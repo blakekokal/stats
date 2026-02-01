@@ -8,9 +8,28 @@
 <style>
 body{margin:0;background:#181818;color:#fff;font-family:system-ui,sans-serif;overflow:hidden;}
 #scoreBar{position:fixed;top:0;left:0;right:0;height:44px;background:#111;display:none;align-items:center;justify-content:center;font-weight:600;z-index:10;}
-/* ONLY SPACING CHANGES */
-.page{display:none;min-height:100vh;padding:72px 16px 120px;box-sizing:border-box;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;text-align:center;overflow:hidden;}
+
+/* ALL NON-START PAGES: BUTTONS STACK FROM BOTTOM CENTER UP */
+.page{
+  display:none;
+  min-height:100vh;
+  padding:72px 16px 120px;
+  box-sizing:border-box;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  gap:14px;
+  text-align:center;
+  overflow:hidden;
+}
 .page.active{display:flex;}
+
+/* START PAGE SCROLLS FROM TOP */
+#roundPage{
+  justify-content:flex-start;
+  overflow:auto;
+}
+
 button{width:100%;max-width:320px;height:52px;font-size:16px;border-radius:10px;border:none;font-weight:600;cursor:pointer;white-space:nowrap;color:#fff;-webkit-tap-highlight-color:transparent;}
 .selected{box-shadow:0 0 0 3px #ffffffaa;}
 .big{height:64px;font-size:17px;}
@@ -19,6 +38,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 .row button{flex:1;}
 .input-wrap{position:relative;width:100%;max-width:320px;}
 .input-wrap span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#aaa;}
+
 .back-wrap{position:fixed;bottom:48px;left:0;right:0;display:flex;justify-content:center;}
 .back{background:#555;}
 
@@ -55,7 +75,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="roundPage" class="page active">
   <div style="font-size:28px;font-weight:800;">Stat Tracker</div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
-    Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and hen it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
+    Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
   <input id="playerName" placeholder="Player Name">
   <input id="roundDate" type="date">
