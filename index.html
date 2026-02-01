@@ -231,44 +231,135 @@ function show(id){
 function goBack(){
   const currentPage=document.querySelector('.page.active').id;
   
+  // FROM PAR PAGE - Go back to round info OR undo previous hole
   if(currentPage==='parPage'){
-    show('roundPage');
-  }
-  else if(currentPage==='liePage'){
-    // If we're on first shot, go back to par page
-    if(shots===1&&currentHoleShots.length===1){
-      currentHoleShots.pop();
-      show('parPage');
+    if(currentHole>1&&lastCompletedHole){
+      undoLastHole();
+    }else{
+      show('roundPage');
     }
-    // Otherwise go back to distance page of previous shot
-    else if(currentHoleShots.length>1){
-      currentHoleShots.pop();
+  }
+  
+  // FROM LIE PAGE - Go back to par page (first shot) or distance page (later shots)
+  else if(currentPage==='liePage'){
+    if(shots===1){
+      // First shot - go back to par page and remove the tee shot
+      if(currentHoleShots.length>0) currentHoleShots.pop();
+      show('parPage');
+    }else{
+      // Not first shot - go back to previous distance entry
+      if(currentHoleShots.length>0) currentHoleShots.pop();
       shots--;
       distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
       shotDistance.value=currentHoleShots[currentHoleShots.length-1].distanceAfter||100;
-      lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
       show('distancePage');
     }
   }
+  
+  // FROM DISTANCE PAGE - Go back to lie selection for same shot
   else if(currentPage==='distancePage'){
-    // Go back to lie page for current shot
     lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
     show('liePage');
   }
-  else if(currentPage==='penaltyPage'){
+  
+  // FROM PENALTY PAGES - Go back to lie page
+  else if(currentPage==='penaltyPage'||currentPage==='obPenaltyPage'){
     show('liePage');
   }
-  else if(currentPage==='obPenaltyPage'){
-    show('liePage');
-  }
+  
+  // FROM PUTT PAGE - Go back to lie page of last regular shot
   else if(currentPage==='puttPage'){
-    // Remove the putt shot and go back to lie page
-    if(currentHoleShots.length>0){
-      currentHoleShots.pop();
-    }
+    if(currentHoleShots.length>0) currentHoleShots.pop();
     lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
     show('liePage');
   }
+}
+
+function undoLastHole(){
+  // Restore previous hole state
+  currentHole--;
+  allHoles.pop();
+  
+  const lastHole=lastCompletedHole;
+  const lastScore=lastHole.score;
+  
+  // Reverse all stats
+  totalStrokes-=lastScore;
+  totalPar-=lastHole.par;
+  totalPutts-=lastHole.putts;
+  
+  if(lastHole.par===3){c3--;p3-=lastScore;}
+  if(lastHole.par===4){c4--;p4-=lastScore;}
+  if(lastHole.par===5){c5--;p5-=lastScore;}
+  
+  // Reverse GIR
+  let hadGIR=false;
+  let firstPuttDist=0;
+  lastHole.shots.forEach(s=>{
+    if(s.lie==='GREEN'&&s.shotNum<=(lastHole.par-2)){
+      hadGIR=true;
+      gir--;
+      firstPuttDist=s.distanceAfter||0;
+    }
+  });
+  if(hadGIR&&firstPuttDist>0){
+    girFirstPuttDist-=firstPuttDist;
+    girPutts-=lastHole.putts;
+  }
+  
+  // Reverse scrambling
+  if(!hadGIR){
+    scrOpp--;
+    if(lastHole.putts===1) scr--;
+  }
+  
+  // Reverse fairway stats
+  if(lastHole.par===4||lastHole.par===5){
+    const teeShot=lastHole.shots[0];
+    if(teeShot){
+      fwOpp--;
+      if(teeShot.lie==='FAIRWAY') fwHit--;
+      if(teeShot.lie==='LEFT ROUGH') fwLeft--;
+      if(teeShot.lie==='RIGHT ROUGH') fwRight--;
+    }
+  }
+  
+  // Reverse bunker stats
+  let hadBunker=false;
+  lastHole.shots.forEach(s=>{
+    if(s.lie&&s.lie.includes('BUNKER')){
+      hadBunker=true;
+      bunOpp--;
+    }
+  });
+  if(hadBunker&&lastHole.putts===1) bun--;
+  
+  // Reverse one-putt stats
+  if(lastHole.putts>0){
+    onePuttOpp--;
+    if(lastHole.putts===1) onePuttMade--;
+  }
+  
+  // Reverse three-putt stats
+  if(lastHole.putts>=3) threePlusPutts--;
+  
+  // Restore hole state
+  par=lastHole.par;
+  currentHoleData=JSON.parse(JSON.stringify(lastHole));
+  currentHoleShots=JSON.parse(JSON.stringify(lastHole.shots));
+  shots=lastHole.score-lastHole.putts;
+  putts=lastHole.putts-1;
+  girThisHole=hadGIR;
+  
+  // Remove the holed putt
+  currentHoleShots.pop();
+  
+  // Go to last putt
+  puttTitle.innerText=`Putt ${putts+1}`;
+  const lastPutt=currentHoleShots[currentHoleShots.length-1];
+  puttDistance.value=lastPutt.distanceBefore||3;
+  holeHeader.innerText=`Hole ${currentHole}`;
+  show('puttPage');
 }
 function highlight(btn){
   btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
@@ -294,6 +385,7 @@ let onePuttMade=0;
 let allHoles=[];
 let currentHoleData={};
 let currentHoleShots=[];
+let lastCompletedHole=null;
 
 function selectPresetHoles(n){customHoles.value='';totalHoles=n;}
 function enterScoring(){
@@ -360,6 +452,7 @@ function selectLie(lie){
   }
   if(lie==='GS BUNKER'){
     shots++;
+    currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:30,distanceAfter:null,isPutt:false});
     distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
     shotDistance.value=30;
     lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
@@ -367,21 +460,20 @@ function selectLie(lie){
     return;
   }
   shots++;
-  distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
-  // Set default distance based on par and shot number
+  let defaultDist=100;
   if(shots===2&&par===5){
-    shotDistance.value=250;
-  }else{
-    shotDistance.value=100;
+    defaultDist=250;
   }
+  currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:defaultDist,distanceAfter:null,isPutt:false});
+  distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
+  shotDistance.value=defaultDist;
   lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
   show('distancePage');
 }
 
 function confirmDistance(){
   const lastShot=currentHoleShots[currentHoleShots.length-1];
-  lastShot.distanceAfter=parseInt(shotDistance.value||0);
-  currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:lastShot.distanceAfter,distanceAfter:null,isPutt:false});
+  lastShot.distanceBefore=parseInt(shotDistance.value||0);
   show('liePage');
 }
 
@@ -441,6 +533,10 @@ function finishHole(){
   currentHoleData.score=holeStrokes;
   currentHoleData.putts=putts;
   currentHoleData.shots=currentHoleShots;
+  
+  // Store as last completed hole for undo
+  lastCompletedHole=JSON.parse(JSON.stringify(currentHoleData));
+  
   allHoles.push(currentHoleData);
   
   if(par===3){c3++;p3+=holeStrokes;}
