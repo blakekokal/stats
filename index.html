@@ -8,7 +8,7 @@
 <style>
 body{margin:0;background:#181818;color:#fff;font-family:system-ui,sans-serif;}
 #scoreBar{position:fixed;top:0;left:0;right:0;height:44px;background:#111;display:none;align-items:center;justify-content:center;font-weight:600;z-index:10;}
-.page{display:none;min-height:100vh;padding:72px 16px 72px;box-sizing:border-box;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;}
+.page{display:none;min-height:100vh;padding:72px 16px 72px;box-sizing:border-box;flex-direction:column;align-items:center;justify-content:flex-start;gap:14px;text-align:center;}
 .page.active{display:flex;}
 button{width:100%;max-width:320px;height:52px;font-size:16px;border-radius:10px;border:none;font-weight:600;cursor:pointer;white-space:nowrap;color:#fff;-webkit-tap-highlight-color:transparent;}
 .selected{box-shadow:0 0 0 3px #ffffffaa;}
@@ -18,7 +18,8 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 .row button{flex:1;}
 .input-wrap{position:relative;width:100%;max-width:320px;}
 .input-wrap span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#aaa;}
-.back-wrap{position:fixed;bottom:16px;left:0;right:0;display:flex;justify-content:center;}
+/* ONLY CHANGE: back button moved up closer to content */
+.back-wrap{position:fixed;bottom:72px;left:0;right:0;display:flex;justify-content:center;}
 .back{background:#555;}
 
 .holes9{background:#2e7d32;}
@@ -54,7 +55,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="roundPage" class="page active">
   <div style="font-size:28px;font-weight:800;">Stat Tracker</div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
-    Enter name, date, # of holes played. The app will ask for the par and yardage of the hole, then ask for where each shot ended up — fairway, water, bunker, etc — then it will ask for the next shot details, the yardage left to the hole, and where it ended up, until you select green and hole out with the putt.
+    Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and hen it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
   <input id="playerName" placeholder="Player Name">
   <input id="roundDate" type="date">
@@ -188,7 +189,145 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 </div>
 
 <script>
-/* unchanged JS — full logic preserved */
+let historyStack=['roundPage'];
+function show(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if(historyStack[historyStack.length-1]!==id) historyStack.push(id);
+}
+function goBack(){
+  if(historyStack.length>1){
+    historyStack.pop();
+    show(historyStack[historyStack.length-1]);
+  }
+}
+function highlight(btn){
+  btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+}
+
+let totalHoles=null,currentHole=1;
+let totalPar=0,totalStrokes=0;
+let par=4,shots=0,putts=0;
+let fwOpp=0,fwHit=0,fwLeft=0,fwRight=0;
+let gir=0,girFirstPuttDist=0;
+let scrOpp=0,scr=0;
+let bunOpp=0,bun=0;
+let p3=0,p4=0,p5=0,c3=0,c4=0,c5=0;
+let firstPuttThisHole=null;
+let girThisHole=false;
+let totalPutts=0;
+let girPutts=0;
+let threePlusPutts=0;
+let onePuttOpp=0;
+let onePuttMade=0;
+
+function selectPresetHoles(n){customHoles.value='';totalHoles=n;}
+function enterScoring(){
+  const c=parseInt(customHoles.value);
+  totalHoles=(c>=3&&c<=18)?c:(totalHoles||9);
+  scoreBar.style.display='flex';
+  show('parPage');
+}
+function setPar(p){par=p;holeYards.value=p===3?150:p===4?400:520;}
+function startHole(){shots=1;putts=0;firstPuttThisHole=null;girThisHole=false;show('shotPage');}
+function ordinal(n){return n===1?'1st':n===2?'2nd':n===3?'3rd':`${n}th`;}
+
+function selectLie(lie){
+  if(shots===1&&(par===4||par===5)){
+    fwOpp++;
+    if(lie==='FAIRWAY')fwHit++;
+    if(lie==='LEFT ROUGH')fwLeft++;
+    if(lie==='RIGHT ROUGH')fwRight++;
+  }
+  if(lie==='GS BUNKER') bunOpp++;
+  if(lie==='GREEN'){
+    if(shots<=par-2){gir++;girThisHole=true;} else scrOpp++;
+    putts=0;
+    puttTitle.innerText='Putt 1';
+    puttDistance.value=30;
+    onePuttOpp++;
+    show('puttPage');
+    return;
+  }
+  if(lie==='HOLE'){finishHole();return;}
+  shots++;
+  distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
+  shotDistance.value=100;
+  show('distancePage');
+}
+
+function nextPutt(){
+  totalPutts++;
+  if(putts===0&&girThisHole) firstPuttThisHole=parseInt(puttDistance.value||0);
+  putts++;
+  puttTitle.innerText=`Putt ${putts+1}`;
+  puttDistance.value=3;
+}
+
+function holeOut(){
+  totalPutts++;
+  if(putts===0){
+    onePuttMade++;
+    if(girThisHole) firstPuttThisHole=parseInt(puttDistance.value||0);
+  }
+  putts++;
+  if(putts>=3) threePlusPutts++;
+  if(girThisHole) girPutts+=putts;
+  if(firstPuttThisHole!==null){girFirstPuttDist+=firstPuttThisHole;firstPuttThisHole=null;}
+  if(shots>par-2&&putts===1) scr++;
+  if(bunOpp>0&&putts===1) bun++;
+  finishHole();
+}
+
+function finishHole(){
+  const holeStrokes=shots+putts;
+  if(par===3){c3++;p3+=holeStrokes;}
+  if(par===4){c4++;p4+=holeStrokes;}
+  if(par===5){c5++;p5+=holeStrokes;}
+  totalStrokes+=holeStrokes;
+  totalPar+=par;
+  const d=totalStrokes-totalPar;
+  scoreBar.innerText=d===0?`E through ${currentHole}`:`${d>0?'+':''}${d} through ${currentHole}`;
+  if(currentHole<totalHoles){
+    currentHole++;
+    holeHeader.innerText=`Hole ${currentHole}`;
+    show('parPage');
+  }else{
+    renderSummary();
+    show('summaryPage');
+  }
+}
+
+function renderSummary(){
+  sumScore.innerText=totalStrokes;
+  sumPar.innerText=totalPar;
+  const d=totalStrokes-totalPar;
+  sumToPar.innerText=d===0?'E':`${d>0?'+':''}${d}`;
+  const dt=new Date(roundDate.value);
+  roundMeta.innerText=`${playerName.value||'Player'} · ${courseName.value||'Course'} · ${dt.getMonth()+1}/${dt.getDate()}/${dt.getFullYear()}`;
+
+  fwHitS.innerText=fwHit;fwOppS.innerText=fwOpp;fwPctS.innerText=fwOpp?Math.round(fwHit/fwOpp*100):0;
+  fwLeftS.innerText=fwLeft;fwRightS.innerText=fwRight;
+  fwLeftPctS.innerText=fwOpp?Math.round(fwLeft/fwOpp*100):0;
+  fwRightPctS.innerText=fwOpp?Math.round(fwRight/fwOpp*100):0;
+
+  girS.innerText=gir;girTotS.innerText=totalHoles;girPctS.innerText=totalHoles?Math.round(gir/totalHoles*100):0;
+  proxGirS.innerText=gir?Math.round(girFirstPuttDist/gir):0;
+
+  scrS.innerText=scr;scrOppS.innerText=scrOpp;scrPctS.innerText=scrOpp?Math.round(scr/scrOpp*100):0;
+  bunS.innerText=bun;bunOppS.innerText=bunOpp;bunPctS.innerText=bunOpp?Math.round(bun/bunOpp*100):0;
+
+  avgP3.innerText=c3?(p3/c3).toFixed(1):'–';
+  avgP4.innerText=c4?(p4/c4).toFixed(1):'–';
+  avgP5.innerText=c5?(p5/c5).toFixed(1):'–';
+
+  pph.innerText=`Putts per Hole- ${(totalPutts/totalHoles).toFixed(1)}`;
+  ppg.innerText=`Putts per GIR- ${gir?(girPutts/gir).toFixed(1):'–'}`;
+
+  threePutts.innerText=`Three or more putts- ${threePlusPutts}`;
+  onePuttPct.innerText=`One-Putt %- ${onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0}%`;
+}
 </script>
 
 </body>
