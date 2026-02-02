@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Golf Tracker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 body{margin:0;background:#181818;color:#fff;font-family:system-ui,sans-serif;overflow:hidden;}
@@ -73,7 +74,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.2.6</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.3.3</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -145,6 +146,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 </div>
 
 <div id="puttPage" class="page">
+  <div id="puttShotNum" style="font-size:14px;opacity:.7;">Shot 3</div>
   <h3 id="puttTitle">Putt 1</h3>
   <div class="input-wrap"><input id="puttDistance" value="30"><span>feet</span></div>
   <button class="holes9" onclick="nextPutt()">CONFIRM PUTT</button>
@@ -220,11 +222,13 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
     </div>
   </div>
   
-  <button class="holes9" onclick="exportToExcel()">EXPORT TO EXCEL</button>
+  <button class="holes9" onclick="exportToCSV()">SAVE CSV</button>
+  <button class="holes18" onclick="exportToExcel()">SAVE EXCEL</button>
 </div>
 
 <script>
 function show(id){
+  processingClick=false; // Reset processing flag when changing pages
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
 }
@@ -243,7 +247,25 @@ function goBack(){
   // FROM LIE PAGE - Go back to par page (first shot) or distance page (later shots)
   else if(currentPage==='liePage'){
     if(shots===1){
-      // First shot - go back to par page and remove the tee shot
+      // First shot - reverse stats if counted, then go back to par page
+      const currentShot=currentHoleShots[currentHoleShots.length-1];
+      if(currentShot){
+        // Reverse fairway stats if they were counted
+        if(fwCountedThisHole&&currentShot.fwCounted){
+          console.log('BACK from lie (shot 1): Reversing fairway stats for: '+currentShot.lie);
+          fwOpp--;
+          if(currentShot.lie==='FAIRWAY') fwHit--;
+          if(currentShot.lie==='LEFT ROUGH') fwLeft--;
+          if(currentShot.lie==='RIGHT ROUGH') fwRight--;
+          fwCountedThisHole=false;
+        }
+        // Reverse bunker stats if they were counted
+        if(currentShot.bunkerCounted){
+          console.log('BACK from lie (shot 1): Reversing bunker opp');
+          bunOpp--;
+        }
+      }
+      // Remove the shot - startHole will create a fresh one
       if(currentHoleShots.length>0) currentHoleShots.pop();
       show('parPage');
     }else{
@@ -264,25 +286,25 @@ function goBack(){
     }
     shots--;
     
-    // Reverse the stats but DON'T clear the flags
-    // This way if they select the same lie again, it won't double-count
+    // Reverse the stats
     const currentShot=currentHoleShots[currentHoleShots.length-1];
     if(currentShot){
       // Reverse fairway stats if they were counted
-      if(currentShot.fwCounted){
+      if(fwCountedThisHole&&currentShot.fwCounted){
         console.log('BACK: Reversing fairway stats for: '+currentShot.lie);
         fwOpp--;
         if(currentShot.lie==='FAIRWAY') fwHit--;
         if(currentShot.lie==='LEFT ROUGH') fwLeft--;
         if(currentShot.lie==='RIGHT ROUGH') fwRight--;
-        // Don't clear the flag - keep it true
-        console.log('BACK: fwOpp='+fwOpp);
+        fwCountedThisHole=false;
+        currentShot.fwCounted=false;
+        console.log('BACK: fwOpp='+fwOpp+', fwCountedThisHole=false');
       }
       // Reverse bunker stats if they were counted
       if(currentShot.bunkerCounted){
         console.log('BACK: Reversing bunker opp! bunOpp before: '+bunOpp);
         bunOpp--;
-        // Don't clear the flag - keep it true
+        currentShot.bunkerCounted=false;
         console.log('BACK: bunOpp after: '+bunOpp);
       }
     }
@@ -413,6 +435,7 @@ let bunOpp=0,bun=0;
 let p3=0,p4=0,p5=0,c3=0,c4=0,c5=0;
 let firstPuttThisHole=null;
 let girThisHole=false;
+let fwCountedThisHole=false;
 let totalPutts=0;
 let girPutts=0;
 let threePlusPutts=0;
@@ -422,6 +445,7 @@ let onePuttMade=0;
 let allHoles=[];
 let currentHoleData={};
 let currentHoleShots=[];
+let processingClick=false;
 
 function selectPresetHoles(n){customHoles.value='';totalHoles=n;}
 function enterScoring(){
@@ -436,16 +460,31 @@ function startHole(){
   putts=0;
   firstPuttThisHole=null;
   girThisHole=false;
+  fwCountedThisHole=false;
   lieTitle.innerText='Where did your tee shot end?';
   currentHoleData={hole:currentHole,par:par,yards:parseInt(holeYards.value)};
   currentHoleShots=[];
-  currentHoleShots.push({shotNum:1,lie:null,distanceBefore:currentHoleData.yards,distanceAfter:null,isPutt:false});
+  currentHoleShots.push({shotNum:1,lie:null,distanceBefore:currentHoleData.yards,distanceAfter:null,isPutt:false,fwCounted:false,bunkerCounted:false});
   show('liePage');
 }
 function ordinal(n){return n===1?'1st':n===2?'2nd':n===3?'3rd':`${n}th`;}
 
 function selectLie(lie){
+  // Prevent double-clicking
+  if(processingClick){
+    console.log('Already processing a click, ignoring duplicate');
+    return;
+  }
+  processingClick=true;
+  
   const lastShot=currentHoleShots[currentHoleShots.length-1];
+  
+  // Prevent double-clicking - if lie is already set to this value, ignore
+  if(lastShot.lie===lie){
+    console.log('Lie already set to '+lie+', ignoring duplicate click');
+    processingClick=false;
+    return;
+  }
   
   // If we're changing the lie, reverse the old stats first
   if(lastShot.lie&&lastShot.lie!==lie){
@@ -458,6 +497,7 @@ function selectLie(lie){
       if(lastShot.lie==='LEFT ROUGH') fwLeft--;
       if(lastShot.lie==='RIGHT ROUGH') fwRight--;
       lastShot.fwCounted=false;
+      fwCountedThisHole=false;
     }
     // Reverse bunker stats if they were counted
     if(lastShot.bunkerCounted){
@@ -470,17 +510,20 @@ function selectLie(lie){
   
   lastShot.lie=lie;
   
-  // Count fairway stats for tee shots on par 4/5 - only if not already counted
-  if(shots===1&&(par===4||par===5)&&!lastShot.fwCounted){
+  console.log('Shot #'+shots+', lie='+lie+', fwCountedThisHole='+fwCountedThisHole+', bunkerCounted='+lastShot.bunkerCounted);
+  
+  // Count fairway stats for tee shots on par 4/5 - only once per hole
+  if(shots===1&&(par===4||par===5)&&!fwCountedThisHole){
     console.log('Counting fairway stats for: '+lie);
     fwOpp++;
     if(lie==='FAIRWAY') fwHit++;
     if(lie==='LEFT ROUGH') fwLeft++;
     if(lie==='RIGHT ROUGH') fwRight++;
+    fwCountedThisHole=true;
     lastShot.fwCounted=true;
-    console.log('fwOpp='+fwOpp+', fwHit='+fwHit);
-  }else if(shots===1&&(par===4||par===5)&&lastShot.fwCounted){
-    console.log('Fairway stat already counted for this shot, skipping');
+    console.log('fwOpp='+fwOpp+', fwHit='+fwHit+', set fwCountedThisHole=true');
+  }else if(shots===1&&(par===4||par===5)&&fwCountedThisHole){
+    console.log('Fairway stat already counted for this hole, skipping');
   }
   
   // Count bunker opportunities - only if not already counted
@@ -532,8 +575,9 @@ function selectLie(lie){
       onePuttOpp++;
     }
     
-    currentHoleShots.push({shotNum:shots+1,lie:'PUTT',distanceBefore:defaultPutt,distanceAfter:null,isPutt:true});
+    currentHoleShots.push({shotNum:shots+1,lie:'PUTT',distanceBefore:defaultPutt,distanceAfter:null,isPutt:true,fwCounted:false,bunkerCounted:false});
     puttDistance.value=defaultPutt;
+    puttShotNum.innerText=`Shot ${shots+1}`;
     show('puttPage');
     return;
   }
@@ -548,7 +592,7 @@ function selectLie(lie){
   }
   if(lie==='GS BUNKER'){
     shots++;
-    currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:30,distanceAfter:null,isPutt:false});
+    currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:30,distanceAfter:null,isPutt:false,fwCounted:false,bunkerCounted:false});
     distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
     shotDistance.value=30;
     lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
@@ -560,7 +604,7 @@ function selectLie(lie){
   if(shots===2&&par===5){
     defaultDist=250;
   }
-  currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:defaultDist,distanceAfter:null,isPutt:false});
+  currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:defaultDist,distanceAfter:null,isPutt:false,fwCounted:false,bunkerCounted:false});
   distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
   shotDistance.value=defaultDist;
   lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
@@ -580,9 +624,9 @@ function handlePenalty(choice){
   const lastShot=currentHoleShots[currentHoleShots.length-1];
   const lastDistance=lastShot.distanceBefore||100;
   lastShot.distanceAfter=lastDistance;
-  currentHoleShots.push({shotNum:shots+1,lie:'PENALTY',distanceBefore:lastDistance,distanceAfter:lastDistance,isPutt:false});
+  currentHoleShots.push({shotNum:shots+1,lie:'PENALTY',distanceBefore:lastDistance,distanceAfter:lastDistance,isPutt:false,fwCounted:false,bunkerCounted:false});
   shots += 2;
-  currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:lastDistance,distanceAfter:null,isPutt:false});
+  currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:lastDistance,distanceAfter:null,isPutt:false,fwCounted:false,bunkerCounted:false});
   distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
   shotDistance.value=lastDistance;
   lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
@@ -597,7 +641,8 @@ function nextPutt(){
   lastShot.distanceAfter=dist;
   putts++;
   puttTitle.innerText=`Putt ${putts+1}`;
-  currentHoleShots.push({shotNum:shots+putts,lie:'PUTT',distanceBefore:dist,distanceAfter:null,isPutt:true});
+  puttShotNum.innerText=`Shot ${shots+putts+1}`;
+  currentHoleShots.push({shotNum:shots+putts,lie:'PUTT',distanceBefore:dist,distanceAfter:null,isPutt:true,fwCounted:false,bunkerCounted:false});
   puttDistance.value=3;
 }
 
@@ -687,16 +732,260 @@ function renderSummary(){
   onePuttPct.innerText=`One-Putt %- ${onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0}%`;
 }
 
+function exportToCSV(){
+  if(!allHoles || allHoles.length===0){
+    alert('No round data to export. Please complete at least one hole.');
+    return;
+  }
+  
+  const csv = generateCSV();
+  
+  const blob=new Blob([csv],{type:'text/csv'});
+  const url=window.URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`golf-stats-${roundDate.value||'round'}.csv`;
+  a.click();
+  window.URL.revokeObjectURL(url);
+}
+
 function exportToExcel(){
   if(!allHoles || allHoles.length===0){
     alert('No round data to export. Please complete at least one hole.');
     return;
   }
   
+  const wb = XLSX.utils.book_new();
+  
+  // Calculate common stats
+  let eagles=0,birdies=0,pars=0,bogeys=0,doubleOrWorse=0;
+  allHoles.forEach(h=>{
+    const diff=h.score-h.par;
+    if(diff<=-2) eagles++;
+    else if(diff===-1) birdies++;
+    else if(diff===0) pars++;
+    else if(diff===1) bogeys++;
+    else doubleOrWorse++;
+  });
+  
+  let totalYards=0;
+  allHoles.forEach(h=>totalYards+=h.yards);
+  
+  // ============ SHEET 1: SCORING ============
+  let scoringData = [
+    ['SCORING'],
+    [],
+    ['Player:', playerName.value||'Player'],
+    ['Course:', courseName.value||'Course'],
+    ['Date:', roundDate.value],
+    [],
+    ['Hole', ...allHoles.map(h=>h.hole), 'TOTAL'],
+    ['Yards', ...allHoles.map(h=>h.yards), totalYards],
+    ['Par', ...allHoles.map(h=>h.par), totalPar],
+    ['Score', ...allHoles.map(h=>h.score), totalStrokes],
+    ['Putts', ...allHoles.map(h=>h.putts), totalPutts],
+    [],
+    ['Avg Par 3 Score', c3?(p3/c3).toFixed(2):'N/A'],
+    ['Avg Par 4 Score', c4?(p4/c4).toFixed(2):'N/A'],
+    ['Avg Par 5 Score', c5?(p5/c5).toFixed(2):'N/A'],
+    [],
+    ['Eagles', eagles],
+    ['Birdies', birdies],
+    ['Pars', pars],
+    ['Bogeys', bogeys],
+    ['Double or Worse', doubleOrWorse]
+  ];
+  const ws1 = XLSX.utils.aoa_to_sheet(scoringData);
+  XLSX.utils.book_append_sheet(wb, ws1, 'Scoring');
+  
+  // ============ SHEET 2: OFF THE TEE ============
+  let drivingDistances=[];
+  allHoles.forEach(h=>{
+    if((h.par===4||h.par===5)&&h.shots.length>0&&h.shots[0].distanceAfter){
+      drivingDistances.push(h.yards-h.shots[0].distanceAfter);
+    }
+  });
+  const avgDrive=drivingDistances.length?Math.round(drivingDistances.reduce((a,b)=>a+b,0)/drivingDistances.length):0;
+  
+  let teeData = [
+    ['OFF THE TEE'],
+    [],
+    ['Fairways Hit', `${fwHit}/${fwOpp}`, fwOpp?Math.round(fwHit/fwOpp*100)+'%':'0%'],
+    ['Missed Left', fwLeft, fwOpp?Math.round(fwLeft/fwOpp*100)+'%':'0%'],
+    ['Missed Right', fwRight, fwOpp?Math.round(fwRight/fwOpp*100)+'%':'0%'],
+    [],
+    ['Avg Driving Distance', avgDrive+' yards']
+  ];
+  const ws2 = XLSX.utils.aoa_to_sheet(teeData);
+  XLSX.utils.book_append_sheet(wb, ws2, 'Off The Tee');
+  
+  // ============ SHEET 3: APPROACH ============
+  let par3ApproachDist=[],par4ApproachDist=[],par5ApproachDist=[];
+  let par3Approaches=[],par4Approaches=[],par5Approaches=[];
+  
+  allHoles.forEach(h=>{
+    h.shots.forEach((s,idx)=>{
+      if(!s.isPutt&&s.distanceBefore&&s.lie==='GREEN'){
+        if(h.par===3){
+          par3ApproachDist.push(s.distanceBefore);
+          par3Approaches.push(s.distanceAfter||0);
+        }else if(h.par===4){
+          par4ApproachDist.push(s.distanceBefore);
+          par4Approaches.push(s.distanceAfter||0);
+        }else if(h.par===5){
+          par5ApproachDist.push(s.distanceBefore);
+          par5Approaches.push(s.distanceAfter||0);
+        }
+      }
+    });
+  });
+  
+  const avgPar3Dist=par3ApproachDist.length?Math.round(par3ApproachDist.reduce((a,b)=>a+b,0)/par3ApproachDist.length):0;
+  const avgPar3=par3Approaches.length?Math.round(par3Approaches.reduce((a,b)=>a+b,0)/par3Approaches.length):0;
+  const avgPar4Dist=par4ApproachDist.length?Math.round(par4ApproachDist.reduce((a,b)=>a+b,0)/par4ApproachDist.length):0;
+  const avgPar4=par4Approaches.length?Math.round(par4Approaches.reduce((a,b)=>a+b,0)/par4Approaches.length):0;
+  const avgPar5Dist=par5ApproachDist.length?Math.round(par5ApproachDist.reduce((a,b)=>a+b,0)/par5ApproachDist.length):0;
+  const avgPar5=par5Approaches.length?Math.round(par5Approaches.reduce((a,b)=>a+b,0)/par5Approaches.length):0;
+  
+  const approachRanges=[
+    {min:101,max:125,shots:[],label:'101-125 yards'},
+    {min:126,max:150,shots:[],label:'126-150 yards'},
+    {min:151,max:175,shots:[],label:'151-175 yards'},
+    {min:176,max:200,shots:[],label:'176-200 yards'},
+    {min:201,max:225,shots:[],label:'201-225 yards'},
+    {min:226,max:250,shots:[],label:'226-250 yards'},
+    {min:251,max:275,shots:[],label:'251-275 yards'},
+    {min:276,max:999,shots:[],label:'276+ yards'}
+  ];
+  
+  allHoles.forEach(h=>{
+    h.shots.forEach((s,idx)=>{
+      const distBefore=s.distanceBefore||0;
+      if(!s.isPutt&&distBefore>100&&s.lie==='GREEN'){
+        approachRanges.forEach(r=>{
+          if(distBefore>=r.min&&distBefore<=r.max){
+            r.shots.push(s.distanceAfter||0);
+          }
+        });
+      }
+    });
+  });
+  
+  let approachData = [
+    ['APPROACH'],
+    [],
+    ['GIR', `${gir}/${totalHoles}`, totalHoles?Math.round(gir/totalHoles*100)+'%':'0%'],
+    ['Proximity when GIR', (gir?Math.round(girFirstPuttDist/gir):0)+' ft'],
+    [],
+    ['Approach by Distance', '# of Shots', 'Avg Proximity']
+  ];
+  
+  approachRanges.forEach(r=>{
+    const avg=r.shots.length?Math.round(r.shots.reduce((a,b)=>a+b,0)/r.shots.length):0;
+    approachData.push([r.label, r.shots.length, avg+' ft']);
+  });
+  
+  approachData.push([]);
+  approachData.push(['Avg Par 3 Tee Shot Distance', avgPar3Dist+' yds', par3ApproachDist.length+' shots']);
+  approachData.push(['Avg Par 3 Tee Shot Proximity', avgPar3+' ft']);
+  approachData.push([]);
+  approachData.push(['Avg Par 4 Approach Distance', avgPar4Dist+' yds', par4ApproachDist.length+' shots']);
+  approachData.push(['Avg Par 4 Approach Proximity', avgPar4+' ft']);
+  approachData.push([]);
+  approachData.push(['Avg Par 5 Approach Distance', avgPar5Dist+' yds', par5ApproachDist.length+' shots']);
+  approachData.push(['Avg Par 5 Approach Proximity', avgPar5+' ft']);
+  
+  const ws3 = XLSX.utils.aoa_to_sheet(approachData);
+  XLSX.utils.book_append_sheet(wb, ws3, 'Approach');
+  
+  // ============ SHEET 4: SHORT GAME ============
+  let bunkerShots=[];
+  allHoles.forEach(h=>{
+    h.shots.forEach((s,idx)=>{
+      if(s.lie&&s.lie.includes('BUNKER')&&h.shots[idx+1]){
+        const nextShot=h.shots[idx+1];
+        if(nextShot.lie==='GREEN'){
+          bunkerShots.push(nextShot.distanceAfter||0);
+        }
+      }
+    });
+  });
+  const avgBunkerProx=bunkerShots.length?Math.round(bunkerShots.reduce((a,b)=>a+b,0)/bunkerShots.length):0;
+  
+  const shortRanges=[
+    {min:0,max:25,shots:[],label:'0-25 yards'},
+    {min:26,max:50,shots:[],label:'26-50 yards'},
+    {min:51,max:75,shots:[],label:'51-75 yards'},
+    {min:76,max:100,shots:[],label:'76-100 yards'}
+  ];
+  
+  allHoles.forEach(h=>{
+    h.shots.forEach((s,idx)=>{
+      const distBefore=s.distanceBefore||0;
+      if(!s.isPutt&&distBefore>0&&distBefore<=100&&s.lie==='GREEN'){
+        shortRanges.forEach(r=>{
+          if(distBefore>=r.min&&distBefore<=r.max){
+            r.shots.push(s.distanceAfter||0);
+          }
+        });
+      }
+    });
+  });
+  
+  let shortGameData = [
+    ['SHORT GAME'],
+    [],
+    ['Scrambling', `${scr}/${scrOpp}`, scrOpp?Math.round(scr/scrOpp*100)+'%':'0%'],
+    ['Up & Down from Bunkers', `${bun}/${bunOpp}`, bunOpp?Math.round(bun/bunOpp*100)+'%':'0%'],
+    ['Avg Proximity from Bunkers', avgBunkerProx+' ft', bunkerShots.length+' shots'],
+    [],
+    ['Short Game by Distance', '# of Shots', 'Avg Proximity']
+  ];
+  
+  shortRanges.forEach(r=>{
+    const avg=r.shots.length?Math.round(r.shots.reduce((a,b)=>a+b,0)/r.shots.length):0;
+    shortGameData.push([r.label, r.shots.length, avg+' ft']);
+  });
+  
+  const ws4 = XLSX.utils.aoa_to_sheet(shortGameData);
+  XLSX.utils.book_append_sheet(wb, ws4, 'Short Game');
+  
+  // ============ SHEET 5: PUTTING ============
+  let puttingData = [
+    ['PUTTING'],
+    [],
+    ['Total Putts', totalPutts],
+    ['Putts per Hole', (totalPutts/totalHoles).toFixed(1)],
+    ['Putts per GIR', gir?(girPutts/gir).toFixed(1):'N/A'],
+    ['Three-Putts', threePlusPutts],
+    ['One-Putt %', (onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0)+'%'],
+    [],
+    ['SHOT-BY-SHOT DATA'],
+    [],
+    ['Hole', 'Shot #', 'Lie', 'Distance Before', 'Distance After']
+  ];
+  
+  allHoles.forEach(h=>{
+    h.shots.forEach(s=>{
+      const unit=s.isPutt?' ft':' yds';
+      const distBefore=s.distanceBefore!=null?s.distanceBefore+unit:'N/A';
+      const distAfter=s.distanceAfter!=null?s.distanceAfter+unit:'N/A';
+      puttingData.push([h.hole, s.shotNum, s.lie||'', distBefore, distAfter]);
+    });
+  });
+  
+  const ws5 = XLSX.utils.aoa_to_sheet(puttingData);
+  XLSX.utils.book_append_sheet(wb, ws5, 'Putting');
+  
+  // Save file
+  XLSX.writeFile(wb, `golf-stats-${roundDate.value||'round'}.xlsx`);
+}
+
+function generateCSV(){
   let csv='';
   
-  // SHEET 1: SCORECARD (HORIZONTAL)
-  csv+='SCORECARD\n';
+  // SCORING
+  csv+='SCORING\n';
   csv+=`Player:,${playerName.value||'Player'}\n`;
   csv+=`Course:,${courseName.value||'Course'}\n`;
   csv+=`Date:,${roundDate.value}\n`;
@@ -726,9 +1015,31 @@ function exportToExcel(){
   allHoles.forEach(h=>csv+=`${h.putts},`);
   csv+=`${totalPutts}\n`;
   
-  // SHEET 2: OFF THE TEE
-  csv+='\n\nOFF THE TEE\n';
-  csv+=`Fairways Hit,="${fwHit}/${fwOpp}",${fwOpp?Math.round(fwHit/fwOpp*100):0}%\n`;
+  csv+='\n';
+  
+  csv+=`Avg Par 3 Score,${c3?(p3/c3).toFixed(2):'N/A'}\n`;
+  csv+=`Avg Par 4 Score,${c4?(p4/c4).toFixed(2):'N/A'}\n`;
+  csv+=`Avg Par 5 Score,${c5?(p5/c5).toFixed(2):'N/A'}\n`;
+  csv+='\n';
+  
+  let eagles=0,birdies=0,pars=0,bogeys=0,doubleOrWorse=0;
+  allHoles.forEach(h=>{
+    const diff=h.score-h.par;
+    if(diff<=-2) eagles++;
+    else if(diff===-1) birdies++;
+    else if(diff===0) pars++;
+    else if(diff===1) bogeys++;
+    else doubleOrWorse++;
+  });
+  csv+=`Eagles,${eagles}\n`;
+  csv+=`Birdies,${birdies}\n`;
+  csv+=`Pars,${pars}\n`;
+  csv+=`Bogeys,${bogeys}\n`;
+  csv+=`Double or Worse,${doubleOrWorse}\n`;
+  
+  // OFF THE TEE
+  csv+='\nOFF THE TEE\n';
+  csv+=`Fairways Hit,${fwHit}/${fwOpp},${fwOpp?Math.round(fwHit/fwOpp*100):0}%\n`;
   csv+=`Missed Left,${fwLeft},${fwOpp?Math.round(fwLeft/fwOpp*100):0}%\n`;
   csv+=`Missed Right,${fwRight},${fwOpp?Math.round(fwRight/fwOpp*100):0}%\n`;
   
@@ -741,12 +1052,40 @@ function exportToExcel(){
   const avgDrive=drivingDistances.length?Math.round(drivingDistances.reduce((a,b)=>a+b,0)/drivingDistances.length):0;
   csv+=`Avg Driving Distance,${avgDrive} yards\n`;
   
-  // SHEET 3: APPROACH
-  csv+='\n\nAPPROACH\n';
-  csv+=`GIR,="${gir}/${totalHoles}",${totalHoles?Math.round(gir/totalHoles*100):0}%\n`;
+  // APPROACH
+  csv+='\nAPPROACH\n';
+  csv+=`GIR,${gir}/${totalHoles},${totalHoles?Math.round(gir/totalHoles*100):0}%\n`;
   csv+=`Proximity when GIR,${gir?Math.round(girFirstPuttDist/gir):0} ft\n`;
   csv+='\n';
-  csv+='Distance Range,# of Shots,Avg Proximity\n';
+  
+  let par3ApproachDist=[],par4ApproachDist=[],par5ApproachDist=[];
+  let par3Approaches=[],par4Approaches=[],par5Approaches=[];
+  
+  allHoles.forEach(h=>{
+    h.shots.forEach((s,idx)=>{
+      if(!s.isPutt&&s.distanceBefore&&s.lie==='GREEN'){
+        if(h.par===3){
+          par3ApproachDist.push(s.distanceBefore);
+          par3Approaches.push(s.distanceAfter||0);
+        }else if(h.par===4){
+          par4ApproachDist.push(s.distanceBefore);
+          par4Approaches.push(s.distanceAfter||0);
+        }else if(h.par===5){
+          par5ApproachDist.push(s.distanceBefore);
+          par5Approaches.push(s.distanceAfter||0);
+        }
+      }
+    });
+  });
+  
+  const avgPar3Dist=par3ApproachDist.length?Math.round(par3ApproachDist.reduce((a,b)=>a+b,0)/par3ApproachDist.length):0;
+  const avgPar3=par3Approaches.length?Math.round(par3Approaches.reduce((a,b)=>a+b,0)/par3Approaches.length):0;
+  const avgPar4Dist=par4ApproachDist.length?Math.round(par4ApproachDist.reduce((a,b)=>a+b,0)/par4ApproachDist.length):0;
+  const avgPar4=par4Approaches.length?Math.round(par4Approaches.reduce((a,b)=>a+b,0)/par4Approaches.length):0;
+  const avgPar5Dist=par5ApproachDist.length?Math.round(par5ApproachDist.reduce((a,b)=>a+b,0)/par5ApproachDist.length):0;
+  const avgPar5=par5Approaches.length?Math.round(par5Approaches.reduce((a,b)=>a+b,0)/par5Approaches.length):0;
+  
+  csv+='Approach by Distance,# of Shots,Avg Proximity\n';
   
   const approachRanges=[
     {min:101,max:125,shots:[],label:'101-125 yards'},
@@ -762,7 +1101,6 @@ function exportToExcel(){
   allHoles.forEach(h=>{
     h.shots.forEach((s,idx)=>{
       const distBefore=s.distanceBefore||0;
-      // Include shots over 100 yards that land on green (approach shots and par 3 tee shots)
       if(!s.isPutt&&distBefore>100&&s.lie==='GREEN'){
         approachRanges.forEach(r=>{
           if(distBefore>=r.min&&distBefore<=r.max){
@@ -779,64 +1117,24 @@ function exportToExcel(){
   });
   
   csv+='\n';
-  
-  // Calculate avg approach distance by par
-  let par3Approaches=[];
-  let par4Approaches=[];
-  let par5Approaches=[];
-  
-  allHoles.forEach(h=>{
-    h.shots.forEach((s,idx)=>{
-      if(!s.isPutt&&s.distanceBefore&&s.lie==='GREEN'){
-        if(h.par===3) par3Approaches.push(s.distanceAfter||0);
-        else if(h.par===4) par4Approaches.push(s.distanceAfter||0);
-        else if(h.par===5) par5Approaches.push(s.distanceAfter||0);
-      }
-    });
-  });
-  
-  const avgPar3=par3Approaches.length?Math.round(par3Approaches.reduce((a,b)=>a+b,0)/par3Approaches.length):0;
-  const avgPar4=par4Approaches.length?Math.round(par4Approaches.reduce((a,b)=>a+b,0)/par4Approaches.length):0;
-  const avgPar5=par5Approaches.length?Math.round(par5Approaches.reduce((a,b)=>a+b,0)/par5Approaches.length):0;
-  
-  csv+=`Avg Par 3 Tee Shot Proximity,${avgPar3} ft,${par3Approaches.length} shots\n`;
-  csv+=`Avg Par 4 Approach Proximity,${avgPar4} ft,${par4Approaches.length} shots\n`;
-  csv+=`Avg Par 5 Approach Proximity,${avgPar5} ft,${par5Approaches.length} shots\n`;
-  
-  csv+='\n';
-  
-  // Calculate avg approach DISTANCE (how far away before hitting to green) by par
-  let par3ApproachDist=[];
-  let par4ApproachDist=[];
-  let par5ApproachDist=[];
-  
-  allHoles.forEach(h=>{
-    h.shots.forEach((s,idx)=>{
-      if(!s.isPutt&&s.distanceBefore&&s.lie==='GREEN'){
-        if(h.par===3) par3ApproachDist.push(s.distanceBefore);
-        else if(h.par===4) par4ApproachDist.push(s.distanceBefore);
-        else if(h.par===5) par5ApproachDist.push(s.distanceBefore);
-      }
-    });
-  });
-  
-  const avgPar3Dist=par3ApproachDist.length?Math.round(par3ApproachDist.reduce((a,b)=>a+b,0)/par3ApproachDist.length):0;
-  const avgPar4Dist=par4ApproachDist.length?Math.round(par4ApproachDist.reduce((a,b)=>a+b,0)/par4ApproachDist.length):0;
-  const avgPar5Dist=par5ApproachDist.length?Math.round(par5ApproachDist.reduce((a,b)=>a+b,0)/par5ApproachDist.length):0;
-  
   csv+=`Avg Par 3 Tee Shot Distance,${avgPar3Dist} yds,${par3ApproachDist.length} shots\n`;
+  csv+=`Avg Par 3 Tee Shot Proximity,${avgPar3} ft\n`;
+  csv+='\n';
   csv+=`Avg Par 4 Approach Distance,${avgPar4Dist} yds,${par4ApproachDist.length} shots\n`;
+  csv+=`Avg Par 4 Approach Proximity,${avgPar4} ft\n`;
+  csv+='\n';
   csv+=`Avg Par 5 Approach Distance,${avgPar5Dist} yds,${par5ApproachDist.length} shots\n`;
+  csv+=`Avg Par 5 Approach Proximity,${avgPar5} ft\n`;
   
-  // SHEET 4: SHORT GAME
-  csv+='\n\nSHORT GAME\n';
-  csv+=`Scrambling,="${scr}/${scrOpp}",${scrOpp?Math.round(scr/scrOpp*100):0}%\n`;
-  csv+=`Up & Down from Bunkers,="${bun}/${bunOpp}",${bunOpp?Math.round(bun/bunOpp*100):0}%\n`;
+  // SHORT GAME
+  csv+='\nSHORT GAME\n';
+  csv+=`Scrambling,${scr}/${scrOpp},${scrOpp?Math.round(scr/scrOpp*100):0}%\n`;
+  csv+=`Up & Down from Bunkers,${bun}/${bunOpp},${bunOpp?Math.round(bun/bunOpp*100):0}%\n`;
   
   let bunkerShots=[];
   allHoles.forEach(h=>{
     h.shots.forEach((s,idx)=>{
-      if(s.lie.includes('BUNKER')&&h.shots[idx+1]){
+      if(s.lie&&s.lie.includes('BUNKER')&&h.shots[idx+1]){
         const nextShot=h.shots[idx+1];
         if(nextShot.lie==='GREEN'){
           bunkerShots.push(nextShot.distanceAfter||0);
@@ -847,7 +1145,7 @@ function exportToExcel(){
   const avgBunkerProx=bunkerShots.length?Math.round(bunkerShots.reduce((a,b)=>a+b,0)/bunkerShots.length):0;
   csv+=`Avg Proximity from Bunkers,${avgBunkerProx} ft,${bunkerShots.length} shots\n`;
   csv+='\n';
-  csv+='Distance Range,# of Shots,Avg Proximity\n';
+  csv+='Short Game by Distance,# of Shots,Avg Proximity\n';
   
   const shortRanges=[
     {min:0,max:25,shots:[],label:'0-25 yards'},
@@ -859,7 +1157,6 @@ function exportToExcel(){
   allHoles.forEach(h=>{
     h.shots.forEach((s,idx)=>{
       const distBefore=s.distanceBefore||0;
-      // Include shots 100 yards or less that land on green (not putts)
       if(!s.isPutt&&distBefore>0&&distBefore<=100&&s.lie==='GREEN'){
         shortRanges.forEach(r=>{
           if(distBefore>=r.min&&distBefore<=r.max){
@@ -875,16 +1172,16 @@ function exportToExcel(){
     csv+=`${r.label},${r.shots.length},${avg} ft\n`;
   });
   
-  // SHEET 5: PUTTING
-  csv+='\n\nPUTTING\n';
+  // PUTTING
+  csv+='\nPUTTING\n';
   csv+=`Total Putts,${totalPutts}\n`;
   csv+=`Putts per Hole,${(totalPutts/totalHoles).toFixed(1)}\n`;
   csv+=`Putts per GIR,${gir?(girPutts/gir).toFixed(1):'N/A'}\n`;
   csv+=`Three-Putts,${threePlusPutts}\n`;
   csv+=`One-Putt %,${onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0}%\n`;
   
-  // SHEET 6: SHOT BY SHOT
-  csv+='\n\nSHOT-BY-SHOT DATA\n';
+  // SHOT BY SHOT
+  csv+='\nSHOT-BY-SHOT DATA\n';
   csv+='Hole,Shot #,Lie,Distance Before,Distance After\n';
   allHoles.forEach(h=>{
     h.shots.forEach(s=>{
@@ -895,14 +1192,7 @@ function exportToExcel(){
     });
   });
   
-  // Download CSV
-  const blob=new Blob([csv],{type:'text/csv'});
-  const url=window.URL.createObjectURL(blob);
-  const a=document.createElement('a');
-  a.href=url;
-  a.download=`golf-stats-${roundDate.value||'round'}.csv`;
-  a.click();
-  window.URL.revokeObjectURL(url);
+  return csv;
 }
 </script>
 
