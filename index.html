@@ -74,7 +74,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.3.3</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.3.9</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -365,10 +365,23 @@ function undoLastHole(){
     girPutts-=lastHole.putts;
   }
   
-  // Reverse scrambling
+  // Reverse scrambling - check if there was a scrambling opportunity on this hole
+  let hadScrambleOpp=false;
   if(!hadGIR){
-    scrOpp--;
-    if(lastHole.putts===1) scr--;
+    // Check if there was a GS bunker or missed GIR situation
+    lastHole.shots.forEach(s=>{
+      if(s.lie==='GS BUNKER') hadScrambleOpp=true;
+    });
+    // If they hit green after missing in regulation, that's also a scramble opp
+    if(!hadScrambleOpp){
+      lastHole.shots.forEach(s=>{
+        if(s.lie==='GREEN'&&s.shotNum>(lastHole.par-2)) hadScrambleOpp=true;
+      });
+    }
+    if(hadScrambleOpp){
+      scrOpp--;
+      if(lastHole.putts===1) scr--;
+    }
   }
   
   // Reverse fairway stats
@@ -408,6 +421,7 @@ function undoLastHole(){
   shots=lastHole.score-lastHole.putts;
   putts=lastHole.putts-1;
   girThisHole=false; // Always reset so hole can be counted fresh when replayed
+  scrCountedThisHole=false;
   firstPuttThisHole=null;
   
   // Remove the holed putt
@@ -436,6 +450,7 @@ let p3=0,p4=0,p5=0,c3=0,c4=0,c5=0;
 let firstPuttThisHole=null;
 let girThisHole=false;
 let fwCountedThisHole=false;
+let scrCountedThisHole=false;
 let totalPutts=0;
 let girPutts=0;
 let threePlusPutts=0;
@@ -461,6 +476,7 @@ function startHole(){
   firstPuttThisHole=null;
   girThisHole=false;
   fwCountedThisHole=false;
+  scrCountedThisHole=false;
   lieTitle.innerText='Where did your tee shot end?';
   currentHoleData={hole:currentHole,par:par,yards:parseInt(holeYards.value)};
   currentHoleShots=[];
@@ -563,8 +579,9 @@ function selectLie(lie){
       }
       girThisHole=true; // Mark that we hit GIR on this hole
     }else{
-      if(!girThisHole){
+      if(!girThisHole && !scrCountedThisHole){
         scrOpp++;
+        scrCountedThisHole=true;
         console.log('Not GIR, counted scrambling opp. scrOpp='+scrOpp);
       }
     }
@@ -591,6 +608,20 @@ function selectLie(lie){
     return;
   }
   if(lie==='GS BUNKER'){
+    lastShot.lie=lie;
+    // Count bunker opportunity if not already counted
+    if(!lastShot.bunkerCounted){
+      console.log('Counting GS bunker opp! bunOpp before: '+bunOpp);
+      bunOpp++;
+      lastShot.bunkerCounted=true;
+      console.log('bunOpp after: '+bunOpp);
+    }
+    // GS bunker always counts as scrambling opportunity (missed green)
+    if(!girThisHole && !scrCountedThisHole){
+      scrOpp++;
+      scrCountedThisHole=true;
+      console.log('GS Bunker - counted scrambling opp. scrOpp='+scrOpp);
+    }
     shots++;
     currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:30,distanceAfter:null,isPutt:false,fwCounted:false,bunkerCounted:false});
     distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
@@ -665,13 +696,20 @@ function holeOut(){
     console.log('girFirstPuttDist is now: '+girFirstPuttDist);
     firstPuttThisHole=null;
   }
-  if(shots>par-2&&putts===1) scr++;
   
   // Check if we got up and down from bunker (1 putt after bunker shot)
   let hitFromBunker=false;
   currentHoleShots.forEach(s=>{
     if(s.lie&&(s.lie.includes('BUNKER'))) hitFromBunker=true;
   });
+  
+  // Count scramble success - either missed GIR and 1-putted, OR got up and down from bunker
+  if(putts===1 && scrCountedThisHole){
+    scr++;
+    console.log('Scramble success! scr='+scr);
+  }
+  
+  // Count bunker save
   if(hitFromBunker&&putts===1) bun++;
   
   finishHole();
@@ -732,6 +770,18 @@ function renderSummary(){
   onePuttPct.innerText=`One-Putt %- ${onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0}%`;
 }
 
+function formatDateForDisplay(dateStr){
+  if(!dateStr) return '';
+  const d = new Date(dateStr);
+  return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
+}
+
+function formatDateForFilename(dateStr){
+  if(!dateStr) return 'round';
+  const d = new Date(dateStr);
+  return `${d.getMonth()+1}-${d.getDate()}-${d.getFullYear()}`;
+}
+
 function exportToCSV(){
   if(!allHoles || allHoles.length===0){
     alert('No round data to export. Please complete at least one hole.');
@@ -740,11 +790,17 @@ function exportToCSV(){
   
   const csv = generateCSV();
   
+  // Create filename from player name, date, course name
+  const pName = (playerName.value||'Player').replace(/[^a-zA-Z0-9]/g, '');
+  const cName = (courseName.value||'Course').replace(/[^a-zA-Z0-9]/g, '');
+  const rDate = formatDateForFilename(roundDate.value);
+  const filename = `${pName}_${rDate}_${cName}.csv`;
+  
   const blob=new Blob([csv],{type:'text/csv'});
   const url=window.URL.createObjectURL(blob);
   const a=document.createElement('a');
   a.href=url;
-  a.download=`golf-stats-${roundDate.value||'round'}.csv`;
+  a.download=filename;
   a.click();
   window.URL.revokeObjectURL(url);
 }
@@ -771,30 +827,74 @@ function exportToExcel(){
   let totalYards=0;
   allHoles.forEach(h=>totalYards+=h.yards);
   
+  // Calculate penalties
+  let par3TeePenalties=0, par45TeePenalties=0, approachPenalties=0, shortGamePenalties=0;
+  allHoles.forEach(h=>{
+    h.shots.forEach((s,idx)=>{
+      if(s.lie==='PENALTY'){
+        const prevShot=h.shots[idx-1];
+        if(prevShot){
+          // Tee shot penalty (shot 1)
+          if(prevShot.shotNum===1){
+            if(h.par===3) par3TeePenalties++;
+            else par45TeePenalties++;
+          }
+          // Approach penalty (over 100 yards)
+          else if(prevShot.distanceBefore>100){
+            approachPenalties++;
+          }
+          // Short game penalty (100 yards or less)
+          else{
+            shortGamePenalties++;
+          }
+        }
+      }
+    });
+  });
+  
   // ============ SHEET 1: SCORING ============
+  // Split holes into front 9 and back 9
+  const front9 = allHoles.slice(0, Math.min(9, allHoles.length));
+  const back9 = allHoles.slice(9);
+  
+  let front9Yards=0, front9Par=0, front9Score=0, front9Putts=0;
+  front9.forEach(h=>{front9Yards+=h.yards;front9Par+=h.par;front9Score+=h.score;front9Putts+=h.putts;});
+  
+  let back9Yards=0, back9Par=0, back9Score=0, back9Putts=0;
+  back9.forEach(h=>{back9Yards+=h.yards;back9Par+=h.par;back9Score+=h.score;back9Putts+=h.putts;});
+  
   let scoringData = [
     ['SCORING'],
     [],
     ['Player:', playerName.value||'Player'],
     ['Course:', courseName.value||'Course'],
-    ['Date:', roundDate.value],
+    ['Date:', formatDateForDisplay(roundDate.value)],
     [],
-    ['Hole', ...allHoles.map(h=>h.hole), 'TOTAL'],
-    ['Yards', ...allHoles.map(h=>h.yards), totalYards],
-    ['Par', ...allHoles.map(h=>h.par), totalPar],
-    ['Score', ...allHoles.map(h=>h.score), totalStrokes],
-    ['Putts', ...allHoles.map(h=>h.putts), totalPutts],
-    [],
-    ['Avg Par 3 Score', c3?(p3/c3).toFixed(2):'N/A'],
-    ['Avg Par 4 Score', c4?(p4/c4).toFixed(2):'N/A'],
-    ['Avg Par 5 Score', c5?(p5/c5).toFixed(2):'N/A'],
-    [],
-    ['Eagles', eagles],
-    ['Birdies', birdies],
-    ['Pars', pars],
-    ['Bogeys', bogeys],
-    ['Double or Worse', doubleOrWorse]
+    // Front 9
+    ['Hole', ...front9.map(h=>h.hole), 'OUT'],
+    ['Yards', ...front9.map(h=>h.yards), front9Yards],
+    ['Par', ...front9.map(h=>h.par), front9Par],
+    ['Score', ...front9.map(h=>h.score), front9Score],
+    ['Putts', ...front9.map(h=>h.putts), front9Putts]
   ];
+  
+  // Add back 9 if exists
+  if(back9.length>0){
+    scoringData.push([]);
+    scoringData.push(['Hole', ...back9.map(h=>h.hole), 'IN', 'TOTAL']);
+    scoringData.push(['Yards', ...back9.map(h=>h.yards), back9Yards, totalYards]);
+    scoringData.push(['Par', ...back9.map(h=>h.par), back9Par, totalPar]);
+    scoringData.push(['Score', ...back9.map(h=>h.score), back9Score, totalStrokes]);
+    scoringData.push(['Putts', ...back9.map(h=>h.putts), back9Putts, totalPutts]);
+  }
+  
+  scoringData.push([]);
+  scoringData.push(['Avg Par 3 Score', c3?(p3/c3).toFixed(2):'N/A', '', 'Eagles', eagles]);
+  scoringData.push(['Avg Par 4 Score', c4?(p4/c4).toFixed(2):'N/A', '', 'Birdies', birdies]);
+  scoringData.push(['Avg Par 5 Score', c5?(p5/c5).toFixed(2):'N/A', '', 'Pars', pars]);
+  scoringData.push(['', '', '', 'Bogeys', bogeys]);
+  scoringData.push(['', '', '', 'Double or Worse', doubleOrWorse]);
+  
   const ws1 = XLSX.utils.aoa_to_sheet(scoringData);
   XLSX.utils.book_append_sheet(wb, ws1, 'Scoring');
   
@@ -814,7 +914,11 @@ function exportToExcel(){
     ['Missed Left', fwLeft, fwOpp?Math.round(fwLeft/fwOpp*100)+'%':'0%'],
     ['Missed Right', fwRight, fwOpp?Math.round(fwRight/fwOpp*100)+'%':'0%'],
     [],
-    ['Avg Driving Distance', avgDrive+' yards']
+    ['Avg Driving Distance', avgDrive+' yards'],
+    [],
+    ['PENALTIES OFF THE TEE'],
+    ['Par 3 Tee Penalties', par3TeePenalties],
+    ['Par 4/5 Tee Penalties', par45TeePenalties]
   ];
   const ws2 = XLSX.utils.aoa_to_sheet(teeData);
   XLSX.utils.book_append_sheet(wb, ws2, 'Off The Tee');
@@ -894,6 +998,9 @@ function exportToExcel(){
   approachData.push([]);
   approachData.push(['Avg Par 5 Approach Distance', avgPar5Dist+' yds', par5ApproachDist.length+' shots']);
   approachData.push(['Avg Par 5 Approach Proximity', avgPar5+' ft']);
+  approachData.push([]);
+  approachData.push(['PENALTIES ON APPROACH']);
+  approachData.push(['Approach Shot Penalties', approachPenalties]);
   
   const ws3 = XLSX.utils.aoa_to_sheet(approachData);
   XLSX.utils.book_append_sheet(wb, ws3, 'Approach');
@@ -947,6 +1054,10 @@ function exportToExcel(){
     shortGameData.push([r.label, r.shots.length, avg+' ft']);
   });
   
+  shortGameData.push([]);
+  shortGameData.push(['PENALTIES ON SHORT GAME']);
+  shortGameData.push(['Short Game Penalties', shortGamePenalties]);
+  
   const ws4 = XLSX.utils.aoa_to_sheet(shortGameData);
   XLSX.utils.book_append_sheet(wb, ws4, 'Short Game');
   
@@ -958,27 +1069,190 @@ function exportToExcel(){
     ['Putts per Hole', (totalPutts/totalHoles).toFixed(1)],
     ['Putts per GIR', gir?(girPutts/gir).toFixed(1):'N/A'],
     ['Three-Putts', threePlusPutts],
-    ['One-Putt %', (onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0)+'%'],
-    [],
-    ['SHOT-BY-SHOT DATA'],
-    [],
-    ['Hole', 'Shot #', 'Lie', 'Distance Before', 'Distance After']
+    ['One-Putt %', (onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0)+'%']
   ];
-  
-  allHoles.forEach(h=>{
-    h.shots.forEach(s=>{
-      const unit=s.isPutt?' ft':' yds';
-      const distBefore=s.distanceBefore!=null?s.distanceBefore+unit:'N/A';
-      const distAfter=s.distanceAfter!=null?s.distanceAfter+unit:'N/A';
-      puttingData.push([h.hole, s.shotNum, s.lie||'', distBefore, distAfter]);
-    });
-  });
   
   const ws5 = XLSX.utils.aoa_to_sheet(puttingData);
   XLSX.utils.book_append_sheet(wb, ws5, 'Putting');
   
+  // ============ SHEET 6: PLAY BY PLAY ============
+  let playByPlayData = [
+    ['PLAY BY PLAY'],
+    []
+  ];
+  
+  allHoles.forEach(h=>{
+    playByPlayData.push([`Hole ${h.hole}`, `Par ${h.par}`, `${h.yards} yards`]);
+    
+    h.shots.forEach((s, idx)=>{
+      const nextShot = h.shots[idx+1];
+      let shotDesc = '';
+      let distToHole = '';
+      
+      // Get distance traveled and end lie
+      let endLie = s.lie || 'Unknown';
+      if(endLie === 'HOLED') endLie = 'in the hole';
+      else if(endLie === 'PUTT') endLie = 'Green';
+      else if(endLie === 'LEFT ROUGH' || endLie === 'RIGHT ROUGH') endLie = endLie.toLowerCase();
+      else if(endLie === 'GS BUNKER' || endLie === 'FW BUNKER') endLie = endLie.toLowerCase().replace('gs ', 'greenside ').replace('fw ', 'fairway ');
+      else endLie = endLie.toLowerCase();
+      
+      // Distance of this shot
+      let shotDist = '';
+      if(s.distanceBefore != null){
+        if(s.isPutt){
+          shotDist = s.distanceBefore + ' ft';
+        } else {
+          shotDist = s.distanceBefore + ' yds';
+        }
+      }
+      
+      // Distance remaining
+      if(s.lie === 'HOLED'){
+        distToHole = '';
+        shotDesc = `Shot ${s.shotNum} - ${shotDist} putt, in the hole`;
+      } else {
+        let remaining = '';
+        if(s.distanceAfter != null){
+          if(nextShot && nextShot.isPutt){
+            remaining = s.distanceAfter + ' ft';
+          } else if(s.isPutt){
+            remaining = s.distanceAfter + ' ft';
+          } else {
+            remaining = s.distanceAfter + ' yds';
+          }
+        } else if(nextShot){
+          if(nextShot.isPutt){
+            remaining = nextShot.distanceBefore != null ? nextShot.distanceBefore + ' ft' : '';
+          } else {
+            remaining = nextShot.distanceBefore != null ? nextShot.distanceBefore + ' yds' : '';
+          }
+        }
+        
+        if(s.isPutt){
+          shotDesc = `Shot ${s.shotNum} - ${shotDist} putt to ${remaining} from hole`;
+        } else {
+          shotDesc = `Shot ${s.shotNum} - ${shotDist} to ${endLie}, ${remaining} to hole`;
+        }
+      }
+      
+      playByPlayData.push(['', shotDesc]);
+    });
+    
+    // Add score summary
+    const scoreToPar = h.score - h.par;
+    let scoreLabel = '';
+    if(scoreToPar === -2) scoreLabel = 'Eagle';
+    else if(scoreToPar === -1) scoreLabel = 'Birdie';
+    else if(scoreToPar === 0) scoreLabel = 'Par';
+    else if(scoreToPar === 1) scoreLabel = 'Bogey';
+    else if(scoreToPar === 2) scoreLabel = 'Double Bogey';
+    else if(scoreToPar > 2) scoreLabel = `+${scoreToPar}`;
+    else scoreLabel = `${scoreToPar}`;
+    
+    playByPlayData.push(['', `Score: ${h.score} (${scoreLabel})`]);
+    playByPlayData.push([]);
+  });
+  
+  const ws6 = XLSX.utils.aoa_to_sheet(playByPlayData);
+  XLSX.utils.book_append_sheet(wb, ws6, 'Play by Play');
+  
+  // ============ SHEET 7: STROKES GAINED DATA ============
+  let sgData = [
+    ['STROKES GAINED DATA'],
+    [],
+    ['Hole', 'Par', 'Shot #', 'Start Lie', 'Start Distance', 'End Lie', 'End Distance']
+  ];
+  
+  // Helper function to categorize lies for strokes gained
+  function categorizeLie(lie, isPutt, isFromTee){
+    if(isFromTee) return 'Tee';
+    if(isPutt || lie === 'GREEN' || lie === 'PUTT') return 'Green';
+    if(lie === 'FAIRWAY') return 'Fairway';
+    if(lie === 'LEFT ROUGH' || lie === 'RIGHT ROUGH') return 'Rough';
+    if(lie === 'GS BUNKER' || lie === 'FW BUNKER') return 'Sand';
+    if(lie === 'PENALTY' || lie === 'OB' || lie === 'WATER') return 'Recovery';
+    return 'Rough'; // Default to rough for unknown
+  }
+  
+  allHoles.forEach(h=>{
+    h.shots.forEach((s, idx)=>{
+      const nextShot = h.shots[idx+1];
+      const prevShot = idx > 0 ? h.shots[idx-1] : null;
+      
+      // Start lie category
+      let startLieCat = '';
+      if(s.shotNum === 1){
+        startLieCat = 'Tee';
+      } else if(s.isPutt){
+        startLieCat = 'Green';
+      } else if(prevShot && prevShot.lie){
+        startLieCat = categorizeLie(prevShot.lie, false, false);
+      } else {
+        startLieCat = 'Unknown';
+      }
+      
+      // Start distance - yards off green, feet on green
+      let startDist = s.distanceBefore || 0;
+      let startDistDisplay = '';
+      if(s.isPutt){
+        startDistDisplay = startDist + ' ft';
+      } else {
+        startDistDisplay = startDist + ' yds';
+      }
+      
+      // End lie category
+      let endLieCat = '';
+      if(s.lie === 'HOLED'){
+        endLieCat = 'Holed';
+      } else {
+        endLieCat = categorizeLie(s.lie, s.isPutt, false);
+      }
+      
+      // End distance - yards off green, feet on green
+      let endDistDisplay = '0';
+      if(s.lie === 'HOLED'){
+        endDistDisplay = '0';
+      } else if(s.distanceAfter != null){
+        // If ending on green (next shot is putt), use feet
+        if(nextShot && nextShot.isPutt){
+          endDistDisplay = s.distanceAfter + ' ft';
+        } else if(s.isPutt){
+          endDistDisplay = s.distanceAfter + ' ft';
+        } else {
+          endDistDisplay = s.distanceAfter + ' yds';
+        }
+      } else if(nextShot){
+        if(nextShot.isPutt){
+          endDistDisplay = (nextShot.distanceBefore || 0) + ' ft';
+        } else {
+          endDistDisplay = (nextShot.distanceBefore || 0) + ' yds';
+        }
+      }
+      
+      sgData.push([
+        h.hole,
+        h.par,
+        s.shotNum,
+        startLieCat,
+        startDistDisplay,
+        endLieCat,
+        endDistDisplay
+      ]);
+    });
+  });
+  
+  const ws7 = XLSX.utils.aoa_to_sheet(sgData);
+  XLSX.utils.book_append_sheet(wb, ws7, 'Strokes Gained');
+  
+  // Create filename from player name, date, course name
+  const pName = (playerName.value||'Player').replace(/[^a-zA-Z0-9]/g, '');
+  const cName = (courseName.value||'Course').replace(/[^a-zA-Z0-9]/g, '');
+  const rDate = formatDateForFilename(roundDate.value);
+  const filename = `${pName}_${rDate}_${cName}.xlsx`;
+  
   // Save file
-  XLSX.writeFile(wb, `golf-stats-${roundDate.value||'round'}.xlsx`);
+  XLSX.writeFile(wb, filename);
 }
 
 function generateCSV(){
@@ -988,7 +1262,7 @@ function generateCSV(){
   csv+='SCORING\n';
   csv+=`Player:,${playerName.value||'Player'}\n`;
   csv+=`Course:,${courseName.value||'Course'}\n`;
-  csv+=`Date:,${roundDate.value}\n`;
+  csv+=`Date:,${formatDateForDisplay(roundDate.value)}\n`;
   csv+='\n';
   
   csv+='Hole,';
@@ -1180,15 +1454,147 @@ function generateCSV(){
   csv+=`Three-Putts,${threePlusPutts}\n`;
   csv+=`One-Putt %,${onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0}%\n`;
   
-  // SHOT BY SHOT
-  csv+='\nSHOT-BY-SHOT DATA\n';
-  csv+='Hole,Shot #,Lie,Distance Before,Distance After\n';
+  // PLAY BY PLAY
+  csv+='\nPLAY BY PLAY\n';
   allHoles.forEach(h=>{
-    h.shots.forEach(s=>{
-      const unit=s.isPutt?' ft':' yds';
-      const distBefore=s.distanceBefore!=null?s.distanceBefore+unit:'N/A';
-      const distAfter=s.distanceAfter!=null?s.distanceAfter+unit:'N/A';
-      csv+=`${h.hole},${s.shotNum},${s.lie||''},${distBefore},${distAfter}\n`;
+    csv+=`\nHole ${h.hole},Par ${h.par},${h.yards} yards\n`;
+    
+    h.shots.forEach((s, idx)=>{
+      const nextShot = h.shots[idx+1];
+      let shotDesc = '';
+      
+      // Get end lie
+      let endLie = s.lie || 'Unknown';
+      if(endLie === 'HOLED') endLie = 'in the hole';
+      else if(endLie === 'PUTT') endLie = 'green';
+      else if(endLie === 'LEFT ROUGH' || endLie === 'RIGHT ROUGH') endLie = endLie.toLowerCase();
+      else if(endLie === 'GS BUNKER' || endLie === 'FW BUNKER') endLie = endLie.toLowerCase().replace('gs ', 'greenside ').replace('fw ', 'fairway ');
+      else endLie = endLie.toLowerCase();
+      
+      // Distance of this shot
+      let shotDist = '';
+      if(s.distanceBefore != null){
+        if(s.isPutt){
+          shotDist = s.distanceBefore + ' ft';
+        } else {
+          shotDist = s.distanceBefore + ' yds';
+        }
+      }
+      
+      // Distance remaining
+      if(s.lie === 'HOLED'){
+        shotDesc = `Shot ${s.shotNum} - ${shotDist} putt in the hole`;
+      } else {
+        let remaining = '';
+        if(s.distanceAfter != null){
+          if(nextShot && nextShot.isPutt){
+            remaining = s.distanceAfter + ' ft';
+          } else if(s.isPutt){
+            remaining = s.distanceAfter + ' ft';
+          } else {
+            remaining = s.distanceAfter + ' yds';
+          }
+        } else if(nextShot){
+          if(nextShot.isPutt){
+            remaining = nextShot.distanceBefore != null ? nextShot.distanceBefore + ' ft' : '';
+          } else {
+            remaining = nextShot.distanceBefore != null ? nextShot.distanceBefore + ' yds' : '';
+          }
+        }
+        
+        if(s.isPutt){
+          shotDesc = `Shot ${s.shotNum} - ${shotDist} putt to ${remaining} from hole`;
+        } else {
+          shotDesc = `Shot ${s.shotNum} - ${shotDist} to ${endLie} - ${remaining} to hole`;
+        }
+      }
+      
+      csv+=`,${shotDesc}\n`;
+    });
+    
+    // Score summary
+    const scoreToPar = h.score - h.par;
+    let scoreLabel = '';
+    if(scoreToPar === -2) scoreLabel = 'Eagle';
+    else if(scoreToPar === -1) scoreLabel = 'Birdie';
+    else if(scoreToPar === 0) scoreLabel = 'Par';
+    else if(scoreToPar === 1) scoreLabel = 'Bogey';
+    else if(scoreToPar === 2) scoreLabel = 'Double Bogey';
+    else if(scoreToPar > 2) scoreLabel = '+' + scoreToPar;
+    else scoreLabel = scoreToPar.toString();
+    
+    csv+=`,Score: ${h.score} (${scoreLabel})\n`;
+  });
+  
+  // STROKES GAINED DATA
+  csv+='\n\nSTROKES GAINED DATA\n';
+  csv+='Hole,Par,Shot #,Start Lie,Start Distance,End Lie,End Distance\n';
+  
+  function categorizeLieCSV(lie, isPutt, isFromTee){
+    if(isFromTee) return 'Tee';
+    if(isPutt || lie === 'GREEN' || lie === 'PUTT') return 'Green';
+    if(lie === 'FAIRWAY') return 'Fairway';
+    if(lie === 'LEFT ROUGH' || lie === 'RIGHT ROUGH') return 'Rough';
+    if(lie === 'GS BUNKER' || lie === 'FW BUNKER') return 'Sand';
+    if(lie === 'PENALTY' || lie === 'OB' || lie === 'WATER') return 'Recovery';
+    return 'Rough';
+  }
+  
+  allHoles.forEach(h=>{
+    h.shots.forEach((s, idx)=>{
+      const nextShot = h.shots[idx+1];
+      const prevShot = idx > 0 ? h.shots[idx-1] : null;
+      
+      // Start lie category
+      let startLieCat = '';
+      if(s.shotNum === 1){
+        startLieCat = 'Tee';
+      } else if(s.isPutt){
+        startLieCat = 'Green';
+      } else if(prevShot && prevShot.lie){
+        startLieCat = categorizeLieCSV(prevShot.lie, false, false);
+      } else {
+        startLieCat = 'Unknown';
+      }
+      
+      // Start distance - yards off green, feet on green
+      let startDist = s.distanceBefore || 0;
+      let startDistDisplay = '';
+      if(s.isPutt){
+        startDistDisplay = startDist + ' ft';
+      } else {
+        startDistDisplay = startDist + ' yds';
+      }
+      
+      // End lie category
+      let endLieCat = '';
+      if(s.lie === 'HOLED'){
+        endLieCat = 'Holed';
+      } else {
+        endLieCat = categorizeLieCSV(s.lie, s.isPutt, false);
+      }
+      
+      // End distance - yards off green, feet on green
+      let endDistDisplay = '0';
+      if(s.lie === 'HOLED'){
+        endDistDisplay = '0';
+      } else if(s.distanceAfter != null){
+        if(nextShot && nextShot.isPutt){
+          endDistDisplay = s.distanceAfter + ' ft';
+        } else if(s.isPutt){
+          endDistDisplay = s.distanceAfter + ' ft';
+        } else {
+          endDistDisplay = s.distanceAfter + ' yds';
+        }
+      } else if(nextShot){
+        if(nextShot.isPutt){
+          endDistDisplay = (nextShot.distanceBefore || 0) + ' ft';
+        } else {
+          endDistDisplay = (nextShot.distanceBefore || 0) + ' yds';
+        }
+      }
+      
+      csv+=`${h.hole},${h.par},${s.shotNum},${startLieCat},${startDistDisplay},${endLieCat},${endDistDisplay}\n`;
     });
   });
   
