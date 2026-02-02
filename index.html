@@ -73,7 +73,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker</div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.2.4</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -233,7 +233,7 @@ function goBack(){
   
   // FROM PAR PAGE - Go back to round info OR undo previous hole
   if(currentPage==='parPage'){
-    if(currentHole>1&&lastCompletedHole){
+    if(currentHole>1&&allHoles.length>0){
       undoLastHole();
     }else{
       show('roundPage');
@@ -258,6 +258,34 @@ function goBack(){
   
   // FROM DISTANCE PAGE - Go back to lie selection for same shot
   else if(currentPage==='distancePage'){
+    // Remove the next shot that was created when we selected a lie
+    if(currentHoleShots.length>shots){
+      currentHoleShots.pop();
+    }
+    shots--;
+    
+    // Now reverse the stats that were counted for the CURRENT shot's lie
+    const currentShot=currentHoleShots[currentHoleShots.length-1];
+    if(currentShot){
+      // Reverse fairway stats if they were counted
+      if(currentShot.fwCounted){
+        console.log('BACK: Reversing fairway stats for: '+currentShot.lie);
+        fwOpp--;
+        if(currentShot.lie==='FAIRWAY') fwHit--;
+        if(currentShot.lie==='LEFT ROUGH') fwLeft--;
+        if(currentShot.lie==='RIGHT ROUGH') fwRight--;
+        currentShot.fwCounted=false;
+        console.log('BACK: fwOpp='+fwOpp);
+      }
+      // Reverse bunker stats if they were counted
+      if(currentShot.bunkerCounted){
+        console.log('BACK: Reversing bunker opp! bunOpp before: '+bunOpp);
+        bunOpp--;
+        currentShot.bunkerCounted=false;
+        console.log('BACK: bunOpp after: '+bunOpp);
+      }
+    }
+    
     lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
     show('liePage');
   }
@@ -269,6 +297,7 @@ function goBack(){
   
   // FROM PUTT PAGE - Go back to lie page of last regular shot
   else if(currentPage==='puttPage'){
+    // Just remove the putt and go back - don't touch girThisHole
     if(currentHoleShots.length>0) currentHoleShots.pop();
     lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
     show('liePage');
@@ -276,11 +305,14 @@ function goBack(){
 }
 
 function undoLastHole(){
-  // Restore previous hole state
+  // Get the last completed hole from allHoles
+  const lastHole=allHoles[allHoles.length-1];
+  if(!lastHole) return;
+  
+  // Remove it from allHoles
   currentHole--;
   allHoles.pop();
   
-  const lastHole=lastCompletedHole;
   const lastScore=lastHole.score;
   
   // Reverse all stats
@@ -300,10 +332,13 @@ function undoLastHole(){
       hadGIR=true;
       gir--;
       firstPuttDist=s.distanceAfter||0;
+      console.log('UNDO: Reversing GIR. gir is now: '+gir+', removing proximity: '+firstPuttDist);
     }
   });
   if(hadGIR&&firstPuttDist>0){
+    console.log('UNDO: girFirstPuttDist before: '+girFirstPuttDist);
     girFirstPuttDist-=firstPuttDist;
+    console.log('UNDO: girFirstPuttDist after: '+girFirstPuttDist);
     girPutts-=lastHole.putts;
   }
   
@@ -349,7 +384,8 @@ function undoLastHole(){
   currentHoleShots=JSON.parse(JSON.stringify(lastHole.shots));
   shots=lastHole.score-lastHole.putts;
   putts=lastHole.putts-1;
-  girThisHole=hadGIR;
+  girThisHole=false; // Always reset so hole can be counted fresh when replayed
+  firstPuttThisHole=null;
   
   // Remove the holed putt
   currentHoleShots.pop();
@@ -385,7 +421,6 @@ let onePuttMade=0;
 let allHoles=[];
 let currentHoleData={};
 let currentHoleShots=[];
-let lastCompletedHole=null;
 
 function selectPresetHoles(n){customHoles.value='';totalHoles=n;}
 function enterScoring(){
@@ -410,17 +445,50 @@ function ordinal(n){return n===1?'1st':n===2?'2nd':n===3?'3rd':`${n}th`;}
 
 function selectLie(lie){
   const lastShot=currentHoleShots[currentHoleShots.length-1];
+  
+  // If we're changing the lie (shot already has a lie), reverse the old stats first
+  if(lastShot.lie&&lastShot.lie!==lie){
+    console.log('Changing lie from '+lastShot.lie+' to '+lie+', reversing old stats');
+    // Reverse fairway stats if they were counted
+    if(lastShot.fwCounted){
+      console.log('Reversing old fairway stats');
+      fwOpp--;
+      if(lastShot.lie==='FAIRWAY') fwHit--;
+      if(lastShot.lie==='LEFT ROUGH') fwLeft--;
+      if(lastShot.lie==='RIGHT ROUGH') fwRight--;
+      lastShot.fwCounted=false;
+    }
+    // Reverse bunker stats if they were counted
+    if(lastShot.bunkerCounted){
+      console.log('Reversing old bunker stats, bunOpp before: '+bunOpp);
+      bunOpp--;
+      lastShot.bunkerCounted=false;
+      console.log('bunOpp after reversal: '+bunOpp);
+    }
+  }
+  
   lastShot.lie=lie;
   
-  if(shots===1&&(par===4||par===5)){
+  // Count fairway stats for tee shots on par 4/5 - only once
+  if(shots===1&&(par===4||par===5)&&!lastShot.fwCounted){
+    console.log('Counting fairway stats for: '+lie);
     fwOpp++;
-    if(lie==='FAIRWAY')fwHit++;
-    if(lie==='LEFT ROUGH')fwLeft++;
-    if(lie==='RIGHT ROUGH')fwRight++;
+    if(lie==='FAIRWAY') fwHit++;
+    if(lie==='LEFT ROUGH') fwLeft++;
+    if(lie==='RIGHT ROUGH') fwRight++;
+    lastShot.fwCounted=true;
+    console.log('fwOpp='+fwOpp+', fwHit='+fwHit);
   }
-  if(lie==='GS BUNKER'||lie==='FW BUNKER') bunOpp++;
+  
+  // Count bunker opportunities - only once
+  if((lie==='GS BUNKER'||lie==='FW BUNKER')&&!lastShot.bunkerCounted){
+    console.log('Counting bunker opp! bunOpp before: '+bunOpp);
+    bunOpp++;
+    lastShot.bunkerCounted=true;
+    console.log('bunOpp after: '+bunOpp);
+  }
+  
   if(lie==='GREEN'){
-    if(shots<=par-2){gir++;girThisHole=true;} else scrOpp++;
     putts=0;
     puttTitle.innerText='Putt 1';
     
@@ -435,9 +503,32 @@ function selectLie(lie){
     else defaultPutt=40;
     
     lastShot.distanceAfter=defaultPutt;
+    
+    // Count GIR stats - only once per hole
+    console.log('Selecting GREEN - before count: gir='+gir+', girThisHole='+girThisHole);
+    if(shots<=par-2){
+      if(!girThisHole){
+        gir++;
+        console.log('Counted GIR! gir is now: '+gir);
+      }else{
+        console.log('Already counted GIR for this hole, skipping');
+      }
+      girThisHole=true; // Mark that we hit GIR on this hole
+    }else{
+      if(!girThisHole){
+        scrOpp++;
+        console.log('Not GIR, counted scrambling opp. scrOpp='+scrOpp);
+      }
+    }
+    
+    // Only count onePuttOpp if we haven't already
+    const hasPuttShot=currentHoleShots.some(s=>s.isPutt);
+    if(!hasPuttShot){
+      onePuttOpp++;
+    }
+    
     currentHoleShots.push({shotNum:shots+1,lie:'PUTT',distanceBefore:defaultPutt,distanceAfter:null,isPutt:true});
     puttDistance.value=defaultPutt;
-    onePuttOpp++;
     show('puttPage');
     return;
   }
@@ -474,6 +565,9 @@ function selectLie(lie){
 function confirmDistance(){
   const lastShot=currentHoleShots[currentHoleShots.length-1];
   lastShot.distanceBefore=parseInt(shotDistance.value||0);
+  
+  // Don't count stats here - they're counted in selectLie when choosing the lie
+  
   show('liePage');
 }
 
@@ -515,7 +609,12 @@ function holeOut(){
   putts++;
   if(putts>=3) threePlusPutts++;
   if(girThisHole) girPutts+=putts;
-  if(firstPuttThisHole!==null){girFirstPuttDist+=firstPuttThisHole;firstPuttThisHole=null;}
+  if(firstPuttThisHole!==null){
+    console.log('Adding to girFirstPuttDist: '+firstPuttThisHole+', was: '+girFirstPuttDist);
+    girFirstPuttDist+=firstPuttThisHole;
+    console.log('girFirstPuttDist is now: '+girFirstPuttDist);
+    firstPuttThisHole=null;
+  }
   if(shots>par-2&&putts===1) scr++;
   
   // Check if we got up and down from bunker (1 putt after bunker shot)
@@ -533,9 +632,6 @@ function finishHole(){
   currentHoleData.score=holeStrokes;
   currentHoleData.putts=putts;
   currentHoleData.shots=currentHoleShots;
-  
-  // Store as last completed hole for undo
-  lastCompletedHole=JSON.parse(JSON.stringify(currentHoleData));
   
   allHoles.push(currentHoleData);
   
