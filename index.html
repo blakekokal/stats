@@ -73,7 +73,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.2.4</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.2.6</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -264,7 +264,8 @@ function goBack(){
     }
     shots--;
     
-    // Now reverse the stats that were counted for the CURRENT shot's lie
+    // Reverse the stats but DON'T clear the flags
+    // This way if they select the same lie again, it won't double-count
     const currentShot=currentHoleShots[currentHoleShots.length-1];
     if(currentShot){
       // Reverse fairway stats if they were counted
@@ -274,14 +275,14 @@ function goBack(){
         if(currentShot.lie==='FAIRWAY') fwHit--;
         if(currentShot.lie==='LEFT ROUGH') fwLeft--;
         if(currentShot.lie==='RIGHT ROUGH') fwRight--;
-        currentShot.fwCounted=false;
+        // Don't clear the flag - keep it true
         console.log('BACK: fwOpp='+fwOpp);
       }
       // Reverse bunker stats if they were counted
       if(currentShot.bunkerCounted){
         console.log('BACK: Reversing bunker opp! bunOpp before: '+bunOpp);
         bunOpp--;
-        currentShot.bunkerCounted=false;
+        // Don't clear the flag - keep it true
         console.log('BACK: bunOpp after: '+bunOpp);
       }
     }
@@ -446,7 +447,7 @@ function ordinal(n){return n===1?'1st':n===2?'2nd':n===3?'3rd':`${n}th`;}
 function selectLie(lie){
   const lastShot=currentHoleShots[currentHoleShots.length-1];
   
-  // If we're changing the lie (shot already has a lie), reverse the old stats first
+  // If we're changing the lie, reverse the old stats first
   if(lastShot.lie&&lastShot.lie!==lie){
     console.log('Changing lie from '+lastShot.lie+' to '+lie+', reversing old stats');
     // Reverse fairway stats if they were counted
@@ -469,7 +470,7 @@ function selectLie(lie){
   
   lastShot.lie=lie;
   
-  // Count fairway stats for tee shots on par 4/5 - only once
+  // Count fairway stats for tee shots on par 4/5 - only if not already counted
   if(shots===1&&(par===4||par===5)&&!lastShot.fwCounted){
     console.log('Counting fairway stats for: '+lie);
     fwOpp++;
@@ -478,14 +479,18 @@ function selectLie(lie){
     if(lie==='RIGHT ROUGH') fwRight++;
     lastShot.fwCounted=true;
     console.log('fwOpp='+fwOpp+', fwHit='+fwHit);
+  }else if(shots===1&&(par===4||par===5)&&lastShot.fwCounted){
+    console.log('Fairway stat already counted for this shot, skipping');
   }
   
-  // Count bunker opportunities - only once
+  // Count bunker opportunities - only if not already counted
   if((lie==='GS BUNKER'||lie==='FW BUNKER')&&!lastShot.bunkerCounted){
     console.log('Counting bunker opp! bunOpp before: '+bunOpp);
     bunOpp++;
     lastShot.bunkerCounted=true;
     console.log('bunOpp after: '+bunOpp);
+  }else if((lie==='GS BUNKER'||lie==='FW BUNKER')&&lastShot.bunkerCounted){
+    console.log('Bunker stat already counted for this shot, skipping');
   }
   
   if(lie==='GREEN'){
