@@ -1,4 +1,4 @@
-<!DOCTYPE html> 
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -51,9 +51,11 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 
 .hole{background:#424242;}
 .green{background:#43a047;outline:2px solid #a5d6a7;}
+.green-miss{background:#2e7d32;font-size:13px;}
 .fairway{background:#81c784;}
 .bunker{background:#fbc02d;color:#000;}
 .rough{background:#1b5e20;}
+.recovery{background:#e65100;}
 .danger{background:#c62828;}
 .water{background:#1565c0;}
 
@@ -74,7 +76,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.3.9</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.4.7</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -108,7 +110,15 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="liePage" class="page">
   <h3 id="lieTitle">Where did your tee shot end?</h3>
   <button class="hole" onclick="highlight(this);selectLie('HOLE')">HOLE</button>
-  <button class="green big" onclick="highlight(this);selectLie('GREEN')">GREEN</button>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;max-width:320px;">
+    <button class="green-miss" style="width:80px;height:36px;" onclick="highlight(this);selectLie('MISS LONG')">LONG</button>
+    <div style="display:flex;gap:6px;align-items:center;width:100%;">
+      <button class="green-miss" style="width:60px;height:50px;" onclick="highlight(this);selectLie('MISS LEFT')">LEFT</button>
+      <button class="green big" style="flex:1;height:70px;" onclick="highlight(this);selectLie('GREEN')">GREEN</button>
+      <button class="green-miss" style="width:60px;height:50px;" onclick="highlight(this);selectLie('MISS RIGHT')">RIGHT</button>
+    </div>
+    <button class="green-miss" style="width:80px;height:36px;" onclick="highlight(this);selectLie('MISS SHORT')">SHORT</button>
+  </div>
   <div class="row">
     <button class="bunker" onclick="highlight(this);selectLie('GS BUNKER')">GS BUNKER</button>
     <button class="bunker" onclick="highlight(this);selectLie('FW BUNKER')">FW BUNKER</button>
@@ -120,6 +130,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
   </div>
   <div class="row">
     <button class="danger" onclick="highlight(this);selectLie('OB')">OB</button>
+    <button class="recovery" onclick="highlight(this);selectLie('RECOVERY')">RECOVERY</button>
     <button class="water" onclick="highlight(this);selectLie('WATER')">WATER</button>
   </div>
   <div class="back-wrap"><button class="back" onclick="goBack()">BACK</button></div>
@@ -145,12 +156,21 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
   <div class="back-wrap"><button class="back" onclick="goBack()">BACK</button></div>
 </div>
 
+<div id="recoveryPage" class="page">
+  <h3>Recovery - Which direction?</h3>
+  <div class="row">
+    <button class="rough" onclick="handleRecovery('LEFT')">LEFT</button>
+    <button class="rough" onclick="handleRecovery('RIGHT')">RIGHT</button>
+  </div>
+  <div class="back-wrap"><button class="back" onclick="goBack()">BACK</button></div>
+</div>
+
 <div id="puttPage" class="page">
   <div id="puttShotNum" style="font-size:14px;opacity:.7;">Shot 3</div>
   <h3 id="puttTitle">Putt 1</h3>
-  <div class="input-wrap"><input id="puttDistance" value="30"><span>feet</span></div>
+  <div class="input-wrap"><input id="puttDistance" type="number" value="30" oninput="this.setAttribute('value', this.value)"><span>feet</span></div>
   <button class="holes9" onclick="nextPutt()">CONFIRM PUTT</button>
-  <button class="hole" onclick="holeOut()">HOLED OUT</button>
+  <button class="hole" onclick="holeOut()">HOLED IT!</button>
   <div class="back-wrap"><button class="back" onclick="goBack()">BACK</button></div>
 </div>
 
@@ -430,7 +450,9 @@ function undoLastHole(){
   // Go to last putt
   puttTitle.innerText=`Putt ${putts+1}`;
   const lastPutt=currentHoleShots[currentHoleShots.length-1];
-  puttDistance.value=lastPutt.distanceBefore||3;
+  const puttInput = document.getElementById('puttDistance');
+  puttInput.value = lastPutt.distanceBefore||3;
+  puttInput.setAttribute('value', lastPutt.distanceBefore||3);
   holeHeader.innerText=`Hole ${currentHole}`;
   show('puttPage');
 }
@@ -444,6 +466,7 @@ let totalPar=0,totalStrokes=0;
 let par=4,shots=0,putts=0;
 let fwOpp=0,fwHit=0,fwLeft=0,fwRight=0;
 let gir=0,girFirstPuttDist=0;
+let girOpp=0,missLeft=0,missRight=0,missShort=0,missLong=0;
 let scrOpp=0,scr=0;
 let bunOpp=0,bun=0;
 let p3=0,p4=0,p5=0,c3=0,c4=0,c5=0;
@@ -532,9 +555,10 @@ function selectLie(lie){
   if(shots===1&&(par===4||par===5)&&!fwCountedThisHole){
     console.log('Counting fairway stats for: '+lie);
     fwOpp++;
-    if(lie==='FAIRWAY') fwHit++;
+    if(lie==='FAIRWAY'||lie==='GREEN') fwHit++;  // GREEN counts as hitting fairway
     if(lie==='LEFT ROUGH') fwLeft++;
     if(lie==='RIGHT ROUGH') fwRight++;
+    // RECOVERY counts as missing fairway (no fwHit, fwLeft, or fwRight increment)
     fwCountedThisHole=true;
     lastShot.fwCounted=true;
     console.log('fwOpp='+fwOpp+', fwHit='+fwHit+', set fwCountedThisHole=true');
@@ -593,7 +617,9 @@ function selectLie(lie){
     }
     
     currentHoleShots.push({shotNum:shots+1,lie:'PUTT',distanceBefore:defaultPutt,distanceAfter:null,isPutt:true,fwCounted:false,bunkerCounted:false});
-    puttDistance.value=defaultPutt;
+    const puttInput = document.getElementById('puttDistance');
+    puttInput.value = defaultPutt;
+    puttInput.setAttribute('value', defaultPutt);
     puttShotNum.innerText=`Shot ${shots+1}`;
     show('puttPage');
     return;
@@ -605,6 +631,33 @@ function selectLie(lie){
   }
   if(lie==='OB'){
     show('obPenaltyPage');
+    return;
+  }
+  if(lie==='RECOVERY'){
+    show('recoveryPage');
+    return;
+  }
+  // Handle green misses - count as missed GIR and scrambling opportunity
+  if(lie==='MISS LEFT'||lie==='MISS RIGHT'||lie==='MISS SHORT'||lie==='MISS LONG'){
+    lastShot.lie=lie;
+    // Count green miss direction
+    girOpp++;
+    if(lie==='MISS LEFT') missLeft++;
+    if(lie==='MISS RIGHT') missRight++;
+    if(lie==='MISS SHORT') missShort++;
+    if(lie==='MISS LONG') missLong++;
+    // Count scrambling opportunity
+    if(!girThisHole && !scrCountedThisHole){
+      scrOpp++;
+      scrCountedThisHole=true;
+      console.log('Green miss - counted scrambling opp. scrOpp='+scrOpp);
+    }
+    shots++;
+    currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:15,distanceAfter:null,isPutt:false,fwCounted:false,bunkerCounted:false});
+    distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
+    shotDistance.value=15;
+    lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
+    show('distancePage');
     return;
   }
   if(lie==='GS BUNKER'){
@@ -664,53 +717,123 @@ function handlePenalty(choice){
   show('distancePage');
 }
 
+function handleRecovery(direction){
+  const lastShot=currentHoleShots[currentHoleShots.length-1];
+  lastShot.lie='RECOVERY';
+  
+  // Count as missed fairway left or right on tee shots
+  if(shots===1&&(par===4||par===5)&&!fwCountedThisHole){
+    fwOpp++;
+    if(direction==='LEFT') fwLeft++;
+    if(direction==='RIGHT') fwRight++;
+    fwCountedThisHole=true;
+    lastShot.fwCounted=true;
+  }
+  
+  // Move to next shot
+  shots++;
+  const lastDistance=lastShot.distanceBefore||100;
+  currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:lastDistance,distanceAfter:null,isPutt:false,fwCounted:false,bunkerCounted:false});
+  distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
+  shotDistance.value=lastDistance;
+  lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
+  show('distancePage');
+}
+
 function nextPutt(){
   totalPutts++;
-  const dist=parseInt(puttDistance.value||0);
-  const lastShot=currentHoleShots[currentHoleShots.length-1];
-  if(putts===0&&girThisHole) firstPuttThisHole=lastShot.distanceBefore;
-  lastShot.distanceAfter=dist;
+  const distInput = document.getElementById('puttDistance');
+  // The input value is the distance of THIS putt that was just taken
+  const thisPuttDist = parseInt(distInput.value) || 0;
+  console.log('nextPutt - this putt was from:', thisPuttDist, 'ft');
+  
+  const lastShot = currentHoleShots[currentHoleShots.length-1];
+  
+  // Update the lastShot's distanceBefore to match what user entered (in case they changed it)
+  lastShot.distanceBefore = thisPuttDist;
+  
+  if(putts===0 && girThisHole) firstPuttThisHole = thisPuttDist;
+  
+  // Set the PREVIOUS putt's distanceAfter to this putt's distanceBefore
+  // (The previous putt ended where this putt started)
+  if(currentHoleShots.length >= 2){
+    const prevShot = currentHoleShots[currentHoleShots.length - 2];
+    if(prevShot.isPutt && prevShot.distanceAfter === null){
+      prevShot.distanceAfter = thisPuttDist;
+      console.log('Set previous putt distanceAfter to:', thisPuttDist);
+    }
+  }
+  
   putts++;
-  puttTitle.innerText=`Putt ${putts+1}`;
-  puttShotNum.innerText=`Shot ${shots+putts+1}`;
-  currentHoleShots.push({shotNum:shots+putts,lie:'PUTT',distanceBefore:dist,distanceAfter:null,isPutt:true,fwCounted:false,bunkerCounted:false});
-  puttDistance.value=3;
+  puttTitle.innerText = `Putt ${putts+1}`;
+  puttShotNum.innerText = `Shot ${shots+putts+1}`;
+  
+  // Clear input and wait for user to enter next putt distance
+  // Default to 3 as a reasonable short putt
+  distInput.value = 3;
+  distInput.setAttribute('value', 3);
+  
+  // Create placeholder for next putt
+  const newShot = {shotNum:shots+putts+1, lie:'PUTT', distanceBefore:3, distanceAfter:null, isPutt:true, fwCounted:false, bunkerCounted:false};
+  currentHoleShots.push(newShot);
+  
+  console.log('Ready for putt', putts+1);
 }
 
 function holeOut(){
   totalPutts++;
-  const dist=parseInt(puttDistance.value||0);
-  const lastShot=currentHoleShots[currentHoleShots.length-1];
+  const distInput = document.getElementById('puttDistance');
+  const thisPuttDist = parseInt(distInput.value) || 0;
+  console.log('holeOut - this putt was from:', thisPuttDist, 'ft');
+  
+  const lastShot = currentHoleShots[currentHoleShots.length-1];
+  
+  // Update the lastShot's distanceBefore to match what user entered
+  lastShot.distanceBefore = thisPuttDist;
+  
   if(putts===0){
     onePuttMade++;
-    if(girThisHole) firstPuttThisHole=lastShot.distanceBefore;
+    if(girThisHole) firstPuttThisHole = thisPuttDist;
   }
-  lastShot.distanceAfter=0;
-  lastShot.lie='HOLED';
+  
+  // Ball went in the hole
+  lastShot.distanceAfter = 0;
+  lastShot.lie = 'HOLED';
+  
+  // Now we need to set the distanceAfter for the PREVIOUS putt (if there was one)
+  // The previous putt's distanceAfter = this putt's distanceBefore
+  if(currentHoleShots.length >= 2){
+    const prevShot = currentHoleShots[currentHoleShots.length - 2];
+    if(prevShot.isPutt && prevShot.distanceAfter === null){
+      prevShot.distanceAfter = thisPuttDist;
+      console.log('Set previous putt distanceAfter to:', thisPuttDist);
+    }
+  }
+  
   putts++;
-  if(putts>=3) threePlusPutts++;
-  if(girThisHole) girPutts+=putts;
-  if(firstPuttThisHole!==null){
-    console.log('Adding to girFirstPuttDist: '+firstPuttThisHole+', was: '+girFirstPuttDist);
-    girFirstPuttDist+=firstPuttThisHole;
-    console.log('girFirstPuttDist is now: '+girFirstPuttDist);
-    firstPuttThisHole=null;
+  if(putts >= 3) threePlusPutts++;
+  if(girThisHole) girPutts += putts;
+  if(firstPuttThisHole !== null){
+    console.log('Adding to girFirstPuttDist:', firstPuttThisHole, ', was:', girFirstPuttDist);
+    girFirstPuttDist += firstPuttThisHole;
+    console.log('girFirstPuttDist is now:', girFirstPuttDist);
+    firstPuttThisHole = null;
   }
   
   // Check if we got up and down from bunker (1 putt after bunker shot)
-  let hitFromBunker=false;
-  currentHoleShots.forEach(s=>{
-    if(s.lie&&(s.lie.includes('BUNKER'))) hitFromBunker=true;
+  let hitFromBunker = false;
+  currentHoleShots.forEach(s => {
+    if(s.lie && s.lie.includes('BUNKER')) hitFromBunker = true;
   });
   
-  // Count scramble success - either missed GIR and 1-putted, OR got up and down from bunker
-  if(putts===1 && scrCountedThisHole){
+  // Count scramble success
+  if(putts === 1 && scrCountedThisHole){
     scr++;
-    console.log('Scramble success! scr='+scr);
+    console.log('Scramble success! scr=' + scr);
   }
   
   // Count bunker save
-  if(hitFromBunker&&putts===1) bun++;
+  if(hitFromBunker && putts === 1) bun++;
   
   finishHole();
 }
@@ -981,6 +1104,12 @@ function exportToExcel(){
     ['GIR', `${gir}/${totalHoles}`, totalHoles?Math.round(gir/totalHoles*100)+'%':'0%'],
     ['Proximity when GIR', (gir?Math.round(girFirstPuttDist/gir):0)+' ft'],
     [],
+    ['MISSED GREENS'],
+    ['Missed Short', missShort, girOpp?Math.round(missShort/girOpp*100)+'%':'0%'],
+    ['Missed Long', missLong, girOpp?Math.round(missLong/girOpp*100)+'%':'0%'],
+    ['Missed Left', missLeft, girOpp?Math.round(missLeft/girOpp*100)+'%':'0%'],
+    ['Missed Right', missRight, girOpp?Math.round(missRight/girOpp*100)+'%':'0%'],
+    [],
     ['Approach by Distance', '# of Shots', 'Avg Proximity']
   ];
   
@@ -1005,7 +1134,7 @@ function exportToExcel(){
   const ws3 = XLSX.utils.aoa_to_sheet(approachData);
   XLSX.utils.book_append_sheet(wb, ws3, 'Approach');
   
-  // ============ SHEET 4: SHORT GAME ============
+  // ============ SHEET 4: AROUND THE GREEN ============
   let bunkerShots=[];
   allHoles.forEach(h=>{
     h.shots.forEach((s,idx)=>{
@@ -1040,13 +1169,13 @@ function exportToExcel(){
   });
   
   let shortGameData = [
-    ['SHORT GAME'],
+    ['AROUND THE GREEN'],
     [],
     ['Scrambling', `${scr}/${scrOpp}`, scrOpp?Math.round(scr/scrOpp*100)+'%':'0%'],
     ['Up & Down from Bunkers', `${bun}/${bunOpp}`, bunOpp?Math.round(bun/bunOpp*100)+'%':'0%'],
     ['Avg Proximity from Bunkers', avgBunkerProx+' ft', bunkerShots.length+' shots'],
     [],
-    ['Short Game by Distance', '# of Shots', 'Avg Proximity']
+    ['Around the Green by Distance', '# of Shots', 'Avg Proximity']
   ];
   
   shortRanges.forEach(r=>{
@@ -1055,11 +1184,11 @@ function exportToExcel(){
   });
   
   shortGameData.push([]);
-  shortGameData.push(['PENALTIES ON SHORT GAME']);
-  shortGameData.push(['Short Game Penalties', shortGamePenalties]);
+  shortGameData.push(['PENALTIES AROUND THE GREEN']);
+  shortGameData.push(['Around the Green Penalties', shortGamePenalties]);
   
   const ws4 = XLSX.utils.aoa_to_sheet(shortGameData);
-  XLSX.utils.book_append_sheet(wb, ws4, 'Short Game');
+  XLSX.utils.book_append_sheet(wb, ws4, 'Around the Green');
   
   // ============ SHEET 5: PUTTING ============
   let puttingData = [
@@ -1092,9 +1221,13 @@ function exportToExcel(){
       // Get distance traveled and end lie
       let endLie = s.lie || 'Unknown';
       if(endLie === 'HOLED') endLie = 'in the hole';
-      else if(endLie === 'PUTT') endLie = 'Green';
+      else if(endLie === 'PUTT') endLie = 'green';
       else if(endLie === 'LEFT ROUGH' || endLie === 'RIGHT ROUGH') endLie = endLie.toLowerCase();
       else if(endLie === 'GS BUNKER' || endLie === 'FW BUNKER') endLie = endLie.toLowerCase().replace('gs ', 'greenside ').replace('fw ', 'fairway ');
+      else if(endLie === 'MISS LEFT') endLie = 'left of green';
+      else if(endLie === 'MISS RIGHT') endLie = 'right of green';
+      else if(endLie === 'MISS SHORT') endLie = 'short of green';
+      else if(endLie === 'MISS LONG') endLie = 'long of green';
       else endLie = endLie.toLowerCase();
       
       // Distance of this shot
@@ -1161,7 +1294,7 @@ function exportToExcel(){
   let sgData = [
     ['STROKES GAINED DATA'],
     [],
-    ['Hole', 'Par', 'Shot #', 'Start Lie', 'Start Distance', 'End Lie', 'End Distance']
+    ['Hole', 'Par', 'Shot #', 'Start Distance', 'Start Lie', 'End Lie', 'End Distance']
   ];
   
   // Helper function to categorize lies for strokes gained
@@ -1170,8 +1303,9 @@ function exportToExcel(){
     if(isPutt || lie === 'GREEN' || lie === 'PUTT') return 'Green';
     if(lie === 'FAIRWAY') return 'Fairway';
     if(lie === 'LEFT ROUGH' || lie === 'RIGHT ROUGH') return 'Rough';
+    if(lie === 'MISS LEFT' || lie === 'MISS RIGHT' || lie === 'MISS SHORT' || lie === 'MISS LONG') return 'Rough';
     if(lie === 'GS BUNKER' || lie === 'FW BUNKER') return 'Sand';
-    if(lie === 'PENALTY' || lie === 'OB' || lie === 'WATER') return 'Recovery';
+    if(lie === 'RECOVERY' || lie === 'PENALTY' || lie === 'OB' || lie === 'WATER') return 'Recovery';
     return 'Rough'; // Default to rough for unknown
   }
   
@@ -1234,8 +1368,8 @@ function exportToExcel(){
         h.hole,
         h.par,
         s.shotNum,
-        startLieCat,
         startDistDisplay,
+        startLieCat,
         endLieCat,
         endDistDisplay
       ]);
@@ -1331,6 +1465,12 @@ function generateCSV(){
   csv+=`GIR,${gir}/${totalHoles},${totalHoles?Math.round(gir/totalHoles*100):0}%\n`;
   csv+=`Proximity when GIR,${gir?Math.round(girFirstPuttDist/gir):0} ft\n`;
   csv+='\n';
+  csv+='MISSED GREENS\n';
+  csv+=`Missed Short,${missShort},${girOpp?Math.round(missShort/girOpp*100):0}%\n`;
+  csv+=`Missed Long,${missLong},${girOpp?Math.round(missLong/girOpp*100):0}%\n`;
+  csv+=`Missed Left,${missLeft},${girOpp?Math.round(missLeft/girOpp*100):0}%\n`;
+  csv+=`Missed Right,${missRight},${girOpp?Math.round(missRight/girOpp*100):0}%\n`;
+  csv+='\n';
   
   let par3ApproachDist=[],par4ApproachDist=[],par5ApproachDist=[];
   let par3Approaches=[],par4Approaches=[],par5Approaches=[];
@@ -1400,8 +1540,8 @@ function generateCSV(){
   csv+=`Avg Par 5 Approach Distance,${avgPar5Dist} yds,${par5ApproachDist.length} shots\n`;
   csv+=`Avg Par 5 Approach Proximity,${avgPar5} ft\n`;
   
-  // SHORT GAME
-  csv+='\nSHORT GAME\n';
+  // AROUND THE GREEN
+  csv+='\nAROUND THE GREEN\n';
   csv+=`Scrambling,${scr}/${scrOpp},${scrOpp?Math.round(scr/scrOpp*100):0}%\n`;
   csv+=`Up & Down from Bunkers,${bun}/${bunOpp},${bunOpp?Math.round(bun/bunOpp*100):0}%\n`;
   
@@ -1419,7 +1559,7 @@ function generateCSV(){
   const avgBunkerProx=bunkerShots.length?Math.round(bunkerShots.reduce((a,b)=>a+b,0)/bunkerShots.length):0;
   csv+=`Avg Proximity from Bunkers,${avgBunkerProx} ft,${bunkerShots.length} shots\n`;
   csv+='\n';
-  csv+='Short Game by Distance,# of Shots,Avg Proximity\n';
+  csv+='Around the Green by Distance,# of Shots,Avg Proximity\n';
   
   const shortRanges=[
     {min:0,max:25,shots:[],label:'0-25 yards'},
@@ -1469,6 +1609,10 @@ function generateCSV(){
       else if(endLie === 'PUTT') endLie = 'green';
       else if(endLie === 'LEFT ROUGH' || endLie === 'RIGHT ROUGH') endLie = endLie.toLowerCase();
       else if(endLie === 'GS BUNKER' || endLie === 'FW BUNKER') endLie = endLie.toLowerCase().replace('gs ', 'greenside ').replace('fw ', 'fairway ');
+      else if(endLie === 'MISS LEFT') endLie = 'left of green';
+      else if(endLie === 'MISS RIGHT') endLie = 'right of green';
+      else if(endLie === 'MISS SHORT') endLie = 'short of green';
+      else if(endLie === 'MISS LONG') endLie = 'long of green';
       else endLie = endLie.toLowerCase();
       
       // Distance of this shot
@@ -1528,15 +1672,16 @@ function generateCSV(){
   
   // STROKES GAINED DATA
   csv+='\n\nSTROKES GAINED DATA\n';
-  csv+='Hole,Par,Shot #,Start Lie,Start Distance,End Lie,End Distance\n';
+  csv+='Hole,Par,Shot #,Start Distance,Start Lie,End Lie,End Distance\n';
   
   function categorizeLieCSV(lie, isPutt, isFromTee){
     if(isFromTee) return 'Tee';
     if(isPutt || lie === 'GREEN' || lie === 'PUTT') return 'Green';
     if(lie === 'FAIRWAY') return 'Fairway';
     if(lie === 'LEFT ROUGH' || lie === 'RIGHT ROUGH') return 'Rough';
+    if(lie === 'MISS LEFT' || lie === 'MISS RIGHT' || lie === 'MISS SHORT' || lie === 'MISS LONG') return 'Rough';
     if(lie === 'GS BUNKER' || lie === 'FW BUNKER') return 'Sand';
-    if(lie === 'PENALTY' || lie === 'OB' || lie === 'WATER') return 'Recovery';
+    if(lie === 'RECOVERY' || lie === 'PENALTY' || lie === 'OB' || lie === 'WATER') return 'Recovery';
     return 'Rough';
   }
   
@@ -1594,7 +1739,7 @@ function generateCSV(){
         }
       }
       
-      csv+=`${h.hole},${h.par},${s.shotNum},${startLieCat},${startDistDisplay},${endLieCat},${endDistDisplay}\n`;
+      csv+=`${h.hole},${h.par},${s.shotNum},${startDistDisplay},${startLieCat},${endLieCat},${endDistDisplay}\n`;
     });
   });
   
@@ -1604,4 +1749,3 @@ function generateCSV(){
 
 </body>
 </html>
-
