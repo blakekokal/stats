@@ -2,45 +2,47 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Golf Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-body{margin:0;background:#181818;color:#fff;font-family:system-ui,sans-serif;overflow:hidden;}
+html,body{margin:0;padding:0;height:100%;overflow:hidden;}
+body{background:#181818;color:#fff;font-family:system-ui,sans-serif;}
 #scoreBar{position:fixed;top:0;left:0;right:0;height:44px;background:#111;display:none;align-items:center;justify-content:center;font-weight:600;z-index:10;}
 
 /* ALL NON-START PAGES: BUTTONS STACK FROM BOTTOM CENTER UP */
 .page{
   display:none;
-  min-height:100vh;
-  padding:72px 16px 120px;
+  height:100%;
+  padding:50px 16px 70px;
   box-sizing:border-box;
   flex-direction:column;
   align-items:center;
-  justify-content:flex-end;
-  gap:10px;
+  justify-content:center;
+  gap:8px;
   text-align:center;
-  overflow:hidden;
+  overflow-y:auto;
 }
 .page.active{display:flex;}
 
 /* START PAGE SCROLLS FROM TOP */
 #roundPage{
   justify-content:flex-start;
-  overflow:auto;
+  padding-top:20px;
 }
 
-button{width:100%;max-width:320px;height:46px;font-size:15px;border-radius:10px;border:none;font-weight:600;cursor:pointer;white-space:nowrap;color:#fff;-webkit-tap-highlight-color:transparent;}
+button{width:100%;max-width:320px;height:44px;font-size:15px;border-radius:10px;border:none;font-weight:600;cursor:pointer;white-space:nowrap;color:#fff;-webkit-tap-highlight-color:transparent;}
 .selected{box-shadow:0 0 0 3px #ffffffaa;}
-.big{height:56px;font-size:16px;}
-input{width:100%;max-width:320px;height:46px;background:#222;color:#fff;border-radius:10px;border:none;text-align:center;font-size:16px;}
-.row{display:flex;gap:10px;width:100%;max-width:320px;}
+.big{height:52px;font-size:16px;}
+input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-radius:10px;border:none;text-align:center;font-size:16px;box-sizing:border-box;}
+.row{display:flex;gap:8px;width:100%;max-width:320px;}
 .row button{flex:1;}
+.row input{flex:1;min-width:0;}
 .input-wrap{position:relative;width:100%;max-width:320px;}
 .input-wrap span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#aaa;}
 
-.back-wrap{position:fixed;bottom:15px;left:0;right:0;display:flex;justify-content:center;}
+.back-wrap{position:fixed;bottom:10px;left:0;right:0;display:flex;justify-content:center;z-index:5;}
 .back{background:#555;height:36px;}
 
 .holes9{background:#2e7d32;}
@@ -76,13 +78,21 @@ input{width:100%;max-width:320px;height:46px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.6.2</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.7.0</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
   <input id="playerName" placeholder="Player Name">
   <div class="row">
-    <input id="playerHandicap" type="number" inputmode="numeric" placeholder="Handicap" style="flex:1;" onfocus="this.select()">
+    <select id="playerHandicap" style="flex:1;height:44px;background:#222;color:#fff;border-radius:10px;border:none;text-align:center;font-size:15px;appearance:none;-webkit-appearance:none;padding:0 10px;">
+      <option value="pro">Compare to: Tour Pro</option>
+      <option value="0">Compare to: Scratch (0)</option>
+      <option value="5">Compare to: 5 Handicap</option>
+      <option value="10">Compare to: 10 Handicap</option>
+      <option value="15">Compare to: 15 Handicap</option>
+      <option value="20">Compare to: 20 Handicap</option>
+      <option value="25">Compare to: 25 Handicap</option>
+    </select>
     <input id="roundDate" type="date" style="flex:1;">
   </div>
   <input id="courseName" placeholder="Course Name">
@@ -110,8 +120,8 @@ input{width:100%;max-width:320px;height:46px;background:#222;color:#fff;border-r
   <div class="back-wrap"><button class="back" onclick="goBack()">BACK</button></div>
 </div>
 
-<div id="liePage" class="page" style="justify-content:flex-start;padding-top:20px;padding-bottom:70px;">
-  <h3 id="lieTitle" style="margin:0 0 10px 0;">Where did your tee shot end?</h3>
+<div id="liePage" class="page">
+  <h3 id="lieTitle" style="margin:0 0 8px 0;font-size:16px;">Where did your tee shot end?</h3>
   <button class="hole" onclick="highlight(this);selectLie('HOLE')">HOLE</button>
   <button class="green big" onclick="highlight(this);selectLie('GREEN')">GREEN</button>
   <button class="green-miss" onclick="highlight(this);selectLie('MISSED GREEN')">MISSED AROUND GREEN</button>
@@ -509,8 +519,11 @@ let threePlusPutts=0;
 let onePuttOpp=0;
 let onePuttMade=0;
 let sgPuttingTotal=0;
+let sgOTTTotal=0;
+let sgAPPTotal=0;
+let sgARGTotal=0;
 
-// Strokes Gained Putting lookup table (PGA Tour baseline)
+// Strokes Gained Putting lookup table (PGA Tour baseline) - distance in feet
 const sgPuttingTable = {
   1:1, 2:1, 3:1.04, 4:1.13, 5:1.23, 6:1.34, 7:1.42, 8:1.51, 9:1.56, 10:1.61,
   11:1.65, 12:1.69, 13:1.72, 14:1.75, 15:1.78, 16:1.81, 17:1.83, 18:1.85, 19:1.86,
@@ -520,6 +533,90 @@ const sgPuttingTable = {
   47:2.12, 48:2.12, 49:2.13, 50:2.14, 55:2.18, 60:2.21, 65:2.25, 70:2.28, 75:2.31,
   80:2.34, 85:2.37, 90:2.4, 100:2.44, 110:2.48
 };
+
+// Expected strokes to hole out by lie type and distance (yards) - Tour Pro baseline
+// Format: distance -> expected strokes
+const sgTeeTable = {
+  100:2.92, 105:2.93, 110:2.95, 115:2.97, 120:2.99, 125:2.99, 130:2.97, 135:2.97,
+  140:2.97, 145:2.97, 150:2.99, 155:2.99, 160:2.99, 165:3.01, 170:3.02, 175:3.04,
+  180:3.05, 185:3.07, 190:3.09, 195:3.11, 200:3.12, 210:3.14, 220:3.17, 230:3.21,
+  240:3.25, 250:3.35, 260:3.45, 270:3.55, 280:3.65, 290:3.68, 300:3.71, 320:3.79,
+  340:3.86, 360:3.92, 380:3.96, 400:3.99, 420:4.02, 440:4.08, 460:4.17, 480:4.28,
+  500:4.41, 520:4.54, 540:4.65, 560:4.74, 580:4.79, 600:4.82
+};
+
+const sgFairwayTable = {
+  10:2.2, 15:2.3, 20:2.4, 25:2.45, 30:2.5, 35:2.55, 40:2.6, 45:2.62, 50:2.65,
+  55:2.67, 60:2.7, 65:2.72, 70:2.73, 75:2.74, 80:2.75, 85:2.77, 90:2.78, 95:2.79,
+  100:2.8, 105:2.81, 110:2.83, 115:2.84, 120:2.85, 125:2.86, 130:2.88, 135:2.9,
+  140:2.91, 145:2.93, 150:2.95, 155:2.97, 160:2.98, 165:3, 170:3.03, 175:3.06,
+  180:3.08, 185:3.11, 190:3.13, 195:3.16, 200:3.19, 210:3.26, 220:3.32, 230:3.39,
+  240:3.45, 250:3.52, 260:3.58, 270:3.63, 280:3.69, 290:3.74, 300:3.78
+};
+
+const sgRoughTable = {
+  10:2.49, 15:2.54, 20:2.59, 25:2.64, 30:2.69, 35:2.74, 40:2.78, 45:2.82, 50:2.85,
+  55:2.88, 60:2.91, 65:2.92, 70:2.93, 75:2.95, 80:2.96, 85:2.97, 90:2.99, 95:3.01,
+  100:3.02, 105:3.03, 110:3.04, 115:3.06, 120:3.08, 125:3.09, 130:3.11, 135:3.13,
+  140:3.15, 145:3.17, 150:3.19, 155:3.21, 160:3.23, 165:3.25, 170:3.27, 175:3.29,
+  180:3.31, 185:3.34, 190:3.37, 195:3.4, 200:3.42, 210:3.48, 220:3.53, 230:3.8,
+  240:3.64, 250:3.69, 260:3.74, 270:3.78, 280:3.83, 290:3.87, 300:3.9
+};
+
+const sgSandTable = {
+  10:2.41, 15:2.47, 20:2.53, 25:2.59, 30:2.67, 35:2.76, 40:2.82, 45:2.9, 50:2.98,
+  55:3.07, 60:3.15, 65:3.17, 70:3.19, 75:3.22, 80:3.24, 85:3.24, 90:3.23, 95:3.23,
+  100:3.23, 105:3.23, 110:3.22, 115:3.21, 120:3.21, 125:3.21, 130:3.21, 135:3.22,
+  140:3.22, 145:3.23, 150:3.25, 155:3.26, 160:3.28, 165:3.3, 170:3.33, 175:3.36,
+  180:3.4, 185:3.43, 190:3.47, 195:3.51, 200:3.55, 210:3.62, 220:3.7, 230:3.77,
+  240:3.84, 250:3.88, 260:3.93, 270:3.96, 280:4, 290:4.02, 300:4.04
+};
+
+const sgRecoveryTable = {
+  100:3.8, 105:3.8, 110:3.8, 115:3.8, 120:3.78, 125:3.78, 130:3.78, 135:3.78,
+  140:3.8, 145:3.8, 150:3.8, 155:3.8, 160:3.81, 165:3.81, 170:3.81, 175:3.81,
+  180:3.82, 185:3.83, 190:3.84, 195:3.86, 200:3.87, 210:3.89, 220:3.92, 230:3.95,
+  240:3.97, 250:4, 260:4.03, 270:4.07, 280:4.1, 290:4.15, 300:4.2
+};
+
+// Handicap adjustment offsets - strokes lost per round compared to tour pro
+// These will be used to adjust baseline expectations
+const handicapOffsets = {
+  'pro': { tee: 0, approach: 0, short: 0, putt: 0 },
+  '0': { tee: 1.78, approach: 2.03, short: 0.39, putt: 0.94 },
+  '5': { tee: 3.31, approach: 4.29, short: 0.97, putt: 1.42 },
+  '10': { tee: 3.61, approach: 6.11, short: 1.33, putt: 2.77 },
+  '15': { tee: 4.86, approach: 8.54, short: 4.46, putt: 4.46 },
+  '20': { tee: 5.75, approach: 11.26, short: 4.48, putt: 4.48 },
+  '25': { tee: 7.53, approach: 14.23, short: 4.71, putt: 4.71 }
+};
+
+function getExpectedStrokes(distance, lie){
+  let table;
+  if(lie === 'TEE') table = sgTeeTable;
+  else if(lie === 'FAIRWAY' || lie === 'GREEN') table = sgFairwayTable;
+  else if(lie === 'ROUGH' || lie === 'LEFT ROUGH' || lie === 'RIGHT ROUGH' || 
+          lie === 'MISS LEFT' || lie === 'MISS RIGHT' || lie === 'MISS SHORT' || lie === 'MISS LONG') table = sgRoughTable;
+  else if(lie === 'SAND' || lie === 'GS BUNKER' || lie === 'FW BUNKER') table = sgSandTable;
+  else if(lie === 'RECOVERY') table = sgRecoveryTable;
+  else table = sgRoughTable; // Default to rough
+  
+  if(table[distance]) return table[distance];
+  
+  // Interpolate
+  const distances = Object.keys(table).map(Number).sort((a,b)=>a-b);
+  if(distance < distances[0]) return table[distances[0]];
+  if(distance > distances[distances.length-1]) return table[distances[distances.length-1]];
+  
+  for(let i=0; i<distances.length-1; i++){
+    if(distance > distances[i] && distance < distances[i+1]){
+      const d1 = distances[i], d2 = distances[i+1];
+      const e1 = table[d1], e2 = table[d2];
+      return e1 + (e2-e1) * (distance-d1) / (d2-d1);
+    }
+  }
+  return 3; // Fallback
+}
 
 function getExpectedPutts(distance){
   if(distance <= 0) return 0;
@@ -942,8 +1039,94 @@ function finishHole(){
   currentHoleData.putts=putts;
   currentHoleData.shots=currentHoleShots;
   
+  // Calculate Strokes Gained for each shot
+  let holeSgOTT = 0, holeSgAPP = 0, holeSgARG = 0, holeSgPutt = 0;
+  
+  currentHoleShots.forEach((s, idx) => {
+    if(!s.lie || s.lie === 'PENALTY') return;
+    
+    const nextShot = currentHoleShots[idx + 1];
+    const distBefore = s.distanceBefore || 0;
+    const distAfter = s.distanceAfter || 0;
+    
+    // Determine what kind of shot this was
+    const shotNum = s.shotNum;
+    const isTeeShotPar45 = shotNum === 1 && (par === 4 || par === 5);
+    const isTeeShotPar3 = shotNum === 1 && par === 3;
+    const isPutt = s.isPutt;
+    const isShortGame = !isPutt && distBefore <= 50 && !isTeeShotPar45;
+    const isApproach = !isPutt && !isTeeShotPar45 && !isShortGame;
+    
+    if(isPutt){
+      // Putting SG calculated separately below
+    } else if(s.lie === 'HOLED'){
+      // Holed from off green - huge gain
+      let expectedBefore = 0;
+      if(isTeeShotPar45){
+        expectedBefore = getExpectedStrokes(currentHoleData.yards, 'TEE');
+        holeSgOTT += expectedBefore - 1;
+      } else if(isTeeShotPar3){
+        expectedBefore = getExpectedStrokes(currentHoleData.yards, 'TEE');
+        holeSgAPP += expectedBefore - 1;
+      } else if(isShortGame){
+        const prevShot = currentHoleShots[idx - 1];
+        const prevLie = prevShot ? prevShot.lie : 'FAIRWAY';
+        expectedBefore = getExpectedStrokes(distBefore, prevLie);
+        holeSgARG += expectedBefore - 1;
+      } else {
+        const prevShot = currentHoleShots[idx - 1];
+        const prevLie = prevShot ? prevShot.lie : 'FAIRWAY';
+        expectedBefore = getExpectedStrokes(distBefore, prevLie);
+        holeSgAPP += expectedBefore - 1;
+      }
+    } else if(isTeeShotPar45){
+      // Off the tee on par 4/5
+      const expectedBefore = getExpectedStrokes(currentHoleData.yards, 'TEE');
+      const expectedAfter = distAfter > 0 ? getExpectedStrokes(distAfter, s.lie) : getExpectedPutts(distAfter * 3);
+      const sg = expectedBefore - expectedAfter - 1;
+      holeSgOTT += sg;
+      console.log(`OTT: ${currentHoleData.yards}yds TEE -> ${distAfter}yds ${s.lie}, expected ${expectedBefore.toFixed(2)} -> ${expectedAfter.toFixed(2)}, SG: ${sg.toFixed(2)}`);
+    } else if(isTeeShotPar3){
+      // Par 3 tee shot counts as approach
+      const expectedBefore = getExpectedStrokes(currentHoleData.yards, 'TEE');
+      let expectedAfter;
+      if(s.lie === 'GREEN'){
+        expectedAfter = getExpectedPutts(distAfter * 3); // Convert yards to feet approx
+      } else {
+        expectedAfter = distAfter > 0 ? getExpectedStrokes(distAfter, s.lie) : getExpectedPutts(10);
+      }
+      const sg = expectedBefore - expectedAfter - 1;
+      holeSgAPP += sg;
+    } else if(isShortGame){
+      // Around the green (50 yards and in, not putting)
+      const prevShot = currentHoleShots[idx - 1];
+      const prevLie = prevShot ? prevShot.lie : 'FAIRWAY';
+      const expectedBefore = getExpectedStrokes(distBefore, prevLie);
+      let expectedAfter;
+      if(s.lie === 'GREEN'){
+        expectedAfter = getExpectedPutts(distAfter * 3);
+      } else {
+        expectedAfter = distAfter > 0 ? getExpectedStrokes(distAfter, s.lie) : getExpectedPutts(10);
+      }
+      const sg = expectedBefore - expectedAfter - 1;
+      holeSgARG += sg;
+    } else if(isApproach){
+      // Approach shot (>50 yards, not tee shot on par 4/5)
+      const prevShot = currentHoleShots[idx - 1];
+      const prevLie = prevShot ? prevShot.lie : 'FAIRWAY';
+      const expectedBefore = getExpectedStrokes(distBefore, prevLie);
+      let expectedAfter;
+      if(s.lie === 'GREEN'){
+        expectedAfter = getExpectedPutts(distAfter * 3);
+      } else {
+        expectedAfter = distAfter > 0 ? getExpectedStrokes(distAfter, s.lie) : getExpectedPutts(10);
+      }
+      const sg = expectedBefore - expectedAfter - 1;
+      holeSgAPP += sg;
+    }
+  });
+  
   // Calculate SG Putting for this hole
-  // Find first putt distance and number of putts
   let firstPuttDist = 0;
   let numPutts = 0;
   currentHoleShots.forEach(s => {
@@ -955,13 +1138,25 @@ function finishHole(){
   
   if(firstPuttDist > 0 && numPutts > 0){
     const expectedPutts = getExpectedPutts(firstPuttDist);
-    const sgPuttingHole = expectedPutts - numPutts;
-    sgPuttingTotal += sgPuttingHole;
-    currentHoleData.sgPutting = sgPuttingHole;
+    holeSgPutt = expectedPutts - numPutts;
     currentHoleData.firstPuttDist = firstPuttDist;
     currentHoleData.expectedPutts = expectedPutts;
-    console.log(`Hole ${currentHole}: ${numPutts} putts from ${firstPuttDist}ft, expected ${expectedPutts.toFixed(2)}, SG Putting: ${sgPuttingHole.toFixed(2)}`);
+    console.log(`Hole ${currentHole}: ${numPutts} putts from ${firstPuttDist}ft, expected ${expectedPutts.toFixed(2)}, SG Putting: ${holeSgPutt.toFixed(2)}`);
   }
+  
+  // Store hole SG data
+  currentHoleData.sgOTT = holeSgOTT;
+  currentHoleData.sgAPP = holeSgAPP;
+  currentHoleData.sgARG = holeSgARG;
+  currentHoleData.sgPutting = holeSgPutt;
+  
+  // Add to totals
+  sgOTTTotal += holeSgOTT;
+  sgAPPTotal += holeSgAPP;
+  sgARGTotal += holeSgARG;
+  sgPuttingTotal += holeSgPutt;
+  
+  console.log(`Hole ${currentHole} SG: OTT=${holeSgOTT.toFixed(2)}, APP=${holeSgAPP.toFixed(2)}, ARG=${holeSgARG.toFixed(2)}, Putt=${holeSgPutt.toFixed(2)}`);
   
   allHoles.push(currentHoleData);
   
@@ -1076,11 +1271,25 @@ function renderSummary(){
   onePuttPct.innerHTML = `One-Putt %- <span class="num" id="onePuttPctVal">${onePuttPctVal}%</span>`;
   colorStat(document.getElementById('onePuttPctVal'), onePuttPctVal, 40, 30, true);
   
-  // Display Strokes Gained stats
-  const sgOTT = 0; // Placeholder - will calculate later
-  const sgAPP = 0; // Placeholder - will calculate later
-  const sgARG = 0; // Placeholder - will calculate later
-  const sgTotal = sgOTT + sgAPP + sgARG + sgPuttingTotal;
+  // Display Strokes Gained stats - use actual calculated values
+  const sgTotal = sgOTTTotal + sgAPPTotal + sgARGTotal + sgPuttingTotal;
+  
+  // Get handicap selection for display
+  const handicapSelect = document.getElementById('playerHandicap');
+  const handicapVal = handicapSelect.value;
+  const handicapLabels = {
+    'pro': 'Tour Pro',
+    '0': 'Scratch',
+    '5': '5 HCP',
+    '10': '10 HCP',
+    '15': '15 HCP',
+    '20': '20 HCP',
+    '25': '25 HCP'
+  };
+  const handicapLabel = handicapLabels[handicapVal] || 'Tour Pro';
+  
+  // Update the SG Total label with handicap comparison
+  document.querySelector('#summaryPage .stat.center span[style*="font-weight:600"]').nextElementSibling.nextElementSibling.innerText = `(vs ${handicapLabel})`;
   
   function formatSG(val){
     return val >= 0 ? `+${val.toFixed(2)}` : val.toFixed(2);
@@ -1090,16 +1299,16 @@ function renderSummary(){
   }
   
   const sgOTTEl = document.getElementById('sgOTT');
-  sgOTTEl.innerText = formatSG(sgOTT);
-  colorSG(sgOTTEl, sgOTT);
+  sgOTTEl.innerText = formatSG(sgOTTTotal);
+  colorSG(sgOTTEl, sgOTTTotal);
   
   const sgAPPEl = document.getElementById('sgAPP');
-  sgAPPEl.innerText = formatSG(sgAPP);
-  colorSG(sgAPPEl, sgAPP);
+  sgAPPEl.innerText = formatSG(sgAPPTotal);
+  colorSG(sgAPPEl, sgAPPTotal);
   
   const sgARGEl = document.getElementById('sgARG');
-  sgARGEl.innerText = formatSG(sgARG);
-  colorSG(sgARGEl, sgARG);
+  sgARGEl.innerText = formatSG(sgARGTotal);
+  colorSG(sgARGEl, sgARGTotal);
   
   const sgPuttingEl = document.getElementById('sgPuttingDisplay');
   sgPuttingEl.innerText = formatSG(sgPuttingTotal);
@@ -2014,6 +2223,26 @@ function generateCSV(){
   
   return csv;
 }
+
+// Handle mobile keyboard - scroll focused input into view
+document.addEventListener('focusin', function(e) {
+  if(e.target.tagName === 'INPUT') {
+    setTimeout(() => {
+      e.target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 300);
+  }
+});
+
+// Reset scroll position when page changes
+const originalShow = show;
+show = function(id) {
+  originalShow(id);
+  const page = document.getElementById(id);
+  if(page) {
+    page.scrollTop = 0;
+  }
+  window.scrollTo(0, 0);
+};
 </script>
 
 </body>
