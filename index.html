@@ -19,7 +19,7 @@ body{margin:0;background:#181818;color:#fff;font-family:system-ui,sans-serif;ove
   flex-direction:column;
   align-items:center;
   justify-content:flex-end;
-  gap:14px;
+  gap:10px;
   text-align:center;
   overflow:hidden;
 }
@@ -31,17 +31,17 @@ body{margin:0;background:#181818;color:#fff;font-family:system-ui,sans-serif;ove
   overflow:auto;
 }
 
-button{width:100%;max-width:320px;height:52px;font-size:16px;border-radius:10px;border:none;font-weight:600;cursor:pointer;white-space:nowrap;color:#fff;-webkit-tap-highlight-color:transparent;}
+button{width:100%;max-width:320px;height:46px;font-size:15px;border-radius:10px;border:none;font-weight:600;cursor:pointer;white-space:nowrap;color:#fff;-webkit-tap-highlight-color:transparent;}
 .selected{box-shadow:0 0 0 3px #ffffffaa;}
-.big{height:64px;font-size:17px;}
-input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-radius:10px;border:none;text-align:center;font-size:16px;}
-.row{display:flex;gap:12px;width:100%;max-width:320px;}
+.big{height:56px;font-size:16px;}
+input{width:100%;max-width:320px;height:46px;background:#222;color:#fff;border-radius:10px;border:none;text-align:center;font-size:16px;}
+.row{display:flex;gap:10px;width:100%;max-width:320px;}
 .row button{flex:1;}
 .input-wrap{position:relative;width:100%;max-width:320px;}
 .input-wrap span{position:absolute;right:14px;top:50%;transform:translateY(-50%);color:#aaa;}
 
-.back-wrap{position:fixed;bottom:48px;left:0;right:0;display:flex;justify-content:center;}
-.back{background:#555;}
+.back-wrap{position:fixed;bottom:15px;left:0;right:0;display:flex;justify-content:center;}
+.back{background:#555;height:36px;}
 
 .holes9{background:#2e7d32;}
 .holes18{background:#1565c0;}
@@ -59,15 +59,15 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 .danger{background:#c62828;}
 .water{background:#1565c0;}
 
-.stat{width:100%;max-width:360px;background:#222;padding:12px;border-radius:10px;font-size:15px;box-sizing:border-box;}
+.stat{width:100%;max-width:360px;background:#222;padding:8px 12px;border-radius:10px;font-size:14px;box-sizing:border-box;}
 .stat.center{text-align:center;}
 .stat-split{display:flex;}
 .stat-half{flex:1;text-align:center;}
 .stat-half.left{border-right:1px solid #333;}
 .num{font-weight:700;}
-.summary-title{text-decoration:underline;font-size:22px;font-weight:600;}
-.score-summary{font-size:18px;font-weight:600;}
-.round-meta{font-size:14px;opacity:.85;}
+.summary-title{text-decoration:underline;font-size:22px;font-weight:600;margin:0;line-height:1.2;}
+.score-summary{font-size:18px;font-weight:600;margin:0;line-height:1.2;}
+.round-meta{font-size:14px;opacity:.85;margin:0;line-height:1.2;}
 </style>
 </head>
 
@@ -76,19 +76,21 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.5.3</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.6.2</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
   <input id="playerName" placeholder="Player Name">
-  <input id="playerHandicap" type="number" placeholder="Handicap">
-  <input id="roundDate" type="date">
+  <div class="row">
+    <input id="playerHandicap" type="number" inputmode="numeric" placeholder="Handicap" style="flex:1;" onfocus="this.select()">
+    <input id="roundDate" type="date" style="flex:1;">
+  </div>
   <input id="courseName" placeholder="Course Name">
   <div class="row">
     <button class="holes9" onclick="highlight(this);selectPresetHoles(9)">9 Holes</button>
     <button class="holes18" onclick="highlight(this);selectPresetHoles(18)">18 Holes</button>
   </div>
-  <input id="customHoles" type="number" min="3" max="18" placeholder="Custom # of Holes (3–18)">
+  <input id="customHoles" type="number" inputmode="numeric" min="3" max="18" placeholder="Custom # of Holes (3–18)" onfocus="this.select()">
   <button class="holes9" onclick="enterScoring()">CONFIRM</button>
 </div>
 
@@ -97,7 +99,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
   <button class="par3" onclick="highlight(this);setPar(3)">PAR 3</button>
   <button class="par4" onclick="highlight(this);setPar(4)">PAR 4</button>
   <button class="par5" onclick="highlight(this);setPar(5)">PAR 5</button>
-  <div class="input-wrap"><input id="holeYards"><span>yards</span></div>
+  <div class="input-wrap"><input id="holeYards" type="number" inputmode="numeric" onfocus="this.select()"><span>yards</span></div>
   <button class="holes9" onclick="startHole()">CONFIRM</button>
   <div class="back-wrap"><button class="back" onclick="goBack()">BACK</button></div>
 </div>
@@ -108,8 +110,8 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
   <div class="back-wrap"><button class="back" onclick="goBack()">BACK</button></div>
 </div>
 
-<div id="liePage" class="page">
-  <h3 id="lieTitle">Where did your tee shot end?</h3>
+<div id="liePage" class="page" style="justify-content:flex-start;padding-top:20px;padding-bottom:70px;">
+  <h3 id="lieTitle" style="margin:0 0 10px 0;">Where did your tee shot end?</h3>
   <button class="hole" onclick="highlight(this);selectLie('HOLE')">HOLE</button>
   <button class="green big" onclick="highlight(this);selectLie('GREEN')">GREEN</button>
   <button class="green-miss" onclick="highlight(this);selectLie('MISSED GREEN')">MISSED AROUND GREEN</button>
@@ -132,7 +134,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 
 <div id="distancePage" class="page">
   <h3 id="distanceTitle">2nd Shot Distance</h3>
-  <div class="input-wrap"><input id="shotDistance" value="100"><span>yards</span></div>
+  <div class="input-wrap"><input id="shotDistance" type="number" inputmode="numeric" value="100" onfocus="this.select()"><span>yards</span></div>
   <button class="holes9" onclick="confirmDistance()">CONFIRM</button>
   <div class="back-wrap"><button class="back" onclick="goBack()">BACK</button></div>
 </div>
@@ -175,20 +177,20 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="puttPage" class="page">
   <div id="puttShotNum" style="font-size:14px;opacity:.7;">Shot 3</div>
   <h3 id="puttTitle">Putt 1</h3>
-  <div class="input-wrap"><input id="puttDistance" type="number" value="30" oninput="this.setAttribute('value', this.value)"><span>feet</span></div>
+  <div class="input-wrap"><input id="puttDistance" type="number" inputmode="numeric" value="30" onfocus="this.select()" oninput="this.setAttribute('value', this.value)"><span>feet</span></div>
   <button class="holes9" onclick="nextPutt()">CONFIRM PUTT</button>
   <button class="hole" onclick="holeOut()">HOLED IT!</button>
   <div class="back-wrap"><button class="back" onclick="goBack()">BACK</button></div>
 </div>
 
-<div id="summaryPage" class="page" style="justify-content:flex-start;padding-top:20px;">
-  <div class="summary-title">Round Summary</div>
-  <div class="round-meta" id="roundMeta"></div>
-  <div class="score-summary">
+<div id="summaryPage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;padding-bottom:20px;">
+  <div class="summary-title" style="margin:0;line-height:1;">Round Summary</div>
+  <div class="score-summary" style="margin:0;line-height:1.1;">
     <span class="num" id="sumScore"></span>
     (<span class="num" id="sumToPar"></span>)
     Par <span class="num" id="sumPar"></span>
   </div>
+  <div class="round-meta" id="roundMeta" style="margin:0 0 8px 0;line-height:1;"></div>
 
   <div class="stat">
     <div class="stat-split">
@@ -249,7 +251,9 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
     </div>
   </div>
 
-  <div class="section-title" style="margin-top:15px;">Strokes Gained</div>
+  <div class="stat center">
+    <span style="font-weight:600;">SG: Total</span> <span class="num" id="sgTotal"></span> <span style="font-size:12px;opacity:0.7;">(vs Tour Pro)</span>
+  </div>
   
   <div class="stat">
     <div class="stat-split">
@@ -265,12 +269,10 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
     </div>
   </div>
   
-  <div class="stat center">
-    <span style="font-weight:600;">SG: Total</span> <span class="num" id="sgTotal"></span>
+  <div class="row">
+    <button class="holes9" onclick="exportToCSV()">SAVE CSV</button>
+    <button class="holes18" onclick="exportToExcel()">SAVE EXCEL</button>
   </div>
-  
-  <button class="holes9" onclick="exportToCSV()">SAVE CSV</button>
-  <button class="holes18" onclick="exportToExcel()">SAVE EXCEL</button>
 </div>
 
 <script>
@@ -757,7 +759,17 @@ function selectLie(lie){
 
 function confirmDistance(){
   const lastShot=currentHoleShots[currentHoleShots.length-1];
-  lastShot.distanceBefore=parseInt(shotDistance.value||0);
+  const distance = parseInt(shotDistance.value||0);
+  lastShot.distanceBefore = distance;
+  
+  // Set the previous shot's distanceAfter to this shot's distanceBefore
+  if(currentHoleShots.length >= 2){
+    const prevShot = currentHoleShots[currentHoleShots.length-2];
+    if(prevShot && prevShot.distanceAfter === null){
+      prevShot.distanceAfter = distance;
+      console.log('Set previous shot distanceAfter to:', distance);
+    }
+  }
   
   // Don't count stats here - they're counted in selectLie when choosing the lie
   
@@ -1000,6 +1012,70 @@ function renderSummary(){
   threePutts.innerText=`Three or more putts- ${threePlusPutts}`;
   onePuttPct.innerText=`One-Putt %- ${onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0}%`;
   
+  // Color coding helper functions
+  // green = good, white = average, red = below average
+  function colorStat(el, val, goodThreshold, avgThreshold, higherIsBetter=true){
+    if(val === '–' || val === 'N/A') return;
+    const numVal = parseFloat(val);
+    if(isNaN(numVal)) return;
+    if(higherIsBetter){
+      if(numVal >= goodThreshold) el.style.color = '#4caf50'; // green
+      else if(numVal >= avgThreshold) el.style.color = '#ffffff'; // white
+      else el.style.color = '#f44336'; // red
+    } else {
+      if(numVal <= goodThreshold) el.style.color = '#4caf50'; // green
+      else if(numVal <= avgThreshold) el.style.color = '#ffffff'; // white
+      else el.style.color = '#f44336'; // red
+    }
+  }
+  
+  // Avg Par scores - lower is better. Par is avg, -0.2 is good
+  if(c3) colorStat(avgP3, avgP3.innerText, 2.9, 3.1, false);
+  if(c4) colorStat(avgP4, avgP4.innerText, 3.9, 4.1, false);
+  if(c5) colorStat(avgP5, avgP5.innerText, 4.9, 5.1, false);
+  
+  // Fairway % - higher is better. 60% good, 50% avg
+  const fwPct = fwOpp ? Math.round(fwHit/fwOpp*100) : 0;
+  colorStat(fwPctS, fwPct, 60, 50, true);
+  
+  // GIR % - higher is better. 50% good, 33% avg
+  const girPct = totalHoles ? Math.round(gir/totalHoles*100) : 0;
+  colorStat(girPctS, girPct, 50, 33, true);
+  
+  // Proximity when GIR - lower is better. 25ft good, 35ft avg
+  const proxGir = gir ? Math.round(girFirstPuttDist/gir) : 0;
+  colorStat(proxGirS, proxGir, 25, 35, false);
+  
+  // Scrambling % - higher is better. 50% good, 33% avg. White if 0 opportunities
+  const scrPct = scrOpp ? Math.round(scr/scrOpp*100) : 0;
+  if(scrOpp > 0) colorStat(scrPctS, scrPct, 50, 33, true);
+  else scrPctS.style.color = '#ffffff';
+  
+  // Bunker save % - higher is better. 40% good, 25% avg. White if 0 opportunities
+  const bunPct = bunOpp ? Math.round(bun/bunOpp*100) : 0;
+  if(bunOpp > 0) colorStat(bunPctS, bunPct, 40, 25, true);
+  else bunPctS.style.color = '#ffffff';
+  
+  // Putts per hole - lower is better. 1.8 good, 2.0 avg
+  const pphVal = (totalPutts/totalHoles).toFixed(1);
+  const pphSpan = document.createElement('span');
+  pph.innerHTML = `Putts per Hole- <span class="num" id="pphVal">${pphVal}</span>`;
+  colorStat(document.getElementById('pphVal'), pphVal, 1.8, 2.0, false);
+  
+  // Putts per GIR - lower is better. 1.8 good, 2.0 avg
+  const ppgVal = gir ? (girPutts/gir).toFixed(1) : '–';
+  ppg.innerHTML = `Putts per GIR- <span class="num" id="ppgVal">${ppgVal}</span>`;
+  if(ppgVal !== '–') colorStat(document.getElementById('ppgVal'), ppgVal, 1.8, 2.0, false);
+  
+  // Three putts - lower is better. 0 good, 2 avg
+  threePutts.innerHTML = `Three or more putts- <span class="num" id="threePuttsVal">${threePlusPutts}</span>`;
+  colorStat(document.getElementById('threePuttsVal'), threePlusPutts, 0, 2, false);
+  
+  // One putt % - higher is better. 40% good, 30% avg
+  const onePuttPctVal = onePuttOpp ? Math.round(onePuttMade/onePuttOpp*100) : 0;
+  onePuttPct.innerHTML = `One-Putt %- <span class="num" id="onePuttPctVal">${onePuttPctVal}%</span>`;
+  colorStat(document.getElementById('onePuttPctVal'), onePuttPctVal, 40, 30, true);
+  
   // Display Strokes Gained stats
   const sgOTT = 0; // Placeholder - will calculate later
   const sgAPP = 0; // Placeholder - will calculate later
@@ -1165,9 +1241,12 @@ function exportToExcel(){
   
   // ============ SHEET 2: OFF THE TEE ============
   let drivingDistances=[];
+  let driveDetails=[];
   allHoles.forEach(h=>{
-    if((h.par===4||h.par===5)&&h.shots.length>0&&h.shots[0].distanceAfter){
-      drivingDistances.push(h.yards-h.shots[0].distanceAfter);
+    if((h.par===4||h.par===5)&&h.shots.length>0&&h.shots[0].distanceAfter!=null){
+      const driveDistance = h.yards - h.shots[0].distanceAfter;
+      drivingDistances.push(driveDistance);
+      driveDetails.push({hole: h.hole, distance: driveDistance, par: h.par, yards: h.yards});
     }
   });
   const avgDrive=drivingDistances.length?Math.round(drivingDistances.reduce((a,b)=>a+b,0)/drivingDistances.length):0;
@@ -1181,10 +1260,19 @@ function exportToExcel(){
     [],
     ['Avg Driving Distance', avgDrive+' yards'],
     [],
-    ['PENALTIES OFF THE TEE'],
-    ['Par 3 Tee Penalties', par3TeePenalties],
-    ['Par 4/5 Tee Penalties', par45TeePenalties]
+    ['DRIVING DISTANCES'],
+    ['Hole', 'Par', 'Drive Distance']
   ];
+  
+  driveDetails.forEach(d=>{
+    teeData.push([d.hole, d.par, d.distance+' yds']);
+  });
+  
+  teeData.push([]);
+  teeData.push(['PENALTIES OFF THE TEE']);
+  teeData.push(['Par 3 Tee Penalties', par3TeePenalties]);
+  teeData.push(['Par 4/5 Tee Penalties', par45TeePenalties]);
+  
   const ws2 = XLSX.utils.aoa_to_sheet(teeData);
   XLSX.utils.book_append_sheet(wb, ws2, 'Off The Tee');
   
@@ -1613,13 +1701,22 @@ function generateCSV(){
   csv+=`Missed Right,${fwRight},${fwOpp?Math.round(fwRight/fwOpp*100):0}%\n`;
   
   let drivingDistances=[];
+  let driveDetailsCSV=[];
   allHoles.forEach(h=>{
-    if((h.par===4||h.par===5)&&h.shots.length>0&&h.shots[0].distanceAfter){
-      drivingDistances.push(h.yards-h.shots[0].distanceAfter);
+    if((h.par===4||h.par===5)&&h.shots.length>0&&h.shots[0].distanceAfter!=null){
+      const driveDistance = h.yards - h.shots[0].distanceAfter;
+      drivingDistances.push(driveDistance);
+      driveDetailsCSV.push({hole: h.hole, distance: driveDistance, par: h.par, yards: h.yards});
     }
   });
   const avgDrive=drivingDistances.length?Math.round(drivingDistances.reduce((a,b)=>a+b,0)/drivingDistances.length):0;
   csv+=`Avg Driving Distance,${avgDrive} yards\n`;
+  csv+='\n';
+  csv+='DRIVING DISTANCES\n';
+  csv+='Hole,Par,Drive Distance\n';
+  driveDetailsCSV.forEach(d=>{
+    csv+=`${d.hole},${d.par},${d.distance} yds\n`;
+  });
   
   // APPROACH
   csv+='\nAPPROACH\n';
