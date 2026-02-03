@@ -76,11 +76,12 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.5.0</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.5.3</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
   <input id="playerName" placeholder="Player Name">
+  <input id="playerHandicap" type="number" placeholder="Handicap">
   <input id="roundDate" type="date">
   <input id="courseName" placeholder="Course Name">
   <div class="row">
@@ -180,7 +181,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
   <div class="back-wrap"><button class="back" onclick="goBack()">BACK</button></div>
 </div>
 
-<div id="summaryPage" class="page">
+<div id="summaryPage" class="page" style="justify-content:flex-start;padding-top:20px;">
   <div class="summary-title">Round Summary</div>
   <div class="round-meta" id="roundMeta"></div>
   <div class="score-summary">
@@ -246,6 +247,26 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
       <div class="stat-half left" id="threePutts"></div>
       <div class="stat-half" id="onePuttPct"></div>
     </div>
+  </div>
+
+  <div class="section-title" style="margin-top:15px;">Strokes Gained</div>
+  
+  <div class="stat">
+    <div class="stat-split">
+      <div class="stat-half left">SG: OTT <span class="num" id="sgOTT">0.00</span></div>
+      <div class="stat-half">SG: APP <span class="num" id="sgAPP">0.00</span></div>
+    </div>
+  </div>
+  
+  <div class="stat">
+    <div class="stat-split">
+      <div class="stat-half left">SG: ARG <span class="num" id="sgARG">0.00</span></div>
+      <div class="stat-half">SG: Putt <span class="num" id="sgPuttingDisplay"></span></div>
+    </div>
+  </div>
+  
+  <div class="stat center">
+    <span style="font-weight:600;">SG: Total</span> <span class="num" id="sgTotal"></span>
   </div>
   
   <button class="holes9" onclick="exportToCSV()">SAVE CSV</button>
@@ -485,6 +506,35 @@ let girPutts=0;
 let threePlusPutts=0;
 let onePuttOpp=0;
 let onePuttMade=0;
+let sgPuttingTotal=0;
+
+// Strokes Gained Putting lookup table (PGA Tour baseline)
+const sgPuttingTable = {
+  1:1, 2:1, 3:1.04, 4:1.13, 5:1.23, 6:1.34, 7:1.42, 8:1.51, 9:1.56, 10:1.61,
+  11:1.65, 12:1.69, 13:1.72, 14:1.75, 15:1.78, 16:1.81, 17:1.83, 18:1.85, 19:1.86,
+  20:1.87, 21:1.88, 22:1.89, 23:1.91, 24:1.92, 25:1.93, 26:1.94, 27:1.95, 28:1.96,
+  29:1.97, 30:1.98, 31:1.99, 32:2, 33:2.01, 34:2.01, 35:2.02, 36:2.03, 37:2.04,
+  38:2.05, 39:2.05, 40:2.06, 41:2.07, 42:2.08, 43:2.08, 44:2.09, 45:2.1, 46:2.11,
+  47:2.12, 48:2.12, 49:2.13, 50:2.14, 55:2.18, 60:2.21, 65:2.25, 70:2.28, 75:2.31,
+  80:2.34, 85:2.37, 90:2.4, 100:2.44, 110:2.48
+};
+
+function getExpectedPutts(distance){
+  if(distance <= 0) return 0;
+  if(sgPuttingTable[distance]) return sgPuttingTable[distance];
+  // Interpolate for distances not in table
+  const distances = Object.keys(sgPuttingTable).map(Number).sort((a,b)=>a-b);
+  for(let i=0; i<distances.length-1; i++){
+    if(distance > distances[i] && distance < distances[i+1]){
+      const d1 = distances[i], d2 = distances[i+1];
+      const e1 = sgPuttingTable[d1], e2 = sgPuttingTable[d2];
+      return e1 + (e2-e1) * (distance-d1) / (d2-d1);
+    }
+  }
+  // If beyond 110 ft, extrapolate
+  if(distance > 110) return 2.48 + (distance-110) * 0.004;
+  return 2;
+}
 
 let allHoles=[];
 let currentHoleData={};
@@ -880,6 +930,27 @@ function finishHole(){
   currentHoleData.putts=putts;
   currentHoleData.shots=currentHoleShots;
   
+  // Calculate SG Putting for this hole
+  // Find first putt distance and number of putts
+  let firstPuttDist = 0;
+  let numPutts = 0;
+  currentHoleShots.forEach(s => {
+    if(s.isPutt && firstPuttDist === 0){
+      firstPuttDist = s.distanceBefore || 0;
+    }
+    if(s.isPutt || s.lie === 'HOLED') numPutts++;
+  });
+  
+  if(firstPuttDist > 0 && numPutts > 0){
+    const expectedPutts = getExpectedPutts(firstPuttDist);
+    const sgPuttingHole = expectedPutts - numPutts;
+    sgPuttingTotal += sgPuttingHole;
+    currentHoleData.sgPutting = sgPuttingHole;
+    currentHoleData.firstPuttDist = firstPuttDist;
+    currentHoleData.expectedPutts = expectedPutts;
+    console.log(`Hole ${currentHole}: ${numPutts} putts from ${firstPuttDist}ft, expected ${expectedPutts.toFixed(2)}, SG Putting: ${sgPuttingHole.toFixed(2)}`);
+  }
+  
   allHoles.push(currentHoleData);
   
   if(par===3){c3++;p3+=holeStrokes;}
@@ -894,6 +965,7 @@ function finishHole(){
     holeHeader.innerText=`Hole ${currentHole}`;
     show('parPage');
   }else{
+    scoreBar.style.display='none';
     renderSummary();
     show('summaryPage');
   }
@@ -927,6 +999,39 @@ function renderSummary(){
 
   threePutts.innerText=`Three or more putts- ${threePlusPutts}`;
   onePuttPct.innerText=`One-Putt %- ${onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0}%`;
+  
+  // Display Strokes Gained stats
+  const sgOTT = 0; // Placeholder - will calculate later
+  const sgAPP = 0; // Placeholder - will calculate later
+  const sgARG = 0; // Placeholder - will calculate later
+  const sgTotal = sgOTT + sgAPP + sgARG + sgPuttingTotal;
+  
+  function formatSG(val){
+    return val >= 0 ? `+${val.toFixed(2)}` : val.toFixed(2);
+  }
+  function colorSG(el, val){
+    el.style.color = val >= 0 ? '#4caf50' : '#f44336';
+  }
+  
+  const sgOTTEl = document.getElementById('sgOTT');
+  sgOTTEl.innerText = formatSG(sgOTT);
+  colorSG(sgOTTEl, sgOTT);
+  
+  const sgAPPEl = document.getElementById('sgAPP');
+  sgAPPEl.innerText = formatSG(sgAPP);
+  colorSG(sgAPPEl, sgAPP);
+  
+  const sgARGEl = document.getElementById('sgARG');
+  sgARGEl.innerText = formatSG(sgARG);
+  colorSG(sgARGEl, sgARG);
+  
+  const sgPuttingEl = document.getElementById('sgPuttingDisplay');
+  sgPuttingEl.innerText = formatSG(sgPuttingTotal);
+  colorSG(sgPuttingEl, sgPuttingTotal);
+  
+  const sgTotalEl = document.getElementById('sgTotal');
+  sgTotalEl.innerText = formatSG(sgTotal);
+  colorSG(sgTotalEl, sgTotal);
 }
 
 function formatDateForDisplay(dateStr){
@@ -1026,6 +1131,7 @@ function exportToExcel(){
     ['SCORING'],
     [],
     ['Player:', playerName.value||'Player'],
+    ['Handicap:', document.getElementById('playerHandicap').value||'N/A'],
     ['Course:', courseName.value||'Course'],
     ['Date:', formatDateForDisplay(roundDate.value)],
     [],
@@ -1234,8 +1340,26 @@ function exportToExcel(){
     ['Putts per Hole', (totalPutts/totalHoles).toFixed(1)],
     ['Putts per GIR', gir?(girPutts/gir).toFixed(1):'N/A'],
     ['Three-Putts', threePlusPutts],
-    ['One-Putt %', (onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0)+'%']
+    ['One-Putt %', (onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0)+'%'],
+    [],
+    ['STROKES GAINED PUTTING'],
+    ['Total SG Putting', sgPuttingTotal.toFixed(2)],
+    ['SG Putting per Hole', (sgPuttingTotal/totalHoles).toFixed(2)],
+    [],
+    ['Hole', 'First Putt Dist', 'Putts', 'Expected Putts', 'SG Putting']
   ];
+  
+  allHoles.forEach(h=>{
+    if(h.firstPuttDist){
+      puttingData.push([
+        h.hole,
+        h.firstPuttDist + ' ft',
+        h.putts,
+        h.expectedPutts ? h.expectedPutts.toFixed(2) : 'N/A',
+        h.sgPutting ? h.sgPutting.toFixed(2) : 'N/A'
+      ]);
+    }
+  });
   
   const ws5 = XLSX.utils.aoa_to_sheet(puttingData);
   XLSX.utils.book_append_sheet(wb, ws5, 'Putting');
@@ -1431,6 +1555,7 @@ function generateCSV(){
   // SCORING
   csv+='SCORING\n';
   csv+=`Player:,${playerName.value||'Player'}\n`;
+  csv+=`Handicap:,${document.getElementById('playerHandicap').value||'N/A'}\n`;
   csv+=`Course:,${courseName.value||'Course'}\n`;
   csv+=`Date:,${formatDateForDisplay(roundDate.value)}\n`;
   csv+='\n';
@@ -1629,6 +1754,17 @@ function generateCSV(){
   csv+=`Putts per GIR,${gir?(girPutts/gir).toFixed(1):'N/A'}\n`;
   csv+=`Three-Putts,${threePlusPutts}\n`;
   csv+=`One-Putt %,${onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0}%\n`;
+  csv+='\n';
+  csv+='STROKES GAINED PUTTING\n';
+  csv+=`Total SG Putting,${sgPuttingTotal.toFixed(2)}\n`;
+  csv+=`SG Putting per Hole,${(sgPuttingTotal/totalHoles).toFixed(2)}\n`;
+  csv+='\n';
+  csv+='Hole,First Putt Dist,Putts,Expected Putts,SG Putting\n';
+  allHoles.forEach(h=>{
+    if(h.firstPuttDist){
+      csv+=`${h.hole},${h.firstPuttDist} ft,${h.putts},${h.expectedPutts?h.expectedPutts.toFixed(2):'N/A'},${h.sgPutting?h.sgPutting.toFixed(2):'N/A'}\n`;
+    }
+  });
   
   // PLAY BY PLAY
   csv+='\nPLAY BY PLAY\n';
