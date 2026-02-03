@@ -51,7 +51,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 
 .hole{background:#424242;}
 .green{background:#43a047;outline:2px solid #a5d6a7;}
-.green-miss{background:#2e7d32;font-size:13px;}
+.green-miss{background:#2e7d32;height:42px;}
 .fairway{background:#81c784;}
 .bunker{background:#fbc02d;color:#000;}
 .rough{background:#1b5e20;}
@@ -76,7 +76,7 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.4.8</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.5.0</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -110,15 +110,8 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
 <div id="liePage" class="page">
   <h3 id="lieTitle">Where did your tee shot end?</h3>
   <button class="hole" onclick="highlight(this);selectLie('HOLE')">HOLE</button>
-  <div style="display:flex;flex-direction:column;align-items:center;gap:6px;width:100%;max-width:320px;">
-    <button class="green-miss" style="width:100%;height:36px;" onclick="highlight(this);selectLie('MISS LONG')">LONG</button>
-    <div style="display:flex;gap:6px;align-items:center;width:100%;">
-      <button class="green-miss" style="width:60px;height:70px;" onclick="highlight(this);selectLie('MISS LEFT')">LEFT</button>
-      <button class="green big" style="flex:1;height:70px;" onclick="highlight(this);selectLie('GREEN')">GREEN</button>
-      <button class="green-miss" style="width:60px;height:70px;" onclick="highlight(this);selectLie('MISS RIGHT')">RIGHT</button>
-    </div>
-    <button class="green-miss" style="width:100%;height:36px;" onclick="highlight(this);selectLie('MISS SHORT')">SHORT</button>
-  </div>
+  <button class="green big" onclick="highlight(this);selectLie('GREEN')">GREEN</button>
+  <button class="green-miss" onclick="highlight(this);selectLie('MISSED GREEN')">MISSED AROUND GREEN</button>
   <div class="row">
     <button class="bunker" onclick="highlight(this);selectLie('GS BUNKER')">GS BUNKER</button>
     <button class="bunker" onclick="highlight(this);selectLie('FW BUNKER')">FW BUNKER</button>
@@ -161,6 +154,19 @@ input{width:100%;max-width:320px;height:52px;background:#222;color:#fff;border-r
   <div class="row">
     <button class="rough" onclick="handleRecovery('LEFT')">LEFT</button>
     <button class="rough" onclick="handleRecovery('RIGHT')">RIGHT</button>
+  </div>
+  <div class="back-wrap"><button class="back" onclick="goBack()">BACK</button></div>
+</div>
+
+<div id="missedGreenPage" class="page">
+  <h3>Missed Green - Which direction?</h3>
+  <div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:100%;max-width:320px;">
+    <button class="green-miss" onclick="handleMissedGreen('LONG')">LONG</button>
+    <div class="row">
+      <button class="green-miss" onclick="handleMissedGreen('LEFT')">LEFT</button>
+      <button class="green-miss" onclick="handleMissedGreen('RIGHT')">RIGHT</button>
+    </div>
+    <button class="green-miss" onclick="handleMissedGreen('SHORT')">SHORT</button>
   </div>
   <div class="back-wrap"><button class="back" onclick="goBack()">BACK</button></div>
 </div>
@@ -334,7 +340,7 @@ function goBack(){
   }
   
   // FROM PENALTY PAGES - Go back to lie page
-  else if(currentPage==='penaltyPage'||currentPage==='obPenaltyPage'){
+  else if(currentPage==='penaltyPage'||currentPage==='obPenaltyPage'||currentPage==='recoveryPage'||currentPage==='missedGreenPage'){
     show('liePage');
   }
   
@@ -637,6 +643,10 @@ function selectLie(lie){
     show('recoveryPage');
     return;
   }
+  if(lie==='MISSED GREEN'){
+    show('missedGreenPage');
+    return;
+  }
   // Handle green misses - count as missed GIR and scrambling opportunity
   if(lie==='MISS LEFT'||lie==='MISS RIGHT'||lie==='MISS SHORT'||lie==='MISS LONG'){
     lastShot.lie=lie;
@@ -732,10 +742,36 @@ function handleRecovery(direction){
   
   // Move to next shot
   shots++;
-  const lastDistance=lastShot.distanceBefore||100;
-  currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:lastDistance,distanceAfter:null,isPutt:false,fwCounted:false,bunkerCounted:false});
+  currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:150,distanceAfter:null,isPutt:false,fwCounted:false,bunkerCounted:false});
   distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
-  shotDistance.value=lastDistance;
+  shotDistance.value=150;
+  lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
+  show('distancePage');
+}
+
+function handleMissedGreen(direction){
+  const lastShot=currentHoleShots[currentHoleShots.length-1];
+  lastShot.lie='MISS '+direction;
+  
+  // Count green miss direction
+  girOpp++;
+  if(direction==='LEFT') missLeft++;
+  if(direction==='RIGHT') missRight++;
+  if(direction==='SHORT') missShort++;
+  if(direction==='LONG') missLong++;
+  
+  // Count scrambling opportunity
+  if(!girThisHole && !scrCountedThisHole){
+    scrOpp++;
+    scrCountedThisHole=true;
+    console.log('Green miss - counted scrambling opp. scrOpp='+scrOpp);
+  }
+  
+  // Move to next shot with default 15 yards
+  shots++;
+  currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:15,distanceAfter:null,isPutt:false,fwCounted:false,bunkerCounted:false});
+  distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
+  shotDistance.value=15;
   lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
   show('distancePage');
 }
