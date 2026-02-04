@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Golf Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
 
 <style>
 html,body{margin:0;padding:0;height:100%;overflow:hidden;}
@@ -78,7 +79,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.7.0</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.7.7</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -1043,6 +1044,7 @@ function finishHole(){
   let holeSgOTT = 0, holeSgAPP = 0, holeSgARG = 0, holeSgPutt = 0;
   
   currentHoleShots.forEach((s, idx) => {
+    s.sg = 0; // Initialize SG for this shot
     if(!s.lie || s.lie === 'PENALTY') return;
     
     const nextShot = currentHoleShots[idx + 1];
@@ -1062,41 +1064,57 @@ function finishHole(){
     } else if(s.lie === 'HOLED'){
       // Holed from off green - huge gain
       let expectedBefore = 0;
+      let sg = 0;
       if(isTeeShotPar45){
         expectedBefore = getExpectedStrokes(currentHoleData.yards, 'TEE');
-        holeSgOTT += expectedBefore - 1;
+        sg = expectedBefore - 1;
+        holeSgOTT += sg;
       } else if(isTeeShotPar3){
         expectedBefore = getExpectedStrokes(currentHoleData.yards, 'TEE');
-        holeSgAPP += expectedBefore - 1;
+        sg = expectedBefore - 1;
+        holeSgAPP += sg;
       } else if(isShortGame){
         const prevShot = currentHoleShots[idx - 1];
         const prevLie = prevShot ? prevShot.lie : 'FAIRWAY';
         expectedBefore = getExpectedStrokes(distBefore, prevLie);
-        holeSgARG += expectedBefore - 1;
+        sg = expectedBefore - 1;
+        holeSgARG += sg;
       } else {
         const prevShot = currentHoleShots[idx - 1];
         const prevLie = prevShot ? prevShot.lie : 'FAIRWAY';
         expectedBefore = getExpectedStrokes(distBefore, prevLie);
-        holeSgAPP += expectedBefore - 1;
+        sg = expectedBefore - 1;
+        holeSgAPP += sg;
       }
+      s.sg = sg;
     } else if(isTeeShotPar45){
       // Off the tee on par 4/5
       const expectedBefore = getExpectedStrokes(currentHoleData.yards, 'TEE');
-      const expectedAfter = distAfter > 0 ? getExpectedStrokes(distAfter, s.lie) : getExpectedPutts(distAfter * 3);
+      let expectedAfter;
+      if(s.lie === 'GREEN'){
+        // distAfter is already in feet for green
+        expectedAfter = getExpectedPutts(distAfter);
+      } else {
+        expectedAfter = distAfter > 0 ? getExpectedStrokes(distAfter, s.lie) : 2.5;
+      }
       const sg = expectedBefore - expectedAfter - 1;
+      s.sg = sg;
       holeSgOTT += sg;
-      console.log(`OTT: ${currentHoleData.yards}yds TEE -> ${distAfter}yds ${s.lie}, expected ${expectedBefore.toFixed(2)} -> ${expectedAfter.toFixed(2)}, SG: ${sg.toFixed(2)}`);
+      console.log(`OTT: ${currentHoleData.yards}yds TEE -> ${s.lie === 'GREEN' ? distAfter + 'ft' : distAfter + 'yds'} ${s.lie}, expected ${expectedBefore.toFixed(2)} -> ${expectedAfter.toFixed(2)}, SG: ${sg.toFixed(2)}`);
     } else if(isTeeShotPar3){
       // Par 3 tee shot counts as approach
       const expectedBefore = getExpectedStrokes(currentHoleData.yards, 'TEE');
       let expectedAfter;
       if(s.lie === 'GREEN'){
-        expectedAfter = getExpectedPutts(distAfter * 3); // Convert yards to feet approx
+        // distAfter is already in feet for green
+        expectedAfter = getExpectedPutts(distAfter);
       } else {
-        expectedAfter = distAfter > 0 ? getExpectedStrokes(distAfter, s.lie) : getExpectedPutts(10);
+        expectedAfter = distAfter > 0 ? getExpectedStrokes(distAfter, s.lie) : 2.5;
       }
       const sg = expectedBefore - expectedAfter - 1;
+      s.sg = sg;
       holeSgAPP += sg;
+      console.log(`APP (Par 3): ${currentHoleData.yards}yds TEE -> ${s.lie === 'GREEN' ? distAfter + 'ft' : distAfter + 'yds'} ${s.lie}, expected ${expectedBefore.toFixed(2)} -> ${expectedAfter.toFixed(2)}, SG: ${sg.toFixed(2)}`);
     } else if(isShortGame){
       // Around the green (50 yards and in, not putting)
       const prevShot = currentHoleShots[idx - 1];
@@ -1104,12 +1122,15 @@ function finishHole(){
       const expectedBefore = getExpectedStrokes(distBefore, prevLie);
       let expectedAfter;
       if(s.lie === 'GREEN'){
-        expectedAfter = getExpectedPutts(distAfter * 3);
+        // distAfter is already in feet for green
+        expectedAfter = getExpectedPutts(distAfter);
       } else {
-        expectedAfter = distAfter > 0 ? getExpectedStrokes(distAfter, s.lie) : getExpectedPutts(10);
+        expectedAfter = distAfter > 0 ? getExpectedStrokes(distAfter, s.lie) : 2.5;
       }
       const sg = expectedBefore - expectedAfter - 1;
+      s.sg = sg;
       holeSgARG += sg;
+      console.log(`ARG: ${distBefore}yds ${prevLie} -> ${s.lie === 'GREEN' ? distAfter + 'ft' : distAfter + 'yds'} ${s.lie}, expected ${expectedBefore.toFixed(2)} -> ${expectedAfter.toFixed(2)}, SG: ${sg.toFixed(2)}`);
     } else if(isApproach){
       // Approach shot (>50 yards, not tee shot on par 4/5)
       const prevShot = currentHoleShots[idx - 1];
@@ -1117,31 +1138,46 @@ function finishHole(){
       const expectedBefore = getExpectedStrokes(distBefore, prevLie);
       let expectedAfter;
       if(s.lie === 'GREEN'){
-        expectedAfter = getExpectedPutts(distAfter * 3);
+        // distAfter is already in feet for green
+        expectedAfter = getExpectedPutts(distAfter);
       } else {
-        expectedAfter = distAfter > 0 ? getExpectedStrokes(distAfter, s.lie) : getExpectedPutts(10);
+        expectedAfter = distAfter > 0 ? getExpectedStrokes(distAfter, s.lie) : 2.5;
       }
       const sg = expectedBefore - expectedAfter - 1;
+      s.sg = sg;
       holeSgAPP += sg;
+      console.log(`APP: ${distBefore}yds ${prevLie} -> ${s.lie === 'GREEN' ? distAfter + 'ft' : distAfter + 'yds'} ${s.lie}, expected ${expectedBefore.toFixed(2)} -> ${expectedAfter.toFixed(2)}, SG: ${sg.toFixed(2)}`);
     }
   });
   
-  // Calculate SG Putting for this hole
+  // Calculate SG Putting for each putt
   let firstPuttDist = 0;
   let numPutts = 0;
-  currentHoleShots.forEach(s => {
-    if(s.isPutt && firstPuttDist === 0){
-      firstPuttDist = s.distanceBefore || 0;
+  currentHoleShots.forEach((s, idx) => {
+    if(s.isPutt){
+      const puttDist = s.distanceBefore || 0;
+      if(firstPuttDist === 0) firstPuttDist = puttDist;
+      const expectedBefore = getExpectedPutts(puttDist);
+      let expectedAfter = 0;
+      if(s.lie === 'HOLED' || s.distanceAfter === 0){
+        expectedAfter = 0; // Holed it
+      } else if(s.distanceAfter){
+        expectedAfter = getExpectedPutts(s.distanceAfter);
+      }
+      const sg = expectedBefore - expectedAfter - 1;
+      s.sg = sg;
+      holeSgPutt += sg;
+      numPutts++;
     }
-    if(s.isPutt || s.lie === 'HOLED') numPutts++;
+    if(s.lie === 'HOLED' && !s.isPutt){
+      // Already counted above for holed shots from off green
+    }
   });
   
-  if(firstPuttDist > 0 && numPutts > 0){
-    const expectedPutts = getExpectedPutts(firstPuttDist);
-    holeSgPutt = expectedPutts - numPutts;
-    currentHoleData.firstPuttDist = firstPuttDist;
-    currentHoleData.expectedPutts = expectedPutts;
-    console.log(`Hole ${currentHole}: ${numPutts} putts from ${firstPuttDist}ft, expected ${expectedPutts.toFixed(2)}, SG Putting: ${holeSgPutt.toFixed(2)}`);
+  currentHoleData.firstPuttDist = firstPuttDist;
+  currentHoleData.expectedPutts = firstPuttDist > 0 ? getExpectedPutts(firstPuttDist) : 0;
+  if(numPutts > 0){
+    console.log(`Hole ${currentHole}: ${numPutts} putts from ${firstPuttDist}ft, SG Putting: ${holeSgPutt.toFixed(2)}`);
   }
   
   // Store hole SG data
@@ -1413,12 +1449,13 @@ function exportToExcel(){
   back9.forEach(h=>{back9Yards+=h.yards;back9Par+=h.par;back9Score+=h.score;back9Putts+=h.putts;});
   
   let scoringData = [
-    ['SCORING'],
+    ['SCORING', '', '', '', '', 'AVERAGES', '', '', 'SCORE DISTRIBUTION'],
     [],
-    ['Player:', playerName.value||'Player'],
-    ['Handicap:', document.getElementById('playerHandicap').value||'N/A'],
-    ['Course:', courseName.value||'Course'],
-    ['Date:', formatDateForDisplay(roundDate.value)],
+    ['Player:', playerName.value||'Player', '', '', '', 'Avg Par 3', c3?(p3/c3).toFixed(2):'N/A', '', 'Eagles', eagles],
+    ['Handicap:', document.getElementById('playerHandicap').value||'N/A', '', '', '', 'Avg Par 4', c4?(p4/c4).toFixed(2):'N/A', '', 'Birdies', birdies],
+    ['Course:', courseName.value||'Course', '', '', '', 'Avg Par 5', c5?(p5/c5).toFixed(2):'N/A', '', 'Pars', pars],
+    ['Date:', formatDateForDisplay(roundDate.value), '', '', '', '', '', '', 'Bogeys', bogeys],
+    ['', '', '', '', '', '', '', '', 'Double+', doubleOrWorse],
     [],
     // Front 9
     ['Hole', ...front9.map(h=>h.hole), 'OUT'],
@@ -1438,38 +1475,152 @@ function exportToExcel(){
     scoringData.push(['Putts', ...back9.map(h=>h.putts), back9Putts, totalPutts]);
   }
   
-  scoringData.push([]);
-  scoringData.push(['Avg Par 3 Score', c3?(p3/c3).toFixed(2):'N/A', '', 'Eagles', eagles]);
-  scoringData.push(['Avg Par 4 Score', c4?(p4/c4).toFixed(2):'N/A', '', 'Birdies', birdies]);
-  scoringData.push(['Avg Par 5 Score', c5?(p5/c5).toFixed(2):'N/A', '', 'Pars', pars]);
-  scoringData.push(['', '', '', 'Bogeys', bogeys]);
-  scoringData.push(['', '', '', 'Double or Worse', doubleOrWorse]);
   
   const ws1 = XLSX.utils.aoa_to_sheet(scoringData);
   XLSX.utils.book_append_sheet(wb, ws1, 'Scoring');
   
-  // ============ SHEET 2: OFF THE TEE ============
+  // ============ SHEET 2: STROKES GAINED ============
+  const sgTotal = sgOTTTotal + sgAPPTotal + sgARGTotal + sgPuttingTotal;
+  
+  // Helper function to categorize lies for strokes gained
+  function categorizeLie(lie, isPutt, isFromTee){
+    if(isFromTee) return 'Tee';
+    if(isPutt || lie === 'GREEN' || lie === 'PUTT') return 'Green';
+    if(lie === 'FAIRWAY') return 'Fairway';
+    if(lie === 'LEFT ROUGH' || lie === 'RIGHT ROUGH') return 'Rough';
+    if(lie === 'MISS LEFT' || lie === 'MISS RIGHT' || lie === 'MISS SHORT' || lie === 'MISS LONG') return 'Rough';
+    if(lie === 'GS BUNKER' || lie === 'FW BUNKER') return 'Sand';
+    if(lie === 'RECOVERY' || lie === 'PENALTY' || lie === 'OB' || lie === 'WATER') return 'Recovery';
+    return 'Rough';
+  }
+  
+  let sgSummaryData = [
+    ['STROKES GAINED'],
+    [],
+    ['SG: Total', sgTotal.toFixed(2)],
+    ['SG: Off The Tee', sgOTTTotal.toFixed(2)],
+    ['SG: Approach', sgAPPTotal.toFixed(2)],
+    ['SG: Around the Green', sgARGTotal.toFixed(2)],
+    ['SG: Putting', sgPuttingTotal.toFixed(2)],
+    [],
+    ['SHOT BY SHOT BREAKDOWN'],
+    ['Hole', 'Par', 'Shot #', 'Start Distance', 'Start Lie', 'End Lie', 'End Distance', 'Strokes Gained']
+  ];
+  
+  // Add shot-by-shot data
+  allHoles.forEach(h=>{
+    h.shots.forEach((s, idx)=>{
+      const nextShot = h.shots[idx+1];
+      const prevShot = idx > 0 ? h.shots[idx-1] : null;
+      
+      // Start lie category
+      let startLieCat = '';
+      if(s.shotNum === 1){
+        startLieCat = 'Tee';
+      } else if(s.isPutt){
+        startLieCat = 'Green';
+      } else if(prevShot && prevShot.lie){
+        startLieCat = categorizeLie(prevShot.lie, false, false);
+      } else {
+        startLieCat = 'Unknown';
+      }
+      
+      // Start distance
+      let startDist = s.distanceBefore || 0;
+      let startDistDisplay = '';
+      if(s.isPutt){
+        startDistDisplay = startDist + ' ft';
+      } else {
+        startDistDisplay = startDist + ' yds';
+      }
+      
+      // End lie category
+      let endLieCat = '';
+      if(s.lie === 'HOLED'){
+        endLieCat = 'Holed';
+      } else {
+        endLieCat = categorizeLie(s.lie, s.isPutt, false);
+      }
+      
+      // End distance
+      let endDistDisplay = '0';
+      if(s.lie === 'HOLED'){
+        endDistDisplay = '0';
+      } else if(s.distanceAfter != null){
+        if(nextShot && nextShot.isPutt){
+          endDistDisplay = s.distanceAfter + ' ft';
+        } else if(s.isPutt){
+          endDistDisplay = s.distanceAfter + ' ft';
+        } else {
+          endDistDisplay = s.distanceAfter + ' yds';
+        }
+      } else if(nextShot){
+        if(nextShot.isPutt){
+          endDistDisplay = nextShot.distanceBefore != null ? nextShot.distanceBefore + ' ft' : '';
+        } else {
+          endDistDisplay = nextShot.distanceBefore != null ? nextShot.distanceBefore + ' yds' : '';
+        }
+      }
+      
+      // Format SG for display
+      let sgDisplay = '';
+      if(s.sg != null){
+        if(s.sg >= 0){
+          sgDisplay = '+' + s.sg.toFixed(2);
+        } else {
+          sgDisplay = s.sg.toFixed(2);
+        }
+      }
+      
+      sgSummaryData.push([
+        h.hole,
+        h.par,
+        s.shotNum,
+        startDistDisplay,
+        startLieCat,
+        endLieCat,
+        endDistDisplay,
+        sgDisplay
+      ]);
+    });
+  });
+  
+  const wsSG = XLSX.utils.aoa_to_sheet(sgSummaryData);
+  XLSX.utils.book_append_sheet(wb, wsSG, 'Strokes Gained');
+  
+  // ============ SHEET 3: OFF THE TEE ============
   let drivingDistances=[];
   let driveDetails=[];
+  let longestDrive = 0;
+  let shortestDrive = 999;
   allHoles.forEach(h=>{
     if((h.par===4||h.par===5)&&h.shots.length>0&&h.shots[0].distanceAfter!=null){
       const driveDistance = h.yards - h.shots[0].distanceAfter;
       drivingDistances.push(driveDistance);
       driveDetails.push({hole: h.hole, distance: driveDistance, par: h.par, yards: h.yards});
+      if(driveDistance > longestDrive) longestDrive = driveDistance;
+      if(driveDistance < shortestDrive) shortestDrive = driveDistance;
     }
   });
   const avgDrive=drivingDistances.length?Math.round(drivingDistances.reduce((a,b)=>a+b,0)/drivingDistances.length):0;
+  if(drivingDistances.length === 0) shortestDrive = 0;
   
   let teeData = [
     ['OFF THE TEE'],
     [],
+    ['SG: Off The Tee', sgOTTTotal.toFixed(2)],
+    [],
+    ['FAIRWAY ACCURACY'],
     ['Fairways Hit', `${fwHit}/${fwOpp}`, fwOpp?Math.round(fwHit/fwOpp*100)+'%':'0%'],
     ['Missed Left', fwLeft, fwOpp?Math.round(fwLeft/fwOpp*100)+'%':'0%'],
     ['Missed Right', fwRight, fwOpp?Math.round(fwRight/fwOpp*100)+'%':'0%'],
     [],
-    ['Avg Driving Distance', avgDrive+' yards'],
+    ['DRIVING DISTANCE'],
+    ['Average', avgDrive+' yards'],
+    ['Longest', longestDrive+' yards'],
+    ['Shortest', shortestDrive+' yards'],
     [],
-    ['DRIVING DISTANCES'],
+    ['DRIVE BY HOLE'],
     ['Hole', 'Par', 'Drive Distance']
   ];
   
@@ -1540,14 +1691,16 @@ function exportToExcel(){
   let approachData = [
     ['APPROACH'],
     [],
+    ['SG: Approach', sgAPPTotal.toFixed(2)],
+    [],
     ['GIR', `${gir}/${totalHoles}`, totalHoles?Math.round(gir/totalHoles*100)+'%':'0%'],
     ['Proximity when GIR', (gir?Math.round(girFirstPuttDist/gir):0)+' ft'],
     [],
     ['MISSED GREENS'],
-    ['Missed Short', missShort, girOpp?Math.round(missShort/girOpp*100)+'%':'0%'],
-    ['Missed Long', missLong, girOpp?Math.round(missLong/girOpp*100)+'%':'0%'],
-    ['Missed Left', missLeft, girOpp?Math.round(missLeft/girOpp*100)+'%':'0%'],
-    ['Missed Right', missRight, girOpp?Math.round(missRight/girOpp*100)+'%':'0%'],
+    ['Short', missShort, girOpp?Math.round(missShort/girOpp*100)+'%':'0%'],
+    ['Long', missLong, girOpp?Math.round(missLong/girOpp*100)+'%':'0%'],
+    ['Left', missLeft, girOpp?Math.round(missLeft/girOpp*100)+'%':'0%'],
+    ['Right', missRight, girOpp?Math.round(missRight/girOpp*100)+'%':'0%'],
     [],
     ['Approach by Distance', '# of Shots', 'Avg Proximity']
   ];
@@ -1610,6 +1763,8 @@ function exportToExcel(){
   let shortGameData = [
     ['AROUND THE GREEN'],
     [],
+    ['SG: Around the Green', sgARGTotal.toFixed(2)],
+    [],
     ['Scrambling', `${scr}/${scrOpp}`, scrOpp?Math.round(scr/scrOpp*100)+'%':'0%'],
     ['Up & Down from Bunkers', `${bun}/${bunOpp}`, bunOpp?Math.round(bun/bunOpp*100)+'%':'0%'],
     ['Avg Proximity from Bunkers', avgBunkerProx+' ft', bunkerShots.length+' shots'],
@@ -1630,21 +1785,77 @@ function exportToExcel(){
   XLSX.utils.book_append_sheet(wb, ws4, 'Around the Green');
   
   // ============ SHEET 5: PUTTING ============
+  // Calculate additional putting stats
+  let puttDistances = [];
+  let madePuttDistances = [];
+  let longestMadePutt = 0;
+  let avgFirstPuttDist = 0;
+  let firstPuttCount = 0;
+  
+  allHoles.forEach(h=>{
+    if(h.firstPuttDist){
+      puttDistances.push(h.firstPuttDist);
+      avgFirstPuttDist += h.firstPuttDist;
+      firstPuttCount++;
+    }
+    // Check for made putts (one-putts)
+    if(h.putts === 1 && h.firstPuttDist){
+      madePuttDistances.push(h.firstPuttDist);
+      if(h.firstPuttDist > longestMadePutt) longestMadePutt = h.firstPuttDist;
+    }
+  });
+  avgFirstPuttDist = firstPuttCount > 0 ? Math.round(avgFirstPuttDist / firstPuttCount) : 0;
+  
+  // Putting by distance ranges
+  const puttRanges = [
+    {min: 0, max: 5, made: 0, total: 0, label: '0-5 ft'},
+    {min: 6, max: 10, made: 0, total: 0, label: '6-10 ft'},
+    {min: 11, max: 20, made: 0, total: 0, label: '11-20 ft'},
+    {min: 21, max: 30, made: 0, total: 0, label: '21-30 ft'},
+    {min: 31, max: 999, made: 0, total: 0, label: '30+ ft'}
+  ];
+  
+  allHoles.forEach(h=>{
+    if(h.firstPuttDist && h.putts >= 1){
+      puttRanges.forEach(r=>{
+        if(h.firstPuttDist >= r.min && h.firstPuttDist <= r.max){
+          r.total++;
+          if(h.putts === 1) r.made++;
+        }
+      });
+    }
+  });
+  
   let puttingData = [
     ['PUTTING'],
     [],
+    ['SG: Putting', sgPuttingTotal.toFixed(2)],
+    [],
+    ['PUTTING SUMMARY'],
     ['Total Putts', totalPutts],
     ['Putts per Hole', (totalPutts/totalHoles).toFixed(1)],
     ['Putts per GIR', gir?(girPutts/gir).toFixed(1):'N/A'],
+    ['Avg First Putt Distance', avgFirstPuttDist + ' ft'],
+    [],
+    ['PUTTING PERFORMANCE'],
+    ['One-Putts', onePuttMade, (onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0)+'%'],
+    ['Two-Putts', totalHoles - onePuttMade - threePlusPutts],
     ['Three-Putts', threePlusPutts],
-    ['One-Putt %', (onePuttOpp?Math.round(onePuttMade/onePuttOpp*100):0)+'%'],
+    ['Longest Made Putt', longestMadePutt + ' ft'],
     [],
-    ['STROKES GAINED PUTTING'],
-    ['Total SG Putting', sgPuttingTotal.toFixed(2)],
-    ['SG Putting per Hole', (sgPuttingTotal/totalHoles).toFixed(2)],
-    [],
-    ['Hole', 'First Putt Dist', 'Putts', 'Expected Putts', 'SG Putting']
+    ['MAKE % BY DISTANCE'],
+    ['Distance', 'Made/Total', 'Make %']
   ];
+  
+  puttRanges.forEach(r=>{
+    if(r.total > 0){
+      puttingData.push([r.label, `${r.made}/${r.total}`, Math.round(r.made/r.total*100)+'%']);
+    }
+  });
+  
+  puttingData.push([]);
+  puttingData.push(['HOLE BY HOLE PUTTING']);
+  puttingData.push(['Hole', 'First Putt Dist', 'Putts', 'Expected Putts', 'SG Putting']);
   
   allHoles.forEach(h=>{
     if(h.firstPuttDist){
@@ -1661,7 +1872,7 @@ function exportToExcel(){
   const ws5 = XLSX.utils.aoa_to_sheet(puttingData);
   XLSX.utils.book_append_sheet(wb, ws5, 'Putting');
   
-  // ============ SHEET 6: PLAY BY PLAY ============
+  // ============ SHEET 7: PLAY BY PLAY ============
   let playByPlayData = [
     ['PLAY BY PLAY'],
     []
@@ -1687,14 +1898,19 @@ function exportToExcel(){
       else if(endLie === 'MISS LONG') endLie = 'long of green';
       else endLie = endLie.toLowerCase();
       
-      // Distance of this shot
+      // Distance of this shot - for tee shots on par 4/5, calculate driving distance
       let shotDist = '';
-      if(s.distanceBefore != null){
-        if(s.isPutt){
-          shotDist = s.distanceBefore + ' ft';
-        } else {
-          shotDist = s.distanceBefore + ' yds';
-        }
+      if(s.isPutt){
+        if(s.distanceBefore != null) shotDist = s.distanceBefore + ' ft';
+      } else if(s.shotNum === 1 && (h.par === 4 || h.par === 5) && s.distanceAfter != null){
+        // Tee shot on par 4/5 - show driving distance (hole yards - remaining yards)
+        const driveDist = h.yards - s.distanceAfter;
+        shotDist = driveDist + ' yds';
+      } else if(s.shotNum === 1){
+        // Tee shot on par 3 - show hole distance
+        shotDist = h.yards + ' yds';
+      } else if(s.distanceBefore != null){
+        shotDist = s.distanceBefore + ' yds';
       }
       
       // Distance remaining
@@ -1726,7 +1942,17 @@ function exportToExcel(){
         }
       }
       
-      playByPlayData.push(['', shotDesc]);
+      // Format SG for this shot
+      let sgDisplay = '';
+      if(s.sg != null){
+        if(s.sg >= 0){
+          sgDisplay = '+' + s.sg.toFixed(2);
+        } else {
+          sgDisplay = s.sg.toFixed(2);
+        }
+      }
+      
+      playByPlayData.push(['', shotDesc, sgDisplay]);
     });
     
     // Add score summary
@@ -1744,97 +1970,263 @@ function exportToExcel(){
     playByPlayData.push([]);
   });
   
-  const ws6 = XLSX.utils.aoa_to_sheet(playByPlayData);
-  XLSX.utils.book_append_sheet(wb, ws6, 'Play by Play');
+  const ws7 = XLSX.utils.aoa_to_sheet(playByPlayData);
+  XLSX.utils.book_append_sheet(wb, ws7, 'Play by Play');
   
-  // ============ SHEET 7: STROKES GAINED DATA ============
-  let sgData = [
-    ['STROKES GAINED DATA'],
-    [],
-    ['Hole', 'Par', 'Shot #', 'Start Distance', 'Start Lie', 'End Lie', 'End Distance']
-  ];
-  
-  // Helper function to categorize lies for strokes gained
-  function categorizeLie(lie, isPutt, isFromTee){
-    if(isFromTee) return 'Tee';
-    if(isPutt || lie === 'GREEN' || lie === 'PUTT') return 'Green';
-    if(lie === 'FAIRWAY') return 'Fairway';
-    if(lie === 'LEFT ROUGH' || lie === 'RIGHT ROUGH') return 'Rough';
-    if(lie === 'MISS LEFT' || lie === 'MISS RIGHT' || lie === 'MISS SHORT' || lie === 'MISS LONG') return 'Rough';
-    if(lie === 'GS BUNKER' || lie === 'FW BUNKER') return 'Sand';
-    if(lie === 'RECOVERY' || lie === 'PENALTY' || lie === 'OB' || lie === 'WATER') return 'Recovery';
-    return 'Rough'; // Default to rough for unknown
+  // Helper function to set column widths based on content
+  function autoFitColumns(ws, data){
+    const colWidths = [];
+    data.forEach(row => {
+      if(Array.isArray(row)){
+        row.forEach((cell, colIdx) => {
+          const cellLen = cell ? String(cell).length : 0;
+          if(!colWidths[colIdx] || cellLen > colWidths[colIdx]){
+            colWidths[colIdx] = cellLen;
+          }
+        });
+      }
+    });
+    ws['!cols'] = colWidths.map(w => ({ wch: Math.min(Math.max(w + 2, 8), 50) }));
   }
   
-  allHoles.forEach(h=>{
-    h.shots.forEach((s, idx)=>{
-      const nextShot = h.shots[idx+1];
-      const prevShot = idx > 0 ? h.shots[idx-1] : null;
-      
-      // Start lie category
-      let startLieCat = '';
-      if(s.shotNum === 1){
-        startLieCat = 'Tee';
-      } else if(s.isPutt){
-        startLieCat = 'Green';
-      } else if(prevShot && prevShot.lie){
-        startLieCat = categorizeLie(prevShot.lie, false, false);
-      } else {
-        startLieCat = 'Unknown';
-      }
-      
-      // Start distance - yards off green, feet on green
-      let startDist = s.distanceBefore || 0;
-      let startDistDisplay = '';
-      if(s.isPutt){
-        startDistDisplay = startDist + ' ft';
-      } else {
-        startDistDisplay = startDist + ' yds';
-      }
-      
-      // End lie category
-      let endLieCat = '';
-      if(s.lie === 'HOLED'){
-        endLieCat = 'Holed';
-      } else {
-        endLieCat = categorizeLie(s.lie, s.isPutt, false);
-      }
-      
-      // End distance - yards off green, feet on green
-      let endDistDisplay = '0';
-      if(s.lie === 'HOLED'){
-        endDistDisplay = '0';
-      } else if(s.distanceAfter != null){
-        // If ending on green (next shot is putt), use feet
-        if(nextShot && nextShot.isPutt){
-          endDistDisplay = s.distanceAfter + ' ft';
-        } else if(s.isPutt){
-          endDistDisplay = s.distanceAfter + ' ft';
-        } else {
-          endDistDisplay = s.distanceAfter + ' yds';
-        }
-      } else if(nextShot){
-        if(nextShot.isPutt){
-          endDistDisplay = (nextShot.distanceBefore || 0) + ' ft';
-        } else {
-          endDistDisplay = (nextShot.distanceBefore || 0) + ' yds';
+  // Set uniform column widths for scorecard
+  function setUniformScorecard(ws, numCols){
+    const cols = [];
+    cols.push({ wch: 8 }); // First column (labels)
+    for(let i = 1; i <= numCols; i++){
+      cols.push({ wch: 6 }); // Uniform width for hole columns
+    }
+    ws['!cols'] = cols;
+  }
+  
+  // Helper function to color code SG cells (green for positive, red for negative) with black border
+  function colorSGCells(ws, data, sgColIndex, skipParCol = false){
+    data.forEach((row, rowIdx) => {
+      if(Array.isArray(row) && row[sgColIndex] != null){
+        const cellVal = String(row[sgColIndex]);
+        // Skip if it's a par value (1-5) and skipParCol is true
+        if(skipParCol && ['1','2','3','4','5'].includes(cellVal)) return;
+        
+        const val = parseFloat(row[sgColIndex]);
+        if(!isNaN(val)){
+          const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: sgColIndex });
+          if(ws[cellRef]){
+            const border = {
+              top: { style: 'thin', color: { rgb: '000000' } },
+              bottom: { style: 'thin', color: { rgb: '000000' } },
+              left: { style: 'thin', color: { rgb: '000000' } },
+              right: { style: 'thin', color: { rgb: '000000' } }
+            };
+            if(val > 0){
+              ws[cellRef].s = {
+                font: { color: { rgb: "008000" } },
+                fill: { fgColor: { rgb: "E8F5E9" } },
+                border: border
+              };
+            } else if(val < 0){
+              ws[cellRef].s = {
+                font: { color: { rgb: "CC0000" } },
+                fill: { fgColor: { rgb: "FFEBEE" } },
+                border: border
+              };
+            } else {
+              ws[cellRef].s = { border: border };
+            }
+          }
         }
       }
-      
-      sgData.push([
-        h.hole,
-        h.par,
-        s.shotNum,
-        startDistDisplay,
-        startLieCat,
-        endLieCat,
-        endDistDisplay
-      ]);
     });
+  }
+  
+  // Helper to add borders to a range of cells
+  function addBorders(ws, startRow, endRow, startCol, endCol){
+    for(let r = startRow; r <= endRow; r++){
+      for(let c = startCol; c <= endCol; c++){
+        const cellRef = XLSX.utils.encode_cell({ r: r, c: c });
+        if(ws[cellRef]){
+          ws[cellRef].s = ws[cellRef].s || {};
+          ws[cellRef].s.border = {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
+          };
+        }
+      }
+    }
+  }
+  
+  // Helper to bold cells in a row
+  function boldRow(ws, rowIdx, startCol, endCol){
+    for(let c = startCol; c <= endCol; c++){
+      const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: c });
+      if(ws[cellRef]){
+        ws[cellRef].s = ws[cellRef].s || {};
+        ws[cellRef].s.font = ws[cellRef].s.font || {};
+        ws[cellRef].s.font.bold = true;
+      }
+    }
+  }
+  
+  // Helper to color score cells relative to par
+  function colorScoreVsPar(ws, scoreRowIdx, parRowIdx, startCol, endCol){
+    for(let c = startCol; c <= endCol; c++){
+      const scoreRef = XLSX.utils.encode_cell({ r: scoreRowIdx, c: c });
+      const parRef = XLSX.utils.encode_cell({ r: parRowIdx, c: c });
+      if(ws[scoreRef] && ws[parRef]){
+        const score = parseInt(ws[scoreRef].v);
+        const par = parseInt(ws[parRef].v);
+        if(!isNaN(score) && !isNaN(par)){
+          const diff = score - par;
+          ws[scoreRef].s = ws[scoreRef].s || {};
+          ws[scoreRef].s.border = {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
+          };
+          if(diff <= -2){ // Eagle or better
+            ws[scoreRef].s.font = { color: { rgb: "FFD700" }, bold: true }; // Gold
+            ws[scoreRef].s.fill = { fgColor: { rgb: "FFFDE7" } };
+          } else if(diff === -1){ // Birdie
+            ws[scoreRef].s.font = { color: { rgb: "008000" } }; // Green
+            ws[scoreRef].s.fill = { fgColor: { rgb: "E8F5E9" } };
+          } else if(diff === 0){ // Par
+            ws[scoreRef].s.font = { color: { rgb: "000000" } };
+          } else if(diff === 1){ // Bogey
+            ws[scoreRef].s.font = { color: { rgb: "CC0000" } }; // Red
+            ws[scoreRef].s.fill = { fgColor: { rgb: "FFEBEE" } };
+          } else { // Double+
+            ws[scoreRef].s.font = { color: { rgb: "990000" }, bold: true }; // Dark red
+            ws[scoreRef].s.fill = { fgColor: { rgb: "FFCDD2" } };
+          }
+        }
+      }
+    }
+  }
+  
+  // Apply column widths to all sheets
+  autoFitColumns(ws1, scoringData);
+  autoFitColumns(wsSG, sgSummaryData);
+  autoFitColumns(ws2, teeData);
+  autoFitColumns(ws3, approachData);
+  autoFitColumns(ws4, shortGameData);
+  autoFitColumns(ws5, puttingData);
+  autoFitColumns(ws7, playByPlayData);
+  
+  // Set uniform scorecard column widths
+  setUniformScorecard(ws1, Math.max(front9.length + 1, back9.length + 2));
+  
+  // Apply borders to scorecard on Scoring sheet (rows 8-12 for front 9)
+  addBorders(ws1, 8, 12, 0, front9.length + 1);
+  // Bold the Par row (row 10) and Header row (row 8)
+  boldRow(ws1, 8, 0, front9.length + 1);
+  boldRow(ws1, 10, 0, front9.length + 1);
+  // Color score cells vs par (score is row 11, par is row 10)
+  colorScoreVsPar(ws1, 11, 10, 1, front9.length);
+  
+  if(back9.length > 0){
+    addBorders(ws1, 14, 18, 0, back9.length + 2);
+    boldRow(ws1, 14, 0, back9.length + 2);
+    boldRow(ws1, 16, 0, back9.length + 2);
+    colorScoreVsPar(ws1, 17, 16, 1, back9.length);
+  }
+  
+  // Color code SG summary values at top of Strokes Gained sheet (rows 2-6, column 1)
+  colorSGCells(wsSG, sgSummaryData, 1);
+  
+  // Color code shot-by-shot SG column (column 7) - skip par column coloring
+  colorSGCells(wsSG, sgSummaryData, 7, false);
+  
+  // Bold par values in SG sheet (column 1 starting from row 9)
+  sgSummaryData.forEach((row, rowIdx) => {
+    if(rowIdx >= 9 && Array.isArray(row) && [3,4,5].includes(row[1])){
+      const cellRef = XLSX.utils.encode_cell({ r: rowIdx, c: 1 });
+      if(wsSG[cellRef]){
+        wsSG[cellRef].s = wsSG[cellRef].s || {};
+        wsSG[cellRef].s.font = { bold: true };
+        wsSG[cellRef].s.border = {
+          top: { style: 'thin', color: { rgb: '000000' } },
+          bottom: { style: 'thin', color: { rgb: '000000' } },
+          left: { style: 'thin', color: { rgb: '000000' } },
+          right: { style: 'thin', color: { rgb: '000000' } }
+        };
+      }
+    }
   });
   
-  const ws7 = XLSX.utils.aoa_to_sheet(sgData);
-  XLSX.utils.book_append_sheet(wb, ws7, 'Strokes Gained');
+  // Add borders to SG sheet sections
+  addBorders(wsSG, 2, 6, 0, 1); // SG summary at top
+  addBorders(wsSG, 9, sgSummaryData.length - 1, 0, 7); // Shot data table
+  
+  // Play by Play - column 2 (SG) - only color SG values, not yardage
+  playByPlayData.forEach((row, rowIdx) => {
+    if(Array.isArray(row)){
+      const cellRef2 = XLSX.utils.encode_cell({ r: rowIdx, c: 2 });
+      if(ws7[cellRef2]){
+        const val = parseFloat(row[2]);
+        if(!isNaN(val)){
+          const border = {
+            top: { style: 'thin', color: { rgb: '000000' } },
+            bottom: { style: 'thin', color: { rgb: '000000' } },
+            left: { style: 'thin', color: { rgb: '000000' } },
+            right: { style: 'thin', color: { rgb: '000000' } }
+          };
+          if(val > 0){
+            ws7[cellRef2].s = {
+              font: { color: { rgb: "008000" } },
+              fill: { fgColor: { rgb: "E8F5E9" } },
+              border: border
+            };
+          } else if(val < 0){
+            ws7[cellRef2].s = {
+              font: { color: { rgb: "CC0000" } },
+              fill: { fgColor: { rgb: "FFEBEE" } },
+              border: border
+            };
+          } else {
+            ws7[cellRef2].s = { border: border };
+          }
+        } else {
+          // Non-SG cells in column 2 - just border, no color
+          ws7[cellRef2].s = {
+            border: {
+              top: { style: 'thin', color: { rgb: '000000' } },
+              bottom: { style: 'thin', color: { rgb: '000000' } },
+              left: { style: 'thin', color: { rgb: '000000' } },
+              right: { style: 'thin', color: { rgb: '000000' } }
+            }
+          };
+        }
+      }
+    }
+  });
+  
+  // Add borders to Off The Tee sheet
+  addBorders(ws2, 2, 2, 0, 1); // SG row
+  addBorders(ws2, 4, 7, 0, 2); // Fairways section with header
+  addBorders(ws2, 9, 12, 0, 1); // Driving distance section
+  addBorders(ws2, 14, 15 + driveDetails.length, 0, 2); // Driving by hole table
+  const penaltyStartRow = 17 + driveDetails.length;
+  addBorders(ws2, penaltyStartRow, penaltyStartRow + 2, 0, 1); // Penalties section
+  
+  // Add borders to Approach sheet
+  addBorders(ws3, 2, 2, 0, 1); // SG row
+  addBorders(ws3, 4, 5, 0, 2); // GIR section
+  addBorders(ws3, 7, 11, 0, 2); // Missed greens
+  
+  // Add borders to Around the Green sheet
+  addBorders(ws4, 2, 2, 0, 1); // SG row
+  addBorders(ws4, 4, 5, 0, 2); // Scrambling/Bunkers
+  
+  // Add borders to Putting sheet - updated for new layout
+  addBorders(ws5, 2, 2, 0, 1); // SG row
+  addBorders(ws5, 4, 8, 0, 1); // Summary section
+  addBorders(ws5, 10, 14, 0, 2); // Performance section
+  addBorders(ws5, 16, 17 + puttRanges.filter(r=>r.total>0).length, 0, 2); // Make % by distance
+  
+  // Color SG values in putting hole-by-hole table
+  colorSGCells(ws5, puttingData, 4);
   
   // Create filename from player name, date, course name
   const pName = (playerName.value||'Player').replace(/[^a-zA-Z0-9]/g, '');
@@ -1933,10 +2325,10 @@ function generateCSV(){
   csv+=`Proximity when GIR,${gir?Math.round(girFirstPuttDist/gir):0} ft\n`;
   csv+='\n';
   csv+='MISSED GREENS\n';
-  csv+=`Missed Short,${missShort},${girOpp?Math.round(missShort/girOpp*100):0}%\n`;
-  csv+=`Missed Long,${missLong},${girOpp?Math.round(missLong/girOpp*100):0}%\n`;
-  csv+=`Missed Left,${missLeft},${girOpp?Math.round(missLeft/girOpp*100):0}%\n`;
-  csv+=`Missed Right,${missRight},${girOpp?Math.round(missRight/girOpp*100):0}%\n`;
+  csv+=`Short,${missShort},${girOpp?Math.round(missShort/girOpp*100):0}%\n`;
+  csv+=`Long,${missLong},${girOpp?Math.round(missLong/girOpp*100):0}%\n`;
+  csv+=`Left,${missLeft},${girOpp?Math.round(missLeft/girOpp*100):0}%\n`;
+  csv+=`Right,${missRight},${girOpp?Math.round(missRight/girOpp*100):0}%\n`;
   csv+='\n';
   
   let par3ApproachDist=[],par4ApproachDist=[],par5ApproachDist=[];
@@ -2093,14 +2485,19 @@ function generateCSV(){
       else if(endLie === 'MISS LONG') endLie = 'long of green';
       else endLie = endLie.toLowerCase();
       
-      // Distance of this shot
+      // Distance of this shot - for tee shots on par 4/5, calculate driving distance
       let shotDist = '';
-      if(s.distanceBefore != null){
-        if(s.isPutt){
-          shotDist = s.distanceBefore + ' ft';
-        } else {
-          shotDist = s.distanceBefore + ' yds';
-        }
+      if(s.isPutt){
+        if(s.distanceBefore != null) shotDist = s.distanceBefore + ' ft';
+      } else if(s.shotNum === 1 && (h.par === 4 || h.par === 5) && s.distanceAfter != null){
+        // Tee shot on par 4/5 - show driving distance (hole yards - remaining yards)
+        const driveDist = h.yards - s.distanceAfter;
+        shotDist = driveDist + ' yds';
+      } else if(s.shotNum === 1){
+        // Tee shot on par 3 - show hole distance
+        shotDist = h.yards + ' yds';
+      } else if(s.distanceBefore != null){
+        shotDist = s.distanceBefore + ' yds';
       }
       
       // Distance remaining
@@ -2131,7 +2528,17 @@ function generateCSV(){
         }
       }
       
-      csv+=`,${shotDesc}\n`;
+      // Format SG for this shot
+      let sgDisplay = '';
+      if(s.sg != null){
+        if(s.sg >= 0){
+          sgDisplay = '+' + s.sg.toFixed(2);
+        } else {
+          sgDisplay = s.sg.toFixed(2);
+        }
+      }
+      
+      csv+=`,${shotDesc},${sgDisplay}\n`;
     });
     
     // Score summary
