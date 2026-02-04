@@ -79,7 +79,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.7.7</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.7.9</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -203,6 +203,24 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   </div>
   <div class="round-meta" id="roundMeta" style="margin:0 0 8px 0;line-height:1;"></div>
 
+  <div class="stat center">
+    <span style="font-weight:600;">SG: Total</span> <span class="num" id="sgTotal"></span> <span style="font-size:12px;opacity:0.7;">(vs Tour Pro)</span>
+  </div>
+  
+  <div class="stat">
+    <div class="stat-split">
+      <div class="stat-half left">SG: OTT <span class="num" id="sgOTT">0.00</span></div>
+      <div class="stat-half">SG: APP <span class="num" id="sgAPP">0.00</span></div>
+    </div>
+  </div>
+  
+  <div class="stat">
+    <div class="stat-split">
+      <div class="stat-half left">SG: ARG <span class="num" id="sgARG">0.00</span></div>
+      <div class="stat-half">SG: Putt <span class="num" id="sgPuttingDisplay"></span></div>
+    </div>
+  </div>
+
   <div class="stat">
     <div class="stat-split">
       <div class="stat-half left">Avg Score Par 3/4/5</div>
@@ -259,24 +277,6 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
     <div class="stat-split">
       <div class="stat-half left" id="threePutts"></div>
       <div class="stat-half" id="onePuttPct"></div>
-    </div>
-  </div>
-
-  <div class="stat center">
-    <span style="font-weight:600;">SG: Total</span> <span class="num" id="sgTotal"></span> <span style="font-size:12px;opacity:0.7;">(vs Tour Pro)</span>
-  </div>
-  
-  <div class="stat">
-    <div class="stat-split">
-      <div class="stat-half left">SG: OTT <span class="num" id="sgOTT">0.00</span></div>
-      <div class="stat-half">SG: APP <span class="num" id="sgAPP">0.00</span></div>
-    </div>
-  </div>
-  
-  <div class="stat">
-    <div class="stat-split">
-      <div class="stat-half left">SG: ARG <span class="num" id="sgARG">0.00</span></div>
-      <div class="stat-half">SG: Putt <span class="num" id="sgPuttingDisplay"></span></div>
     </div>
   </div>
   
@@ -1477,6 +1477,14 @@ function exportToExcel(){
   
   
   const ws1 = XLSX.utils.aoa_to_sheet(scoringData);
+  
+  // Merge cells for Player, Course, Date values (columns B-D)
+  ws1['!merges'] = ws1['!merges'] || [];
+  ws1['!merges'].push({ s: { r: 2, c: 1 }, e: { r: 2, c: 3 } }); // Player value
+  ws1['!merges'].push({ s: { r: 3, c: 1 }, e: { r: 3, c: 3 } }); // Handicap value
+  ws1['!merges'].push({ s: { r: 4, c: 1 }, e: { r: 4, c: 3 } }); // Course value
+  ws1['!merges'].push({ s: { r: 5, c: 1 }, e: { r: 5, c: 3 } }); // Date value
+  
   XLSX.utils.book_append_sheet(wb, ws1, 'Scoring');
   
   // ============ SHEET 2: STROKES GAINED ============
@@ -1586,6 +1594,23 @@ function exportToExcel(){
   });
   
   const wsSG = XLSX.utils.aoa_to_sheet(sgSummaryData);
+  
+  // Merge cells for "SHOT BY SHOT BREAKDOWN" header (row 8, columns A-H)
+  wsSG['!merges'] = wsSG['!merges'] || [];
+  wsSG['!merges'].push({ s: { r: 8, c: 0 }, e: { r: 8, c: 7 } }); // Shot by shot header
+  
+  // Set column widths - narrower for Hole, Par, Shot#
+  wsSG['!cols'] = [
+    { wch: 6 },  // Hole
+    { wch: 5 },  // Par
+    { wch: 7 },  // Shot #
+    { wch: 14 }, // Start Distance
+    { wch: 10 }, // Start Lie
+    { wch: 10 }, // End Lie
+    { wch: 14 }, // End Distance
+    { wch: 14 }  // Strokes Gained
+  ];
+  
   XLSX.utils.book_append_sheet(wb, wsSG, 'Strokes Gained');
   
   // ============ SHEET 3: OFF THE TEE ============
@@ -1641,20 +1666,37 @@ function exportToExcel(){
   let par3Approaches=[],par4Approaches=[],par5Approaches=[];
   
   allHoles.forEach(h=>{
-    h.shots.forEach((s,idx)=>{
-      if(!s.isPutt&&s.distanceBefore&&s.lie==='GREEN'){
-        if(h.par===3){
-          par3ApproachDist.push(s.distanceBefore);
-          par3Approaches.push(s.distanceAfter||0);
-        }else if(h.par===4){
-          par4ApproachDist.push(s.distanceBefore);
-          par4Approaches.push(s.distanceAfter||0);
-        }else if(h.par===5){
-          par5ApproachDist.push(s.distanceBefore);
-          par5Approaches.push(s.distanceAfter||0);
+    // For par 4/5, get the 2nd shot distance (approach shot distance)
+    if(h.par === 4 && h.shots.length >= 2){
+      const secondShot = h.shots[1];
+      if(secondShot && secondShot.distanceBefore && !secondShot.isPutt){
+        par4ApproachDist.push(secondShot.distanceBefore);
+        // If it hit the green, record proximity
+        if(secondShot.lie === 'GREEN' && secondShot.distanceAfter != null){
+          par4Approaches.push(secondShot.distanceAfter);
         }
       }
-    });
+    } else if(h.par === 5 && h.shots.length >= 2){
+      const secondShot = h.shots[1];
+      if(secondShot && secondShot.distanceBefore && !secondShot.isPutt){
+        par5ApproachDist.push(secondShot.distanceBefore);
+        // If it hit the green, record proximity
+        if(secondShot.lie === 'GREEN' && secondShot.distanceAfter != null){
+          par5Approaches.push(secondShot.distanceAfter);
+        }
+      }
+    }
+    
+    // For par 3, the tee shot is the approach
+    if(h.par === 3 && h.shots.length >= 1){
+      const teeShot = h.shots[0];
+      if(teeShot){
+        par3ApproachDist.push(h.yards); // Use hole yardage for par 3 tee shot
+        if(teeShot.lie === 'GREEN' && teeShot.distanceAfter != null){
+          par3Approaches.push(teeShot.distanceAfter);
+        }
+      }
+    }
   });
   
   const avgPar3Dist=par3ApproachDist.length?Math.round(par3ApproachDist.reduce((a,b)=>a+b,0)/par3ApproachDist.length):0;
@@ -2335,20 +2377,35 @@ function generateCSV(){
   let par3Approaches=[],par4Approaches=[],par5Approaches=[];
   
   allHoles.forEach(h=>{
-    h.shots.forEach((s,idx)=>{
-      if(!s.isPutt&&s.distanceBefore&&s.lie==='GREEN'){
-        if(h.par===3){
-          par3ApproachDist.push(s.distanceBefore);
-          par3Approaches.push(s.distanceAfter||0);
-        }else if(h.par===4){
-          par4ApproachDist.push(s.distanceBefore);
-          par4Approaches.push(s.distanceAfter||0);
-        }else if(h.par===5){
-          par5ApproachDist.push(s.distanceBefore);
-          par5Approaches.push(s.distanceAfter||0);
+    // For par 4/5, get the 2nd shot distance (approach shot distance)
+    if(h.par === 4 && h.shots.length >= 2){
+      const secondShot = h.shots[1];
+      if(secondShot && secondShot.distanceBefore && !secondShot.isPutt){
+        par4ApproachDist.push(secondShot.distanceBefore);
+        if(secondShot.lie === 'GREEN' && secondShot.distanceAfter != null){
+          par4Approaches.push(secondShot.distanceAfter);
         }
       }
-    });
+    } else if(h.par === 5 && h.shots.length >= 2){
+      const secondShot = h.shots[1];
+      if(secondShot && secondShot.distanceBefore && !secondShot.isPutt){
+        par5ApproachDist.push(secondShot.distanceBefore);
+        if(secondShot.lie === 'GREEN' && secondShot.distanceAfter != null){
+          par5Approaches.push(secondShot.distanceAfter);
+        }
+      }
+    }
+    
+    // For par 3, the tee shot is the approach
+    if(h.par === 3 && h.shots.length >= 1){
+      const teeShot = h.shots[0];
+      if(teeShot){
+        par3ApproachDist.push(h.yards);
+        if(teeShot.lie === 'GREEN' && teeShot.distanceAfter != null){
+          par3Approaches.push(teeShot.distanceAfter);
+        }
+      }
+    }
   });
   
   const avgPar3Dist=par3ApproachDist.length?Math.round(par3ApproachDist.reduce((a,b)=>a+b,0)/par3ApproachDist.length):0;
