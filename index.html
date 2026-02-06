@@ -79,7 +79,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.8.0</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.8.1</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -293,6 +293,10 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   <div class="row">
     <button class="holes9" onclick="exportToCSV()">SAVE CSV</button>
     <button class="holes18" onclick="exportToExcel()">SAVE EXCEL</button>
+  </div>
+  <div class="row">
+    <button style="background:#7B1FA2;" onclick="emailResults()">EMAIL</button>
+    <button style="background:#F57C00;" onclick="uploadToGoogleDrive()">GOOGLE DRIVE</button>
   </div>
 </div>
 
@@ -819,6 +823,61 @@ function onSummaryHandicapChange(hcp){
   // Sync the start-page dropdown so exports use the selected handicap
   document.getElementById('playerHandicap').value = hcp;
   recalculateAllSG(hcp);
+}
+
+function emailResults(){
+  const player = document.getElementById('playerName').value || 'Player';
+  const course = document.getElementById('courseName').value || 'Course';
+  const date = document.getElementById('roundDate').value;
+  const d = totalStrokes - totalPar;
+  const scoreStr = `${totalStrokes} (${d===0?'E':(d>0?'+':'')+d})`;
+  
+  // Generate Excel file as blob
+  const wb = generateExcelWorkbook();
+  const wbout = XLSX.write(wb, {bookType:'xlsx', type:'array'});
+  const blob = new Blob([wbout], {type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const file = new File([blob], `${player}_${course}_${formatDateForFilename(date)}.xlsx`, {type: blob.type});
+  
+  // Try Web Share API with file (works on iOS/Android)
+  if(navigator.canShare && navigator.canShare({files:[file]})){
+    navigator.share({
+      title: `Golf Round - ${player} at ${course}`,
+      text: `${player} at ${course} - ${scoreStr}`,
+      files: [file]
+    }).catch(()=>{});
+  } else {
+    // Fallback: download file then open mailto
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
+    
+    const subject = encodeURIComponent(`Golf Round - ${player} at ${course} - ${scoreStr}`);
+    const body = encodeURIComponent(`Attached: ${file.name}`);
+    setTimeout(()=>{
+      window.location.href = `mailto:?subject=${subject}&body=${body}`;
+    }, 300);
+    alert('Excel file downloaded. Please attach it to the email that opens.');
+  }
+}
+
+function uploadToGoogleDrive(){
+  // Generate the Excel file as a blob and open Google Drive upload
+  if(typeof XLSX === 'undefined'){
+    alert('Excel library not loaded. Please try Save Excel first, then upload manually.');
+    return;
+  }
+  
+  // Trigger Excel download first so user has the file
+  exportToExcel();
+  
+  // Small delay then open Google Drive
+  setTimeout(()=>{
+    window.open('https://drive.google.com/drive/my-drive', '_blank');
+    alert('Your Excel file has been downloaded. Drag it into the Google Drive tab that just opened, or use the "+ New" button to upload.');
+  }, 500);
 }
 
 let allHoles=[];
@@ -1534,12 +1593,7 @@ function exportToCSV(){
   window.URL.revokeObjectURL(url);
 }
 
-function exportToExcel(){
-  if(!allHoles || allHoles.length===0){
-    alert('No round data to export. Please complete at least one hole.');
-    return;
-  }
-  
+function generateExcelWorkbook(){
   const wb = XLSX.utils.book_new();
   
   // Calculate common stats
@@ -2287,7 +2341,7 @@ function exportToExcel(){
   autoFitColumns(ws5, puttingData);
   autoFitColumns(ws7, playByPlayData);
   // Tighten play by play columns for mobile readability
-  ws7['!cols'] = [{ wch: 7 }, { wch: 38 }, { wch: 7 }];
+  ws7['!cols'] = [{ wch: 7 }, { wch: 38 }, { wch: 8 }];
   
   // Set uniform scorecard column widths
   setUniformScorecard(ws1, Math.max(front9.length + 1, back9.length + 2));
@@ -2403,13 +2457,20 @@ function exportToExcel(){
   // Color SG values in putting hole-by-hole table
   colorSGCells(ws5, puttingData, 4);
   
-  // Create filename from player name, date, course name
+  return wb;
+}
+
+function exportToExcel(){
+  if(!allHoles || allHoles.length===0){
+    alert('No round data to export. Please complete at least one hole.');
+    return;
+  }
+  
+  const wb = generateExcelWorkbook();
   const pName = (playerName.value||'Player').replace(/[^a-zA-Z0-9]/g, '');
   const cName = (courseName.value||'Course').replace(/[^a-zA-Z0-9]/g, '');
   const rDate = formatDateForFilename(roundDate.value);
   const filename = `${pName}_${rDate}_${cName}.xlsx`;
-  
-  // Save file
   XLSX.writeFile(wb, filename);
 }
 
@@ -2851,4 +2912,3 @@ show = function(id) {
 
 </body>
 </html>
-
