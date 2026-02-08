@@ -79,7 +79,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.8.1</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.7.9</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -665,6 +665,55 @@ function getExpectedPutts(distance, handicapOverride){
     }
   }
   return 2;
+}
+
+// Calculate SG for a specific handicap WITHOUT modifying globals (for export)
+function calculateSGForHandicap(hcp){
+  let ott=0, app=0, arg=0, putt=0;
+  allHoles.forEach(h => {
+    const holeShots = h.shots || [];
+    holeShots.forEach((s, idx) => {
+      if(!s.lie || s.lie === 'PENALTY') return;
+      const distBefore = s.distanceBefore || 0;
+      const distAfter = s.distanceAfter || 0;
+      const isTeeShotPar45 = s.shotNum === 1 && (h.par === 4 || h.par === 5);
+      const isTeeShotPar3 = s.shotNum === 1 && h.par === 3;
+      const isPutt = s.isPutt;
+      const isShortGame = !isPutt && distBefore <= 50 && !isTeeShotPar45;
+      if(isPutt){
+        const eb = getExpectedPutts(distBefore, hcp);
+        let ea = 0;
+        if(s.lie !== 'HOLED' && s.distanceAfter) ea = getExpectedPutts(s.distanceAfter, hcp);
+        putt += eb - ea - 1;
+      } else if(s.lie === 'HOLED'){
+        let eb = 0;
+        if(isTeeShotPar45){ eb = getExpectedStrokes(h.yards, 'TEE', hcp); ott += eb - 1; }
+        else if(isTeeShotPar3){ eb = getExpectedStrokes(h.yards, 'TEE', hcp); app += eb - 1; }
+        else if(isShortGame){ const pl = idx>0 ? holeShots[idx-1].lie : 'FAIRWAY'; eb = getExpectedStrokes(distBefore, pl, hcp); arg += eb - 1; }
+        else { const pl = idx>0 ? holeShots[idx-1].lie : 'FAIRWAY'; eb = getExpectedStrokes(distBefore, pl, hcp); app += eb - 1; }
+      } else if(isTeeShotPar45){
+        const eb = getExpectedStrokes(h.yards, 'TEE', hcp);
+        const ea = s.lie==='GREEN' ? getExpectedPutts(distAfter, hcp) : (distAfter>0 ? getExpectedStrokes(distAfter, s.lie, hcp) : 2.5);
+        ott += eb - ea - 1;
+      } else if(isTeeShotPar3){
+        const eb = getExpectedStrokes(h.yards, 'TEE', hcp);
+        const ea = s.lie==='GREEN' ? getExpectedPutts(distAfter, hcp) : (distAfter>0 ? getExpectedStrokes(distAfter, s.lie, hcp) : 2.5);
+        app += eb - ea - 1;
+      } else if(isShortGame){
+        const pl = idx>0 ? holeShots[idx-1].lie : 'FAIRWAY';
+        const eb = getExpectedStrokes(distBefore, pl, hcp);
+        const ea = s.lie==='GREEN' ? getExpectedPutts(distAfter, hcp) : (distAfter>0 ? getExpectedStrokes(distAfter, s.lie, hcp) : 2.5);
+        arg += eb - ea - 1;
+      } else {
+        const pl = idx>0 ? holeShots[idx-1].lie : 'FAIRWAY';
+        const eb = getExpectedStrokes(distBefore, pl, hcp);
+        const ea = s.lie==='GREEN' ? getExpectedPutts(distAfter, hcp) : (distAfter>0 ? getExpectedStrokes(distAfter, s.lie, hcp) : 2.5);
+        app += eb - ea - 1;
+      }
+    });
+  });
+  const total = ott + app + arg + putt;
+  return {total, ott, app, arg, putt};
 }
 
 // Recalculate all strokes gained data for a new handicap comparison
@@ -1703,15 +1752,37 @@ function generateExcelWorkbook(){
   let sgSummaryData = [
     ['STROKES GAINED'],
     [],
+    ['Comparison:', document.getElementById('playerHandicap').value || 'pro'],
     ['SG: Total', sgTotal.toFixed(2)],
     ['SG: Off The Tee', sgOTTTotal.toFixed(2)],
     ['SG: Approach', sgAPPTotal.toFixed(2)],
     ['SG: Around the Green', sgARGTotal.toFixed(2)],
     ['SG: Putting', sgPuttingTotal.toFixed(2)],
     [],
-    ['SHOT BY SHOT BREAKDOWN'],
-    ['Hole', 'Par', 'Shot #', 'Start Distance', 'Start Lie', 'End Lie', 'End Distance', 'Strokes Gained']
+    ['SG BY HANDICAP COMPARISON'],
+    ['Handicap', 'SG Total', 'SG OTT', 'SG APP', 'SG ARG', 'SG Putt']
   ];
+  
+  // Calculate SG for each handicap level
+  const hcpLevels = [
+    {key: 'pro', label: 'Tour Pro'},
+    {key: '0', label: 'Scratch (0)'},
+    {key: '5', label: '5 Handicap'},
+    {key: '10', label: '10 Handicap'},
+    {key: '15', label: '15 Handicap'},
+    {key: '20', label: '20 Handicap'},
+    {key: '25', label: '25 Handicap'},
+    {key: '30', label: '30 Handicap'}
+  ];
+  
+  hcpLevels.forEach(h => {
+    const sg = calculateSGForHandicap(h.key);
+    sgSummaryData.push([h.label, sg.total.toFixed(2), sg.ott.toFixed(2), sg.app.toFixed(2), sg.arg.toFixed(2), sg.putt.toFixed(2)]);
+  });
+  
+  sgSummaryData.push([]);
+  sgSummaryData.push(['SHOT BY SHOT BREAKDOWN']);
+  sgSummaryData.push(['Hole', 'Par', 'Shot #', 'Start Distance', 'Start Lie', 'End Lie', 'End Distance', 'Strokes Gained']);
   
   // Add shot-by-shot data
   allHoles.forEach(h=>{
@@ -1795,7 +1866,7 @@ function generateExcelWorkbook(){
   
   // Merge cells for "SHOT BY SHOT BREAKDOWN" header (row 8, columns A-H)
   wsSG['!merges'] = wsSG['!merges'] || [];
-  wsSG['!merges'].push({ s: { r: 8, c: 0 }, e: { r: 8, c: 7 } }); // Shot by shot header
+  wsSG['!merges'].push({ s: { r: 20, c: 0 }, e: { r: 20, c: 7 } }); // Shot by shot header
   
   // Set column widths - narrower for Hole, Par, Shot#
   wsSG['!cols'] = [
