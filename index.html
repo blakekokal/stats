@@ -79,7 +79,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.9.0</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.8.2</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -98,6 +98,10 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
     <input id="roundDate" type="date" style="flex:1;">
   </div>
   <input id="courseName" placeholder="Course Name">
+  <select id="roundType" style="width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-radius:10px;border:none;text-align:center;font-size:15px;appearance:none;-webkit-appearance:none;padding:0 10px;">
+    <option value="Casual">Round Type: Casual</option>
+    <option value="Tournament">Round Type: Tournament</option>
+  </select>
   <div class="row">
     <button class="holes9" onclick="highlight(this);selectPresetHoles(9)">9 Holes</button>
     <button class="holes18" onclick="highlight(this);selectPresetHoles(18)">18 Holes</button>
@@ -1513,7 +1517,7 @@ function renderSummary(){
   const d=totalStrokes-totalPar;
   sumToPar.innerText=d===0?'E':`${d>0?'+':''}${d}`;
   const dt=new Date(roundDate.value);
-  roundMeta.innerText=`${playerName.value||'Player'} · ${courseName.value||'Course'} · ${dt.getMonth()+1}/${dt.getDate()}/${dt.getFullYear()}`;
+  roundMeta.innerText=`${playerName.value||'Player'} · ${courseName.value||'Course'} · ${dt.getMonth()+1}/${dt.getDate()}/${dt.getFullYear()} · ${document.getElementById('roundType').value}`;
 
   fwHitS.innerText=fwHit;fwOppS.innerText=fwOpp;fwPctS.innerText=fwOpp?Math.round(fwHit/fwOpp*100):0;
   fwLeftS.innerText=fwLeft;fwRightS.innerText=fwRight;
@@ -1702,7 +1706,7 @@ function generateExcelWorkbook(){
     ['Handicap:', document.getElementById('playerHandicap').value||'N/A', '', '', '', 'Avg Par 4', c4?(p4/c4).toFixed(2):'N/A', '', 'Birdies', birdies],
     ['Course:', courseName.value||'Course', '', '', '', 'Avg Par 5', c5?(p5/c5).toFixed(2):'N/A', '', 'Pars', pars],
     ['Date:', formatDateForDisplay(roundDate.value), '', '', '', '', '', '', 'Bogeys', bogeys],
-    ['', '', '', '', '', '', '', '', 'Double+', doubleOrWorse],
+    ['Round Type:', document.getElementById('roundType').value||'Casual', '', '', '', '', '', '', 'Double+', doubleOrWorse],
     [],
     // Front 9
     ['Hole', ...front9.map(h=>h.hole), 'OUT'],
@@ -1731,6 +1735,7 @@ function generateExcelWorkbook(){
   ws1['!merges'].push({ s: { r: 3, c: 1 }, e: { r: 3, c: 3 } }); // Handicap value
   ws1['!merges'].push({ s: { r: 4, c: 1 }, e: { r: 4, c: 3 } }); // Course value
   ws1['!merges'].push({ s: { r: 5, c: 1 }, e: { r: 5, c: 3 } }); // Date value
+  ws1['!merges'].push({ s: { r: 6, c: 1 }, e: { r: 6, c: 3 } }); // Round Type value
   
   XLSX.utils.book_append_sheet(wb, ws1, 'Scoring');
   
@@ -2554,6 +2559,7 @@ function generateCSV(){
   csv+=`Handicap:,${document.getElementById('playerHandicap').value||'N/A'}\n`;
   csv+=`Course:,${courseName.value||'Course'}\n`;
   csv+=`Date:,${formatDateForDisplay(roundDate.value)}\n`;
+  csv+=`Round Type:,${document.getElementById('roundType').value||'Casual'}\n`;
   csv+='\n';
   
   csv+='Hole,';
@@ -2983,4 +2989,3 @@ show = function(id) {
 
 </body>
 </html>
-
