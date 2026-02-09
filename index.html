@@ -6,6 +6,7 @@
 <title>Golf Tracker</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.bundle.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <style>
 html,body{margin:0;padding:0;height:100%;overflow:hidden;}
@@ -30,7 +31,7 @@ body{background:#181818;color:#fff;font-family:system-ui,sans-serif;}
 /* START PAGE SCROLLS FROM TOP */
 #roundPage{
   justify-content:flex-start;
-  padding-top:20px;
+  padding-top:36px;
 }
 
 button{width:100%;max-width:320px;height:44px;font-size:15px;border-radius:10px;border:none;font-weight:600;cursor:pointer;white-space:nowrap;color:#fff;-webkit-tap-highlight-color:transparent;}
@@ -78,8 +79,72 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <div id="scoreBar">E through 0</div>
 
+<!-- AUTH BAR - inside round page header -->
+<div id="authBar" style="position:fixed;top:6px;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:flex-end;padding:0 12px;">
+  <span id="authUser" style="font-size:11px;color:#888;margin-right:6px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
+  <button id="profileBtn" onclick="showProfile()" style="width:auto;max-width:none;height:26px;font-size:11px;background:#444;border-radius:6px;padding:0 10px;display:none;margin-right:4px;">Profile</button>
+  <button id="authBtn" onclick="showAuthPage()" style="width:auto;max-width:none;height:26px;font-size:11px;background:#333;border-radius:6px;padding:0 12px;">Login</button>
+</div>
+
+<!-- AUTH PAGE -->
+<div id="authPage" class="page" style="justify-content:center;">
+  <div style="font-size:24px;font-weight:800;">Account</div>
+  <div id="authMsg" style="font-size:13px;color:#f44;min-height:20px;"></div>
+  <input id="authEmail" type="email" placeholder="Email">
+  <input id="authPass" type="password" placeholder="Password">
+  <input id="authPassConfirm" type="password" placeholder="Confirm Password">
+  <input id="authName" placeholder="Display Name (for signup)">
+  <button class="holes9" onclick="doSignUp()">SIGN UP</button>
+  <button class="holes18" onclick="doLogin()">LOG IN</button>
+  <button style="background:#555;" onclick="show('roundPage')">BACK</button>
+</div>
+
+<!-- PROFILE HUB -->
+<div id="profilePage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;">
+  <!-- Tab bar -->
+  <div id="profileTabs" style="display:flex;gap:0;width:100%;max-width:360px;margin-bottom:12px;border-radius:10px;overflow:hidden;">
+    <button onclick="showProfileTab('account')" id="tabAccount" style="flex:1;height:38px;font-size:13px;background:#333;border-radius:0;border:none;color:#fff;font-weight:700;">Account</button>
+    <button onclick="showProfileTab('dashboard')" id="tabDashboard" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;">Dashboard</button>
+    <button onclick="showProfileTab('rounds')" id="tabRounds" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;">Saved Rounds</button>
+  </div>
+
+  <!-- ACCOUNT TAB -->
+  <div id="profileAccountTab" style="width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center;gap:8px;">
+    <div style="font-size:20px;font-weight:800;">👤 Account Info</div>
+    <div id="profileEmail" style="font-size:14px;color:#aaa;margin:2px 0;"></div>
+    <div id="profileJoined" style="font-size:12px;color:#666;margin-bottom:4px;"></div>
+    <input id="profileName" placeholder="Display Name">
+    <button class="holes9" onclick="updateProfile()">SAVE NAME</button>
+    <div id="profileMsg" style="font-size:13px;min-height:18px;"></div>
+    <div style="margin-top:12px;width:100%;border-top:1px solid #333;padding-top:12px;display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <div style="font-size:13px;color:#888;">Change Password</div>
+      <input id="newPassword" type="password" placeholder="New Password (min 6 chars)">
+      <input id="newPasswordConfirm" type="password" placeholder="Confirm New Password">
+      <button style="background:#F57C00;" onclick="changePassword()">UPDATE PASSWORD</button>
+      <div id="pwMsg" style="font-size:13px;min-height:18px;"></div>
+    </div>
+    <button style="background:#c62828;margin-top:12px;" onclick="doLogout();show('roundPage')">LOG OUT</button>
+  </div>
+
+  <!-- DASHBOARD TAB -->
+  <div id="profileDashboardTab" style="width:100%;max-width:360px;display:none;">
+    <div style="font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;">📊 My Dashboard</div>
+    <div id="dashLoading" style="text-align:center;color:#888;font-size:13px;">Loading stats...</div>
+    <div id="dashContent" style="display:none;"></div>
+  </div>
+
+  <!-- SAVED ROUNDS TAB -->
+  <div id="profileRoundsTab" style="width:100%;max-width:360px;display:none;">
+    <div style="font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;">📋 Saved Rounds</div>
+    <div id="roundsListMsg" style="font-size:13px;color:#888;min-height:20px;text-align:center;"></div>
+    <div id="roundsList" style="width:100%;"></div>
+  </div>
+
+  <button style="background:#555;margin-top:16px;" onclick="show('roundPage')">BACK</button>
+</div>
+
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v1.8.2</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v2.0.1</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -295,13 +360,11 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   </div>
   
   <div class="row">
-    <button class="holes9" onclick="exportToCSV()">SAVE CSV</button>
     <button class="holes18" onclick="exportToExcel()">SAVE EXCEL</button>
+    <button style="background:#7B1FA2;" onclick="emailResults()">EMAIL / SHARE</button>
   </div>
-  <div class="row">
-    <button style="background:#7B1FA2;" onclick="emailResults()">EMAIL</button>
-    <button style="background:#F57C00;" onclick="uploadToGoogleDrive()">GOOGLE DRIVE</button>
-  </div>
+  <button id="saveToAccountBtn" style="background:#00838F;display:none;" onclick="saveRoundToAccount()">💾 SAVE TO ACCOUNT</button>
+  <div id="saveStatus" style="font-size:12px;color:#4CAF50;min-height:18px;"></div>
 </div>
 
 <script>
@@ -2985,6 +3048,745 @@ show = function(id) {
   }
   window.scrollTo(0, 0);
 };
+// =====================================================
+// SUPABASE AUTH & ROUND SAVING
+// =====================================================
+const SUPABASE_URL = 'https://dstitvnkgefekmkcwndm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRzdGl0dm5rZ2VmZWtta2N3bmRtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA1ODkzNzgsImV4cCI6MjA4NjE2NTM3OH0.znndZ6B0bSWFWky2IVMYhsv_pcgXcd3t3lWM4AAxF9c';
+const _sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let currentUser = null;
+
+async function checkAuth() {
+  const { data: { session } } = await _sb.auth.getSession();
+  if (session) {
+    currentUser = session.user;
+    updateAuthUI(true);
+  } else {
+    currentUser = null;
+    updateAuthUI(false);
+  }
+}
+
+function updateAuthUI(loggedIn) {
+  const authBtn = document.getElementById('authBtn');
+  const authUser = document.getElementById('authUser');
+  const profileBtn = document.getElementById('profileBtn');
+  const saveBtn = document.getElementById('saveToAccountBtn');
+  
+  if (loggedIn && currentUser) {
+    const name = currentUser.user_metadata?.display_name || currentUser.email;
+    authUser.textContent = name;
+    authBtn.textContent = 'Logout';
+    authBtn.onclick = doLogout;
+    profileBtn.style.display = '';
+    if (saveBtn) saveBtn.style.display = '';
+  } else {
+    authUser.textContent = '';
+    authBtn.textContent = 'Login';
+    authBtn.onclick = function(){ showAuthPage(); };
+    profileBtn.style.display = 'none';
+    if (saveBtn) saveBtn.style.display = 'none';
+  }
+}
+
+function showAuthPage() {
+  document.getElementById('authMsg').textContent = '';
+  show('authPage');
+}
+
+async function doSignUp() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  const passConfirm = document.getElementById('authPassConfirm').value;
+  const name = document.getElementById('authName').value.trim();
+  const msg = document.getElementById('authMsg');
+  
+  if (!email || !pass) { msg.textContent = 'Email and password required'; msg.style.color = '#f44'; return; }
+  if (pass.length < 6) { msg.textContent = 'Password must be at least 6 characters'; msg.style.color = '#f44'; return; }
+  if (pass !== passConfirm) { msg.textContent = 'Passwords do not match'; msg.style.color = '#f44'; return; }
+  
+  msg.textContent = 'Creating account...';
+  msg.style.color = '#888';
+  
+  const { data, error } = await _sb.auth.signUp({
+    email,
+    password: pass,
+    options: { data: { display_name: name || email.split('@')[0] } }
+  });
+  
+  if (error) {
+    msg.style.color = '#f44';
+    msg.textContent = error.message;
+    return;
+  }
+  
+  if (data.user && !data.session) {
+    msg.style.color = '#4CAF50';
+    msg.textContent = 'Check your email to confirm, then log in!';
+  } else {
+    currentUser = data.user;
+    updateAuthUI(true);
+    // Auto-fill player name
+    if (name) document.getElementById('playerName').value = name;
+    show('roundPage');
+  }
+}
+
+async function doLogin() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPass').value;
+  const msg = document.getElementById('authMsg');
+  
+  if (!email || !pass) { msg.textContent = 'Email and password required'; return; }
+  
+  msg.textContent = 'Logging in...';
+  msg.style.color = '#888';
+  
+  const { data, error } = await _sb.auth.signInWithPassword({ email, password: pass });
+  
+  if (error) {
+    msg.style.color = '#f44';
+    msg.textContent = error.message;
+    return;
+  }
+  
+  currentUser = data.user;
+  updateAuthUI(true);
+  // Auto-fill player name
+  const dname = currentUser.user_metadata?.display_name;
+  if (dname) document.getElementById('playerName').value = dname;
+  show('roundPage');
+}
+
+async function doLogout() {
+  await _sb.auth.signOut();
+  currentUser = null;
+  updateAuthUI(false);
+}
+
+// Listen for auth changes
+_sb.auth.onAuthStateChange((event, session) => {
+  if (session) {
+    currentUser = session.user;
+    updateAuthUI(true);
+  } else {
+    currentUser = null;
+    updateAuthUI(false);
+  }
+});
+
+// Save round to Supabase
+async function saveRoundToAccount() {
+  if (!currentUser) {
+    alert('Please log in first to save rounds.');
+    showAuthPage();
+    return;
+  }
+  
+  const status = document.getElementById('saveStatus');
+  status.textContent = 'Saving...';
+  status.style.color = '#888';
+  
+  // Collect all round stats for the JSON blob
+  const roundBlob = {
+    allHoles: allHoles.map(h => ({
+      hole: h.hole, par: h.par, yards: h.yards, score: h.score, putts: h.putts,
+      firstPuttDist: h.firstPuttDist, expectedPutts: h.expectedPutts,
+      sgOTT: h.sgOTT, sgAPP: h.sgAPP, sgARG: h.sgARG, sgPutting: h.sgPutting,
+      shots: h.shots.map(s => ({
+        shotNum: s.shotNum, lie: s.lie, distanceBefore: s.distanceBefore,
+        distanceAfter: s.distanceAfter, isPutt: s.isPutt
+      }))
+    })),
+    stats: {
+      fwHit, fwOpp, fwLeft, fwRight,
+      girHit: gir, girOpp: girOpp,
+      scrMade: scr, scrOpp: scrOpp,
+      bunMade: bun, bunOpp: bunOpp,
+      totalPutts: allHoles.reduce((s,h)=>s+h.putts,0),
+      onePutts: onePuttMade,
+      threePutts: threePlusPutts,
+      avgDrive: (function(){ let t=0,c=0; allHoles.forEach(h=>{ if(h.par>=4){ const ts=h.shots.find(s=>s.shotNum===1); if(ts&&ts.distanceAfter>0&&ts.lie!=='PENALTY'&&ts.lie!=='OB'&&ts.lie!=='WATER'){ t+=ts.distanceBefore-ts.distanceAfter; c++; }}});  return c>0?Math.round(t/c):0; })()
+    }
+  };
+  
+  const { error } = await _sb.from('rounds').insert({
+    user_id: currentUser.id,
+    player_name: document.getElementById('playerName').value || 'Player',
+    course_name: document.getElementById('courseName').value || 'Course',
+    round_date: document.getElementById('roundDate').value || new Date().toISOString().split('T')[0],
+    round_type: document.getElementById('roundType').value || 'Casual',
+    handicap: document.getElementById('playerHandicap').value || 'pro',
+    holes: allHoles.length,
+    score: totalStrokes,
+    par: totalPar,
+    to_par: totalStrokes - totalPar,
+    round_data: roundBlob
+  });
+  
+  if (error) {
+    status.style.color = '#f44';
+    status.textContent = 'Error: ' + error.message;
+  } else {
+    status.style.color = '#4CAF50';
+    status.textContent = '✓ Round saved to your account!';
+  }
+}
+
+// Load My Rounds
+async function loadMyRounds() {
+  if (!currentUser) { showAuthPage(); return; }
+  
+  const msg = document.getElementById('roundsListMsg');
+  const list = document.getElementById('roundsList');
+  msg.textContent = 'Loading...';
+  list.innerHTML = '';
+  
+  const { data, error } = await _sb
+    .from('rounds')
+    .select('id, player_name, course_name, round_date, round_type, holes, score, par, to_par, created_at')
+    .eq('user_id', currentUser.id)
+    .order('round_date', { ascending: false });
+  
+  if (error) {
+    msg.textContent = 'Error: ' + error.message;
+    return;
+  }
+  
+  if (!data || data.length === 0) {
+    msg.textContent = 'No saved rounds yet. Complete a round and tap "Save to Account".';
+    return;
+  }
+  
+  msg.textContent = data.length + ' round(s)';
+  
+  data.forEach(r => {
+    const tp = r.to_par > 0 ? '+' + r.to_par : r.to_par === 0 ? 'E' : r.to_par;
+    const d = new Date(r.round_date + 'T12:00:00');
+    const dateStr = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
+    const typeTag = r.round_type === 'Tournament' ? '<span style="color:#FF9800;font-size:10px;"> ★ Tournament</span>' : '';
+    
+    const card = document.createElement('div');
+    card.style.cssText = 'background:#222;border-radius:10px;padding:12px;margin:6px 0;cursor:pointer;';
+    card.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-weight:700;font-size:15px;">${r.course_name}${typeTag}</div>
+          <div style="font-size:12px;color:#aaa;">${dateStr} · ${r.holes} holes · ${r.player_name}</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:20px;font-weight:800;">${r.score}</div>
+          <div style="font-size:13px;color:${r.to_par>0?'#ef5350':r.to_par<0?'#66bb6a':'#aaa'}">${tp}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button onclick="event.stopPropagation();viewSavedRound('${r.id}')" style="flex:1;height:30px;font-size:12px;background:#1565c0;border-radius:6px;">View Details</button>
+        <button onclick="event.stopPropagation();deleteSavedRound('${r.id}',this)" style="width:60px;height:30px;font-size:12px;background:#c62828;border-radius:6px;">Delete</button>
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+async function viewSavedRound(roundId) {
+  const msg = document.getElementById('roundsListMsg');
+  msg.textContent = 'Loading round...';
+  
+  const { data, error } = await _sb
+    .from('rounds')
+    .select('*')
+    .eq('id', roundId)
+    .single();
+  
+  if (error || !data) {
+    msg.textContent = 'Error loading round';
+    return;
+  }
+  
+  // Restore the round into the app
+  const rd = data.round_data;
+  if (!rd || !rd.allHoles || rd.allHoles.length === 0) {
+    msg.textContent = 'Round data is empty';
+    return;
+  }
+  
+  // Set metadata
+  document.getElementById('playerName').value = data.player_name;
+  document.getElementById('courseName').value = data.course_name;
+  document.getElementById('roundDate').value = data.round_date;
+  document.getElementById('roundType').value = data.round_type || 'Casual';
+  document.getElementById('playerHandicap').value = data.handicap || 'pro';
+  
+  // Restore hole data
+  allHoles = rd.allHoles;
+  totalHoles = data.holes;
+  
+  // Recalculate ALL aggregates from hole data
+  totalStrokes = 0; totalPar = 0; totalPutts = 0;
+  fwHit = 0; fwOpp = 0; fwLeft = 0; fwRight = 0;
+  gir = 0; girOpp = 0; girFirstPuttDist = 0; girPutts = 0;
+  scr = 0; scrOpp = 0;
+  bun = 0; bunOpp = 0;
+  onePuttMade = 0; onePuttOpp = 0; threePlusPutts = 0;
+  p3 = 0; c3 = 0; p4 = 0; c4 = 0; p5 = 0; c5 = 0;
+  missLeft = 0; missRight = 0; missShort = 0; missLong = 0;
+  
+  allHoles.forEach(h => {
+    totalStrokes += h.score;
+    totalPar += h.par;
+    totalPutts += h.putts || 0;
+    onePuttOpp += 1;
+    
+    // Par averages
+    if (h.par === 3) { c3++; p3 += h.score; }
+    if (h.par === 4) { c4++; p4 += h.score; }
+    if (h.par === 5) { c5++; p5 += h.score; }
+    
+    // Putting
+    if ((h.putts || 0) === 1) onePuttMade++;
+    if ((h.putts || 0) >= 3) threePlusPutts++;
+    
+    // GIR + first putt distance
+    if (h.firstPuttDist > 0) {
+      girFirstPuttDist += h.firstPuttDist;
+      girPutts += h.putts || 0;
+    }
+  });
+  
+  // Restore stats that can't be recalculated from holes alone
+  if (rd.stats) {
+    fwHit = rd.stats.fwHit || 0; fwOpp = rd.stats.fwOpp || 0;
+    fwLeft = rd.stats.fwLeft || 0; fwRight = rd.stats.fwRight || 0;
+    gir = rd.stats.girHit || 0; girOpp = rd.stats.girOpp || 0;
+    scr = rd.stats.scrMade || 0; scrOpp = rd.stats.scrOpp || 0;
+    bun = rd.stats.bunMade || 0; bunOpp = rd.stats.bunOpp || 0;
+    if (rd.stats.onePutts !== undefined) onePuttMade = rd.stats.onePutts;
+    if (rd.stats.threePutts !== undefined) threePlusPutts = rd.stats.threePutts;
+  }
+  
+  currentHole = allHoles.length + 1;
+  scoreBar.style.display = 'flex';
+  
+  // Recalculate SG for the selected handicap so display shows correct values
+  const hcp = document.getElementById('playerHandicap').value || 'pro';
+  recalculateAllSG(hcp);
+  
+  // Show summary
+  renderSummary();
+  show('summaryPage');
+  document.getElementById('saveStatus').textContent = '(viewing saved round)';
+}
+
+async function deleteSavedRound(roundId, btn) {
+  if (!confirm('Delete this round? This cannot be undone.')) return;
+  
+  btn.textContent = '...';
+  const { error } = await _sb.from('rounds').delete().eq('id', roundId);
+  
+  if (error) {
+    alert('Error: ' + error.message);
+    btn.textContent = 'Delete';
+  } else {
+    btn.closest('div[style*="background:#222"]').remove();
+    const msg = document.getElementById('roundsListMsg');
+    const remaining = document.getElementById('roundsList').children.length;
+    msg.textContent = remaining + ' round(s)';
+    if (remaining === 0) msg.textContent = 'No saved rounds.';
+  }
+}
+
+function showProfile() {
+  if (!currentUser) { showAuthPage(); return; }
+  document.getElementById('profileEmail').textContent = currentUser.email;
+  document.getElementById('profileName').value = currentUser.user_metadata?.display_name || '';
+  const joined = currentUser.created_at ? new Date(currentUser.created_at) : null;
+  document.getElementById('profileJoined').textContent = joined ? 'Joined ' + (joined.getMonth()+1) + '/' + joined.getDate() + '/' + joined.getFullYear() : '';
+  document.getElementById('profileMsg').textContent = '';
+  document.getElementById('pwMsg').textContent = '';
+  show('profilePage');
+  showProfileTab('account');
+}
+
+function showProfileTab(tab) {
+  // Toggle tab content
+  document.getElementById('profileAccountTab').style.display = tab === 'account' ? 'flex' : 'none';
+  document.getElementById('profileDashboardTab').style.display = tab === 'dashboard' ? 'block' : 'none';
+  document.getElementById('profileRoundsTab').style.display = tab === 'rounds' ? 'block' : 'none';
+  
+  // Style tabs
+  ['tabAccount','tabDashboard','tabRounds'].forEach(id => {
+    const el = document.getElementById(id);
+    el.style.background = '#222'; el.style.color = '#888'; el.style.fontWeight = '600';
+  });
+  const activeId = tab === 'account' ? 'tabAccount' : tab === 'dashboard' ? 'tabDashboard' : 'tabRounds';
+  const active = document.getElementById(activeId);
+  active.style.background = '#333'; active.style.color = '#fff'; active.style.fontWeight = '700';
+  
+  // Load data for tabs
+  if (tab === 'dashboard') loadDashboard();
+  if (tab === 'rounds') loadMyRounds();
+}
+
+async function loadDashboard() {
+  const loading = document.getElementById('dashLoading');
+  const content = document.getElementById('dashContent');
+  loading.style.display = 'block';
+  content.style.display = 'none';
+  
+  const { data, error } = await _sb
+    .from('rounds')
+    .select('*')
+    .eq('user_id', currentUser.id)
+    .order('round_date', { ascending: false });
+  
+  loading.style.display = 'none';
+  content.style.display = 'block';
+  
+  if (error || !data || data.length === 0) {
+    content.innerHTML = '<div style="text-align:center;color:#888;padding:20px;">No rounds saved yet.</div>';
+    return;
+  }
+  
+  // ===== AGGREGATE ALL DATA FROM SAVED ROUNDS =====
+  const A = { n: data.length, holes: 0, totScore: 0, totPar: 0, totPutts: 0,
+    fwHit:0, fwOpp:0, fwLeft:0, fwRight:0,
+    girHit:0, girOpp:0, girFirstPuttDist:0, girPutts:0,
+    scrMade:0, scrOpp:0, bunMade:0, bunOpp:0,
+    onePutt:0, threePutt:0,
+    p3:0, c3:0, p4:0, c4:0, p5:0, c5:0,
+    eagles:0, birdies:0, pars:0, bogeys:0, dblPlus:0,
+    r18s:[], r18tp:[], r9s:[], r9tp:[],
+    drives:[], longestDrive:0, shortestDrive:999,
+    par3TeePen:0, par45TeePen:0, appPen:0, sgPen:0,
+    missShort:0, missLong:0, missLeft:0, missRight:0,
+    allPuttRanges: [{min:0,max:3,m:0,t:0,l:'0-3 ft'},{min:4,max:7,m:0,t:0,l:'4-7 ft'},{min:8,max:11,m:0,t:0,l:'8-11 ft'},{min:12,max:15,m:0,t:0,l:'12-15 ft'},{min:16,max:20,m:0,t:0,l:'16-20 ft'},{min:21,max:30,m:0,t:0,l:'21-30 ft'},{min:31,max:40,m:0,t:0,l:'31-40 ft'},{min:41,max:50,m:0,t:0,l:'41-50 ft'},{min:51,max:999,m:0,t:0,l:'50+ ft'}],
+    appRanges: [{min:101,max:125,s:[],l:'101-125'},{min:126,max:150,s:[],l:'126-150'},{min:151,max:175,s:[],l:'151-175'},{min:176,max:200,s:[],l:'176-200'},{min:201,max:225,s:[],l:'201-225'},{min:226,max:250,s:[],l:'226-250'},{min:251,max:275,s:[],l:'251-275'},{min:276,max:999,s:[],l:'276+'}],
+    shortRanges: [{min:0,max:25,s:[],l:'0-25'},{min:26,max:50,s:[],l:'26-50'},{min:51,max:75,s:[],l:'51-75'},{min:76,max:100,s:[],l:'76-100'}],
+    par3AppDist:[], par4AppDist:[], par5AppDist:[],
+    par3AppProx:[], par4AppProx:[], par5AppProx:[],
+    bunkerProx:[], firstPuttDists:[], madePuttDists:[], longestMadePutt:0,
+    bestRound: null, bestToPar: 999,
+    sgOTT:0, sgAPP:0, sgARG:0, sgPutt:0
+  };
+  
+  data.forEach(r => {
+    const rd = r.round_data || {};
+    const holes = rd.allHoles || [];
+    const st = rd.stats || {};
+    A.holes += holes.length;
+    A.totScore += r.score; A.totPar += r.par;
+    if (r.to_par < A.bestToPar) { A.bestToPar = r.to_par; A.bestRound = r; }
+    if (holes.length >= 14) { A.r18s.push(r.score); A.r18tp.push(r.to_par); }
+    else { A.r9s.push(r.score); A.r9tp.push(r.to_par); }
+    A.fwHit += st.fwHit||0; A.fwOpp += st.fwOpp||0; A.fwLeft += st.fwLeft||0; A.fwRight += st.fwRight||0;
+    A.girHit += st.girHit||0; A.girOpp += st.girOpp||0;
+    A.scrMade += st.scrMade||0; A.scrOpp += st.scrOpp||0;
+    A.bunMade += st.bunMade||0; A.bunOpp += st.bunOpp||0;
+    A.onePutt += st.onePutts||0; A.threePutt += st.threePutts||0;
+    
+    holes.forEach(h => {
+      A.totPutts += h.putts||0;
+      const diff = h.score - h.par;
+      if (diff <= -2) A.eagles++; else if (diff === -1) A.birdies++; else if (diff === 0) A.pars++; else if (diff === 1) A.bogeys++; else A.dblPlus++;
+      if (h.par===3) { A.c3++; A.p3+=h.score; } if (h.par===4) { A.c4++; A.p4+=h.score; } if (h.par===5) { A.c5++; A.p5+=h.score; }
+      if (h.firstPuttDist > 0) { A.firstPuttDists.push(h.firstPuttDist); A.girFirstPuttDist += h.firstPuttDist; A.girPutts += h.putts||0; }
+      if ((h.putts||0) === 1 && h.firstPuttDist > 0) { A.madePuttDists.push(h.firstPuttDist); if (h.firstPuttDist > A.longestMadePutt) A.longestMadePutt = h.firstPuttDist; }
+      A.sgOTT += h.sgOTT||0; A.sgAPP += h.sgAPP||0; A.sgARG += h.sgARG||0; A.sgPutt += h.sgPutting||0;
+      
+      const shots = h.shots||[];
+      shots.forEach((s,idx) => {
+        const db = s.distanceBefore||0;
+        if ((h.par===4||h.par===5) && s.shotNum===1 && s.distanceAfter!=null && s.lie!=='PENALTY' && s.lie!=='OB' && s.lie!=='WATER') {
+          const dd = h.yards - s.distanceAfter;
+          A.drives.push(dd);
+          if (dd > A.longestDrive) A.longestDrive = dd;
+          if (dd < A.shortestDrive) A.shortestDrive = dd;
+        }
+        if (s.lie === 'PENALTY') {
+          const prev = shots[idx-1];
+          if (prev) {
+            if (prev.shotNum===1) { if (h.par===3) A.par3TeePen++; else A.par45TeePen++; }
+            else if (prev.distanceBefore > 100) A.appPen++;
+            else A.sgPen++;
+          }
+        }
+        if (!s.isPutt && db > 100 && s.lie === 'GREEN') {
+          A.appRanges.forEach(r => { if (db >= r.min && db <= r.max) r.s.push(s.distanceAfter||0); });
+        }
+        if (!s.isPutt && db > 0 && db <= 100 && s.lie === 'GREEN') {
+          A.shortRanges.forEach(r => { if (db >= r.min && db <= r.max) r.s.push(s.distanceAfter||0); });
+        }
+        if (s.lie && s.lie.includes('BUNKER') && shots[idx+1] && shots[idx+1].lie === 'GREEN') {
+          A.bunkerProx.push(shots[idx+1].distanceAfter||0);
+        }
+        if (s.isPutt && db > 0) {
+          A.allPuttRanges.forEach(r => { if (db >= r.min && db <= r.max) { r.t++; if (s.lie==='HOLED' || s.distanceAfter===0) r.m++; }});
+        }
+        if (!s.isPutt && s.shotNum > 0) {
+          if (s.lie === 'MISS SHORT') A.missShort++;
+          if (s.lie === 'MISS LONG') A.missLong++;
+          if (s.lie === 'MISS LEFT') A.missLeft++;
+          if (s.lie === 'MISS RIGHT') A.missRight++;
+        }
+      });
+      if (h.par === 3 && shots.length >= 1) {
+        A.par3AppDist.push(h.yards);
+        if (shots[0].lie === 'GREEN' && shots[0].distanceAfter != null) A.par3AppProx.push(shots[0].distanceAfter);
+      }
+      if (h.par === 4 && shots.length >= 2 && !shots[1].isPutt) {
+        A.par4AppDist.push(shots[1].distanceBefore||0);
+        if (shots[1].lie === 'GREEN' && shots[1].distanceAfter != null) A.par4AppProx.push(shots[1].distanceAfter);
+      }
+      if (h.par === 5 && shots.length >= 2 && !shots[1].isPutt) {
+        A.par5AppDist.push(shots[1].distanceBefore||0);
+        if (shots[1].lie === 'GREEN' && shots[1].distanceAfter != null) A.par5AppProx.push(shots[1].distanceAfter);
+      }
+    });
+  });
+  if (A.drives.length === 0) A.shortestDrive = 0;
+  
+  // ===== HELPERS =====
+  function ftp(v) { if (v===null||v===undefined) return '\u2013'; v=Math.round(v*10)/10; return v>0?'+'+v:v===0?'E':''+v; }
+  function ftpC(v) { return v>0?'#ef5350':v<0?'#66bb6a':'#aaa'; }
+  function pct(n,d) { return d>0?Math.round(n/d*100)+'%':'\u2013'; }
+  function davg(arr) { return arr.length>0?Math.round(arr.reduce((a,b)=>a+b,0)/arr.length):0; }
+  function avgF(arr,dec) { return arr.length>0?(arr.reduce((a,b)=>a+b,0)/arr.length).toFixed(dec||1):'\u2013'; }
+  function sgFmt(v) { return v>=0?'+'+v.toFixed(2):v.toFixed(2); }
+  function sgC(v) { return v>=0?'#66bb6a':'#ef5350'; }
+  function row(l,v,s) { return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #2a2a2a;"><span style="color:#ccc;">'+l+'</span><span style="font-weight:700;">'+v+(s?' <span style="font-size:11px;color:#888;">'+s+'</span>':'')+'</span></div>'; }
+  function hdr(t) { return '<div style="font-size:14px;font-weight:800;color:#2E7D32;margin:14px 0 4px;border-bottom:2px solid #2E7D32;padding-bottom:2px;">'+t+'</div>'; }
+  function tbl(headers, rows) {
+    var h = '<div style="overflow-x:auto;margin:4px 0;"><table style="width:100%;font-size:12px;border-collapse:collapse;"><tr>';
+    headers.forEach(function(c) { h += '<td style="padding:4px 6px;font-weight:700;color:#aaa;border-bottom:1px solid #444;">'+c+'</td>'; });
+    h += '</tr>';
+    rows.forEach(function(r) { h += '<tr>'; r.forEach(function(c) { h += '<td style="padding:3px 6px;border-bottom:1px solid #2a2a2a;">'+c+'</td>'; }); h += '</tr>'; });
+    return h + '</table></div>';
+  }
+  
+  var n = A.n;
+  var avg18 = A.r18s.length>0?avgF(A.r18s):'\u2013';
+  var avg18tp = A.r18tp.length>0?A.r18tp.reduce(function(a,b){return a+b;},0)/A.r18tp.length:null;
+  var avg9 = A.r9s.length>0?avgF(A.r9s):'\u2013';
+  var avg9tp = A.r9tp.length>0?A.r9tp.reduce(function(a,b){return a+b;},0)/A.r9tp.length:null;
+  var bestStr = A.bestRound ? A.bestRound.score+' ('+ftp(A.bestRound.to_par)+') \u2014 '+A.bestRound.course_name : '\u2013';
+  var avgDrv = davg(A.drives);
+  var avgFirstPutt = davg(A.firstPuttDists);
+  var twoPutts = A.holes - A.onePutt - A.threePutt;
+  
+  // ===== SUB-TAB BUTTONS =====
+  var html = '<div id="dashSubTabs" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;justify-content:center;">';
+  var tabNames = ['Overview','Off The Tee','Approach','Short Game','Putting','Strokes Gained'];
+  for (var ti = 0; ti < tabNames.length; ti++) {
+    html += '<button onclick="showDashSub('+ti+')" id="dsub'+ti+'" style="height:28px;font-size:11px;padding:0 8px;border-radius:6px;border:none;cursor:pointer;background:'+(ti===0?'#333':'#1a1a1a')+';color:'+(ti===0?'#fff':'#888')+';font-weight:'+(ti===0?'700':'600')+';">'+tabNames[ti]+'</button>';
+  }
+  html += '</div>';
+  
+  // ===== TAB 0: OVERVIEW =====
+  html += '<div id="dsub_0" class="dsubContent">';
+  html += '<div style="text-align:center;color:#888;font-size:12px;margin-bottom:6px;">'+n+' round'+(n!==1?'s':'')+' \u00b7 '+A.holes+' holes</div>';
+  html += hdr('SCORING');
+  html += row('Avg 18-Hole Score', avg18, avg18tp!==null?'<span style="color:'+ftpC(avg18tp)+'">'+ftp(avg18tp)+'</span>':'');
+  html += row('Avg 9-Hole Score', avg9, avg9tp!==null?'<span style="color:'+ftpC(avg9tp)+'">'+ftp(avg9tp)+'</span>':'');
+  html += row('Best Round', bestStr);
+  html += row('Avg Par 3', A.c3?(A.p3/A.c3).toFixed(1):'\u2013');
+  html += row('Avg Par 4', A.c4?(A.p4/A.c4).toFixed(1):'\u2013');
+  html += row('Avg Par 5', A.c5?(A.p5/A.c5).toFixed(1):'\u2013');
+  html += hdr('SCORE DISTRIBUTION');
+  html += row('Eagles', A.eagles, (A.eagles/n).toFixed(1)+'/rd');
+  html += row('Birdies', A.birdies, (A.birdies/n).toFixed(1)+'/rd');
+  html += row('Pars', A.pars, (A.pars/n).toFixed(1)+'/rd');
+  html += row('Bogeys', A.bogeys, (A.bogeys/n).toFixed(1)+'/rd');
+  html += row('Double+', A.dblPlus, (A.dblPlus/n).toFixed(1)+'/rd');
+  html += hdr('KEY STATS');
+  html += row('Fairway %', pct(A.fwHit,A.fwOpp), A.fwHit+'/'+A.fwOpp);
+  html += row('GIR %', pct(A.girHit,A.girOpp), A.girHit+'/'+A.girOpp);
+  html += row('Scrambling %', pct(A.scrMade,A.scrOpp), A.scrMade+'/'+A.scrOpp);
+  html += row('Bunker Save %', pct(A.bunMade,A.bunOpp), A.bunMade+'/'+A.bunOpp);
+  html += row('Putts/Hole', A.holes>0?(A.totPutts/A.holes).toFixed(1):'\u2013');
+  html += row('Avg Drive', avgDrv+' yds', A.drives.length+' drives');
+  html += hdr('STROKES GAINED (vs Tour Pro)');
+  var sgTotPR = (A.sgOTT+A.sgAPP+A.sgARG+A.sgPutt);
+  html += row('SG: Total', '<span style="color:'+sgC(sgTotPR)+'">'+sgFmt(sgTotPR/n)+'</span>', '/round');
+  html += row('SG: Off The Tee', '<span style="color:'+sgC(A.sgOTT)+'">'+sgFmt(A.sgOTT/n)+'</span>', '/round');
+  html += row('SG: Approach', '<span style="color:'+sgC(A.sgAPP)+'">'+sgFmt(A.sgAPP/n)+'</span>', '/round');
+  html += row('SG: Around Green', '<span style="color:'+sgC(A.sgARG)+'">'+sgFmt(A.sgARG/n)+'</span>', '/round');
+  html += row('SG: Putting', '<span style="color:'+sgC(A.sgPutt)+'">'+sgFmt(A.sgPutt/n)+'</span>', '/round');
+  html += hdr('RECENT ROUNDS');
+  var recentRows = [];
+  var recent = data.slice(0,8);
+  for (var ri = 0; ri < recent.length; ri++) {
+    var rr = recent[ri];
+    var d = new Date(rr.round_date+'T12:00:00');
+    recentRows.push([(d.getMonth()+1)+'/'+d.getDate(), rr.course_name, ''+rr.score, '<span style="color:'+ftpC(rr.to_par)+'">'+ftp(rr.to_par)+'</span>']);
+  }
+  html += tbl(['Date','Course','Score','\u00b1Par'], recentRows);
+  html += '</div>';
+  
+  // ===== TAB 1: OFF THE TEE =====
+  html += '<div id="dsub_1" class="dsubContent" style="display:none;">';
+  html += hdr('FAIRWAY ACCURACY');
+  html += row('Fairways Hit', pct(A.fwHit,A.fwOpp), A.fwHit+'/'+A.fwOpp);
+  html += row('Missed Left', A.fwLeft, pct(A.fwLeft,A.fwOpp));
+  html += row('Missed Right', A.fwRight, pct(A.fwRight,A.fwOpp));
+  html += hdr('DRIVING DISTANCE');
+  html += row('Average', avgDrv+' yds', A.drives.length+' drives');
+  html += row('Longest', A.longestDrive+' yds');
+  html += row('Shortest', A.shortestDrive+' yds');
+  html += hdr('PENALTIES OFF THE TEE');
+  html += row('Par 3 Tee Penalties', A.par3TeePen);
+  html += row('Par 4/5 Tee Penalties', A.par45TeePen);
+  html += hdr('SG: OFF THE TEE');
+  html += row('Total', '<span style="color:'+sgC(A.sgOTT)+'">'+sgFmt(A.sgOTT)+'</span>', n+' rounds');
+  html += row('Per Round', '<span style="color:'+sgC(A.sgOTT)+'">'+sgFmt(A.sgOTT/n)+'</span>');
+  html += '</div>';
+  
+  // ===== TAB 2: APPROACH =====
+  html += '<div id="dsub_2" class="dsubContent" style="display:none;">';
+  html += hdr('GREENS IN REGULATION');
+  html += row('GIR', pct(A.girHit,A.girOpp), A.girHit+'/'+A.girOpp);
+  html += row('Proximity when GIR', A.girHit>0?Math.round(A.girFirstPuttDist/A.girHit)+' ft':'\u2013');
+  html += hdr('MISSED GREENS');
+  var totalMiss = A.missShort+A.missLong+A.missLeft+A.missRight;
+  html += row('Short', A.missShort, totalMiss>0?pct(A.missShort,totalMiss):'');
+  html += row('Long', A.missLong, totalMiss>0?pct(A.missLong,totalMiss):'');
+  html += row('Left', A.missLeft, totalMiss>0?pct(A.missLeft,totalMiss):'');
+  html += row('Right', A.missRight, totalMiss>0?pct(A.missRight,totalMiss):'');
+  html += hdr('APPROACH BY DISTANCE');
+  var appRows = [];
+  A.appRanges.forEach(function(r) { if (r.s.length>0) appRows.push([r.l+' yds', r.s.length+' shots', davg(r.s)+' ft']); });
+  html += tbl(['Distance','Shots','Avg Proximity'], appRows);
+  html += hdr('APPROACH BY PAR');
+  html += row('Par 3 Avg Distance', davg(A.par3AppDist)+' yds', A.par3AppDist.length+' holes');
+  html += row('Par 3 Avg Proximity', A.par3AppProx.length>0?davg(A.par3AppProx)+' ft':'\u2013', A.par3AppProx.length+' GIR');
+  html += row('Par 4 Avg Distance', davg(A.par4AppDist)+' yds', A.par4AppDist.length+' holes');
+  html += row('Par 4 Avg Proximity', A.par4AppProx.length>0?davg(A.par4AppProx)+' ft':'\u2013', A.par4AppProx.length+' GIR');
+  html += row('Par 5 Avg Distance', davg(A.par5AppDist)+' yds', A.par5AppDist.length+' holes');
+  html += row('Par 5 Avg Proximity', A.par5AppProx.length>0?davg(A.par5AppProx)+' ft':'\u2013', A.par5AppProx.length+' GIR');
+  html += hdr('PENALTIES ON APPROACH');
+  html += row('Approach Penalties', A.appPen);
+  html += hdr('SG: APPROACH');
+  html += row('Total', '<span style="color:'+sgC(A.sgAPP)+'">'+sgFmt(A.sgAPP)+'</span>', n+' rounds');
+  html += row('Per Round', '<span style="color:'+sgC(A.sgAPP)+'">'+sgFmt(A.sgAPP/n)+'</span>');
+  html += '</div>';
+  
+  // ===== TAB 3: SHORT GAME =====
+  html += '<div id="dsub_3" class="dsubContent" style="display:none;">';
+  html += hdr('SCRAMBLING');
+  html += row('Scrambling', pct(A.scrMade,A.scrOpp), A.scrMade+'/'+A.scrOpp);
+  html += row('Bunker Saves', pct(A.bunMade,A.bunOpp), A.bunMade+'/'+A.bunOpp);
+  html += row('Avg Bunker Proximity', A.bunkerProx.length>0?davg(A.bunkerProx)+' ft':'\u2013', A.bunkerProx.length+' shots');
+  html += hdr('SHORT GAME BY DISTANCE');
+  var sgRows = [];
+  A.shortRanges.forEach(function(r) { if (r.s.length>0) sgRows.push([r.l+' yds', r.s.length+' shots', davg(r.s)+' ft']); });
+  html += tbl(['Distance','Shots','Avg Proximity'], sgRows);
+  html += hdr('PENALTIES AROUND GREEN');
+  html += row('Short Game Penalties', A.sgPen);
+  html += hdr('SG: AROUND THE GREEN');
+  html += row('Total', '<span style="color:'+sgC(A.sgARG)+'">'+sgFmt(A.sgARG)+'</span>', n+' rounds');
+  html += row('Per Round', '<span style="color:'+sgC(A.sgARG)+'">'+sgFmt(A.sgARG/n)+'</span>');
+  html += '</div>';
+  
+  // ===== TAB 4: PUTTING =====
+  html += '<div id="dsub_4" class="dsubContent" style="display:none;">';
+  html += hdr('PUTTING SUMMARY');
+  html += row('Total Putts', A.totPutts, A.holes>0?(A.totPutts/A.holes).toFixed(1)+'/hole':'');
+  html += row('Putts per GIR', A.girHit>0?(A.girPutts/A.girHit).toFixed(1):'\u2013');
+  html += row('Avg First Putt Distance', avgFirstPutt+' ft');
+  html += hdr('PUTTING PERFORMANCE');
+  html += row('One-Putts', A.onePutt, pct(A.onePutt,A.holes));
+  html += row('Two-Putts', twoPutts, pct(twoPutts,A.holes));
+  html += row('Three-Putts', A.threePutt, pct(A.threePutt,A.holes));
+  html += row('Longest Made Putt', A.longestMadePutt+' ft');
+  html += hdr('MAKE % BY DISTANCE');
+  var puttRows = [];
+  A.allPuttRanges.forEach(function(r) { puttRows.push([r.l, r.t>0?r.m+'/'+r.t:'0/0', r.t>0?Math.round(r.m/r.t*100)+'%':'\u2013']); });
+  html += tbl(['Distance','Made/Total','Make %'], puttRows);
+  html += hdr('SG: PUTTING');
+  html += row('Total', '<span style="color:'+sgC(A.sgPutt)+'">'+sgFmt(A.sgPutt)+'</span>', n+' rounds');
+  html += row('Per Round', '<span style="color:'+sgC(A.sgPutt)+'">'+sgFmt(A.sgPutt/n)+'</span>');
+  html += '</div>';
+  
+  // ===== TAB 5: STROKES GAINED =====
+  html += '<div id="dsub_5" class="dsubContent" style="display:none;">';
+  html += hdr('STROKES GAINED SUMMARY (vs Tour Pro)');
+  var sgTot = (A.sgOTT+A.sgAPP+A.sgARG+A.sgPutt);
+  html += row('SG: Total', '<span style="color:'+sgC(sgTot)+'">'+sgFmt(sgTot)+'</span>', sgFmt(sgTot/n)+'/rd');
+  html += row('SG: Off The Tee', '<span style="color:'+sgC(A.sgOTT)+'">'+sgFmt(A.sgOTT)+'</span>', sgFmt(A.sgOTT/n)+'/rd');
+  html += row('SG: Approach', '<span style="color:'+sgC(A.sgAPP)+'">'+sgFmt(A.sgAPP)+'</span>', sgFmt(A.sgAPP/n)+'/rd');
+  html += row('SG: Around Green', '<span style="color:'+sgC(A.sgARG)+'">'+sgFmt(A.sgARG)+'</span>', sgFmt(A.sgARG/n)+'/rd');
+  html += row('SG: Putting', '<span style="color:'+sgC(A.sgPutt)+'">'+sgFmt(A.sgPutt)+'</span>', sgFmt(A.sgPutt/n)+'/rd');
+  html += hdr('SG BY ROUND');
+  var sgRoundRows = [];
+  var sgRecent = data.slice(0,10);
+  for (var si = 0; si < sgRecent.length; si++) {
+    var sr = sgRecent[si];
+    var srd = sr.round_data||{};
+    var sholes = srd.allHoles||[];
+    var rOTT=0,rAPP=0,rARG=0,rPutt=0;
+    sholes.forEach(function(h) { rOTT+=h.sgOTT||0; rAPP+=h.sgAPP||0; rARG+=h.sgARG||0; rPutt+=h.sgPutting||0; });
+    var rTot = rOTT+rAPP+rARG+rPutt;
+    var sd = new Date(sr.round_date+'T12:00:00');
+    sgRoundRows.push([(sd.getMonth()+1)+'/'+sd.getDate(), sr.course_name.substring(0,12),
+      '<span style="color:'+sgC(rTot)+'">'+sgFmt(rTot)+'</span>',
+      '<span style="color:'+sgC(rOTT)+'">'+sgFmt(rOTT)+'</span>',
+      '<span style="color:'+sgC(rAPP)+'">'+sgFmt(rAPP)+'</span>',
+      '<span style="color:'+sgC(rARG)+'">'+sgFmt(rARG)+'</span>',
+      '<span style="color:'+sgC(rPutt)+'">'+sgFmt(rPutt)+'</span>']);
+  }
+  html += tbl(['Date','Course','Tot','OTT','APP','ARG','Putt'], sgRoundRows);
+  html += '</div>';
+  
+  content.innerHTML = html;
+}
+
+function showDashSub(idx) {
+  for (var i = 0; i < 6; i++) {
+    var el = document.getElementById('dsub_'+i);
+    var btn = document.getElementById('dsub'+i);
+    if (el) el.style.display = i === idx ? 'block' : 'none';
+    if (btn) { btn.style.background = i===idx?'#333':'#1a1a1a'; btn.style.color = i===idx?'#fff':'#888'; btn.style.fontWeight = i===idx?'700':'600'; }
+  }
+}
+
+async function updateProfile() {
+  const name = document.getElementById('profileName').value.trim();
+  const msg = document.getElementById('profileMsg');
+  if (!name) { msg.textContent = 'Name cannot be empty'; msg.style.color = '#f44'; return; }
+  
+  msg.textContent = 'Saving...'; msg.style.color = '#888';
+  const { error } = await _sb.auth.updateUser({ data: { display_name: name } });
+  if (error) {
+    msg.style.color = '#f44'; msg.textContent = error.message;
+  } else {
+    msg.style.color = '#4CAF50'; msg.textContent = '✓ Name updated!';
+    currentUser.user_metadata.display_name = name;
+    updateAuthUI(true);
+    document.getElementById('playerName').value = name;
+  }
+}
+
+async function changePassword() {
+  const pw = document.getElementById('newPassword').value;
+  const pwConfirm = document.getElementById('newPasswordConfirm').value;
+  const msg = document.getElementById('pwMsg');
+  if (!pw || pw.length < 6) { msg.textContent = 'Password must be at least 6 characters'; msg.style.color = '#f44'; return; }
+  if (pw !== pwConfirm) { msg.textContent = 'Passwords do not match'; msg.style.color = '#f44'; return; }
+  
+  msg.textContent = 'Updating...'; msg.style.color = '#888';
+  const { error } = await _sb.auth.updateUser({ password: pw });
+  if (error) {
+    msg.style.color = '#f44'; msg.textContent = error.message;
+  } else {
+    msg.style.color = '#4CAF50'; msg.textContent = '✓ Password updated!';
+    document.getElementById('newPassword').value = '';
+    document.getElementById('newPasswordConfirm').value = '';
+  }
+}
+
+// Check auth on load
+checkAuth();
+
 </script>
 
 </body>
