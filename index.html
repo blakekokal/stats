@@ -100,12 +100,12 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 </div>
 
 <!-- PROFILE HUB -->
-<div id="profilePage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;">
+<div id="profilePage" class="page" style="justify-content:flex-start;padding-top:40px;overflow-y:auto;padding-bottom:30px;">
   <!-- Tab bar -->
   <div id="profileTabs" style="display:flex;gap:0;width:100%;max-width:360px;margin-bottom:12px;border-radius:10px;overflow:hidden;">
-    <button onclick="showProfileTab('account')" id="tabAccount" style="flex:1;height:38px;font-size:13px;background:#333;border-radius:0;border:none;color:#fff;font-weight:700;">Account</button>
-    <button onclick="showProfileTab('dashboard')" id="tabDashboard" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;">Dashboard</button>
-    <button onclick="showProfileTab('rounds')" id="tabRounds" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;">Saved Rounds</button>
+    <button onclick="showProfileTab('dashboard')" id="tabDashboard" style="flex:1;height:38px;font-size:13px;background:#333;border-radius:0;border:none;color:#fff;font-weight:700;">Dashboard</button>
+    <button onclick="showProfileTab('rounds')" id="tabRounds" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;">Rounds</button>
+    <button onclick="showProfileTab('account')" id="tabAccount" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;">Settings</button>
   </div>
 
   <!-- ACCOUNT TAB -->
@@ -144,7 +144,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 </div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v2.0.1</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v2.0.2</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -3405,7 +3405,7 @@ function showProfile() {
   document.getElementById('profileMsg').textContent = '';
   document.getElementById('pwMsg').textContent = '';
   show('profilePage');
-  showProfileTab('account');
+  showProfileTab('dashboard');
 }
 
 function showProfileTab(tab) {
@@ -3600,7 +3600,7 @@ async function loadDashboard() {
   html += row('Double+', A.dblPlus, (A.dblPlus/n).toFixed(1)+'/rd');
   html += hdr('KEY STATS');
   html += row('Fairway %', pct(A.fwHit,A.fwOpp), A.fwHit+'/'+A.fwOpp);
-  html += row('GIR %', pct(A.girHit,A.girOpp), A.girHit+'/'+A.girOpp);
+  html += row('GIR %', pct(A.girHit,A.holes), A.girHit+'/'+A.holes);
   html += row('Scrambling %', pct(A.scrMade,A.scrOpp), A.scrMade+'/'+A.scrOpp);
   html += row('Bunker Save %', pct(A.bunMade,A.bunOpp), A.bunMade+'/'+A.bunOpp);
   html += row('Putts/Hole', A.holes>0?(A.totPutts/A.holes).toFixed(1):'\u2013');
@@ -3644,7 +3644,7 @@ async function loadDashboard() {
   // ===== TAB 2: APPROACH =====
   html += '<div id="dsub_2" class="dsubContent" style="display:none;">';
   html += hdr('GREENS IN REGULATION');
-  html += row('GIR', pct(A.girHit,A.girOpp), A.girHit+'/'+A.girOpp);
+  html += row('GIR', pct(A.girHit,A.holes), A.girHit+'/'+A.holes);
   html += row('Proximity when GIR', A.girHit>0?Math.round(A.girFirstPuttDist/A.girHit)+' ft':'\u2013');
   html += hdr('MISSED GREENS');
   var totalMiss = A.missShort+A.missLong+A.missLeft+A.missRight;
