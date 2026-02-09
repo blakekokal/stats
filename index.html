@@ -96,17 +96,21 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   <input id="authName" placeholder="Display Name (for signup)">
   <button class="holes9" onclick="doSignUp()">SIGN UP</button>
   <button class="holes18" onclick="doLogin()">LOG IN</button>
+  <button style="background:transparent;color:#64B5F6;font-size:12px;text-decoration:underline;border:none;cursor:pointer;height:auto;padding:4px;" onclick="doResetPassword()">Forgot Password?</button>
   <button style="background:#555;" onclick="show('roundPage')">BACK</button>
 </div>
 
 <!-- PROFILE HUB -->
-<div id="profilePage" class="page" style="justify-content:flex-start;padding-top:40px;overflow-y:auto;padding-bottom:30px;">
-  <!-- Tab bar -->
-  <div id="profileTabs" style="display:flex;gap:0;width:100%;max-width:360px;margin-bottom:12px;border-radius:10px;overflow:hidden;">
-    <button onclick="showProfileTab('dashboard')" id="tabDashboard" style="flex:1;height:38px;font-size:13px;background:#333;border-radius:0;border:none;color:#fff;font-weight:700;">Dashboard</button>
-    <button onclick="showProfileTab('rounds')" id="tabRounds" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;">Rounds</button>
-    <button onclick="showProfileTab('account')" id="tabAccount" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;">Settings</button>
+<div id="profilePage" class="page" style="justify-content:flex-start;padding-top:10px;overflow-y:hidden;padding-bottom:0;position:relative;">
+  <!-- Tab bar - fixed at top of profile page -->
+  <div id="profileTabs" style="display:flex;gap:0;width:100%;max-width:360px;margin-bottom:0;border-radius:10px;overflow:hidden;flex-shrink:0;">
+    <button onclick="showProfileTab('dashboard')" id="tabDashboard" style="flex:1;height:38px;font-size:13px;background:#333;border-radius:0;border:none;color:#fff;font-weight:700;max-width:none;width:auto;padding:0;margin:0;">Dashboard</button>
+    <button onclick="showProfileTab('rounds')" id="tabRounds" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Rounds</button>
+    <button onclick="showProfileTab('account')" id="tabAccount" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Settings</button>
   </div>
+
+  <!-- Scrollable content area -->
+  <div id="profileScrollArea" style="flex:1;overflow-y:auto;width:100%;display:flex;flex-direction:column;align-items:center;padding:12px 0 30px;">
 
   <!-- ACCOUNT TAB -->
   <div id="profileAccountTab" style="width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center;gap:8px;">
@@ -155,10 +159,11 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   </div>
 
   <button style="background:#555;margin-top:16px;" onclick="show('roundPage')">BACK</button>
+  </div><!-- end profileScrollArea -->
 </div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v2.0.4</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v2.0.9</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -379,6 +384,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   </div>
   <button style="background:#1565C0;" onclick="showFullStats()">📊 SEE FULL STATS</button>
   <button id="saveToAccountBtn" style="background:#00838F;display:none;" onclick="saveRoundToAccount()">💾 SAVE TO ACCOUNT</button>
+  <button id="backToRoundsBtn" style="background:#555;display:none;" onclick="showProfile();showProfileTab('rounds')">← BACK TO SAVED ROUNDS</button>
   <div id="saveStatus" style="font-size:12px;color:#4CAF50;min-height:18px;"></div>
 </div>
 
@@ -386,7 +392,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 <div id="fullStatsPage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;padding-bottom:30px;">
   <div style="font-size:20px;font-weight:800;text-align:center;">📊 Full Round Stats</div>
   <div id="fullStatsSubject" style="font-size:12px;color:#888;text-align:center;margin-bottom:6px;"></div>
-  <div id="fullStatsTabs" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;justify-content:center;"></div>
+  <div id="fullStatsTabs" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;"></div>
   <div id="fullStatsContent"></div>
   <button style="background:#555;margin-top:16px;" onclick="show('summaryPage')">BACK TO SUMMARY</button>
 </div>
@@ -1594,6 +1600,8 @@ function finishHole(){
   }else{
     scoreBar.style.display='none';
     renderSummary();
+    document.getElementById('backToRoundsBtn').style.display = 'none';
+    document.getElementById('saveStatus').textContent = '';
     show('summaryPage');
   }
 }
@@ -3189,6 +3197,30 @@ async function doLogout() {
   updateAuthUI(false);
 }
 
+async function doResetPassword() {
+  const email = document.getElementById('authEmail').value.trim();
+  const msg = document.getElementById('authMsg');
+  
+  if (!email) {
+    msg.style.color = '#f44';
+    msg.textContent = 'Enter your email above, then tap Forgot Password';
+    return;
+  }
+  
+  msg.textContent = 'Sending reset link...';
+  msg.style.color = '#888';
+  
+  const { error } = await _sb.auth.resetPasswordForEmail(email);
+  
+  if (error) {
+    msg.style.color = '#f44';
+    msg.textContent = error.message;
+  } else {
+    msg.style.color = '#4CAF50';
+    msg.textContent = '\u2713 Password reset email sent! Check your inbox.';
+  }
+}
+
 // Listen for auth changes
 _sb.auth.onAuthStateChange((event, session) => {
   if (session) {
@@ -3400,6 +3432,9 @@ async function viewSavedRound(roundId) {
   renderSummary();
   show('summaryPage');
   document.getElementById('saveStatus').textContent = '(viewing saved round)';
+  document.getElementById('backToRoundsBtn').style.display = '';
+  var saveBtn2 = document.getElementById('saveToAccountBtn');
+  if (saveBtn2) saveBtn2.style.display = 'none';
 }
 
 async function deleteSavedRound(roundId, btn) {
@@ -3437,6 +3472,10 @@ function showProfileTab(tab) {
   document.getElementById('profileAccountTab').style.display = tab === 'account' ? 'flex' : 'none';
   document.getElementById('profileDashboardTab').style.display = tab === 'dashboard' ? 'block' : 'none';
   document.getElementById('profileRoundsTab').style.display = tab === 'rounds' ? 'block' : 'none';
+  
+  // Scroll content to top
+  var scrollArea = document.getElementById('profileScrollArea');
+  if (scrollArea) scrollArea.scrollTop = 0;
   
   // Style tabs
   ['tabAccount','tabDashboard','tabRounds'].forEach(id => {
@@ -3716,12 +3755,14 @@ function renderDashboard(data, hcp) {
   for(var hi=0;hi<hcpOpts.length;hi++){html+='<option value="'+hcpOpts[hi].k+'"'+(hcpOpts[hi].k===hcp?' selected':'')+'>'+hcpOpts[hi].l+'</option>';}
   html+='</select></div>';
   
-  html+='<div id="dashSubTabs" style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:10px;justify-content:center;">';
-  var tabNames=['Strokes Gained','Overview','Off The Tee','Approach','Short Game','Putting','Play by Play'];
+  html+='<div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;">';
+  html+='<span style="font-size:12px;color:#aaa;">View:</span>';
+  html+='<select id="dashViewSelect" onchange="showDashSub(parseInt(this.value))" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 10px;font-size:13px;max-width:none;width:auto;">';
+  var tabNames=['Strokes Gained','Overview','Off The Tee','Approach','Short Game','Putting'];
   for(var ti=0;ti<tabNames.length;ti++){
-    html+='<button onclick="showDashSub('+ti+')" id="dsub'+ti+'" style="height:28px;font-size:11px;padding:0 8px;border-radius:6px;border:none;cursor:pointer;background:'+(ti===0?'#333':'#1a1a1a')+';color:'+(ti===0?'#fff':'#888')+';font-weight:'+(ti===0?'700':'600')+';">'+tabNames[ti]+'</button>';
+    html+='<option value="'+ti+'">'+tabNames[ti]+'</option>';
   }
-  html+='</div>';
+  html+='</select></div>';
   
   // ===== TAB 0: STROKES GAINED =====
   html+='<div id="dsub_0" class="dsubContent">';
@@ -3856,47 +3897,16 @@ function renderDashboard(data, hcp) {
   html+=tbl(['Distance','Made/Total','Make %'],puttRows);
   html+='</div>';
   
-  // ===== TAB 6: PLAY BY PLAY =====
-  html+='<div id="dsub_6" class="dsubContent" style="display:none;">';
-  for(var pi=0;pi<A.playByPlay.length;pi++){
-    var pbpRound=A.playByPlay[pi];
-    html+='<div style="margin-bottom:16px;">';
-    html+='<div style="font-size:15px;font-weight:800;color:#fff;background:#2E7D32;padding:8px 10px;border-radius:8px 8px 0 0;">'+pbpRound.course+' \u00b7 '+pbpRound.date+' \u00b7 '+pbpRound.score+' (<span style="color:'+ftpC(pbpRound.toPar)+'">'+ftp(pbpRound.toPar)+'</span>)</div>';
-    for(var ph=0;ph<pbpRound.holes.length;ph++){
-      var hole=pbpRound.holes[ph];
-      var holeDiff=hole.score-hole.par;
-      var scoreLabel='';
-      if(holeDiff<=-2)scoreLabel='Eagle';else if(holeDiff===-1)scoreLabel='Birdie';else if(holeDiff===0)scoreLabel='Par';else if(holeDiff===1)scoreLabel='Bogey';else if(holeDiff===2)scoreLabel='Double';else scoreLabel='+'+holeDiff;
-      var scoreBg=holeDiff<=-2?'#1565C0':holeDiff===-1?'#2E7D32':holeDiff===0?'#333':holeDiff===1?'#E65100':'#B71C1C';
-      html+='<div style="background:#1a1a1a;padding:6px 10px;border-bottom:1px solid #333;">';
-      html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">';
-      html+='<span style="font-weight:700;font-size:13px;">Hole '+hole.hole+' \u00b7 Par '+hole.par+' \u00b7 '+hole.yards+' yds</span>';
-      html+='<span style="font-size:12px;font-weight:700;background:'+scoreBg+';padding:2px 8px;border-radius:4px;">'+hole.score+' ('+scoreLabel+')</span>';
-      html+='</div>';
-      for(var ps=0;ps<hole.shots.length;ps++){
-        var shot=hole.shots[ps];
-        var sgDisp=sgFmt(shot.sg);
-        html+='<div style="display:flex;justify-content:space-between;padding:2px 0;font-size:12px;color:#bbb;">';
-        html+='<span style="flex:1;">'+shot.desc+'</span>';
-        html+='<span style="width:50px;text-align:right;font-weight:700;color:'+sgC(shot.sg)+';">'+sgDisp+'</span>';
-        html+='</div>';
-      }
-      html+='</div>';
-    }
-    html+='</div>';
-  }
-  html+='</div>';
-  
   content.innerHTML=html;
 }
 
 function showDashSub(idx) {
-  for(var i=0;i<7;i++){
+  for(var i=0;i<6;i++){
     var el=document.getElementById('dsub_'+i);
-    var btn=document.getElementById('dsub'+i);
     if(el)el.style.display=i===idx?'block':'none';
-    if(btn){btn.style.background=i===idx?'#333':'#1a1a1a';btn.style.color=i===idx?'#fff':'#888';btn.style.fontWeight=i===idx?'700':'600';}
   }
+  var sel=document.getElementById('dashViewSelect');
+  if(sel)sel.value=idx;
 }
 
 async function updateProfile() {
@@ -3951,10 +3961,12 @@ function showFullStats() {
   
   // Build tab buttons
   var tabNames = ['Scoring','Strokes Gained','Off The Tee','Approach','Short Game','Putting','Play by Play'];
-  var tabsHtml = '';
+  var tabsHtml = '<span style="font-size:12px;color:#aaa;">View:</span>';
+  tabsHtml += '<select id="fstSelect" onchange="showFullStatTab(parseInt(this.value))" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 10px;font-size:13px;max-width:none;width:auto;">';
   for (var i = 0; i < tabNames.length; i++) {
-    tabsHtml += '<button onclick="showFullStatTab('+i+')" id="fst'+i+'" style="height:28px;font-size:11px;padding:0 8px;border-radius:6px;border:none;cursor:pointer;background:'+(i===0?'#333':'#1a1a1a')+';color:'+(i===0?'#fff':'#888')+';font-weight:'+(i===0?'700':'600')+';">'+tabNames[i]+'</button>';
+    tabsHtml += '<option value="'+i+'">'+tabNames[i]+'</option>';
   }
+  tabsHtml += '</select>';
   document.getElementById('fullStatsTabs').innerHTML = tabsHtml;
   
   // Helpers
@@ -4192,10 +4204,8 @@ function showFullStats() {
 function showFullStatTab(idx) {
   if (!window._fullStatTabs) return;
   document.getElementById('fstContent').innerHTML = window._fullStatTabs[idx];
-  for (var i = 0; i < 7; i++) {
-    var btn = document.getElementById('fst'+i);
-    if (btn) { btn.style.background = i===idx?'#333':'#1a1a1a'; btn.style.color = i===idx?'#fff':'#888'; btn.style.fontWeight = i===idx?'700':'600'; }
-  }
+  var sel = document.getElementById('fstSelect');
+  if (sel) sel.value = idx;
 }
 
 // Check auth on load
