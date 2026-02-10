@@ -202,7 +202,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <div id="homePage" class="page active" style="justify-content:center;">
   <div style="font-size:32px;font-weight:800;letter-spacing:-0.5px;">Blake Kokal Golf</div>
-  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.2.2</div>
+  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.2.6</div>
   <div id="homeAuthStatus" style="font-size:13px;color:#888;margin-bottom:16px;"></div>
   <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;">
     <button onclick="goToNewRound()" style="height:56px;font-size:16px;font-weight:700;background:#2E7D32;border-radius:12px;">⛳ Enter New Round</button>
@@ -447,10 +447,24 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
     </select>
   </div>
   
-  <div class="stat center">SG: Off The Tee <span class="num" id="sgOTT">0.00</span></div>
-  <div class="stat center">SG: Approach <span class="num" id="sgAPP">0.00</span></div>
-  <div class="stat center">SG: Around Green <span class="num" id="sgARG">0.00</span></div>
-  <div class="stat center">SG: Putting <span class="num" id="sgPuttingDisplay"></span></div>
+  <div style="display:flex;gap:6px;width:100%;max-width:360px;">
+    <div style="flex:1;background:#222;border-radius:8px;padding:8px 4px;text-align:center;">
+      <div style="font-size:10px;color:#888;">SG: OTT</div>
+      <div class="num" id="sgOTT" style="font-size:15px;">0.00</div>
+    </div>
+    <div style="flex:1;background:#222;border-radius:8px;padding:8px 4px;text-align:center;">
+      <div style="font-size:10px;color:#888;">SG: APP</div>
+      <div class="num" id="sgAPP" style="font-size:15px;">0.00</div>
+    </div>
+    <div style="flex:1;background:#222;border-radius:8px;padding:8px 4px;text-align:center;">
+      <div style="font-size:10px;color:#888;">SG: ARG</div>
+      <div class="num" id="sgARG" style="font-size:15px;">0.00</div>
+    </div>
+    <div style="flex:1;background:#222;border-radius:8px;padding:8px 4px;text-align:center;">
+      <div style="font-size:10px;color:#888;">SG: Putt</div>
+      <div class="num" id="sgPuttingDisplay" style="font-size:15px;"></div>
+    </div>
+  </div>
 
   <div class="stat">
     <div class="stat-split">
@@ -4056,7 +4070,10 @@ function filterSvRounds() {
       + '<div style="font-size:12px;color:#aaa;">' + dateStr + ' · ' + r.holes + 'h</div></div>'
       + '<div style="text-align:right;"><div style="font-size:20px;font-weight:800;">' + r.score + '</div>'
       + '<div style="font-size:13px;color:' + (r.to_par>0?'#ef5350':r.to_par<0?'#66bb6a':'#aaa') + '">' + tp + '</div></div></div>'
-      + '<button onclick="viewSavedRound(\'' + r.id + '\')" style="width:100%;height:30px;font-size:12px;background:#1565c0;border-radius:6px;margin-top:8px;">View Details</button>';
+      + '<div style="display:flex;gap:6px;margin-top:8px;">'
+      + '<button onclick="viewSavedRound(\'' + r.id + '\')" style="flex:1;height:30px;font-size:12px;background:#1565c0;border-radius:6px;">View Details</button>'
+      + '<button onclick="deleteStudentRound(\'' + r.id + '\',this)" style="width:60px;height:30px;font-size:12px;background:#c62828;border-radius:6px;">Delete</button>'
+      + '</div>';
     list.appendChild(card);
   });
 }
@@ -4064,6 +4081,21 @@ function filterSvRounds() {
 // =============================================
 // UPLOAD / IMPORT ROUND FROM EXCEL
 // =============================================
+
+async function deleteStudentRound(roundId, btn) {
+  if (!confirm('Delete this round from student profile?')) return;
+  btn.textContent = '...';
+  var { error } = await _sb.from('rounds').delete().eq('id', roundId);
+  if (error) {
+    alert('Error: ' + error.message);
+    btn.textContent = 'Delete';
+  } else {
+    if (_svAllRounds) {
+      _svAllRounds = _svAllRounds.filter(function(r){ return r.id !== roundId; });
+    }
+    filterSvRounds();
+  }
+}
 
 async function handleRoundUpload(input, targetUserId) {
   var file = input.files[0];
@@ -4078,11 +4110,9 @@ async function handleRoundUpload(input, targetUserId) {
   try {
     var data = await readFileAsArrayBuffer(file);
     var wb = XLSX.read(data, { type: 'array' });
-    var ws = wb.Sheets[wb.SheetNames[0]];
-    var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
     
-    // Parse the round from rows
-    var parsed = parseExcelRound(rows);
+    // Parse the round from all sheets
+    var parsed = parseExcelRound(wb);
     
     if (!parsed) {
       msgEl.style.color = '#f44';
@@ -4143,105 +4173,215 @@ function readFileAsArrayBuffer(file) {
   });
 }
 
-function parseExcelRound(rows) {
-  // Find metadata rows
-  var playerName = '', courseName = '', roundDate = '', handicap = 'pro', roundType = 'Casual';
-  var holeRow = null, yardRow = null, parRow = null, scoreRow = null, puttRow = null;
-  
-  for (var i = 0; i < rows.length && i < 30; i++) {
-    var r = rows[i];
-    if (!r || r.length === 0) continue;
-    var first = String(r[0] || '').trim();
-    
-    // Metadata
-    if (first.toLowerCase().indexOf('player') === 0) playerName = String(r[1] || '').trim();
-    if (first.toLowerCase().indexOf('course') === 0) courseName = String(r[1] || '').trim();
-    if (first.toLowerCase().indexOf('handicap') === 0) handicap = String(r[1] || 'pro').trim();
-    if (first.toLowerCase().indexOf('round type') === 0) roundType = String(r[1] || 'Casual').trim();
-    if (first.toLowerCase().indexOf('date') === 0) {
-      var dVal = r[1];
-      if (dVal) roundDate = parseImportDate(dVal);
+function parseExcelRound(wb) {
+  // Helper to get rows from a sheet by name (case-insensitive partial match)
+  function getSheetRows(name) {
+    for (var i = 0; i < wb.SheetNames.length; i++) {
+      if (wb.SheetNames[i].toLowerCase().indexOf(name.toLowerCase()) !== -1) {
+        return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[i]], { header: 1, defval: '' });
+      }
     }
-    
-    // Scorecard header row
-    if (first.toLowerCase() === 'hole') holeRow = i;
-    if (first.toLowerCase() === 'yards' || first.toLowerCase() === 'yds') yardRow = i;
-    if (first.toLowerCase() === 'par') parRow = i;
-    if (first.toLowerCase() === 'score') scoreRow = i;
-    if (first.toLowerCase() === 'putts') puttRow = i;
+    return null;
   }
   
-  if (holeRow === null || parRow === null || scoreRow === null) {
-    // Try alternate: look for row with numbers 1-9 or 1-18
-    for (var j = 0; j < rows.length && j < 30; j++) {
-      var row = rows[j];
-      if (row && row.length > 2 && (row[1] == 1 || row[1] === '1')) {
-        holeRow = j;
-        if (rows[j+1]) yardRow = j+1;
-        if (rows[j+2]) parRow = j+2;
-        if (rows[j+3]) scoreRow = j+3;
-        if (rows[j+4]) puttRow = j+4;
-        break;
+  // ===== PARSE SCORING SHEET =====
+  var rows = getSheetRows('scor') || XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, defval: '' });
+  
+  var playerName = '', courseName = '', roundDate = '', handicap = 'pro', roundType = 'Casual';
+  var sections = [];
+  
+  for (var i = 0; i < rows.length && i < 60; i++) {
+    var r = rows[i];
+    if (!r || r.length === 0) continue;
+    var first = String(r[0] || '').trim().toLowerCase();
+    
+    if (first.indexOf('player') === 0) playerName = String(r[1] || '').trim();
+    if (first.indexOf('course') === 0) courseName = String(r[1] || '').trim();
+    if (first.indexOf('handicap') === 0) handicap = String(r[1] || 'pro').trim();
+    if (first.indexOf('round type') === 0) roundType = String(r[1] || 'Casual').trim();
+    if (first.indexOf('date') === 0 && r[1]) roundDate = parseImportDate(r[1]);
+    
+    if (first === 'hole') {
+      var sec = { holeRow: i, yardRow: null, parRow: null, scoreRow: null, puttRow: null };
+      for (var k = i + 1; k < Math.min(i + 6, rows.length); k++) {
+        var label = String((rows[k] || [])[0] || '').trim().toLowerCase();
+        if (label === 'yards' || label === 'yds') sec.yardRow = k;
+        if (label === 'par') sec.parRow = k;
+        if (label === 'score') sec.scoreRow = k;
+        if (label === 'putts') sec.puttRow = k;
+      }
+      if (sec.parRow !== null && sec.scoreRow !== null) sections.push(sec);
+    }
+  }
+  
+  if (sections.length === 0) return null;
+  
+  var allHoles = [];
+  var totalScore = 0, totalPar = 0;
+  
+  sections.forEach(function(sec) {
+    var pars = rows[sec.parRow], scores = rows[sec.scoreRow];
+    var yards = sec.yardRow !== null ? rows[sec.yardRow] : null;
+    var putts = sec.puttRow !== null ? rows[sec.puttRow] : null;
+    for (var col = 1; col < pars.length; col++) {
+      var p = parseInt(pars[col]), s = parseInt(scores[col]);
+      if (isNaN(p) || isNaN(s) || p < 2 || p > 6) continue;
+      allHoles.push({
+        hole: allHoles.length + 1, par: p,
+        yards: yards ? parseInt(yards[col]) || 0 : 0,
+        score: s, putts: putts ? parseInt(putts[col]) || 0 : 0,
+        firstPuttDist: 0, expectedPutts: 0,
+        sgOTT: 0, sgAPP: 0, sgARG: 0, sgPutting: 0,
+        shots: []
+      });
+      totalScore += s; totalPar += p;
+    }
+  });
+  
+  if (allHoles.length === 0) return null;
+  
+  // ===== PARSE STROKES GAINED SHEET (shot-by-shot) =====
+  var sgRows = getSheetRows('strokes');
+  if (sgRows) {
+    var shotHeaderRow = -1;
+    for (var si = 0; si < sgRows.length; si++) {
+      if (String(sgRows[si][0] || '').toLowerCase() === 'hole' && String(sgRows[si][2] || '').toLowerCase().indexOf('shot') !== -1) {
+        shotHeaderRow = si; break;
+      }
+    }
+    if (shotHeaderRow >= 0) {
+      for (var sr = shotHeaderRow + 1; sr < sgRows.length; sr++) {
+        var srow = sgRows[sr];
+        if (!srow || srow[0] === '' || srow[0] === null) continue;
+        var hNum = parseInt(srow[0]), shotNum = parseInt(srow[2]);
+        if (isNaN(hNum) || isNaN(shotNum)) continue;
+        var hole = allHoles.find(function(h){ return h.hole === hNum; });
+        if (!hole) continue;
+        
+        var startLie = String(srow[4] || '').toUpperCase();
+        var endLie = String(srow[5] || '').toUpperCase();
+        var isPutt = (startLie === 'GREEN');
+        var distBefore = parseInt(srow[3]) || 0;
+        var endDistStr = String(srow[6] || '');
+        var distAfter = (endLie === 'HOLED') ? 0 : (parseInt(endDistStr) || 0);
+        
+        var lieMapped = endLie;
+        if (endLie === 'HOLED') lieMapped = 'GREEN';
+        else if (endLie.indexOf('ROUGH') !== -1) lieMapped = 'ROUGH';
+        else if (endLie.indexOf('BUNKER') !== -1) lieMapped = 'BUNKER';
+        
+        hole.shots.push({
+          shotNum: shotNum, lie: lieMapped,
+          distanceBefore: distBefore, distanceAfter: distAfter, isPutt: isPutt
+        });
       }
     }
   }
   
-  if (parRow === null || scoreRow === null) return null;
+  // Fill in minimal shots for holes without shot data
+  allHoles.forEach(function(h) {
+    if (h.shots.length === 0) h.shots = buildMinimalShots(h.par, h.score, h.putts, h.yards);
+  });
   
-  var pars = rows[parRow];
-  var scores = rows[scoreRow];
-  var yards = yardRow !== null ? rows[yardRow] : null;
-  var putts = puttRow !== null ? rows[puttRow] : null;
-  
-  // Build allHoles from columns (skip col 0 which is label)
-  var allHoles = [];
-  var totalScore = 0, totalPar = 0;
-  
-  for (var col = 1; col < pars.length; col++) {
-    var p = parseInt(pars[col]);
-    var s = parseInt(scores[col]);
-    if (isNaN(p) || isNaN(s) || p < 2 || p > 6) continue; // skip TOTAL column and invalid
-    
-    var y = yards ? parseInt(yards[col]) || 0 : 0;
-    var pt = putts ? parseInt(putts[col]) || 0 : 0;
-    
-    allHoles.push({
-      hole: allHoles.length + 1,
-      par: p,
-      yards: y,
-      score: s,
-      putts: pt,
-      firstPuttDist: 0,
-      expectedPutts: 0,
-      sgOTT: 0, sgAPP: 0, sgARG: 0, sgPutting: 0,
-      shots: buildMinimalShots(p, s, pt, y)
-    });
-    
-    totalScore += s;
-    totalPar += p;
+  // ===== PARSE PUTTING SHEET (firstPuttDist, expectedPutts per hole) =====
+  var puttRows = getSheetRows('putt');
+  var totalPutts = 0, onePutts = 0, threePutts = 0, girPuttsPerGIR = 0;
+  if (puttRows) {
+    for (var pi = 0; pi < puttRows.length; pi++) {
+      var pr = puttRows[pi];
+      var psLabel = String(pr[0] || '').toLowerCase();
+      if (psLabel === 'total putts') totalPutts = parseInt(pr[1]) || 0;
+      if (psLabel.indexOf('one-putt') !== -1) onePutts = parseInt(pr[1]) || 0;
+      if (psLabel.indexOf('three-putt') !== -1) threePutts = parseInt(pr[1]) || 0;
+      if (psLabel.indexOf('putts per gir') !== -1) girPuttsPerGIR = parseFloat(pr[1]) || 0;
+      // Hole-by-hole putting
+      var holeNum = parseInt(pr[0]);
+      if (!isNaN(holeNum) && holeNum >= 1 && String(pr[1] || '').indexOf('ft') !== -1) {
+        var h2 = allHoles.find(function(h){ return h.hole === holeNum; });
+        if (h2) {
+          h2.firstPuttDist = parseInt(pr[1]) || 0;
+          h2.expectedPutts = parseFloat(pr[3]) || 0;
+          h2.sgPutting = parseFloat(pr[4]) || 0;
+        }
+      }
+    }
   }
   
-  if (allHoles.length === 0) return null;
+  // ===== PARSE OFF THE TEE SHEET =====
+  var ottRows = getSheetRows('off the tee');
+  var fwHit = 0, fwOpp = 0, fwLeft = 0, fwRight = 0, avgDrive = 0;
+  if (ottRows) {
+    for (var oi = 0; oi < ottRows.length; oi++) {
+      var oLabel = String(ottRows[oi][0] || '').toLowerCase();
+      if (oLabel.indexOf('fairways hit') !== -1) {
+        var fwParts = String(ottRows[oi][1] || '').split('/');
+        if (fwParts.length === 2) { fwHit = parseInt(fwParts[0]) || 0; fwOpp = parseInt(fwParts[1]) || 0; }
+      }
+      if (oLabel.indexOf('missed left') !== -1) fwLeft = parseInt(ottRows[oi][1]) || 0;
+      if (oLabel.indexOf('missed right') !== -1) fwRight = parseInt(ottRows[oi][1]) || 0;
+      if (oLabel === 'average') avgDrive = parseInt(ottRows[oi][1]) || 0;
+    }
+  }
   
-  // Default date if not found
+  // ===== PARSE APPROACH SHEET =====
+  var appRows = getSheetRows('approach');
+  var girHit = 0, girOpp = allHoles.length, girProx = 0;
+  var missShort = 0, missLong = 0, missLeft2 = 0, missRight2 = 0;
+  if (appRows) {
+    for (var ai = 0; ai < appRows.length; ai++) {
+      var aLabel = String(appRows[ai][0] || '').toLowerCase();
+      if (aLabel === 'gir') {
+        var girParts = String(appRows[ai][1] || '').split('/');
+        if (girParts.length === 2) { girHit = parseInt(girParts[0]) || 0; girOpp = parseInt(girParts[1]) || girOpp; }
+      }
+      if (aLabel.indexOf('proximity when gir') !== -1) girProx = parseInt(appRows[ai][1]) || 0;
+      if (aLabel === 'short') missShort = parseInt(appRows[ai][1]) || 0;
+      if (aLabel === 'long') missLong = parseInt(appRows[ai][1]) || 0;
+      if (aLabel === 'left') missLeft2 = parseInt(appRows[ai][1]) || 0;
+      if (aLabel === 'right') missRight2 = parseInt(appRows[ai][1]) || 0;
+    }
+  }
+  
+  // ===== PARSE AROUND THE GREEN SHEET =====
+  var argRows = getSheetRows('around');
+  var scrMade = 0, scrOpp = 0, bunMade = 0, bunOpp = 0;
+  if (argRows) {
+    for (var gi = 0; gi < argRows.length; gi++) {
+      var gLabel = String(argRows[gi][0] || '').toLowerCase();
+      if (gLabel.indexOf('scrambling') !== -1) {
+        var scrParts = String(argRows[gi][1] || '').split('/');
+        if (scrParts.length === 2) { scrMade = parseInt(scrParts[0]) || 0; scrOpp = parseInt(scrParts[1]) || 0; }
+      }
+      if (gLabel.indexOf('up') !== -1 && gLabel.indexOf('bunker') !== -1) {
+        var bunParts = String(argRows[gi][1] || '').split('/');
+        if (bunParts.length === 2) { bunMade = parseInt(bunParts[0]) || 0; bunOpp = parseInt(bunParts[1]) || 0; }
+      }
+    }
+  }
+  
+  var stats = {
+    fwHit: fwHit, fwOpp: fwOpp, fwLeft: fwLeft, fwRight: fwRight,
+    girHit: girHit, girOpp: girOpp,
+    girFirstPuttDist: girProx * girHit,
+    girPutts: girHit > 0 ? Math.round(girPuttsPerGIR * girHit) : 0,
+    scrMade: scrMade, scrOpp: scrOpp,
+    bunMade: bunMade, bunOpp: bunOpp,
+    totalPutts: totalPutts || allHoles.reduce(function(s,h){return s+h.putts;},0),
+    onePutts: onePutts, threePutts: threePutts,
+    missShort: missShort, missLong: missLong,
+    missLeft: missLeft2, missRight: missRight2,
+    avgDrive: avgDrive
+  };
+  
   if (!roundDate) roundDate = new Date().toISOString().split('T')[0];
   if (!playerName) playerName = 'Player';
   if (!courseName) courseName = 'Imported Round';
   
-  // Compute basic stats from scorecard
-  var stats = computeImportStats(allHoles);
-  
   return {
-    playerName: playerName,
-    courseName: courseName,
-    roundDate: roundDate,
-    roundType: roundType,
-    handicap: handicap,
-    holes: allHoles.length,
-    score: totalScore,
-    totalPar: totalPar,
-    allHoles: allHoles,
-    stats: stats
+    playerName: playerName, courseName: courseName, roundDate: roundDate,
+    roundType: roundType, handicap: handicap,
+    holes: allHoles.length, score: totalScore, totalPar: totalPar,
+    allHoles: allHoles, stats: stats
   };
 }
 
@@ -4268,27 +4408,39 @@ function buildMinimalShots(par, score, putts, yards) {
   // Build minimal shot array for compatibility with the rest of the app
   var shots = [];
   var nonPuttShots = score - putts;
+  if (nonPuttShots < 1) nonPuttShots = 1;
   
-  // Tee shot
-  if (nonPuttShots >= 1) {
-    shots.push({
-      shotNum: 1,
-      lie: par >= 4 ? 'FAIRWAY' : 'GREEN',
-      distanceBefore: yards,
-      distanceAfter: par === 3 ? 20 : Math.max(50, yards - 250),
-      isPutt: false
-    });
-  }
+  // Estimate distances for each non-putt shot
+  var remaining = yards;
+  var firstPuttDist = 20; // default estimate in feet
   
-  // Approach shots
-  for (var i = 2; i <= nonPuttShots; i++) {
+  for (var i = 1; i <= nonPuttShots; i++) {
+    var isLastNonPutt = (i === nonPuttShots);
+    var distBefore = remaining;
+    var distAfter;
+    
+    if (i === 1 && par >= 4) {
+      // Tee shot on par 4/5: estimate drive ~250 or remaining/nonPuttShots
+      var driveEst = Math.min(250, Math.round(remaining * 0.6));
+      distAfter = Math.max(20, remaining - driveEst);
+    } else if (isLastNonPutt) {
+      // Last non-putt shot reaches green
+      distAfter = firstPuttDist;
+    } else {
+      // Middle shots: distribute remaining evenly
+      var shotsLeft = nonPuttShots - i;
+      distAfter = Math.max(20, Math.round(remaining / (shotsLeft + 1)));
+    }
+    
     shots.push({
       shotNum: i,
-      lie: i === nonPuttShots ? 'GREEN' : 'FAIRWAY',
-      distanceBefore: null,
-      distanceAfter: i === nonPuttShots ? 20 : null,
+      lie: isLastNonPutt ? 'GREEN' : (i === 1 && par >= 4 ? 'FAIRWAY' : 'FAIRWAY'),
+      distanceBefore: distBefore,
+      distanceAfter: isLastNonPutt ? firstPuttDist : distAfter,
       isPutt: false
     });
+    
+    remaining = isLastNonPutt ? 0 : distAfter;
   }
   
   // Putts
@@ -4296,7 +4448,7 @@ function buildMinimalShots(par, score, putts, yards) {
     shots.push({
       shotNum: nonPuttShots + j + 1,
       lie: 'GREEN',
-      distanceBefore: j === 0 ? 20 : 3,
+      distanceBefore: j === 0 ? firstPuttDist : 3,
       distanceAfter: j === putts - 1 ? 0 : 3,
       isPutt: true
     });
