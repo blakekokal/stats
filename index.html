@@ -80,7 +80,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 <div id="scoreBar">E through 0</div>
 
 <!-- AUTH BAR - inside round page header -->
-<div id="authBar" style="position:fixed;top:6px;left:0;right:0;z-index:20;display:flex;align-items:center;justify-content:flex-end;padding:0 12px;">
+<div id="authBar" style="position:fixed;top:6px;left:0;right:0;z-index:20;display:none;align-items:center;justify-content:flex-end;padding:0 12px;">
   <span id="authUser" style="font-size:11px;color:#888;margin-right:6px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></span>
   <button id="profileBtn" onclick="showProfile()" style="width:auto;max-width:none;height:26px;font-size:11px;background:#444;border-radius:6px;padding:0 10px;display:none;margin-right:4px;">Profile</button>
   <button id="authBtn" onclick="showAuthPage()" style="width:auto;max-width:none;height:26px;font-size:11px;background:#333;border-radius:6px;padding:0 12px;">Login</button>
@@ -99,24 +99,17 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   <button class="holes18" id="authLoginBtn" onclick="doLogin()">LOG IN</button>
   <button class="holes9" id="authSignupBtn" onclick="handleSignupClick()">SIGN UP</button>
   <button style="background:transparent;color:#64B5F6;font-size:12px;text-decoration:underline;border:none;cursor:pointer;height:auto;padding:4px;" onclick="doResetPassword()">Forgot Password?</button>
-  <button style="background:#555;" onclick="show('roundPage')">BACK</button>
+  <button style="background:#555;" onclick="show('homePage')">← HOME</button>
 </div>
 
 <!-- PROFILE HUB -->
-<div id="profilePage" class="page" style="justify-content:flex-start;padding-top:10px;overflow-y:hidden;padding-bottom:0;position:relative;">
-  <!-- Tab bar - fixed at top of profile page -->
-  <div id="profileTabs" style="display:flex;gap:0;width:100%;max-width:360px;margin-bottom:0;border-radius:10px;overflow:hidden;flex-shrink:0;">
-    <button onclick="showProfileTab('dashboard')" id="tabDashboard" style="flex:1;height:38px;font-size:13px;background:#333;border-radius:0;border:none;color:#fff;font-weight:700;max-width:none;width:auto;padding:0;margin:0;">Dashboard</button>
-    <button onclick="showProfileTab('rounds')" id="tabRounds" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Rounds</button>
-    <button onclick="showProfileTab('account')" id="tabAccount" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Settings</button>
-  </div>
-
+<div id="profilePage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:hidden;padding-bottom:0;position:relative;">
   <!-- Scrollable content area -->
-  <div id="profileScrollArea" style="flex:1;overflow-y:auto;width:100%;display:flex;flex-direction:column;align-items:center;padding:12px 0 30px;">
+  <div id="profileScrollArea" style="flex:1;overflow-y:auto;width:100%;display:flex;flex-direction:column;align-items:center;padding:0 0 30px;">
 
   <!-- ACCOUNT TAB -->
   <div id="profileAccountTab" style="width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center;gap:8px;">
-    <div style="font-size:20px;font-weight:800;">👤 Account Info</div>
+    <div style="font-size:20px;font-weight:800;">⚙️ Settings</div>
     <div id="profileEmail" style="font-size:14px;color:#aaa;margin:2px 0;"></div>
     <div id="profileJoined" style="font-size:12px;color:#666;margin-bottom:4px;"></div>
     <input id="profileName" placeholder="Display Name">
@@ -129,12 +122,12 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
       <button style="background:#F57C00;" onclick="changePassword()">UPDATE PASSWORD</button>
       <div id="pwMsg" style="font-size:13px;min-height:18px;"></div>
     </div>
-    <button style="background:#c62828;margin-top:12px;" onclick="doLogout();show('roundPage')">LOG OUT</button>
+    <button style="background:#c62828;margin-top:12px;" onclick="doLogout();show('homePage')">LOG OUT</button>
   </div>
 
   <!-- DASHBOARD TAB -->
   <div id="profileDashboardTab" style="width:100%;max-width:360px;display:none;">
-    <div style="font-size:20px;font-weight:800;text-align:center;margin-bottom:6px;">📊 My Dashboard</div>
+    <div style="font-size:20px;font-weight:800;text-align:center;margin-bottom:6px;">📊 Stats Dashboard</div>
     <div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px;">
       <select id="dashFilterType" onchange="applyDashFilters()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 8px;font-size:12px;">
         <option value="all">All Rounds</option>
@@ -155,20 +148,43 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
   <!-- SAVED ROUNDS TAB -->
   <div id="profileRoundsTab" style="width:100%;max-width:360px;display:none;">
-    <div style="font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;">📋 Saved Rounds</div>
+    <div style="font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;">📋 Round History</div>
     <div id="roundsListMsg" style="font-size:13px;color:#888;min-height:20px;text-align:center;"></div>
     <div id="roundsList" style="width:100%;"></div>
   </div>
 
-  <button style="background:#555;margin-top:16px;" onclick="show('roundPage')">BACK</button>
+  <button style="background:#555;margin-top:16px;" onclick="show('homePage')">← HOME</button>
   </div><!-- end profileScrollArea -->
 </div>
 
-<div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v2.1.5</span></div>
-  <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
-    Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
+<div id="homePage" class="page active" style="justify-content:center;">
+  <div style="font-size:32px;font-weight:800;letter-spacing:-0.5px;">Blake Kokal Golf</div>
+  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.1.8</div>
+  <div id="homeAuthStatus" style="font-size:13px;color:#888;margin-bottom:16px;"></div>
+  <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;">
+    <button onclick="goToNewRound()" style="height:56px;font-size:16px;font-weight:700;background:#2E7D32;border-radius:12px;">⛳ Enter New Round</button>
+    <button onclick="goToDashboard()" style="height:56px;font-size:16px;font-weight:700;background:#1565C0;border-radius:12px;">📊 Stats Dashboard</button>
+    <button onclick="goToRoundHistory()" style="height:56px;font-size:16px;font-weight:700;background:#6A1B9A;border-radius:12px;">📋 Round History</button>
+    <button onclick="goToDrills()" style="height:56px;font-size:16px;font-weight:700;background:#E65100;border-radius:12px;">🎯 Drills & Games</button>
+    <button onclick="goToSettings()" style="height:56px;font-size:16px;font-weight:700;background:#444;border-radius:12px;">⚙️ Settings</button>
   </div>
+  <button id="homeLoginBtn" onclick="showAuthPage()" style="margin-top:20px;background:transparent;color:#64B5F6;font-size:13px;text-decoration:underline;border:none;cursor:pointer;height:auto;padding:4px;">Log In / Sign Up</button>
+</div>
+
+<!-- DRILLS & GAMES PAGE -->
+<div id="drillsPage" class="page" style="justify-content:flex-start;padding-top:30px;">
+  <div style="font-size:22px;font-weight:800;margin-bottom:12px;">🎯 Drills & Games</div>
+  <select id="drillCategory" onchange="showDrillCategory(this.value)" style="width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-radius:10px;border:none;text-align:center;font-size:15px;appearance:none;-webkit-appearance:none;padding:0 10px;">
+    <option value="putting">Putting Drills</option>
+    <option value="chipping">Chipping Drills</option>
+    <option value="fullswing">Full Swing Drills</option>
+  </select>
+  <div id="drillContent" style="width:100%;max-width:320px;margin-top:16px;text-align:center;color:#888;font-size:15px;padding:20px;background:#222;border-radius:10px;">Coming soon</div>
+  <button style="background:#555;margin-top:16px;" onclick="show('homePage')">← HOME</button>
+</div>
+
+<div id="roundPage" class="page">
+  <div style="font-size:22px;font-weight:800;">New Round</div>
   <input id="playerName" placeholder="Player Name">
   <div class="row">
     <select id="playerHandicap" style="flex:1;height:44px;background:#222;color:#fff;border-radius:10px;border:none;text-align:center;font-size:15px;appearance:none;-webkit-appearance:none;padding:0 10px;">
@@ -194,6 +210,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   </div>
   <input id="customHoles" type="number" inputmode="numeric" min="3" max="18" placeholder="Custom # of Holes (3–18)" onfocus="this.select()">
   <button class="holes9" onclick="enterScoring()">CONFIRM</button>
+  <button style="background:#555;" onclick="show('homePage')">← HOME</button>
 </div>
 
 <div id="parPage" class="page">
@@ -371,13 +388,16 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
     </div>
   </div>
   
-  <div class="row">
-    <button class="holes18" onclick="exportToExcel()">SAVE EXCEL</button>
-    <button style="background:#7B1FA2;" onclick="emailResults()">EMAIL / SHARE</button>
+  <div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;">
+    <div style="display:flex;gap:8px;">
+      <button style="flex:1;background:#1B5E20;height:44px;font-size:13px;" onclick="exportToExcel()">SAVE EXCEL</button>
+      <button style="flex:1;background:#7B1FA2;height:44px;font-size:13px;" onclick="emailResults()">EMAIL / SHARE</button>
+    </div>
+    <button style="background:#1565C0;height:44px;font-size:13px;" onclick="showFullStats()">📊 SEE FULL STATS</button>
+    <button id="saveToAccountBtn" style="background:#00838F;height:44px;font-size:13px;display:none;" onclick="saveRoundToAccount()">💾 SAVE TO ACCOUNT</button>
+    <button id="backToRoundsBtn" style="background:#555;height:44px;font-size:13px;display:none;" onclick="goToRoundHistory()">← BACK TO ROUND HISTORY</button>
+    <button style="background:#555;height:44px;font-size:13px;" onclick="show('homePage')">← HOME</button>
   </div>
-  <button style="background:#1565C0;" onclick="showFullStats()">📊 SEE FULL STATS</button>
-  <button id="saveToAccountBtn" style="background:#00838F;display:none;" onclick="saveRoundToAccount()">💾 SAVE TO ACCOUNT</button>
-  <button id="backToRoundsBtn" style="background:#555;display:none;" onclick="showProfile();showProfileTab('rounds')">← BACK TO SAVED ROUNDS</button>
   <div id="saveStatus" style="font-size:12px;color:#4CAF50;min-height:18px;"></div>
 </div>
 
@@ -395,9 +415,6 @@ function show(id){
   processingClick=false; // Reset processing flag when changing pages
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  // Show auth bar on all pages except profile (where it overlaps tabs)
-  var authBar = document.getElementById('authBar');
-  if(authBar) authBar.style.display = id === 'profilePage' ? 'none' : 'flex';
   // Hide score bar on non-scoring pages
   var scoringPages = ['parPage','shotPage','liePage','distancePage','puttPage','penaltyPage','obPenaltyPage','recoveryPage','missedGreenPage'];
   if(scoringPages.indexOf(id) === -1) { var sb=document.getElementById('scoreBar'); if(sb) sb.style.display='none'; }
@@ -1606,6 +1623,8 @@ function finishHole(){
     renderSummary();
     document.getElementById('backToRoundsBtn').style.display = 'none';
     document.getElementById('saveStatus').textContent = '';
+    var saveBtn = document.getElementById('saveToAccountBtn');
+    if(saveBtn) saveBtn.style.display = currentUser ? '' : 'none';
     show('summaryPage');
   }
 }
@@ -3118,6 +3137,8 @@ function updateAuthUI(loggedIn) {
   const authUser = document.getElementById('authUser');
   const profileBtn = document.getElementById('profileBtn');
   const saveBtn = document.getElementById('saveToAccountBtn');
+  const homeAuth = document.getElementById('homeAuthStatus');
+  const homeLoginBtn = document.getElementById('homeLoginBtn');
   
   if (loggedIn && currentUser) {
     const name = currentUser.user_metadata?.display_name || currentUser.email;
@@ -3126,12 +3147,16 @@ function updateAuthUI(loggedIn) {
     authBtn.onclick = doLogout;
     profileBtn.style.display = '';
     if (saveBtn) saveBtn.style.display = '';
+    if (homeAuth) homeAuth.textContent = '👤 ' + name;
+    if (homeLoginBtn) homeLoginBtn.style.display = 'none';
   } else {
     authUser.textContent = '';
     authBtn.textContent = 'Login';
     authBtn.onclick = function(){ showAuthPage(); };
     profileBtn.style.display = 'none';
     if (saveBtn) saveBtn.style.display = 'none';
+    if (homeAuth) homeAuth.textContent = '';
+    if (homeLoginBtn) homeLoginBtn.style.display = '';
   }
 }
 
@@ -3202,7 +3227,7 @@ async function doSignUp() {
     updateAuthUI(true);
     // Auto-fill player name
     if (name) document.getElementById('playerName').value = name;
-    show('roundPage');
+    show('homePage');
   }
 }
 
@@ -3229,7 +3254,7 @@ async function doLogin() {
   // Auto-fill player name
   const dname = currentUser.user_metadata?.display_name;
   if (dname) document.getElementById('playerName').value = dname;
-  show('roundPage');
+  show('homePage');
 }
 
 async function doLogout() {
@@ -3496,39 +3521,67 @@ async function deleteSavedRound(roundId, btn) {
   }
 }
 
-function showProfile() {
+function goToNewRound() {
+  show('roundPage');
+  if (currentUser) {
+    var dname = currentUser.user_metadata?.display_name;
+    var nameField = document.getElementById('playerName');
+    if (dname && !nameField.value) nameField.value = dname;
+  }
+}
+
+function goToDashboard() {
   if (!currentUser) { showAuthPage(); return; }
+  loadProfileInfo();
+  show('profilePage');
+  showProfileTab('dashboard');
+}
+
+function goToRoundHistory() {
+  if (!currentUser) { showAuthPage(); return; }
+  loadProfileInfo();
+  show('profilePage');
+  showProfileTab('rounds');
+}
+
+function goToSettings() {
+  if (!currentUser) { showAuthPage(); return; }
+  loadProfileInfo();
+  show('profilePage');
+  showProfileTab('account');
+}
+
+function goToDrills() {
+  show('drillsPage');
+  showDrillCategory(document.getElementById('drillCategory').value);
+}
+
+function showDrillCategory(cat) {
+  document.getElementById('drillContent').innerHTML = '<div style="padding:20px;color:#888;font-size:15px;">Coming soon</div>';
+}
+
+function loadProfileInfo() {
   document.getElementById('profileEmail').textContent = currentUser.email;
   document.getElementById('profileName').value = currentUser.user_metadata?.display_name || '';
   const joined = currentUser.created_at ? new Date(currentUser.created_at) : null;
   document.getElementById('profileJoined').textContent = joined ? 'Joined ' + (joined.getMonth()+1) + '/' + joined.getDate() + '/' + joined.getFullYear() : '';
   document.getElementById('profileMsg').textContent = '';
   document.getElementById('pwMsg').textContent = '';
-  document.getElementById('authBar').style.display = 'none';
-  show('profilePage');
-  showProfileTab('dashboard');
+}
+
+function showProfile() {
+  if (!currentUser) { showAuthPage(); return; }
+  goToDashboard();
 }
 
 function showProfileTab(tab) {
-  // Toggle tab content
   document.getElementById('profileAccountTab').style.display = tab === 'account' ? 'flex' : 'none';
   document.getElementById('profileDashboardTab').style.display = tab === 'dashboard' ? 'block' : 'none';
   document.getElementById('profileRoundsTab').style.display = tab === 'rounds' ? 'block' : 'none';
   
-  // Scroll content to top
   var scrollArea = document.getElementById('profileScrollArea');
   if (scrollArea) scrollArea.scrollTop = 0;
   
-  // Style tabs
-  ['tabAccount','tabDashboard','tabRounds'].forEach(id => {
-    const el = document.getElementById(id);
-    el.style.background = '#222'; el.style.color = '#888'; el.style.fontWeight = '600';
-  });
-  const activeId = tab === 'account' ? 'tabAccount' : tab === 'dashboard' ? 'tabDashboard' : 'tabRounds';
-  const active = document.getElementById(activeId);
-  active.style.background = '#333'; active.style.color = '#fff'; active.style.fontWeight = '700';
-  
-  // Load data for tabs
   if (tab === 'dashboard') loadDashboard();
   if (tab === 'rounds') loadMyRounds();
 }
