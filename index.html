@@ -92,10 +92,12 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   <div id="authMsg" style="font-size:13px;color:#f44;min-height:20px;"></div>
   <input id="authEmail" type="email" placeholder="Email">
   <input id="authPass" type="password" placeholder="Password">
-  <input id="authPassConfirm" type="password" placeholder="Confirm Password">
-  <input id="authName" placeholder="Display Name (for signup)">
-  <button class="holes9" onclick="doSignUp()">SIGN UP</button>
-  <button class="holes18" onclick="doLogin()">LOG IN</button>
+  <div id="signupFields" style="display:none;width:100%;max-width:320px;flex-direction:column;align-items:center;gap:8px;">
+    <input id="authPassConfirm" type="password" placeholder="Confirm Password">
+    <input id="authName" placeholder="Display Name">
+  </div>
+  <button class="holes18" id="authLoginBtn" onclick="doLogin()">LOG IN</button>
+  <button class="holes9" id="authSignupBtn" onclick="handleSignupClick()">SIGN UP</button>
   <button style="background:transparent;color:#64B5F6;font-size:12px;text-decoration:underline;border:none;cursor:pointer;height:auto;padding:4px;" onclick="doResetPassword()">Forgot Password?</button>
   <button style="background:#555;" onclick="show('roundPage')">BACK</button>
 </div>
@@ -163,7 +165,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 </div>
 
 <div id="roundPage" class="page active">
-  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v2.1.3</span></div>
+  <div style="font-size:28px;font-weight:800;">Stat Tracker <span style="font-size:11px;color:#666;">v2.1.5</span></div>
   <div style="max-width:320px;font-size:13px;opacity:.85;line-height:1.4;">
     Enter name, date, course name, and # of holes played, The app will ask for the par and yardage of the hole, then ask for where each shot ended up, fairway, water, bunker, etc, and then it will ask for the 2nd shot details, the yardage left to the hole, and where it ended up, until you select green, and hole out with the putt
   </div>
@@ -305,19 +307,10 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
     </select>
   </div>
   
-  <div class="stat">
-    <div class="stat-split">
-      <div class="stat-half left">SG: OTT <span class="num" id="sgOTT">0.00</span></div>
-      <div class="stat-half">SG: APP <span class="num" id="sgAPP">0.00</span></div>
-    </div>
-  </div>
-  
-  <div class="stat">
-    <div class="stat-split">
-      <div class="stat-half left">SG: ARG <span class="num" id="sgARG">0.00</span></div>
-      <div class="stat-half">SG: Putt <span class="num" id="sgPuttingDisplay"></span></div>
-    </div>
-  </div>
+  <div class="stat center">SG: Off The Tee <span class="num" id="sgOTT">0.00</span></div>
+  <div class="stat center">SG: Approach <span class="num" id="sgAPP">0.00</span></div>
+  <div class="stat center">SG: Around Green <span class="num" id="sgARG">0.00</span></div>
+  <div class="stat center">SG: Putting <span class="num" id="sgPuttingDisplay"></span></div>
 
   <div class="stat">
     <div class="stat-split">
@@ -3143,8 +3136,36 @@ function updateAuthUI(loggedIn) {
 }
 
 function showAuthPage() {
-  document.getElementById('authMsg').textContent = '';
+  resetAuthMode();
   show('authPage');
+}
+
+var _authSignupMode = false;
+
+function handleSignupClick() {
+  if (!_authSignupMode) {
+    // First click - show signup fields
+    _authSignupMode = true;
+    document.getElementById('signupFields').style.display = 'flex';
+    document.getElementById('authSignupBtn').textContent = 'CREATE ACCOUNT';
+    document.getElementById('authLoginBtn').textContent = '← BACK TO LOGIN';
+    document.getElementById('authLoginBtn').onclick = function() { resetAuthMode(); };
+    document.getElementById('authMsg').textContent = '';
+  } else {
+    // Second click - actually sign up
+    doSignUp();
+  }
+}
+
+function resetAuthMode() {
+  _authSignupMode = false;
+  document.getElementById('signupFields').style.display = 'none';
+  document.getElementById('authSignupBtn').textContent = 'SIGN UP';
+  document.getElementById('authLoginBtn').textContent = 'LOG IN';
+  document.getElementById('authLoginBtn').onclick = function() { doLogin(); };
+  document.getElementById('authMsg').textContent = '';
+  document.getElementById('authPassConfirm').value = '';
+  document.getElementById('authName').value = '';
 }
 
 async function doSignUp() {
@@ -3827,7 +3848,10 @@ function renderDashboard(data, hcp) {
   html+='<div style="text-align:center;color:#888;font-size:12px;margin-bottom:6px;">'+n+' round'+(n!==1?'s':'')+' \u00b7 '+A.holes+' holes</div>';
   html+=hdr('SG SUMMARY vs '+hcpLabel);
   html+=sgRow('SG: Total', sgTot/n, '/round');
-  html+=sgRow('SG: OTT / APP / ARG / Putt', 0, sgFmt(A.sgOTT/n)+' / '+sgFmt(A.sgAPP/n)+' / '+sgFmt(A.sgARG/n)+' / '+sgFmt(A.sgPutt/n));
+  html+=sgRow('SG: Off The Tee', A.sgOTT/n, '/round');
+  html+=sgRow('SG: Approach', A.sgAPP/n, '/round');
+  html+=sgRow('SG: Around Green', A.sgARG/n, '/round');
+  html+=sgRow('SG: Putting', A.sgPutt/n, '/round');
   html+=hdr('SCORING');
   html+=row('Avg 18-Hole Score',avg18,avg18tp!==null?'<span style="color:'+ftpC(avg18tp)+'">'+ftp(avg18tp)+'</span>':'');
   html+=row('Avg 9-Hole Score',avg9,avg9tp!==null?'<span style="color:'+ftpC(avg9tp)+'">'+ftp(avg9tp)+'</span>':'');
