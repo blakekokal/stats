@@ -169,6 +169,9 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   <!-- SAVED ROUNDS TAB -->
   <div id="profileRoundsTab" style="width:100%;max-width:360px;display:none;">
     <div style="font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;">📋 Round History</div>
+    <button onclick="document.getElementById('uploadRoundFile').click()" style="width:100%;height:40px;font-size:13px;background:#00695C;border-radius:8px;margin-bottom:8px;">📤 Upload Round (.xlsx)</button>
+    <input type="file" id="uploadRoundFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleRoundUpload(this, currentUser.id)">
+    <div id="uploadRoundMsg" style="font-size:12px;min-height:16px;text-align:center;margin-bottom:6px;"></div>
     <input id="roundSearchInput" type="text" placeholder="🔍 Search course name..." oninput="filterRoundsList()" style="width:100%;max-width:360px;box-sizing:border-box;margin-bottom:6px;">
     <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;">
       <select id="roundFilterType" onchange="filterRoundsList()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 6px;font-size:11px;">
@@ -199,7 +202,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <div id="homePage" class="page active" style="justify-content:center;">
   <div style="font-size:32px;font-weight:800;letter-spacing:-0.5px;">Blake Kokal Golf</div>
-  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.2.1</div>
+  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.2.2</div>
   <div id="homeAuthStatus" style="font-size:13px;color:#888;margin-bottom:16px;"></div>
   <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;">
     <button onclick="goToNewRound()" style="height:56px;font-size:16px;font-weight:700;background:#2E7D32;border-radius:12px;">⛳ Enter New Round</button>
@@ -279,6 +282,9 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
     
     <!-- Student Rounds -->
     <div id="svRoundsTab" style="width:100%;max-width:360px;display:none;">
+      <button onclick="document.getElementById('uploadStudentRoundFile').click()" style="width:100%;height:40px;font-size:13px;background:#00695C;border-radius:8px;margin-bottom:6px;">📤 Upload Round for Student (.xlsx)</button>
+      <input type="file" id="uploadStudentRoundFile" accept=".xlsx,.xls,.csv" style="display:none;" onchange="handleRoundUpload(this, _currentStudentId)">
+      <div id="uploadStudentRoundMsg" style="font-size:12px;min-height:16px;text-align:center;margin-bottom:6px;"></div>
       <input id="svRoundSearch" type="text" placeholder="🔍 Search course name..." oninput="filterSvRounds()" style="width:100%;max-width:360px;box-sizing:border-box;margin-bottom:6px;">
       <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;">
         <select id="svRoundFilterType" onchange="filterSvRounds()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 6px;font-size:11px;">
@@ -4053,6 +4059,282 @@ function filterSvRounds() {
       + '<button onclick="viewSavedRound(\'' + r.id + '\')" style="width:100%;height:30px;font-size:12px;background:#1565c0;border-radius:6px;margin-top:8px;">View Details</button>';
     list.appendChild(card);
   });
+}
+
+// =============================================
+// UPLOAD / IMPORT ROUND FROM EXCEL
+// =============================================
+
+async function handleRoundUpload(input, targetUserId) {
+  var file = input.files[0];
+  if (!file) return;
+  
+  // Determine which message element to use
+  var isStudent = (targetUserId !== currentUser.id);
+  var msgEl = document.getElementById(isStudent ? 'uploadStudentRoundMsg' : 'uploadRoundMsg');
+  msgEl.style.color = '#888';
+  msgEl.textContent = 'Parsing file...';
+  
+  try {
+    var data = await readFileAsArrayBuffer(file);
+    var wb = XLSX.read(data, { type: 'array' });
+    var ws = wb.Sheets[wb.SheetNames[0]];
+    var rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    
+    // Parse the round from rows
+    var parsed = parseExcelRound(rows);
+    
+    if (!parsed) {
+      msgEl.style.color = '#f44';
+      msgEl.textContent = 'Could not parse round data. Check file format.';
+      input.value = '';
+      return;
+    }
+    
+    msgEl.textContent = 'Saving ' + parsed.courseName + ' (' + parsed.holes + ' holes, score ' + parsed.score + ')...';
+    
+    // Build round_data blob from parsed scorecard
+    var roundBlob = {
+      allHoles: parsed.allHoles,
+      stats: parsed.stats || {}
+    };
+    
+    var { error } = await _sb.from('rounds').insert({
+      user_id: targetUserId,
+      player_name: parsed.playerName,
+      course_name: parsed.courseName,
+      round_date: parsed.roundDate,
+      round_type: parsed.roundType,
+      handicap: parsed.handicap,
+      holes: parsed.holes,
+      score: parsed.score,
+      par: parsed.totalPar,
+      to_par: parsed.score - parsed.totalPar,
+      round_data: roundBlob
+    });
+    
+    if (error) {
+      msgEl.style.color = '#f44';
+      msgEl.textContent = 'Error: ' + error.message;
+    } else {
+      msgEl.style.color = '#4CAF50';
+      msgEl.textContent = '✓ Imported ' + parsed.courseName + ' (' + parsed.score + ')';
+      // Refresh the round list
+      if (isStudent) {
+        loadStudentRounds();
+      } else {
+        loadMyRounds();
+      }
+    }
+  } catch(e) {
+    msgEl.style.color = '#f44';
+    msgEl.textContent = 'Error reading file: ' + e.message;
+  }
+  
+  input.value = '';
+}
+
+function readFileAsArrayBuffer(file) {
+  return new Promise(function(resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function(e) { resolve(new Uint8Array(e.target.result)); };
+    reader.onerror = function() { reject(new Error('File read failed')); };
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function parseExcelRound(rows) {
+  // Find metadata rows
+  var playerName = '', courseName = '', roundDate = '', handicap = 'pro', roundType = 'Casual';
+  var holeRow = null, yardRow = null, parRow = null, scoreRow = null, puttRow = null;
+  
+  for (var i = 0; i < rows.length && i < 30; i++) {
+    var r = rows[i];
+    if (!r || r.length === 0) continue;
+    var first = String(r[0] || '').trim();
+    
+    // Metadata
+    if (first.toLowerCase().indexOf('player') === 0) playerName = String(r[1] || '').trim();
+    if (first.toLowerCase().indexOf('course') === 0) courseName = String(r[1] || '').trim();
+    if (first.toLowerCase().indexOf('handicap') === 0) handicap = String(r[1] || 'pro').trim();
+    if (first.toLowerCase().indexOf('round type') === 0) roundType = String(r[1] || 'Casual').trim();
+    if (first.toLowerCase().indexOf('date') === 0) {
+      var dVal = r[1];
+      if (dVal) roundDate = parseImportDate(dVal);
+    }
+    
+    // Scorecard header row
+    if (first.toLowerCase() === 'hole') holeRow = i;
+    if (first.toLowerCase() === 'yards' || first.toLowerCase() === 'yds') yardRow = i;
+    if (first.toLowerCase() === 'par') parRow = i;
+    if (first.toLowerCase() === 'score') scoreRow = i;
+    if (first.toLowerCase() === 'putts') puttRow = i;
+  }
+  
+  if (holeRow === null || parRow === null || scoreRow === null) {
+    // Try alternate: look for row with numbers 1-9 or 1-18
+    for (var j = 0; j < rows.length && j < 30; j++) {
+      var row = rows[j];
+      if (row && row.length > 2 && (row[1] == 1 || row[1] === '1')) {
+        holeRow = j;
+        if (rows[j+1]) yardRow = j+1;
+        if (rows[j+2]) parRow = j+2;
+        if (rows[j+3]) scoreRow = j+3;
+        if (rows[j+4]) puttRow = j+4;
+        break;
+      }
+    }
+  }
+  
+  if (parRow === null || scoreRow === null) return null;
+  
+  var pars = rows[parRow];
+  var scores = rows[scoreRow];
+  var yards = yardRow !== null ? rows[yardRow] : null;
+  var putts = puttRow !== null ? rows[puttRow] : null;
+  
+  // Build allHoles from columns (skip col 0 which is label)
+  var allHoles = [];
+  var totalScore = 0, totalPar = 0;
+  
+  for (var col = 1; col < pars.length; col++) {
+    var p = parseInt(pars[col]);
+    var s = parseInt(scores[col]);
+    if (isNaN(p) || isNaN(s) || p < 2 || p > 6) continue; // skip TOTAL column and invalid
+    
+    var y = yards ? parseInt(yards[col]) || 0 : 0;
+    var pt = putts ? parseInt(putts[col]) || 0 : 0;
+    
+    allHoles.push({
+      hole: allHoles.length + 1,
+      par: p,
+      yards: y,
+      score: s,
+      putts: pt,
+      firstPuttDist: 0,
+      expectedPutts: 0,
+      sgOTT: 0, sgAPP: 0, sgARG: 0, sgPutting: 0,
+      shots: buildMinimalShots(p, s, pt, y)
+    });
+    
+    totalScore += s;
+    totalPar += p;
+  }
+  
+  if (allHoles.length === 0) return null;
+  
+  // Default date if not found
+  if (!roundDate) roundDate = new Date().toISOString().split('T')[0];
+  if (!playerName) playerName = 'Player';
+  if (!courseName) courseName = 'Imported Round';
+  
+  // Compute basic stats from scorecard
+  var stats = computeImportStats(allHoles);
+  
+  return {
+    playerName: playerName,
+    courseName: courseName,
+    roundDate: roundDate,
+    roundType: roundType,
+    handicap: handicap,
+    holes: allHoles.length,
+    score: totalScore,
+    totalPar: totalPar,
+    allHoles: allHoles,
+    stats: stats
+  };
+}
+
+function parseImportDate(val) {
+  // Handle Excel date serial number
+  if (typeof val === 'number') {
+    var d = new Date((val - 25569) * 86400 * 1000);
+    return d.toISOString().split('T')[0];
+  }
+  // Handle string dates
+  var s = String(val).trim();
+  // Try ISO format
+  if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.substring(0, 10);
+  // Try MM/DD/YYYY
+  var parts = s.split('/');
+  if (parts.length === 3) {
+    var yr = parts[2].length === 2 ? '20' + parts[2] : parts[2];
+    return yr + '-' + parts[0].padStart(2,'0') + '-' + parts[1].padStart(2,'0');
+  }
+  return new Date().toISOString().split('T')[0];
+}
+
+function buildMinimalShots(par, score, putts, yards) {
+  // Build minimal shot array for compatibility with the rest of the app
+  var shots = [];
+  var nonPuttShots = score - putts;
+  
+  // Tee shot
+  if (nonPuttShots >= 1) {
+    shots.push({
+      shotNum: 1,
+      lie: par >= 4 ? 'FAIRWAY' : 'GREEN',
+      distanceBefore: yards,
+      distanceAfter: par === 3 ? 20 : Math.max(50, yards - 250),
+      isPutt: false
+    });
+  }
+  
+  // Approach shots
+  for (var i = 2; i <= nonPuttShots; i++) {
+    shots.push({
+      shotNum: i,
+      lie: i === nonPuttShots ? 'GREEN' : 'FAIRWAY',
+      distanceBefore: null,
+      distanceAfter: i === nonPuttShots ? 20 : null,
+      isPutt: false
+    });
+  }
+  
+  // Putts
+  for (var j = 0; j < putts; j++) {
+    shots.push({
+      shotNum: nonPuttShots + j + 1,
+      lie: 'GREEN',
+      distanceBefore: j === 0 ? 20 : 3,
+      distanceAfter: j === putts - 1 ? 0 : 3,
+      isPutt: true
+    });
+  }
+  
+  return shots;
+}
+
+function computeImportStats(allHoles) {
+  var fwHit = 0, fwOpp = 0, girHit = 0, totalPutts = 0;
+  var onePutts = 0, threePutts = 0;
+  
+  allHoles.forEach(function(h) {
+    totalPutts += h.putts || 0;
+    if (h.putts === 1) onePutts++;
+    if (h.putts >= 3) threePutts++;
+    
+    // GIR estimate: if score - putts <= par - 2, they hit in regulation
+    var nonPuttShots = h.score - (h.putts || 0);
+    if (nonPuttShots <= h.par - 2) girHit++;
+    
+    // Fairway opportunities on par 4/5
+    if (h.par >= 4) fwOpp++;
+  });
+  
+  return {
+    fwHit: fwHit,
+    fwOpp: fwOpp,
+    fwLeft: 0, fwRight: 0,
+    girHit: girHit,
+    girOpp: allHoles.length,
+    scrMade: 0, scrOpp: Math.max(0, allHoles.length - girHit),
+    bunMade: 0, bunOpp: 0,
+    totalPutts: totalPutts,
+    onePutts: onePutts,
+    threePutts: threePutts,
+    avgDrive: 0
+  };
 }
 
 function loadProfileInfo() {
