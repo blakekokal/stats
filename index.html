@@ -115,6 +115,26 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
     <input id="profileName" placeholder="Display Name">
     <button class="holes9" onclick="updateProfile()">SAVE NAME</button>
     <div id="profileMsg" style="font-size:13px;min-height:18px;"></div>
+
+    <!-- ROLE SECTION -->
+    <div style="margin-top:12px;width:100%;border-top:1px solid #333;padding-top:12px;display:flex;flex-direction:column;align-items:center;gap:8px;">
+      <div style="font-size:13px;color:#888;">Account Role</div>
+      <div style="display:flex;gap:8px;width:100%;max-width:280px;">
+        <button id="roleStudentBtn" onclick="setRole('student')" style="flex:1;height:40px;font-size:13px;background:#2E7D32;border-radius:8px;font-weight:700;">Student</button>
+        <button id="roleCoachBtn" onclick="setRole('coach')" style="flex:1;height:40px;font-size:13px;background:#333;border-radius:8px;font-weight:600;color:#888;">Coach</button>
+      </div>
+      <!-- Student: invite code -->
+      <div id="studentCodeSection" style="width:100%;display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:4px;">
+        <div style="font-size:12px;color:#888;">Share this code with your coach:</div>
+        <div id="myInviteCode" style="font-size:24px;font-weight:800;letter-spacing:4px;color:#4CAF50;background:#1a1a1a;padding:8px 20px;border-radius:8px;font-family:monospace;"></div>
+        <button onclick="copyInviteCode()" style="background:transparent;color:#64B5F6;font-size:12px;border:none;cursor:pointer;height:auto;padding:2px;text-decoration:underline;">Copy Code</button>
+      </div>
+      <!-- Coach: info -->
+      <div id="coachInfoSection" style="width:100%;display:none;flex-direction:column;align-items:center;gap:6px;margin-top:4px;">
+        <div style="font-size:12px;color:#888;">Manage students from the home page</div>
+      </div>
+    </div>
+
     <div style="margin-top:12px;width:100%;border-top:1px solid #333;padding-top:12px;display:flex;flex-direction:column;align-items:center;gap:8px;">
       <div style="font-size:13px;color:#888;">Change Password</div>
       <input id="newPassword" type="password" placeholder="New Password (min 6 chars)">
@@ -149,8 +169,28 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   <!-- SAVED ROUNDS TAB -->
   <div id="profileRoundsTab" style="width:100%;max-width:360px;display:none;">
     <div style="font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;">📋 Round History</div>
+    <input id="roundSearchInput" type="text" placeholder="🔍 Search course name..." oninput="filterRoundsList()" style="width:100%;max-width:360px;box-sizing:border-box;margin-bottom:6px;">
+    <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;">
+      <select id="roundFilterType" onchange="filterRoundsList()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 6px;font-size:11px;">
+        <option value="all">All Types</option>
+        <option value="Casual">Casual</option>
+        <option value="Tournament">Tournament</option>
+      </select>
+      <select id="roundFilterHoles" onchange="filterRoundsList()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 6px;font-size:11px;">
+        <option value="all">All Holes</option>
+        <option value="9">9 Holes</option>
+        <option value="18">18 Holes</option>
+      </select>
+      <select id="roundFilterTime" onchange="filterRoundsList()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 6px;font-size:11px;">
+        <option value="all">All Time</option>
+        <option value="1">Last Month</option>
+        <option value="3">Last 3 Months</option>
+        <option value="6">Last 6 Months</option>
+      </select>
+    </div>
     <div id="roundsListMsg" style="font-size:13px;color:#888;min-height:20px;text-align:center;"></div>
     <div id="roundsList" style="width:100%;"></div>
+    <div id="roundsFilteredMsg" style="font-size:12px;color:#666;text-align:center;margin-top:6px;"></div>
   </div>
 
   <button style="background:#555;margin-top:16px;" onclick="show('homePage')">← HOME</button>
@@ -159,12 +199,13 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <div id="homePage" class="page active" style="justify-content:center;">
   <div style="font-size:32px;font-weight:800;letter-spacing:-0.5px;">Blake Kokal Golf</div>
-  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.1.8</div>
+  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.2.1</div>
   <div id="homeAuthStatus" style="font-size:13px;color:#888;margin-bottom:16px;"></div>
   <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;">
     <button onclick="goToNewRound()" style="height:56px;font-size:16px;font-weight:700;background:#2E7D32;border-radius:12px;">⛳ Enter New Round</button>
     <button onclick="goToDashboard()" style="height:56px;font-size:16px;font-weight:700;background:#1565C0;border-radius:12px;">📊 Stats Dashboard</button>
     <button onclick="goToRoundHistory()" style="height:56px;font-size:16px;font-weight:700;background:#6A1B9A;border-radius:12px;">📋 Round History</button>
+    <button id="homeStudentsBtn" onclick="goToStudents()" style="height:56px;font-size:16px;font-weight:700;background:#00838F;border-radius:12px;display:none;">🎓 My Students</button>
     <button onclick="goToDrills()" style="height:56px;font-size:16px;font-weight:700;background:#E65100;border-radius:12px;">🎯 Drills & Games</button>
     <button onclick="goToSettings()" style="height:56px;font-size:16px;font-weight:700;background:#444;border-radius:12px;">⚙️ Settings</button>
   </div>
@@ -181,6 +222,82 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   </select>
   <div id="drillContent" style="width:100%;max-width:320px;margin-top:16px;text-align:center;color:#888;font-size:15px;padding:20px;background:#222;border-radius:10px;">Coming soon</div>
   <button style="background:#555;margin-top:16px;" onclick="show('homePage')">← HOME</button>
+</div>
+
+<!-- STUDENTS PAGE (Coach) -->
+<div id="studentsPage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;padding-bottom:30px;">
+  <div style="font-size:22px;font-weight:800;margin-bottom:12px;">🎓 My Students</div>
+  
+  <!-- Add student by code -->
+  <div style="width:100%;max-width:320px;background:#1a1a1a;border-radius:10px;padding:12px;margin-bottom:12px;display:flex;flex-direction:column;align-items:center;gap:8px;">
+    <div style="font-size:13px;color:#888;">Add Student by Invite Code</div>
+    <div style="display:flex;gap:6px;width:100%;">
+      <input id="addStudentCode" placeholder="Enter code" style="flex:1;text-transform:uppercase;letter-spacing:2px;font-family:monospace;text-align:center;">
+      <button onclick="addStudentByCode()" style="width:80px;height:44px;font-size:13px;background:#00838F;border-radius:10px;">ADD</button>
+    </div>
+    <div id="addStudentMsg" style="font-size:12px;min-height:16px;"></div>
+  </div>
+  
+  <!-- Student list -->
+  <div id="studentsListMsg" style="font-size:13px;color:#888;min-height:20px;text-align:center;"></div>
+  <div id="studentsList" style="width:100%;max-width:320px;"></div>
+  
+  <button style="background:#555;margin-top:16px;" onclick="show('homePage')">← HOME</button>
+</div>
+
+<!-- STUDENT VIEWER PAGE (Coach viewing a student) -->
+<div id="studentViewPage" class="page" style="justify-content:flex-start;padding-top:10px;overflow-y:hidden;padding-bottom:0;position:relative;">
+  <div id="studentViewHeader" style="text-align:center;margin-bottom:6px;flex-shrink:0;">
+    <div id="studentViewName" style="font-size:20px;font-weight:800;"></div>
+    <div id="studentViewEmail" style="font-size:12px;color:#888;"></div>
+  </div>
+  <div style="display:flex;gap:0;width:100%;max-width:360px;margin-bottom:0;border-radius:10px;overflow:hidden;flex-shrink:0;">
+    <button onclick="showStudentTab('dashboard')" id="svTabDash" style="flex:1;height:38px;font-size:13px;background:#333;border-radius:0;border:none;color:#fff;font-weight:700;max-width:none;width:auto;padding:0;margin:0;">Dashboard</button>
+    <button onclick="showStudentTab('rounds')" id="svTabRounds" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Rounds</button>
+  </div>
+  <div id="studentViewScroll" style="flex:1;overflow-y:auto;width:100%;display:flex;flex-direction:column;align-items:center;padding:12px 0 30px;">
+    
+    <!-- Student Dashboard -->
+    <div id="svDashTab" style="width:100%;max-width:360px;">
+      <div style="display:flex;gap:6px;justify-content:center;margin-bottom:8px;">
+        <select id="svDashFilterType" onchange="applySvDashFilters()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 8px;font-size:12px;">
+          <option value="all">All Rounds</option>
+          <option value="Casual">Casual</option>
+          <option value="Tournament">Tournament</option>
+        </select>
+        <select id="svDashFilterTime" onchange="applySvDashFilters()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 8px;font-size:12px;">
+          <option value="all">All Time</option>
+          <option value="1">Last Month</option>
+          <option value="3">Last 3 Months</option>
+          <option value="6">Last 6 Months</option>
+          <option value="12">Last Year</option>
+        </select>
+      </div>
+      <div id="svDashLoading" style="text-align:center;color:#888;font-size:13px;">Loading stats...</div>
+      <div id="svDashContent" style="display:none;"></div>
+    </div>
+    
+    <!-- Student Rounds -->
+    <div id="svRoundsTab" style="width:100%;max-width:360px;display:none;">
+      <input id="svRoundSearch" type="text" placeholder="🔍 Search course name..." oninput="filterSvRounds()" style="width:100%;max-width:360px;box-sizing:border-box;margin-bottom:6px;">
+      <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;">
+        <select id="svRoundFilterType" onchange="filterSvRounds()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 6px;font-size:11px;">
+          <option value="all">All Types</option>
+          <option value="Casual">Casual</option>
+          <option value="Tournament">Tournament</option>
+        </select>
+        <select id="svRoundFilterHoles" onchange="filterSvRounds()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 6px;font-size:11px;">
+          <option value="all">All Holes</option>
+          <option value="9">9 Holes</option>
+          <option value="18">18 Holes</option>
+        </select>
+      </div>
+      <div id="svRoundsMsg" style="font-size:13px;color:#888;min-height:20px;text-align:center;"></div>
+      <div id="svRoundsList" style="width:100%;"></div>
+    </div>
+    
+    <button style="background:#555;margin-top:16px;" onclick="show('studentsPage')">← BACK TO STUDENTS</button>
+  </div>
 </div>
 
 <div id="roundPage" class="page">
@@ -395,7 +512,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
     </div>
     <button style="background:#1565C0;height:44px;font-size:13px;" onclick="showFullStats()">📊 SEE FULL STATS</button>
     <button id="saveToAccountBtn" style="background:#00838F;height:44px;font-size:13px;display:none;" onclick="saveRoundToAccount()">💾 SAVE TO ACCOUNT</button>
-    <button id="backToRoundsBtn" style="background:#555;height:44px;font-size:13px;display:none;" onclick="goToRoundHistory()">← BACK TO ROUND HISTORY</button>
+    <button id="backToRoundsBtn" style="background:#555;height:44px;font-size:13px;display:none;" onclick="goBackFromRound()">← BACK TO ROUND HISTORY</button>
     <button style="background:#555;height:44px;font-size:13px;" onclick="show('homePage')">← HOME</button>
   </div>
   <div id="saveStatus" style="font-size:12px;color:#4CAF50;min-height:18px;"></div>
@@ -1623,6 +1740,7 @@ function finishHole(){
     renderSummary();
     document.getElementById('backToRoundsBtn').style.display = 'none';
     document.getElementById('saveStatus').textContent = '';
+    _viewingStudentRound = false;
     var saveBtn = document.getElementById('saveToAccountBtn');
     if(saveBtn) saveBtn.style.display = currentUser ? '' : 'none';
     show('summaryPage');
@@ -3126,6 +3244,7 @@ async function checkAuth() {
   if (session) {
     currentUser = session.user;
     updateAuthUI(true);
+    loadUserRole();
   } else {
     currentUser = null;
     updateAuthUI(false);
@@ -3357,6 +3476,8 @@ async function saveRoundToAccount() {
 }
 
 // Load My Rounds
+var _allRoundsData = null;
+
 async function loadMyRounds() {
   if (!currentUser) { showAuthPage(); return; }
   
@@ -3376,37 +3497,90 @@ async function loadMyRounds() {
     return;
   }
   
-  if (!data || data.length === 0) {
+  _allRoundsData = data || [];
+  
+  if (_allRoundsData.length === 0) {
     msg.textContent = 'No saved rounds yet. Complete a round and tap "Save to Account".';
     return;
   }
   
-  msg.textContent = data.length + ' round(s)';
+  // Reset filters
+  document.getElementById('roundSearchInput').value = '';
+  document.getElementById('roundFilterType').value = 'all';
+  document.getElementById('roundFilterHoles').value = 'all';
+  document.getElementById('roundFilterTime').value = 'all';
   
-  data.forEach(r => {
-    const tp = r.to_par > 0 ? '+' + r.to_par : r.to_par === 0 ? 'E' : r.to_par;
-    const d = new Date(r.round_date + 'T12:00:00');
-    const dateStr = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
-    const typeTag = r.round_type === 'Tournament' ? '<span style="color:#FF9800;font-size:10px;"> ★ Tournament</span>' : '';
+  filterRoundsList();
+}
+
+function filterRoundsList() {
+  if (!_allRoundsData) return;
+  
+  var search = (document.getElementById('roundSearchInput').value || '').toLowerCase().trim();
+  var typeFilter = document.getElementById('roundFilterType').value;
+  var holesFilter = document.getElementById('roundFilterHoles').value;
+  var timeFilter = document.getElementById('roundFilterTime').value;
+  
+  var now = new Date();
+  var cutoff = null;
+  if (timeFilter !== 'all') {
+    cutoff = new Date();
+    cutoff.setMonth(cutoff.getMonth() - parseInt(timeFilter));
+  }
+  
+  var filtered = _allRoundsData.filter(function(r) {
+    // Search by course name or date
+    if (search) {
+      var courseLower = (r.course_name || '').toLowerCase();
+      var dateLower = (r.round_date || '').toLowerCase();
+      if (courseLower.indexOf(search) === -1 && dateLower.indexOf(search) === -1) return false;
+    }
+    // Type filter
+    if (typeFilter !== 'all' && r.round_type !== typeFilter) return false;
+    // Holes filter
+    if (holesFilter !== 'all' && r.holes !== parseInt(holesFilter)) return false;
+    // Time filter
+    if (cutoff) {
+      var rd = new Date(r.round_date + 'T12:00:00');
+      if (rd < cutoff) return false;
+    }
+    return true;
+  });
+  
+  var msg = document.getElementById('roundsListMsg');
+  var list = document.getElementById('roundsList');
+  var filtMsg = document.getElementById('roundsFilteredMsg');
+  list.innerHTML = '';
+  
+  msg.textContent = filtered.length + ' of ' + _allRoundsData.length + ' round(s)';
+  filtMsg.textContent = filtered.length < _allRoundsData.length ? 'Filters active' : '';
+  
+  if (filtered.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:#666;padding:16px;font-size:13px;">No rounds match your filters</div>';
+    return;
+  }
+  
+  filtered.forEach(function(r) {
+    var tp = r.to_par > 0 ? '+' + r.to_par : r.to_par === 0 ? 'E' : r.to_par;
+    var d = new Date(r.round_date + 'T12:00:00');
+    var dateStr = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
+    var typeTag = r.round_type === 'Tournament' ? '<span style="color:#FF9800;font-size:10px;"> ★ Tournament</span>' : '';
     
-    const card = document.createElement('div');
+    var card = document.createElement('div');
     card.style.cssText = 'background:#222;border-radius:10px;padding:12px;margin:6px 0;cursor:pointer;';
-    card.innerHTML = `
-      <div style="display:flex;justify-content:space-between;align-items:center;">
-        <div>
-          <div style="font-weight:700;font-size:15px;">${r.course_name}${typeTag}</div>
-          <div style="font-size:12px;color:#aaa;">${dateStr} · ${r.holes} holes · ${r.player_name}</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-size:20px;font-weight:800;">${r.score}</div>
-          <div style="font-size:13px;color:${r.to_par>0?'#ef5350':r.to_par<0?'#66bb6a':'#aaa'}">${tp}</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:6px;margin-top:8px;">
-        <button onclick="event.stopPropagation();viewSavedRound('${r.id}')" style="flex:1;height:30px;font-size:12px;background:#1565c0;border-radius:6px;">View Details</button>
-        <button onclick="event.stopPropagation();deleteSavedRound('${r.id}',this)" style="width:60px;height:30px;font-size:12px;background:#c62828;border-radius:6px;">Delete</button>
-      </div>
-    `;
+    card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<div>'
+      + '<div style="font-weight:700;font-size:15px;">' + r.course_name + typeTag + '</div>'
+      + '<div style="font-size:12px;color:#aaa;">' + dateStr + ' · ' + r.holes + ' holes · ' + r.player_name + '</div>'
+      + '</div>'
+      + '<div style="text-align:right;">'
+      + '<div style="font-size:20px;font-weight:800;">' + r.score + '</div>'
+      + '<div style="font-size:13px;color:' + (r.to_par>0?'#ef5350':r.to_par<0?'#66bb6a':'#aaa') + '">' + tp + '</div>'
+      + '</div></div>'
+      + '<div style="display:flex;gap:6px;margin-top:8px;">'
+      + '<button onclick="event.stopPropagation();viewSavedRound(\'' + r.id + '\')" style="flex:1;height:30px;font-size:12px;background:#1565c0;border-radius:6px;">View Details</button>'
+      + '<button onclick="event.stopPropagation();deleteSavedRound(\'' + r.id + '\',this)" style="width:60px;height:30px;font-size:12px;background:#c62828;border-radius:6px;">Delete</button>'
+      + '</div>';
     list.appendChild(card);
   });
 }
@@ -3499,6 +3673,9 @@ async function viewSavedRound(roundId) {
   show('summaryPage');
   document.getElementById('saveStatus').textContent = '(viewing saved round)';
   document.getElementById('backToRoundsBtn').style.display = '';
+  // Track if this is a student's round (coach viewing)
+  _viewingStudentRound = (data.user_id !== currentUser.id);
+  document.getElementById('backToRoundsBtn').textContent = _viewingStudentRound ? '← BACK TO STUDENT' : '← BACK TO ROUND HISTORY';
   var saveBtn2 = document.getElementById('saveToAccountBtn');
   if (saveBtn2) saveBtn2.style.display = 'none';
 }
@@ -3513,11 +3690,26 @@ async function deleteSavedRound(roundId, btn) {
     alert('Error: ' + error.message);
     btn.textContent = 'Delete';
   } else {
-    btn.closest('div[style*="background:#222"]').remove();
-    const msg = document.getElementById('roundsListMsg');
-    const remaining = document.getElementById('roundsList').children.length;
-    msg.textContent = remaining + ' round(s)';
-    if (remaining === 0) msg.textContent = 'No saved rounds.';
+    // Remove from cached data and re-filter
+    if (_allRoundsData) {
+      _allRoundsData = _allRoundsData.filter(function(r){ return r.id !== roundId; });
+    }
+    filterRoundsList();
+    if (_allRoundsData && _allRoundsData.length === 0) {
+      document.getElementById('roundsListMsg').textContent = 'No saved rounds.';
+    }
+  }
+}
+
+var _viewingStudentRound = false;
+
+function goBackFromRound() {
+  if (_viewingStudentRound && _currentStudentId) {
+    // Go back to student viewer rounds tab
+    show('studentViewPage');
+    showStudentTab('rounds');
+  } else {
+    goToRoundHistory();
   }
 }
 
@@ -3560,6 +3752,309 @@ function showDrillCategory(cat) {
   document.getElementById('drillContent').innerHTML = '<div style="padding:20px;color:#888;font-size:15px;">Coming soon</div>';
 }
 
+// =============================================
+// COACH / STUDENT SYSTEM
+// =============================================
+
+var _userRole = 'student'; // 'student' or 'coach'
+var _currentStudentId = null;
+var _svAllRounds = null;
+var _svDashData = null;
+var _svDashAllData = null;
+
+function generateInviteCode(userId) {
+  // Generate a 6-char code from user ID (deterministic)
+  var hash = 0;
+  for (var i = 0; i < userId.length; i++) {
+    hash = ((hash << 5) - hash) + userId.charCodeAt(i);
+    hash |= 0;
+  }
+  var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  var code = '';
+  var n = Math.abs(hash);
+  for (var j = 0; j < 6; j++) {
+    code += chars[n % chars.length];
+    n = Math.floor(n / chars.length) + userId.charCodeAt(j % userId.length);
+  }
+  return code;
+}
+
+function setRole(role) {
+  _userRole = role;
+  // Update UI
+  var sBtn = document.getElementById('roleStudentBtn');
+  var cBtn = document.getElementById('roleCoachBtn');
+  if (role === 'student') {
+    sBtn.style.background = '#2E7D32'; sBtn.style.color = '#fff'; sBtn.style.fontWeight = '700';
+    cBtn.style.background = '#333'; cBtn.style.color = '#888'; cBtn.style.fontWeight = '600';
+    document.getElementById('studentCodeSection').style.display = 'flex';
+    document.getElementById('coachInfoSection').style.display = 'none';
+    document.getElementById('homeStudentsBtn').style.display = 'none';
+  } else {
+    cBtn.style.background = '#00838F'; cBtn.style.color = '#fff'; cBtn.style.fontWeight = '700';
+    sBtn.style.background = '#333'; sBtn.style.color = '#888'; sBtn.style.fontWeight = '600';
+    document.getElementById('studentCodeSection').style.display = 'none';
+    document.getElementById('coachInfoSection').style.display = 'flex';
+    document.getElementById('homeStudentsBtn').style.display = '';
+  }
+  // Save role to profiles table
+  if (currentUser) {
+    _sb.from('profiles').update({ role: role }).eq('id', currentUser.id).then(function(){});
+  }
+}
+
+function copyInviteCode() {
+  var code = document.getElementById('myInviteCode').textContent;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(code);
+    document.getElementById('profileMsg').textContent = '✓ Code copied!';
+    document.getElementById('profileMsg').style.color = '#4CAF50';
+  }
+}
+
+async function loadUserRole() {
+  if (!currentUser) return;
+  // Generate and show invite code
+  var code = generateInviteCode(currentUser.id);
+  document.getElementById('myInviteCode').textContent = code;
+  
+  // Save invite code to profiles if not already set
+  await _sb.from('profiles').update({ invite_code: code }).eq('id', currentUser.id);
+  
+  // Load role from profile
+  var { data } = await _sb.from('profiles').select('role').eq('id', currentUser.id).single();
+  if (data && data.role) {
+    setRole(data.role);
+  } else {
+    setRole('student');
+  }
+}
+
+function goToStudents() {
+  if (!currentUser) { showAuthPage(); return; }
+  show('studentsPage');
+  loadStudents();
+}
+
+async function loadStudents() {
+  var msg = document.getElementById('studentsListMsg');
+  var list = document.getElementById('studentsList');
+  msg.textContent = 'Loading students...';
+  list.innerHTML = '';
+  
+  var { data, error } = await _sb.from('coach_students')
+    .select('student_id, student_name, student_email, created_at')
+    .eq('coach_id', currentUser.id)
+    .order('created_at', { ascending: false });
+  
+  if (error) { msg.textContent = 'Error: ' + error.message; return; }
+  if (!data || data.length === 0) { msg.textContent = 'No students yet. Add one using their invite code above.'; return; }
+  
+  msg.textContent = data.length + ' student(s)';
+  
+  data.forEach(function(s) {
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#222;border-radius:10px;padding:12px;margin:6px 0;';
+    card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<div>'
+      + '<div style="font-weight:700;font-size:15px;">' + (s.student_name || 'Student') + '</div>'
+      + '<div style="font-size:12px;color:#aaa;">' + (s.student_email || '') + '</div>'
+      + '</div></div>'
+      + '<div style="display:flex;gap:6px;margin-top:8px;">'
+      + '<button onclick="viewStudent(\'' + s.student_id + '\',\'' + (s.student_name||'Student').replace(/'/g,"\\'") + '\',\'' + (s.student_email||'').replace(/'/g,"\\'") + '\')" style="flex:1;height:36px;font-size:13px;background:#1565c0;border-radius:6px;">View Stats</button>'
+      + '<button onclick="removeStudent(\'' + s.student_id + '\',this)" style="width:70px;height:36px;font-size:12px;background:#c62828;border-radius:6px;">Remove</button>'
+      + '</div>';
+    list.appendChild(card);
+  });
+}
+
+async function addStudentByCode() {
+  var codeInput = document.getElementById('addStudentCode');
+  var msg = document.getElementById('addStudentMsg');
+  var code = (codeInput.value || '').trim().toUpperCase();
+  
+  if (!code || code.length < 4) { msg.style.color = '#f44'; msg.textContent = 'Enter a valid invite code'; return; }
+  
+  msg.style.color = '#888'; msg.textContent = 'Looking up code...';
+  
+  // Find student by invite code
+  var { data: profile, error } = await _sb.from('profiles')
+    .select('id, display_name')
+    .eq('invite_code', code)
+    .single();
+  
+  if (error || !profile) { msg.style.color = '#f44'; msg.textContent = 'No student found with that code'; return; }
+  if (profile.id === currentUser.id) { msg.style.color = '#f44'; msg.textContent = 'Cannot add yourself'; return; }
+  
+  // Get email from auth (we'll store the display name)
+  var studentName = profile.display_name || 'Student';
+  
+  // Check if already added
+  var { data: existing } = await _sb.from('coach_students')
+    .select('id')
+    .eq('coach_id', currentUser.id)
+    .eq('student_id', profile.id);
+  
+  if (existing && existing.length > 0) { msg.style.color = '#FF9800'; msg.textContent = 'Student already added'; return; }
+  
+  // Add the link
+  var { error: insertErr } = await _sb.from('coach_students').insert({
+    coach_id: currentUser.id,
+    student_id: profile.id,
+    student_name: studentName,
+    invite_code: code
+  });
+  
+  if (insertErr) { msg.style.color = '#f44'; msg.textContent = 'Error: ' + insertErr.message; return; }
+  
+  msg.style.color = '#4CAF50'; msg.textContent = '✓ Added ' + studentName;
+  codeInput.value = '';
+  loadStudents();
+}
+
+async function removeStudent(studentId, btn) {
+  if (!confirm('Remove this student?')) return;
+  btn.textContent = '...';
+  await _sb.from('coach_students').delete().eq('coach_id', currentUser.id).eq('student_id', studentId);
+  loadStudents();
+}
+
+// ===== STUDENT VIEWER =====
+
+async function viewStudent(studentId, name, email) {
+  _currentStudentId = studentId;
+  document.getElementById('studentViewName').textContent = name;
+  document.getElementById('studentViewEmail').textContent = email;
+  show('studentViewPage');
+  showStudentTab('dashboard');
+}
+
+function showStudentTab(tab) {
+  document.getElementById('svDashTab').style.display = tab === 'dashboard' ? 'block' : 'none';
+  document.getElementById('svRoundsTab').style.display = tab === 'rounds' ? 'block' : 'none';
+  
+  var dBtn = document.getElementById('svTabDash');
+  var rBtn = document.getElementById('svTabRounds');
+  dBtn.style.background = tab === 'dashboard' ? '#333' : '#222';
+  dBtn.style.color = tab === 'dashboard' ? '#fff' : '#888';
+  dBtn.style.fontWeight = tab === 'dashboard' ? '700' : '600';
+  rBtn.style.background = tab === 'rounds' ? '#333' : '#222';
+  rBtn.style.color = tab === 'rounds' ? '#fff' : '#888';
+  rBtn.style.fontWeight = tab === 'rounds' ? '700' : '600';
+  
+  var scroll = document.getElementById('studentViewScroll');
+  if (scroll) scroll.scrollTop = 0;
+  
+  if (tab === 'dashboard') loadStudentDashboard();
+  if (tab === 'rounds') loadStudentRounds();
+}
+
+async function loadStudentDashboard() {
+  var loading = document.getElementById('svDashLoading');
+  var content = document.getElementById('svDashContent');
+  loading.style.display = 'block'; content.style.display = 'none';
+  
+  var { data, error } = await _sb.from('rounds')
+    .select('*')
+    .eq('user_id', _currentStudentId)
+    .order('round_date', { ascending: false });
+  
+  if (error || !data || data.length === 0) {
+    loading.textContent = error ? 'Error: ' + error.message : 'No rounds found for this student.';
+    return;
+  }
+  
+  _svDashAllData = data;
+  applySvDashFilters();
+}
+
+function applySvDashFilters() {
+  if (!_svDashAllData) return;
+  var typeF = document.getElementById('svDashFilterType').value;
+  var timeF = document.getElementById('svDashFilterTime').value;
+  var filtered = _svDashAllData.filter(function(r) {
+    if (typeF !== 'all' && r.round_type !== typeF) return false;
+    if (timeF !== 'all') {
+      var cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - parseInt(timeF));
+      if (new Date(r.round_date) < cutoff) return false;
+    }
+    return true;
+  });
+  
+  var loading = document.getElementById('svDashLoading');
+  var content = document.getElementById('svDashContent');
+  
+  if (filtered.length === 0) {
+    loading.style.display = 'block'; loading.textContent = 'No rounds match filters.';
+    content.style.display = 'none'; return;
+  }
+  
+  _svDashData = filtered;
+  _activeDashTarget = 'svDashContent';
+  loading.style.display = 'none'; content.style.display = 'block';
+  
+  // Reuse the same renderDashboard function but target svDashContent
+  var hcp = 'pro';
+  renderDashboard(filtered, hcp, 'svDashContent');
+}
+
+async function loadStudentRounds() {
+  var msg = document.getElementById('svRoundsMsg');
+  var list = document.getElementById('svRoundsList');
+  msg.textContent = 'Loading...'; list.innerHTML = '';
+  
+  var { data, error } = await _sb.from('rounds')
+    .select('id, player_name, course_name, round_date, round_type, holes, score, par, to_par')
+    .eq('user_id', _currentStudentId)
+    .order('round_date', { ascending: false });
+  
+  if (error) { msg.textContent = 'Error: ' + error.message; return; }
+  
+  _svAllRounds = data || [];
+  
+  if (_svAllRounds.length === 0) { msg.textContent = 'No rounds found.'; return; }
+  
+  document.getElementById('svRoundSearch').value = '';
+  document.getElementById('svRoundFilterType').value = 'all';
+  document.getElementById('svRoundFilterHoles').value = 'all';
+  filterSvRounds();
+}
+
+function filterSvRounds() {
+  if (!_svAllRounds) return;
+  var search = (document.getElementById('svRoundSearch').value || '').toLowerCase().trim();
+  var typeF = document.getElementById('svRoundFilterType').value;
+  var holesF = document.getElementById('svRoundFilterHoles').value;
+  
+  var filtered = _svAllRounds.filter(function(r) {
+    if (search && (r.course_name || '').toLowerCase().indexOf(search) === -1) return false;
+    if (typeF !== 'all' && r.round_type !== typeF) return false;
+    if (holesF !== 'all' && r.holes !== parseInt(holesF)) return false;
+    return true;
+  });
+  
+  var msg = document.getElementById('svRoundsMsg');
+  var list = document.getElementById('svRoundsList');
+  list.innerHTML = '';
+  msg.textContent = filtered.length + ' of ' + _svAllRounds.length + ' round(s)';
+  
+  filtered.forEach(function(r) {
+    var tp = r.to_par > 0 ? '+' + r.to_par : r.to_par === 0 ? 'E' : r.to_par;
+    var d = new Date(r.round_date + 'T12:00:00');
+    var dateStr = (d.getMonth()+1) + '/' + d.getDate() + '/' + d.getFullYear();
+    var typeTag = r.round_type === 'Tournament' ? '<span style="color:#FF9800;font-size:10px;"> ★</span>' : '';
+    var card = document.createElement('div');
+    card.style.cssText = 'background:#222;border-radius:10px;padding:12px;margin:6px 0;';
+    card.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;">'
+      + '<div><div style="font-weight:700;font-size:14px;">' + r.course_name + typeTag + '</div>'
+      + '<div style="font-size:12px;color:#aaa;">' + dateStr + ' · ' + r.holes + 'h</div></div>'
+      + '<div style="text-align:right;"><div style="font-size:20px;font-weight:800;">' + r.score + '</div>'
+      + '<div style="font-size:13px;color:' + (r.to_par>0?'#ef5350':r.to_par<0?'#66bb6a':'#aaa') + '">' + tp + '</div></div></div>'
+      + '<button onclick="viewSavedRound(\'' + r.id + '\')" style="width:100%;height:30px;font-size:12px;background:#1565c0;border-radius:6px;margin-top:8px;">View Details</button>';
+    list.appendChild(card);
+  });
+}
+
 function loadProfileInfo() {
   document.getElementById('profileEmail').textContent = currentUser.email;
   document.getElementById('profileName').value = currentUser.user_metadata?.display_name || '';
@@ -3567,6 +4062,7 @@ function loadProfileInfo() {
   document.getElementById('profileJoined').textContent = joined ? 'Joined ' + (joined.getMonth()+1) + '/' + joined.getDate() + '/' + joined.getFullYear() : '';
   document.getElementById('profileMsg').textContent = '';
   document.getElementById('pwMsg').textContent = '';
+  loadUserRole();
 }
 
 function showProfile() {
@@ -3641,18 +4137,24 @@ function applyDashFilters() {
   }
   
   _dashData = filtered;
+  _activeDashTarget = 'dashContent';
   var hcpSel = document.getElementById('dashHcpSelect');
   var hcp = hcpSel ? hcpSel.value : 'pro';
   renderDashboard(filtered, hcp);
 }
 
+var _activeDashTarget = 'dashContent';
+
 function recalcDashSG(hcpVal) {
-  if (!_dashData) return;
-  renderDashboard(_dashData, hcpVal);
+  if (_activeDashTarget === 'svDashContent' && _svDashData) {
+    renderDashboard(_svDashData, hcpVal, 'svDashContent');
+  } else if (_dashData) {
+    renderDashboard(_dashData, hcpVal);
+  }
 }
 
-function renderDashboard(data, hcp) {
-  var content = document.getElementById('dashContent');
+function renderDashboard(data, hcp, targetId) {
+  var content = document.getElementById(targetId || 'dashContent');
   
   // ===== AGGREGATE ALL DATA =====
   var A = { n: data.length, holes: 0, totScore: 0, totPar: 0, totPutts: 0,
