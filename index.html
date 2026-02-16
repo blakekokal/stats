@@ -47,6 +47,9 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 .back-wrap{position:fixed;bottom:10px;left:0;right:0;display:flex;justify-content:center;z-index:5;}
 .back{background:#555;height:36px;}
 
+.back-btn-top{position:absolute;top:12px;left:12px;width:36px;height:36px;min-width:36px;max-width:36px;background:#333;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:20;border:none;padding:0;}
+.back-btn-top svg{width:20px;height:20px;stroke:#fff;stroke-width:2;fill:none;}
+
 .holes9{background:#2e7d32;}
 .holes18{background:#1565c0;}
 .par3{background:#4fc3f7;}
@@ -88,6 +91,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <!-- AUTH PAGE -->
 <div id="authPage" class="page" style="justify-content:center;">
+  <button class="back-btn-top" onclick="show('homePage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div style="font-size:24px;font-weight:800;">Account</div>
   <div id="authMsg" style="font-size:13px;color:#f44;min-height:20px;"></div>
   <input id="authEmail" type="email" placeholder="Email">
@@ -104,6 +108,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <!-- PROFILE HUB -->
 <div id="profilePage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:hidden;padding-bottom:0;position:relative;">
+  <button class="back-btn-top" onclick="show('homePage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <!-- Scrollable content area -->
   <div id="profileScrollArea" style="flex:1;overflow-y:auto;width:100%;display:flex;flex-direction:column;align-items:center;padding:0 0 30px;">
 
@@ -196,13 +201,13 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
     <div id="roundsFilteredMsg" style="font-size:12px;color:#666;text-align:center;margin-top:6px;"></div>
   </div>
 
-  <button style="background:#555;margin-top:16px;" onclick="show('homePage')">← HOME</button>
+  <button style="background:#555;margin-top:16px;width:100%;max-width:320px;" onclick="show('homePage')">← HOME</button>
   </div><!-- end profileScrollArea -->
 </div>
 
 <div id="homePage" class="page active" style="justify-content:center;">
   <div style="font-size:32px;font-weight:800;letter-spacing:-0.5px;">Blake Kokal Golf</div>
-  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.3.7</div>
+  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.3.8</div>
   <div id="homeAuthStatus" style="font-size:13px;color:#888;margin-bottom:16px;"></div>
   <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;">
     <button onclick="goToNewRound()" style="height:56px;font-size:16px;font-weight:700;background:#2E7D32;border-radius:12px;">⛳ Enter New Round</button>
@@ -217,6 +222,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <!-- DRILLS & GAMES PAGE -->
 <div id="drillsPage" class="page" style="justify-content:flex-start;padding-top:30px;">
+  <button class="back-btn-top" onclick="show('homePage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div style="font-size:22px;font-weight:800;margin-bottom:12px;">🎯 Drills & Games</div>
   <select id="drillCategory" onchange="showDrillCategory(this.value)" style="width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-radius:10px;border:none;text-align:center;text-align-last:center;font-size:15px;appearance:none;-webkit-appearance:none;padding:0 10px;">
     <option value="putting" style="text-align:center;">Putting Drills</option>
@@ -229,12 +235,14 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <!-- DRILL DETAIL PAGE -->
 <div id="drillDetailPage" class="page" style="justify-content:flex-start;padding-top:20px;overflow-y:auto;padding-bottom:30px;">
+  <button class="back-btn-top" onclick="show('drillsPage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div id="drillDetailContent" style="width:100%;max-width:340px;"></div>
   <button style="background:#555;margin-top:16px;" onclick="show('drillsPage')">← BACK TO DRILLS</button>
 </div>
 
 <!-- STUDENTS PAGE (Coach) -->
 <div id="studentsPage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;padding-bottom:30px;">
+  <button class="back-btn-top" onclick="show('homePage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div style="font-size:22px;font-weight:800;margin-bottom:12px;">🎓 My Students</div>
   
   <!-- Add student by code -->
@@ -256,6 +264,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <!-- STUDENT VIEWER PAGE (Coach viewing a student) -->
 <div id="studentViewPage" class="page" style="justify-content:flex-start;padding-top:10px;overflow-y:hidden;padding-bottom:0;position:relative;">
+  <button class="back-btn-top" onclick="show('studentsPage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div id="studentViewHeader" style="text-align:center;margin-bottom:6px;flex-shrink:0;">
     <div id="studentViewName" style="font-size:20px;font-weight:800;"></div>
     <div id="studentViewEmail" style="font-size:12px;color:#888;"></div>
@@ -313,6 +322,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 </div>
 
 <div id="roundPage" class="page">
+  <button class="back-btn-top" onclick="show('homePage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div style="font-size:22px;font-weight:800;">New Round</div>
   <input id="playerName" placeholder="Player Name">
   <div class="row">
@@ -432,6 +442,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 </div>
 
 <div id="summaryPage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;padding-bottom:20px;">
+  <button class="back-btn-top" onclick="show('homePage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div class="summary-title" style="margin:0;line-height:1;">Round Summary</div>
   <div class="score-summary" style="margin:0;line-height:1.1;">
     <span class="num" id="sumScore"></span>
@@ -546,6 +557,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <!-- FULL STATS PAGE -->
 <div id="fullStatsPage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;padding-bottom:30px;">
+  <button class="back-btn-top" onclick="show('summaryPage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div style="font-size:20px;font-weight:800;text-align:center;">📊 Full Round Stats</div>
   <div id="fullStatsSubject" style="font-size:12px;color:#888;text-align:center;margin-bottom:6px;"></div>
   <div id="fullStatsTabs" style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:10px;"></div>
@@ -3873,11 +3885,11 @@ var drillsData = {
       description: 'A putting drill that develops touch and distance control. Set up a starting tee and two tees to mark a landing zone (3 feet to start, 10-20 feet for the end). Each putt must land inside the zone AND go farther than the previous ball - leapfrogging it. If any ball stops short of the previous or rolls past the zone, restart. Reverse Leapfrog works the opposite way - start with the longest putt and each ball must be shorter than the previous while staying in the zone.',
       expectation: '1 ball for every 12 inches of landing zone. For a 10-foot zone, the goal is 10 balls without a miss.',
       diagrams: `
-        <div style="display:flex;flex-direction:column;gap:12px;">
+        <div style="display:flex;flex-direction:column;gap:12px;width:100%;box-sizing:border-box;">
           <!-- Diagram 1: Setup -->
-          <div style="background:#2d5a27;border-radius:10px;padding:16px;width:100%;">
+          <div style="background:#2d5a27;border-radius:10px;padding:16px;width:100%;box-sizing:border-box;">
             <div style="text-align:center;font-weight:bold;margin-bottom:10px;font-size:14px;color:#fff;">1. SETUP</div>
-            <svg viewBox="0 0 260 350" style="width:100%;height:auto;">
+            <svg viewBox="0 0 260 350" style="width:100%;height:auto;display:block;">
               <rect x="0" y="0" width="260" height="350" fill="#2d5a27"/>
               <circle cx="130" cy="320" r="6" fill="#f4d03f" stroke="#c9a227" stroke-width="2"/>
               <text x="130" y="345" text-anchor="middle" fill="white" font-size="11" font-weight="bold">START TEE</text>
@@ -3899,9 +3911,9 @@ var drillsData = {
             </svg>
           </div>
           <!-- Diagram 2: First Putt -->
-          <div style="background:#2d5a27;border-radius:10px;padding:16px;width:100%;">
+          <div style="background:#2d5a27;border-radius:10px;padding:16px;width:100%;box-sizing:border-box;">
             <div style="text-align:center;font-weight:bold;margin-bottom:10px;font-size:14px;color:#fff;">2. FIRST PUTT</div>
-            <svg viewBox="0 0 260 350" style="width:100%;height:auto;">
+            <svg viewBox="0 0 260 350" style="width:100%;height:auto;display:block;">
               <rect x="0" y="0" width="260" height="350" fill="#2d5a27"/>
               <circle cx="130" cy="320" r="6" fill="#f4d03f" stroke="#c9a227" stroke-width="2"/>
               <circle cx="130" cy="240" r="6" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
@@ -3917,9 +3929,9 @@ var drillsData = {
             </svg>
           </div>
           <!-- Diagram 3: Leapfrog -->
-          <div style="background:#2d5a27;border-radius:10px;padding:16px;width:100%;">
+          <div style="background:#2d5a27;border-radius:10px;padding:16px;width:100%;box-sizing:border-box;">
             <div style="text-align:center;font-weight:bold;margin-bottom:10px;font-size:14px;color:#fff;">3. LEAPFROG</div>
-            <svg viewBox="0 0 260 350" style="width:100%;height:auto;">
+            <svg viewBox="0 0 260 350" style="width:100%;height:auto;display:block;">
               <rect x="0" y="0" width="260" height="350" fill="#2d5a27"/>
               <circle cx="130" cy="320" r="6" fill="#f4d03f" stroke="#c9a227" stroke-width="2"/>
               <circle cx="130" cy="240" r="6" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
@@ -3945,9 +3957,9 @@ var drillsData = {
             </svg>
           </div>
           <!-- Diagram 4: Reverse Leapfrog -->
-          <div style="background:#2d5a27;border-radius:10px;padding:16px;width:100%;">
+          <div style="background:#2d5a27;border-radius:10px;padding:16px;width:100%;box-sizing:border-box;">
             <div style="text-align:center;font-weight:bold;margin-bottom:10px;font-size:14px;color:#fff;">4. REVERSE LEAPFROG</div>
-            <svg viewBox="0 0 260 350" style="width:100%;height:auto;">
+            <svg viewBox="0 0 260 350" style="width:100%;height:auto;display:block;">
               <rect x="0" y="0" width="260" height="350" fill="#2d5a27"/>
               <circle cx="130" cy="320" r="6" fill="#f4d03f" stroke="#c9a227" stroke-width="2"/>
               <circle cx="130" cy="240" r="6" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
@@ -3991,7 +4003,7 @@ function showDrillCategory(cat) {
   
   var html = '';
   drills.forEach(function(drill) {
-    html += '<button onclick="showDrillDetail(\'' + drill.id + '\', \'' + cat + '\')" style="width:100%;height:50px;background:#333;border-radius:10px;margin-bottom:8px;font-size:14px;font-weight:600;text-align:left;padding:0 16px;">' + drill.title + '</button>';
+    html += '<button onclick="showDrillDetail(\'' + drill.id + '\', \'' + cat + '\')" style="width:100%;height:50px;background:#333;border-radius:10px;margin-bottom:8px;font-size:14px;font-weight:600;text-align:center;padding:0 16px;">' + drill.title + '</button>';
   });
   content.innerHTML = html;
 }
