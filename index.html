@@ -202,7 +202,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <div id="homePage" class="page active" style="justify-content:center;">
   <div style="font-size:32px;font-weight:800;letter-spacing:-0.5px;">Blake Kokal Golf</div>
-  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.3.4</div>
+  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.3.7</div>
   <div id="homeAuthStatus" style="font-size:13px;color:#888;margin-bottom:16px;"></div>
   <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;">
     <button onclick="goToNewRound()" style="height:56px;font-size:16px;font-weight:700;background:#2E7D32;border-radius:12px;">⛳ Enter New Round</button>
@@ -223,8 +223,14 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
     <option value="chipping" style="text-align:center;">Chipping Drills</option>
     <option value="fullswing" style="text-align:center;">Full Swing Drills</option>
   </select>
-  <div id="drillContent" style="width:100%;max-width:320px;margin-top:16px;text-align:center;color:#888;font-size:15px;padding:20px;background:#222;border-radius:10px;">Coming soon</div>
+  <div id="drillContent" style="width:100%;max-width:320px;margin-top:16px;"></div>
   <button style="background:#555;margin-top:16px;" onclick="show('homePage')">← HOME</button>
+</div>
+
+<!-- DRILL DETAIL PAGE -->
+<div id="drillDetailPage" class="page" style="justify-content:flex-start;padding-top:20px;overflow-y:auto;padding-bottom:30px;">
+  <div id="drillDetailContent" style="width:100%;max-width:340px;"></div>
+  <button style="background:#555;margin-top:16px;" onclick="show('drillsPage')">← BACK TO DRILLS</button>
 </div>
 
 <!-- STUDENTS PAGE (Coach) -->
@@ -2139,14 +2145,19 @@ function generateExcelWorkbook(){
       const teeShot = h.shots[0];
       let driveDistance = null;
       
-      if(teeShot.lie==='WATER'||teeShot.lie==='OB'||teeShot.lie==='RECOVERY'){
-        // Find the re-hit shot after penalty
+      if(teeShot.lie==='WATER'||teeShot.lie==='OB'){
+        // For water/OB, find the re-hit shot after penalty
         for(let j=1; j<h.shots.length; j++){
           const s = h.shots[j];
           if(s.lie!=='PENALTY'&&s.lie!=='WATER'&&s.lie!=='OB'&&s.lie!=='RECOVERY'&&s.distanceAfter!=null){
-            driveDistance = h.yards - s.distanceAfter;
+            driveDistance = s.distanceBefore - s.distanceAfter;
             break;
           }
+        }
+      } else if(teeShot.lie==='RECOVERY'){
+        // For recovery, use the tee shot's own distanceAfter
+        if(teeShot.distanceAfter!=null){
+          driveDistance = h.yards - teeShot.distanceAfter;
         }
       } else if(teeShot.distanceAfter!=null&&teeShot.lie!=='PENALTY'){
         driveDistance = h.yards - teeShot.distanceAfter;
@@ -2918,13 +2929,17 @@ function generateCSV(){
       const teeShot = h.shots[0];
       let driveDistance = null;
       
-      if(teeShot.lie==='WATER'||teeShot.lie==='OB'||teeShot.lie==='RECOVERY'){
+      if(teeShot.lie==='WATER'||teeShot.lie==='OB'){
         for(let j=1; j<h.shots.length; j++){
           const s = h.shots[j];
           if(s.lie!=='PENALTY'&&s.lie!=='WATER'&&s.lie!=='OB'&&s.lie!=='RECOVERY'&&s.distanceAfter!=null){
-            driveDistance = h.yards - s.distanceAfter;
+            driveDistance = s.distanceBefore - s.distanceAfter;
             break;
           }
+        }
+      } else if(teeShot.lie==='RECOVERY'){
+        if(teeShot.distanceAfter!=null){
+          driveDistance = h.yards - teeShot.distanceAfter;
         }
       } else if(teeShot.distanceAfter!=null&&teeShot.lie!=='PENALTY'){
         driveDistance = h.yards - teeShot.distanceAfter;
@@ -3735,8 +3750,17 @@ async function viewSavedRound(roundId) {
     if ((h.putts || 0) === 1) onePuttMade++;
     if ((h.putts || 0) >= 3) threePlusPutts++;
     
-    // GIR + first putt distance
-    if (h.firstPuttDist > 0) {
+    // GIR + first putt distance - only count if this was actually a GIR
+    // GIR = hit green in par - 2 shots or fewer
+    var shotsToGreen = 0;
+    for (var si = 0; si < (h.shots || []).length; si++) {
+      var shot = h.shots[si];
+      if (shot.isPutt) break;
+      shotsToGreen++;
+    }
+    var isGIR = shotsToGreen <= (h.par - 2);
+    
+    if (isGIR && h.firstPuttDist > 0) {
       girFirstPuttDist += h.firstPuttDist;
       girPutts += h.putts || 0;
     }
@@ -3840,8 +3864,152 @@ function goToDrills() {
   showDrillCategory(document.getElementById('drillCategory').value);
 }
 
+// Drills Database
+var drillsData = {
+  putting: [
+    {
+      id: 'leapfrog',
+      title: 'Leapfrog - Distance Control',
+      description: 'A putting drill that develops touch and distance control. Set up a starting tee and two tees to mark a landing zone (3 feet to start, 10-20 feet for the end). Each putt must land inside the zone AND go farther than the previous ball - leapfrogging it. If any ball stops short of the previous or rolls past the zone, restart. Reverse Leapfrog works the opposite way - start with the longest putt and each ball must be shorter than the previous while staying in the zone.',
+      expectation: '1 ball for every 12 inches of landing zone. For a 10-foot zone, the goal is 10 balls without a miss.',
+      diagrams: `
+        <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;">
+          <!-- Diagram 1: Setup -->
+          <div style="background:#2d5a27;border-radius:10px;padding:12px;width:145px;">
+            <div style="text-align:center;font-weight:bold;margin-bottom:8px;font-size:11px;color:#fff;">1. SETUP</div>
+            <svg viewBox="0 0 260 350" style="width:100%;height:auto;">
+              <rect x="0" y="0" width="260" height="350" fill="#2d5a27"/>
+              <circle cx="130" cy="320" r="6" fill="#f4d03f" stroke="#c9a227" stroke-width="2"/>
+              <text x="130" y="345" text-anchor="middle" fill="white" font-size="11" font-weight="bold">START TEE</text>
+              <circle cx="130" cy="240" r="6" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+              <text x="130" y="225" text-anchor="middle" fill="#e74c3c" font-size="10" font-weight="bold">ZONE START</text>
+              <rect x="60" y="80" width="140" height="155" fill="rgba(46, 204, 113, 0.2)" stroke="#2ecc71" stroke-width="2" stroke-dasharray="6" rx="5"/>
+              <text x="130" y="160" text-anchor="middle" fill="#2ecc71" font-size="12" font-weight="bold">LANDING</text>
+              <text x="130" y="175" text-anchor="middle" fill="#2ecc71" font-size="12" font-weight="bold">ZONE</text>
+              <circle cx="130" cy="70" r="6" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+              <text x="130" y="55" text-anchor="middle" fill="#e74c3c" font-size="10" font-weight="bold">ZONE END</text>
+              <line x1="210" y1="320" x2="210" y2="240" stroke="#888" stroke-width="1" stroke-dasharray="4"/>
+              <line x1="140" y1="320" x2="210" y2="320" stroke="#888" stroke-width="1" stroke-dasharray="4"/>
+              <line x1="140" y1="240" x2="210" y2="240" stroke="#888" stroke-width="1" stroke-dasharray="4"/>
+              <text x="225" y="285" fill="#aaa" font-size="10">3 ft</text>
+              <line x1="210" y1="235" x2="210" y2="75" stroke="#888" stroke-width="1" stroke-dasharray="4"/>
+              <line x1="140" y1="235" x2="210" y2="235" stroke="#888" stroke-width="1" stroke-dasharray="4"/>
+              <line x1="140" y1="75" x2="210" y2="75" stroke="#888" stroke-width="1" stroke-dasharray="4"/>
+              <text x="222" y="155" fill="#aaa" font-size="9">10-20 ft</text>
+            </svg>
+          </div>
+          <!-- Diagram 2: First Putt -->
+          <div style="background:#2d5a27;border-radius:10px;padding:12px;width:145px;">
+            <div style="text-align:center;font-weight:bold;margin-bottom:8px;font-size:11px;color:#fff;">2. FIRST PUTT</div>
+            <svg viewBox="0 0 260 350" style="width:100%;height:auto;">
+              <rect x="0" y="0" width="260" height="350" fill="#2d5a27"/>
+              <circle cx="130" cy="320" r="6" fill="#f4d03f" stroke="#c9a227" stroke-width="2"/>
+              <circle cx="130" cy="240" r="6" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+              <rect x="60" y="80" width="140" height="155" fill="rgba(46, 204, 113, 0.2)" stroke="#2ecc71" stroke-width="2" stroke-dasharray="6" rx="5"/>
+              <circle cx="130" cy="70" r="6" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+              <rect x="123" y="290" width="14" height="50" fill="#555" rx="2"/>
+              <rect x="118" y="285" width="24" height="10" fill="#333" rx="2"/>
+              <line x1="130" y1="280" x2="130" y2="200" stroke="#f39c12" stroke-width="3"/>
+              <polygon points="130,190 122,205 138,205" fill="#f39c12"/>
+              <circle cx="130" cy="210" r="10" fill="white" stroke="#2ecc71" stroke-width="3"/>
+              <text x="130" y="214" text-anchor="middle" fill="#2d5a27" font-size="10" font-weight="bold">1</text>
+              <text x="160" y="215" fill="#2ecc71" font-size="20">✓</text>
+            </svg>
+          </div>
+          <!-- Diagram 3: Leapfrog -->
+          <div style="background:#2d5a27;border-radius:10px;padding:12px;width:145px;">
+            <div style="text-align:center;font-weight:bold;margin-bottom:8px;font-size:11px;color:#fff;">3. LEAPFROG</div>
+            <svg viewBox="0 0 260 350" style="width:100%;height:auto;">
+              <rect x="0" y="0" width="260" height="350" fill="#2d5a27"/>
+              <circle cx="130" cy="320" r="6" fill="#f4d03f" stroke="#c9a227" stroke-width="2"/>
+              <circle cx="130" cy="240" r="6" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+              <rect x="60" y="80" width="140" height="155" fill="rgba(46, 204, 113, 0.2)" stroke="#2ecc71" stroke-width="2" stroke-dasharray="6" rx="5"/>
+              <circle cx="130" cy="70" r="6" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+              <circle cx="130" cy="215" r="10" fill="white" stroke="#ddd" stroke-width="2"/>
+              <text x="130" y="219" text-anchor="middle" fill="#2d5a27" font-size="10" font-weight="bold">1</text>
+              <circle cx="130" cy="175" r="10" fill="white" stroke="#ddd" stroke-width="2"/>
+              <text x="130" y="179" text-anchor="middle" fill="#2d5a27" font-size="10" font-weight="bold">2</text>
+              <circle cx="130" cy="135" r="10" fill="white" stroke="#ddd" stroke-width="2"/>
+              <text x="130" y="139" text-anchor="middle" fill="#2d5a27" font-size="10" font-weight="bold">3</text>
+              <circle cx="130" cy="95" r="10" fill="white" stroke="#2ecc71" stroke-width="3"/>
+              <text x="130" y="99" text-anchor="middle" fill="#2d5a27" font-size="10" font-weight="bold">4</text>
+              <path d="M 150 210 Q 170 195 150 180" stroke="#f39c12" stroke-width="2" fill="none"/>
+              <polygon points="150,180 145,188 155,188" fill="#f39c12"/>
+              <path d="M 150 170 Q 170 155 150 140" stroke="#f39c12" stroke-width="2" fill="none"/>
+              <polygon points="150,140 145,148 155,148" fill="#f39c12"/>
+              <path d="M 150 130 Q 170 115 150 100" stroke="#f39c12" stroke-width="2" fill="none"/>
+              <polygon points="150,100 145,108 155,108" fill="#f39c12"/>
+              <text x="130" y="45" text-anchor="middle" fill="#f4d03f" font-size="14" font-weight="bold">COMPLETE</text>
+              <text x="130" y="280" text-anchor="middle" fill="#aaa" font-size="8">Each ball must pass the previous</text>
+              <text x="130" y="293" text-anchor="middle" fill="#aaa" font-size="8">but stay inside the zone!</text>
+            </svg>
+          </div>
+          <!-- Diagram 4: Reverse Leapfrog -->
+          <div style="background:#2d5a27;border-radius:10px;padding:12px;width:145px;">
+            <div style="text-align:center;font-weight:bold;margin-bottom:8px;font-size:11px;color:#fff;">4. REVERSE</div>
+            <svg viewBox="0 0 260 350" style="width:100%;height:auto;">
+              <rect x="0" y="0" width="260" height="350" fill="#2d5a27"/>
+              <circle cx="130" cy="320" r="6" fill="#f4d03f" stroke="#c9a227" stroke-width="2"/>
+              <circle cx="130" cy="240" r="6" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+              <rect x="60" y="80" width="140" height="155" fill="rgba(46, 204, 113, 0.2)" stroke="#2ecc71" stroke-width="2" stroke-dasharray="6" rx="5"/>
+              <circle cx="130" cy="70" r="6" fill="#e74c3c" stroke="#c0392b" stroke-width="2"/>
+              <circle cx="130" cy="95" r="10" fill="white" stroke="#ddd" stroke-width="2"/>
+              <text x="130" y="99" text-anchor="middle" fill="#2d5a27" font-size="10" font-weight="bold">1</text>
+              <circle cx="130" cy="135" r="10" fill="white" stroke="#ddd" stroke-width="2"/>
+              <text x="130" y="139" text-anchor="middle" fill="#2d5a27" font-size="10" font-weight="bold">2</text>
+              <circle cx="130" cy="175" r="10" fill="white" stroke="#ddd" stroke-width="2"/>
+              <text x="130" y="179" text-anchor="middle" fill="#2d5a27" font-size="10" font-weight="bold">3</text>
+              <circle cx="130" cy="215" r="10" fill="white" stroke="#2ecc71" stroke-width="3"/>
+              <text x="130" y="219" text-anchor="middle" fill="#2d5a27" font-size="10" font-weight="bold">4</text>
+              <path d="M 150 100 Q 170 115 150 130" stroke="#f39c12" stroke-width="2" fill="none"/>
+              <polygon points="150,130 145,122 155,122" fill="#f39c12"/>
+              <path d="M 150 140 Q 170 155 150 170" stroke="#f39c12" stroke-width="2" fill="none"/>
+              <polygon points="150,170 145,162 155,162" fill="#f39c12"/>
+              <path d="M 150 180 Q 170 195 150 210" stroke="#f39c12" stroke-width="2" fill="none"/>
+              <polygon points="150,210 145,202 155,202" fill="#f39c12"/>
+              <text x="130" y="45" text-anchor="middle" fill="#f4d03f" font-size="14" font-weight="bold">COMPLETE</text>
+              <text x="130" y="280" text-anchor="middle" fill="#aaa" font-size="7">Start with the longest putt, then each</text>
+              <text x="130" y="293" text-anchor="middle" fill="#aaa" font-size="7">ball must be shorter but stay in the zone</text>
+            </svg>
+          </div>
+        </div>
+      `
+    }
+  ],
+  chipping: [],
+  fullswing: []
+};
+
 function showDrillCategory(cat) {
-  document.getElementById('drillContent').innerHTML = '<div style="padding:20px;color:#888;font-size:15px;">Coming soon</div>';
+  var drills = drillsData[cat] || [];
+  var content = document.getElementById('drillContent');
+  
+  if (drills.length === 0) {
+    content.innerHTML = '<div style="padding:20px;color:#888;font-size:15px;background:#222;border-radius:10px;text-align:center;">Coming soon</div>';
+    return;
+  }
+  
+  var html = '';
+  drills.forEach(function(drill) {
+    html += '<button onclick="showDrillDetail(\'' + drill.id + '\', \'' + cat + '\')" style="width:100%;height:50px;background:#333;border-radius:10px;margin-bottom:8px;font-size:14px;font-weight:600;text-align:left;padding:0 16px;">' + drill.title + '</button>';
+  });
+  content.innerHTML = html;
+}
+
+function showDrillDetail(drillId, cat) {
+  var drills = drillsData[cat] || [];
+  var drill = drills.find(function(d) { return d.id === drillId; });
+  if (!drill) return;
+  
+  var html = '<div style="font-size:18px;font-weight:800;margin-bottom:12px;text-align:center;">' + drill.title + '</div>';
+  html += '<div style="background:#222;border-radius:10px;padding:14px;margin-bottom:16px;">';
+  html += '<div style="font-size:13px;color:#ccc;line-height:1.5;margin-bottom:12px;">' + drill.description + '</div>';
+  html += '<div style="font-size:13px;color:#f4d03f;line-height:1.5;"><strong>Expectation:</strong> ' + drill.expectation + '</div>';
+  html += '</div>';
+  html += drill.diagrams;
+  
+  document.getElementById('drillDetailContent').innerHTML = html;
+  show('drillDetailPage');
 }
 
 // =============================================
@@ -4708,7 +4876,16 @@ function renderDashboard(data, hcp, targetId) {
       var diff = h.score - h.par;
       if (diff <= -2) A.eagles++; else if (diff === -1) A.birdies++; else if (diff === 0) A.pars++; else if (diff === 1) A.bogeys++; else A.dblPlus++;
       if (h.par===3) { A.c3++; A.p3+=h.score; } if (h.par===4) { A.c4++; A.p4+=h.score; } if (h.par===5) { A.c5++; A.p5+=h.score; }
-      if (h.firstPuttDist > 0) { A.firstPuttDists.push(h.firstPuttDist); A.girFirstPuttDist += h.firstPuttDist; A.girPutts += h.putts||0; }
+      
+      // Check if this was a GIR (hit green in par - 2 shots)
+      var shotsToGreen = 0;
+      for (var sti = 0; sti < (h.shots || []).length; sti++) {
+        if (h.shots[sti].isPutt) break;
+        shotsToGreen++;
+      }
+      var wasGIR = shotsToGreen <= (h.par - 2);
+      
+      if (wasGIR && h.firstPuttDist > 0) { A.firstPuttDists.push(h.firstPuttDist); A.girFirstPuttDist += h.firstPuttDist; A.girPutts += h.putts||0; }
       if ((h.putts||0) === 1 && h.firstPuttDist > 0) { if (h.firstPuttDist > A.longestMadePutt) A.longestMadePutt = h.firstPuttDist; }
       
       // Recalculate SG for this handicap
@@ -5110,12 +5287,16 @@ function showFullStats() {
     if((h.par===4||h.par===5)&&h.shots.length>0){
       var teeShot=h.shots[0];
       var dd=null;
-      if(teeShot.lie==='WATER'||teeShot.lie==='OB'||teeShot.lie==='RECOVERY'){
+      if(teeShot.lie==='WATER'||teeShot.lie==='OB'){
         for(var j=1;j<h.shots.length;j++){
           var s=h.shots[j];
           if(s.lie!=='PENALTY'&&s.lie!=='WATER'&&s.lie!=='OB'&&s.lie!=='RECOVERY'&&s.distanceAfter!=null){
-            dd=h.yards-s.distanceAfter;break;
+            dd=s.distanceBefore-s.distanceAfter;break;
           }
+        }
+      }else if(teeShot.lie==='RECOVERY'){
+        if(teeShot.distanceAfter!=null){
+          dd=h.yards-teeShot.distanceAfter;
         }
       }else if(teeShot.distanceAfter!=null&&teeShot.lie!=='PENALTY'){
         dd=h.yards-teeShot.distanceAfter;
