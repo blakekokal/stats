@@ -220,7 +220,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <div id="homePage" class="page active" style="justify-content:center;">
   <div style="font-size:32px;font-weight:800;letter-spacing:-0.5px;">Blake Kokal Golf</div>
-  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.5.2</div>
+  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.6.0</div>
   <div id="homeAuthStatus" style="font-size:13px;color:#888;margin-bottom:16px;"></div>
   <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;">
     <button onclick="goToNewRound()" style="height:56px;font-size:16px;font-weight:700;background:#2E7D32;border-radius:12px;">⛳ Enter New Round</button>
@@ -324,6 +324,12 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
           <option value="all">All Holes</option>
           <option value="9">9 Holes</option>
           <option value="18">18 Holes</option>
+        </select>
+        <select id="svRoundSortBy" onchange="filterSvRounds()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 6px;font-size:11px;">
+          <option value="date-desc">Date: Newest</option>
+          <option value="date-asc">Date: Oldest</option>
+          <option value="score-asc">Score: Low→High</option>
+          <option value="score-desc">Score: High→Low</option>
         </select>
       </div>
       <div id="svRoundsMsg" style="font-size:13px;color:#888;min-height:20px;text-align:center;"></div>
@@ -556,6 +562,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   </div>
   
   <div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;">
+    <button id="editRoundBtn" onclick="showEditRound()" style="background:#FF8F00;height:44px;font-size:13px;">✏️ EDIT ROUND</button>
     <div style="display:flex;gap:8px;">
       <button style="flex:1;background:#1B5E20;height:44px;font-size:13px;" onclick="exportToExcel()">SAVE EXCEL</button>
       <button style="flex:1;background:#7B1FA2;height:44px;font-size:13px;" onclick="emailResults()">EMAIL / SHARE</button>
@@ -566,6 +573,18 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
     <button style="background:#555;height:44px;font-size:13px;" onclick="show('homePage')">← HOME</button>
   </div>
   <div id="saveStatus" style="font-size:12px;color:#4CAF50;min-height:18px;"></div>
+</div>
+
+<!-- EDIT ROUND PAGE -->
+<div id="editRoundPage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;padding-bottom:30px;">
+  <button class="back-btn-top" onclick="cancelEditRound()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <div style="font-size:20px;font-weight:800;text-align:center;">✏️ Edit Round</div>
+  <div style="font-size:12px;color:#aaa;text-align:center;margin-bottom:12px;">Tap a hole to expand and edit shots</div>
+  <div id="editRoundContent" style="width:100%;max-width:400px;padding:0 10px;"></div>
+  <div style="display:flex;gap:8px;width:100%;max-width:320px;margin-top:16px;">
+    <button style="flex:1;background:#1B5E20;height:44px;font-size:13px;" onclick="saveEditRound()">💾 SAVE CHANGES</button>
+    <button style="flex:1;background:#555;height:44px;font-size:13px;" onclick="cancelEditRound()">CANCEL</button>
+  </div>
 </div>
 
 <!-- FULL STATS PAGE -->
@@ -587,209 +606,139 @@ function show(id){
   var scoringPages = ['parPage','shotPage','liePage','distancePage','puttPage','penaltyPage','obPenaltyPage','recoveryPage','missedGreenPage'];
   if(scoringPages.indexOf(id) === -1) { var sb=document.getElementById('scoreBar'); if(sb) sb.style.display='none'; }
 }
-function goBack(){
-  const currentPage=document.querySelector('.page.active').id;
+// ============ SNAPSHOT-BASED BACK BUTTON SYSTEM ============
+// Instead of manually reversing stats (error-prone), we save a complete
+// snapshot of all state before each transition. Back button just restores.
+let entryHistory = [];
+
+function saveSnapshot() {
+  entryHistory.push({
+    // Page state
+    page: document.querySelector('.page.active')?.id || 'parPage',
+    // Round state
+    shots: shots,
+    putts: putts,
+    par: par,
+    currentHole: currentHole,
+    totalHoles: totalHoles,
+    // Current hole data
+    currentHoleData: JSON.parse(JSON.stringify(currentHoleData)),
+    currentHoleShots: JSON.parse(JSON.stringify(currentHoleShots)),
+    // All completed holes
+    allHoles: JSON.parse(JSON.stringify(allHoles)),
+    // Aggregate stats
+    totalStrokes: totalStrokes,
+    totalPar: totalPar,
+    totalPutts: totalPutts,
+    fwOpp: fwOpp, fwHit: fwHit, fwLeft: fwLeft, fwRight: fwRight,
+    gir: gir, girFirstPuttDist: girFirstPuttDist,
+    girOpp: girOpp, missLeft: missLeft, missRight: missRight, missShort: missShort, missLong: missLong,
+    scrOpp: scrOpp, scr: scr,
+    bunOpp: bunOpp, bun: bun,
+    p3: p3, p4: p4, p5: p5, c3: c3, c4: c4, c5: c5,
+    girPutts: girPutts,
+    threePlusPutts: threePlusPutts,
+    onePuttOpp: onePuttOpp, onePuttMade: onePuttMade,
+    sgPuttingTotal: sgPuttingTotal,
+    sgOTTTotal: sgOTTTotal,
+    sgAPPTotal: sgAPPTotal,
+    sgARGTotal: sgARGTotal,
+    // Per-hole flags
+    firstPuttThisHole: firstPuttThisHole,
+    girThisHole: girThisHole,
+    fwCountedThisHole: fwCountedThisHole,
+    scrCountedThisHole: scrCountedThisHole
+  });
+}
+
+function restoreSnapshot(snapshot) {
+  // Restore round state
+  shots = snapshot.shots;
+  putts = snapshot.putts;
+  par = snapshot.par;
+  currentHole = snapshot.currentHole;
+  totalHoles = snapshot.totalHoles;
+  // Restore current hole data
+  currentHoleData = JSON.parse(JSON.stringify(snapshot.currentHoleData));
+  currentHoleShots = JSON.parse(JSON.stringify(snapshot.currentHoleShots));
+  // Restore all completed holes
+  allHoles = JSON.parse(JSON.stringify(snapshot.allHoles));
+  // Restore aggregate stats
+  totalStrokes = snapshot.totalStrokes;
+  totalPar = snapshot.totalPar;
+  totalPutts = snapshot.totalPutts;
+  fwOpp = snapshot.fwOpp; fwHit = snapshot.fwHit; fwLeft = snapshot.fwLeft; fwRight = snapshot.fwRight;
+  gir = snapshot.gir; girFirstPuttDist = snapshot.girFirstPuttDist;
+  girOpp = snapshot.girOpp; missLeft = snapshot.missLeft; missRight = snapshot.missRight; missShort = snapshot.missShort; missLong = snapshot.missLong;
+  scrOpp = snapshot.scrOpp; scr = snapshot.scr;
+  bunOpp = snapshot.bunOpp; bun = snapshot.bun;
+  p3 = snapshot.p3; p4 = snapshot.p4; p5 = snapshot.p5; c3 = snapshot.c3; c4 = snapshot.c4; c5 = snapshot.c5;
+  girPutts = snapshot.girPutts;
+  threePlusPutts = snapshot.threePlusPutts;
+  onePuttOpp = snapshot.onePuttOpp; onePuttMade = snapshot.onePuttMade;
+  sgPuttingTotal = snapshot.sgPuttingTotal;
+  sgOTTTotal = snapshot.sgOTTTotal;
+  sgAPPTotal = snapshot.sgAPPTotal;
+  sgARGTotal = snapshot.sgARGTotal;
+  // Restore per-hole flags
+  firstPuttThisHole = snapshot.firstPuttThisHole;
+  girThisHole = snapshot.girThisHole;
+  fwCountedThisHole = snapshot.fwCountedThisHole;
+  scrCountedThisHole = snapshot.scrCountedThisHole;
+}
+
+function restorePageUI(page) {
+  // After restoring state, update UI elements to match the restored state
+  holeHeader.innerText = `Hole ${currentHole}`;
+  if (page === 'parPage') {
+    // Nothing special needed
+  } else if (page === 'liePage') {
+    lieTitle.innerText = shots === 1 ? 'Where did your tee shot end?' : `Where did your ${ordinal(shots)} shot end?`;
+  } else if (page === 'distancePage') {
+    distanceTitle.innerText = `${ordinal(shots)} Shot Distance`;
+    const lastShot = currentHoleShots[currentHoleShots.length - 1];
+    if (lastShot && lastShot.distanceAfter !== null) {
+      shotDistance.value = lastShot.distanceAfter;
+    }
+  } else if (page === 'puttPage') {
+    puttTitle.innerText = `Putt ${putts + 1}`;
+    const lastPutt = currentHoleShots[currentHoleShots.length - 1];
+    if (lastPutt) {
+      const puttInput = document.getElementById('puttDistance');
+      puttInput.value = lastPutt.distanceBefore || 3;
+      puttInput.setAttribute('value', lastPutt.distanceBefore || 3);
+    }
+  }
+  updateScoreBar();
+  show(page);
+}
+
+function goBack() {
+  const currentPage = document.querySelector('.page.active').id;
   
-  // FROM PAR PAGE - Go back to round info OR undo previous hole
-  if(currentPage==='parPage'){
-    if(currentHole>1&&allHoles.length>0){
-      undoLastHole();
-    }else{
+  // FROM PAR PAGE on hole 1 - go back to round setup
+  if (currentPage === 'parPage' && currentHole === 1 && allHoles.length === 0) {
+    entryHistory = []; // Clear history when leaving scoring
+    show('roundPage');
+    return;
+  }
+  
+  // For all other cases, restore the previous snapshot
+  if (entryHistory.length > 0) {
+    const snapshot = entryHistory.pop();
+    restoreSnapshot(snapshot);
+    restorePageUI(snapshot.page);
+  } else {
+    // Safety fallback - no history but on a scoring page
+    if (currentPage === 'parPage') {
       show('roundPage');
     }
   }
-  
-  // FROM LIE PAGE - Go back to par page (first shot) or distance page (later shots)
-  else if(currentPage==='liePage'){
-    if(shots===1){
-      // First shot - reverse stats if counted, then go back to par page
-      const currentShot=currentHoleShots[currentHoleShots.length-1];
-      if(currentShot){
-        // Reverse fairway stats if they were counted
-        if(fwCountedThisHole&&currentShot.fwCounted){
-          console.log('BACK from lie (shot 1): Reversing fairway stats for: '+currentShot.lie);
-          fwOpp--;
-          if(currentShot.lie==='FAIRWAY') fwHit--;
-          if(currentShot.lie==='LEFT ROUGH') fwLeft--;
-          if(currentShot.lie==='RIGHT ROUGH') fwRight--;
-          fwCountedThisHole=false;
-        }
-        // Reverse bunker stats if they were counted
-        if(currentShot.bunkerCounted){
-          console.log('BACK from lie (shot 1): Reversing bunker opp');
-          bunOpp--;
-        }
-      }
-      // Remove the shot - startHole will create a fresh one
-      if(currentHoleShots.length>0) currentHoleShots.pop();
-      show('parPage');
-    }else{
-      // Not first shot - go back to previous distance entry
-      if(currentHoleShots.length>0) currentHoleShots.pop();
-      shots--;
-      distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
-      shotDistance.value=currentHoleShots[currentHoleShots.length-1].distanceAfter||100;
-      show('distancePage');
-    }
-  }
-  
-  // FROM DISTANCE PAGE - Go back to lie selection for same shot
-  else if(currentPage==='distancePage'){
-    // Remove the next shot that was created when we selected a lie
-    if(currentHoleShots.length>shots){
-      currentHoleShots.pop();
-    }
-    shots--;
-    
-    // Reverse the stats
-    const currentShot=currentHoleShots[currentHoleShots.length-1];
-    if(currentShot){
-      // Reverse fairway stats if they were counted
-      if(fwCountedThisHole&&currentShot.fwCounted){
-        console.log('BACK: Reversing fairway stats for: '+currentShot.lie);
-        fwOpp--;
-        if(currentShot.lie==='FAIRWAY') fwHit--;
-        if(currentShot.lie==='LEFT ROUGH') fwLeft--;
-        if(currentShot.lie==='RIGHT ROUGH') fwRight--;
-        fwCountedThisHole=false;
-        currentShot.fwCounted=false;
-        console.log('BACK: fwOpp='+fwOpp+', fwCountedThisHole=false');
-      }
-      // Reverse bunker stats if they were counted
-      if(currentShot.bunkerCounted){
-        console.log('BACK: Reversing bunker opp! bunOpp before: '+bunOpp);
-        bunOpp--;
-        currentShot.bunkerCounted=false;
-        console.log('BACK: bunOpp after: '+bunOpp);
-      }
-    }
-    
-    lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
-    show('liePage');
-  }
-  
-  // FROM PENALTY PAGES - Go back to lie page
-  else if(currentPage==='penaltyPage'||currentPage==='obPenaltyPage'||currentPage==='recoveryPage'||currentPage==='missedGreenPage'){
-    show('liePage');
-  }
-  
-  // FROM PUTT PAGE - Go back to lie page of last regular shot
-  else if(currentPage==='puttPage'){
-    // Just remove the putt and go back - don't touch girThisHole
-    if(currentHoleShots.length>0) currentHoleShots.pop();
-    lieTitle.innerText=`Where did your ${ordinal(shots)} shot end?`;
-    show('liePage');
-  }
 }
 
-function undoLastHole(){
-  // Get the last completed hole from allHoles
-  const lastHole=allHoles[allHoles.length-1];
-  if(!lastHole) return;
-  
-  // Remove it from allHoles
-  currentHole--;
-  allHoles.pop();
-  
-  const lastScore=lastHole.score;
-  
-  // Reverse all stats
-  totalStrokes-=lastScore;
-  totalPar-=lastHole.par;
-  totalPutts-=lastHole.putts;
-  
-  if(lastHole.par===3){c3--;p3-=lastScore;}
-  if(lastHole.par===4){c4--;p4-=lastScore;}
-  if(lastHole.par===5){c5--;p5-=lastScore;}
-  
-  // Reverse GIR
-  let hadGIR=false;
-  let firstPuttDist=0;
-  lastHole.shots.forEach(s=>{
-    if(s.lie==='GREEN'&&s.shotNum<=(lastHole.par-2)){
-      hadGIR=true;
-      gir--;
-      firstPuttDist=s.distanceAfter||0;
-      console.log('UNDO: Reversing GIR. gir is now: '+gir+', removing proximity: '+firstPuttDist);
-    }
-  });
-  if(hadGIR&&firstPuttDist>0){
-    console.log('UNDO: girFirstPuttDist before: '+girFirstPuttDist);
-    girFirstPuttDist-=firstPuttDist;
-    console.log('UNDO: girFirstPuttDist after: '+girFirstPuttDist);
-    girPutts-=lastHole.putts;
-  }
-  
-  // Reverse scrambling - check if there was a scrambling opportunity on this hole
-  let hadScrambleOpp=false;
-  if(!hadGIR){
-    // Check if there was a GS bunker or missed GIR situation
-    lastHole.shots.forEach(s=>{
-      if(s.lie==='GS BUNKER') hadScrambleOpp=true;
-    });
-    // If they hit green after missing in regulation, that's also a scramble opp
-    if(!hadScrambleOpp){
-      lastHole.shots.forEach(s=>{
-        if(s.lie==='GREEN'&&s.shotNum>(lastHole.par-2)) hadScrambleOpp=true;
-      });
-    }
-    if(hadScrambleOpp){
-      scrOpp--;
-      if(lastHole.putts===1) scr--;
-    }
-  }
-  
-  // Reverse fairway stats
-  if(lastHole.par===4||lastHole.par===5){
-    const teeShot=lastHole.shots[0];
-    if(teeShot){
-      fwOpp--;
-      if(teeShot.lie==='FAIRWAY') fwHit--;
-      if(teeShot.lie==='LEFT ROUGH') fwLeft--;
-      if(teeShot.lie==='RIGHT ROUGH') fwRight--;
-    }
-  }
-  
-  // Reverse bunker stats (only GS BUNKER counts)
-  let hadBunker=false;
-  lastHole.shots.forEach(s=>{
-    if(s.lie==='GS BUNKER'){
-      hadBunker=true;
-      bunOpp--;
-    }
-  });
-  if(hadBunker&&lastHole.putts===1) bun--;
-  
-  // Reverse one-putt stats
-  if(lastHole.putts>0){
-    onePuttOpp--;
-    if(lastHole.putts===1) onePuttMade--;
-  }
-  
-  // Reverse three-putt stats
-  if(lastHole.putts>=3) threePlusPutts--;
-  
-  // Restore hole state
-  par=lastHole.par;
-  currentHoleData=JSON.parse(JSON.stringify(lastHole));
-  currentHoleShots=JSON.parse(JSON.stringify(lastHole.shots));
-  shots=lastHole.score-lastHole.putts;
-  putts=lastHole.putts-1;
-  girThisHole=false; // Always reset so hole can be counted fresh when replayed
-  scrCountedThisHole=false;
-  firstPuttThisHole=null;
-  
-  // Remove the holed putt
-  currentHoleShots.pop();
-  
-  // Go to last putt
-  puttTitle.innerText=`Putt ${putts+1}`;
-  const lastPutt=currentHoleShots[currentHoleShots.length-1];
-  const puttInput = document.getElementById('puttDistance');
-  puttInput.value = lastPutt.distanceBefore||3;
-  puttInput.setAttribute('value', lastPutt.distanceBefore||3);
-  holeHeader.innerText=`Hole ${currentHole}`;
-  show('puttPage');
+function undoLastHole() {
+  // This is now just goBack - the snapshot handles everything
+  goBack();
 }
 function highlight(btn){
   btn.parentElement.querySelectorAll('button').forEach(b=>b.classList.remove('selected'));
@@ -1219,11 +1168,13 @@ function selectPresetHoles(n){customHoles.value='';totalHoles=n;}
 function enterScoring(){
   const c=parseInt(customHoles.value);
   totalHoles=(c>=3&&c<=18)?c:(totalHoles||9);
+  entryHistory = []; // Reset snapshot history for new round
   scoreBar.style.display='flex';
   show('parPage');
 }
 function setPar(p){par=p;holeYards.value=p===3?150:p===4?400:520;}
 function startHole(){
+  saveSnapshot(); // Save state before transitioning from par page
   shots=1;
   putts=0;
   firstPuttThisHole=null;
@@ -1245,6 +1196,7 @@ function selectLie(lie){
     return;
   }
   processingClick=true;
+  saveSnapshot(); // Save state before lie selection changes anything
   
   const lastShot=currentHoleShots[currentHoleShots.length-1];
   
@@ -1421,6 +1373,7 @@ function selectLie(lie){
 }
 
 function confirmDistance(){
+  saveSnapshot(); // Save state before confirming distance
   const lastShot=currentHoleShots[currentHoleShots.length-1];
   const distance = parseInt(shotDistance.value||0);
   lastShot.distanceBefore = distance;
@@ -1444,6 +1397,7 @@ function confirmDistance(){
 }
 
 function handlePenalty(choice){
+  saveSnapshot(); // Save state before penalty
   const lastShot=currentHoleShots[currentHoleShots.length-1];
   const lastDistance=lastShot.distanceBefore||100;
   // Don't set distanceAfter yet - it will be backfilled when user enters drop distance
@@ -1458,6 +1412,7 @@ function handlePenalty(choice){
 }
 
 function handleRecovery(direction){
+  saveSnapshot(); // Save state before recovery
   const lastShot=currentHoleShots[currentHoleShots.length-1];
   lastShot.lie='RECOVERY';
   
@@ -1480,6 +1435,7 @@ function handleRecovery(direction){
 }
 
 function handleMissedGreen(direction){
+  saveSnapshot(); // Save state before missed green
   const lastShot=currentHoleShots[currentHoleShots.length-1];
   lastShot.lie='MISS '+direction;
   
@@ -1502,6 +1458,7 @@ function handleMissedGreen(direction){
 }
 
 function nextPutt(){
+  saveSnapshot(); // Save state before counting putt
   totalPutts++;
   const distInput = document.getElementById('puttDistance');
   // The input value is the distance of THIS putt that was just taken
@@ -1542,6 +1499,7 @@ function nextPutt(){
 }
 
 function holeOut(){
+  saveSnapshot(); // Save state before holing out
   totalPutts++;
   const distInput = document.getElementById('puttDistance');
   const thisPuttDist = parseInt(distInput.value) || 0;
@@ -1599,6 +1557,7 @@ function holeOut(){
 }
 
 function finishHole(){
+  saveSnapshot(); // Save state before finishing hole (allows undo)
   const holeStrokes=shots+putts;
   currentHoleData.score=holeStrokes;
   currentHoleData.putts=putts;
@@ -1784,6 +1743,316 @@ function finishHole(){
     if(saveBtn) saveBtn.style.display = currentUser ? '' : 'none';
     show('summaryPage');
   }
+}
+
+// ============ EDIT ROUND SYSTEM ============
+let editableHoles = []; // Deep copy of allHoles for editing
+let expandedEditHole = -1; // Which hole is expanded (-1 = none)
+
+function showEditRound() {
+  editableHoles = JSON.parse(JSON.stringify(allHoles));
+  expandedEditHole = -1;
+  renderEditRound();
+  show('editRoundPage');
+}
+
+function cancelEditRound() {
+  editableHoles = [];
+  show('summaryPage');
+}
+
+function renderEditRound() {
+  const container = document.getElementById('editRoundContent');
+  let html = '';
+  
+  editableHoles.forEach((hole, idx) => {
+    const score = hole.score;
+    const diff = score - hole.par;
+    const diffStr = diff === 0 ? 'E' : (diff > 0 ? '+' + diff : '' + diff);
+    const diffColor = diff < 0 ? '#4CAF50' : diff === 0 ? '#fff' : diff === 1 ? '#FF9800' : '#f44336';
+    const isExpanded = expandedEditHole === idx;
+    
+    html += `<div style="background:#2a2a2a;border-radius:10px;margin-bottom:8px;overflow:hidden;">`;
+    html += `<div onclick="toggleEditHole(${idx})" style="display:flex;align-items:center;padding:10px 14px;cursor:pointer;gap:10px;">`;
+    html += `<div style="font-weight:700;width:55px;">Hole ${hole.hole}</div>`;
+    html += `<div style="color:#aaa;font-size:13px;">Par ${hole.par} · ${hole.yards}y</div>`;
+    html += `<div style="margin-left:auto;font-weight:700;">${score}</div>`;
+    html += `<div style="color:${diffColor};font-size:13px;width:30px;text-align:right;">${diffStr}</div>`;
+    html += `<div style="font-size:12px;color:#888;">${isExpanded ? '▲' : '▼'}</div>`;
+    html += `</div>`;
+    
+    if (isExpanded) {
+      html += `<div style="padding:0 14px 14px 14px;border-top:1px solid #444;">`;
+      
+      // Editable par and yardage
+      html += `<div style="display:flex;gap:10px;margin:10px 0;">`;
+      html += `<div style="flex:1;"><label style="font-size:11px;color:#aaa;">Par</label><select onchange="editHolePar(${idx},this.value)" style="width:100%;padding:6px;background:#333;color:white;border:1px solid #555;border-radius:6px;font-size:14px;">`;
+      [3, 4, 5].forEach(p => {
+        html += `<option value="${p}" ${hole.par === p ? 'selected' : ''}>${p}</option>`;
+      });
+      html += `</select></div>`;
+      html += `<div style="flex:1;"><label style="font-size:11px;color:#aaa;">Yards</label><input type="number" value="${hole.yards}" onchange="editHoleYards(${idx},this.value)" style="width:100%;padding:6px;background:#333;color:white;border:1px solid #555;border-radius:6px;font-size:14px;box-sizing:border-box;"></div>`;
+      html += `</div>`;
+      
+      // Shot list
+      html += `<div style="font-size:12px;color:#aaa;margin:8px 0 4px 0;">Shots:</div>`;
+      hole.shots.forEach((shot, sIdx) => {
+        const isLastShot = sIdx === hole.shots.length - 1;
+        const bgColor = shot.isPutt ? '#1a3a1a' : shot.lie === 'PENALTY' ? '#3a1a1a' : '#333';
+        html += `<div style="display:flex;align-items:center;gap:6px;padding:6px 8px;background:${bgColor};border-radius:6px;margin-bottom:4px;font-size:13px;">`;
+        html += `<div style="width:20px;color:#888;">#${shot.shotNum}</div>`;
+        
+        if (shot.lie === 'PENALTY') {
+          html += `<div style="flex:1;color:#f44336;">PENALTY</div>`;
+        } else if (shot.isPutt) {
+          html += `<div style="color:#4CAF50;width:45px;">PUTT</div>`;
+          html += `<input type="number" value="${shot.distanceBefore || 0}" onchange="editShotDist(${idx},${sIdx},'before',this.value)" style="width:50px;padding:3px;background:#444;color:white;border:1px solid #555;border-radius:4px;font-size:12px;text-align:center;" title="Distance (ft)">`;
+          html += `<span style="color:#888;font-size:11px;">ft</span>`;
+          if (isLastShot) {
+            html += `<span style="color:#4CAF50;margin-left:auto;font-size:11px;">HOLED</span>`;
+          }
+        } else {
+          // Lie selector
+          html += `<select onchange="editShotLie(${idx},${sIdx},this.value)" style="width:80px;padding:3px;background:#444;color:white;border:1px solid #555;border-radius:4px;font-size:11px;">`;
+          const lies = ['FAIRWAY','LEFT ROUGH','RIGHT ROUGH','GREEN','GS BUNKER','FS BUNKER','RECOVERY','WATER','OB','MISS LEFT','MISS RIGHT','MISS SHORT','MISS LONG'];
+          lies.forEach(l => {
+            html += `<option value="${l}" ${shot.lie === l ? 'selected' : ''}>${l}</option>`;
+          });
+          html += `</select>`;
+          // Distance before/after
+          html += `<input type="number" value="${shot.distanceBefore || 0}" onchange="editShotDist(${idx},${sIdx},'before',this.value)" style="width:45px;padding:3px;background:#444;color:white;border:1px solid #555;border-radius:4px;font-size:12px;text-align:center;" title="Dist before">`;
+          html += `<span style="color:#888;">→</span>`;
+          html += `<input type="number" value="${shot.distanceAfter || 0}" onchange="editShotDist(${idx},${sIdx},'after',this.value)" style="width:45px;padding:3px;background:#444;color:white;border:1px solid #555;border-radius:4px;font-size:12px;text-align:center;" title="Dist after">`;
+        }
+        
+        // Delete shot button (if more than 2 shots)
+        if (hole.shots.length > 2 && !isLastShot) {
+          html += `<button onclick="deleteEditShot(${idx},${sIdx})" style="background:#f44336;border:none;color:white;width:22px;height:22px;border-radius:4px;font-size:12px;cursor:pointer;margin-left:auto;padding:0;">✕</button>`;
+        }
+        
+        html += `</div>`;
+      });
+      
+      // Add shot button
+      html += `<button onclick="addEditShot(${idx})" style="width:100%;padding:6px;background:#333;color:#4CAF50;border:1px dashed #4CAF50;border-radius:6px;font-size:12px;cursor:pointer;margin-top:4px;">+ Add Shot</button>`;
+      
+      html += `</div>`;
+    }
+    
+    html += `</div>`;
+  });
+  
+  container.innerHTML = html;
+}
+
+function toggleEditHole(idx) {
+  expandedEditHole = expandedEditHole === idx ? -1 : idx;
+  renderEditRound();
+}
+
+function editHolePar(idx, val) {
+  editableHoles[idx].par = parseInt(val);
+}
+
+function editHoleYards(idx, val) {
+  editableHoles[idx].yards = parseInt(val);
+}
+
+function editShotLie(idx, sIdx, val) {
+  editableHoles[idx].shots[sIdx].lie = val;
+}
+
+function editShotDist(idx, sIdx, field, val) {
+  if (field === 'before') editableHoles[idx].shots[sIdx].distanceBefore = parseInt(val) || 0;
+  if (field === 'after') editableHoles[idx].shots[sIdx].distanceAfter = parseInt(val) || 0;
+}
+
+function deleteEditShot(idx, sIdx) {
+  const hole = editableHoles[idx];
+  hole.shots.splice(sIdx, 1);
+  // Renumber remaining shots
+  hole.shots.forEach((s, i) => s.shotNum = i + 1);
+  // Recalculate score and putts
+  const puttCount = hole.shots.filter(s => s.isPutt).length;
+  const nonPuttCount = hole.shots.filter(s => !s.isPutt).length;
+  hole.putts = puttCount;
+  hole.score = hole.shots.length;
+  renderEditRound();
+}
+
+function addEditShot(idx) {
+  const hole = editableHoles[idx];
+  const lastNonPutt = [...hole.shots].reverse().find(s => !s.isPutt);
+  const firstPutt = hole.shots.find(s => s.isPutt);
+  const insertIdx = firstPutt ? hole.shots.indexOf(firstPutt) : hole.shots.length;
+  
+  hole.shots.splice(insertIdx, 0, {
+    shotNum: insertIdx + 1,
+    lie: 'FAIRWAY',
+    distanceBefore: 150,
+    distanceAfter: 30,
+    isPutt: false,
+    fwCounted: false,
+    bunkerCounted: false
+  });
+  
+  // Renumber all shots
+  hole.shots.forEach((s, i) => s.shotNum = i + 1);
+  hole.score = hole.shots.length;
+  hole.putts = hole.shots.filter(s => s.isPutt).length;
+  renderEditRound();
+}
+
+function saveEditRound() {
+  // Replace allHoles with edited version
+  allHoles = JSON.parse(JSON.stringify(editableHoles));
+  
+  // Recalculate ALL stats from scratch
+  recalculateAllStats();
+  
+  // Re-render summary
+  renderSummary();
+  show('summaryPage');
+}
+
+function recalculateAllStats() {
+  // Reset everything
+  totalStrokes = 0; totalPar = 0; totalPutts = 0;
+  fwOpp = 0; fwHit = 0; fwLeft = 0; fwRight = 0;
+  gir = 0; girFirstPuttDist = 0; girOpp = 0;
+  missLeft = 0; missRight = 0; missShort = 0; missLong = 0;
+  scrOpp = 0; scr = 0; bunOpp = 0; bun = 0;
+  p3 = 0; p4 = 0; p5 = 0; c3 = 0; c4 = 0; c5 = 0;
+  girPutts = 0; threePlusPutts = 0;
+  onePuttOpp = 0; onePuttMade = 0;
+  sgPuttingTotal = 0; sgOTTTotal = 0; sgAPPTotal = 0; sgARGTotal = 0;
+  
+  allHoles.forEach(hole => {
+    const score = hole.shots.length;
+    hole.score = score;
+    hole.putts = hole.shots.filter(s => s.isPutt).length;
+    
+    totalStrokes += score;
+    totalPar += hole.par;
+    totalPutts += hole.putts;
+    
+    if (hole.par === 3) { c3++; p3 += score; }
+    if (hole.par === 4) { c4++; p4 += score; }
+    if (hole.par === 5) { c5++; p5 += score; }
+    
+    // Fairway stats (par 4 & 5 only)
+    if (hole.par === 4 || hole.par === 5) {
+      const teeShot = hole.shots[0];
+      if (teeShot && teeShot.lie) {
+        fwOpp++;
+        if (teeShot.lie === 'FAIRWAY') fwHit++;
+        if (teeShot.lie === 'LEFT ROUGH') fwLeft++;
+        if (teeShot.lie === 'RIGHT ROUGH') fwRight++;
+        // GREEN from tee counts as hitting fairway (e.g., driveable par 4)
+        if (teeShot.lie === 'GREEN') fwHit++;
+      }
+    }
+    
+    // GIR check
+    let holeGIR = false;
+    let firstPuttDist = 0;
+    hole.shots.forEach(s => {
+      if (s.lie === 'GREEN' && s.shotNum <= (hole.par - 2)) {
+        holeGIR = true;
+        firstPuttDist = s.distanceAfter || 0;
+      }
+    });
+    if (holeGIR) {
+      gir++;
+      if (firstPuttDist > 0) girFirstPuttDist += firstPuttDist;
+      girPutts += hole.putts;
+    }
+    
+    // Miss direction stats
+    hole.shots.forEach(s => {
+      if (s.lie === 'MISS LEFT') { girOpp++; missLeft++; }
+      if (s.lie === 'MISS RIGHT') { girOpp++; missRight++; }
+      if (s.lie === 'MISS SHORT') { girOpp++; missShort++; }
+      if (s.lie === 'MISS LONG') { girOpp++; missLong++; }
+    });
+    
+    // Scrambling
+    if (!holeGIR) {
+      let hasScrambleOpp = false;
+      hole.shots.forEach(s => {
+        if (s.lie === 'GS BUNKER') hasScrambleOpp = true;
+        if (s.lie === 'GREEN' && s.shotNum > (hole.par - 2)) hasScrambleOpp = true;
+        if (s.lie && s.lie.startsWith('MISS')) hasScrambleOpp = true;
+      });
+      if (hasScrambleOpp) {
+        scrOpp++;
+        if (hole.putts === 1) scr++;
+      }
+    }
+    
+    // Bunker stats
+    let hadBunker = false;
+    hole.shots.forEach(s => {
+      if (s.lie === 'GS BUNKER') { hadBunker = true; bunOpp++; }
+    });
+    if (hadBunker && hole.putts === 1) bun++;
+    
+    // Putt stats
+    if (hole.putts > 0) {
+      onePuttOpp++;
+      if (hole.putts === 1) onePuttMade++;
+    }
+    if (hole.putts >= 3) threePlusPutts++;
+    
+    // Recalculate Strokes Gained for each shot
+    const hcp = document.getElementById('sgHandicap') ? document.getElementById('sgHandicap').value : 'pro';
+    hole.shots.forEach((s, idx) => {
+      s.sg = 0;
+      if (!s.lie || s.lie === 'PENALTY') return;
+      
+      const distBefore = s.distanceBefore || 0;
+      const distAfter = s.distanceAfter || 0;
+      const shotNum = s.shotNum;
+      const isTeeShotPar45 = shotNum === 1 && (hole.par === 4 || hole.par === 5);
+      const isTeeShotPar3 = shotNum === 1 && hole.par === 3;
+      const isPutt = s.isPutt;
+      
+      if (isPutt) {
+        const eb = (typeof getExpectedPutts === 'function') ? getExpectedPutts(distBefore, hcp) : 2;
+        const ea = (distAfter > 0) ? getExpectedPutts(distAfter, hcp) : 0;
+        s.sg = eb - ea - 1;
+        sgPuttingTotal += s.sg;
+      } else if (isTeeShotPar45) {
+        const eb = (typeof getExpectedStrokes === 'function') ? getExpectedStrokes(distBefore, 'TEE', hcp) : hole.par;
+        let ea;
+        if (s.lie === 'GREEN') ea = (typeof getExpectedPutts === 'function') ? getExpectedPutts(distAfter, hcp) : 2;
+        else ea = (distAfter > 0 && typeof getExpectedStrokes === 'function') ? getExpectedStrokes(distAfter, s.lie, hcp) : 2.5;
+        s.sg = eb - ea - 1;
+        sgOTTTotal += s.sg;
+      } else if (isTeeShotPar3) {
+        const eb = (typeof getExpectedStrokes === 'function') ? getExpectedStrokes(distBefore, 'TEE', hcp) : hole.par;
+        let ea;
+        if (s.lie === 'GREEN') ea = (typeof getExpectedPutts === 'function') ? getExpectedPutts(distAfter, hcp) : 2;
+        else ea = (distAfter > 0 && typeof getExpectedStrokes === 'function') ? getExpectedStrokes(distAfter, s.lie, hcp) : 2.5;
+        s.sg = eb - ea - 1;
+        sgAPPTotal += s.sg;
+      } else {
+        // Approach or around-the-green shot
+        const eb = (typeof getExpectedStrokes === 'function') ? getExpectedStrokes(distBefore, s.lie || 'FAIRWAY', hcp) : 3;
+        let ea;
+        if (s.lie === 'GREEN' || (s.distanceAfter !== undefined && s.distanceAfter !== null)) {
+          const nextShot = hole.shots[idx + 1];
+          if (nextShot && nextShot.isPutt) ea = (typeof getExpectedPutts === 'function') ? getExpectedPutts(distAfter, hcp) : 2;
+          else ea = (distAfter > 0 && typeof getExpectedStrokes === 'function') ? getExpectedStrokes(distAfter, nextShot ? nextShot.lie || 'FAIRWAY' : 'FAIRWAY', hcp) : 2.5;
+        } else {
+          ea = 2.5;
+        }
+        s.sg = eb - ea - 1;
+        if (distBefore <= 50) sgARGTotal += s.sg;
+        else sgAPPTotal += s.sg;
+      }
+    });
+  });
 }
 
 function renderSummary(){
@@ -4318,6 +4587,7 @@ async function loadStudentRounds() {
   document.getElementById('svRoundSearch').value = '';
   document.getElementById('svRoundFilterType').value = 'all';
   document.getElementById('svRoundFilterHoles').value = 'all';
+  document.getElementById('svRoundSortBy').value = 'date-desc';
   filterSvRounds();
 }
 
@@ -4326,12 +4596,27 @@ function filterSvRounds() {
   var search = (document.getElementById('svRoundSearch').value || '').toLowerCase().trim();
   var typeF = document.getElementById('svRoundFilterType').value;
   var holesF = document.getElementById('svRoundFilterHoles').value;
+  var sortBy = document.getElementById('svRoundSortBy').value;
   
   var filtered = _svAllRounds.filter(function(r) {
     if (search && (r.course_name || '').toLowerCase().indexOf(search) === -1) return false;
     if (typeF !== 'all' && r.round_type !== typeF) return false;
     if (holesF !== 'all' && r.holes !== parseInt(holesF)) return false;
     return true;
+  });
+  
+  // Sort the filtered results
+  filtered.sort(function(a, b) {
+    if (sortBy === 'date-desc') {
+      return new Date(b.round_date) - new Date(a.round_date);
+    } else if (sortBy === 'date-asc') {
+      return new Date(a.round_date) - new Date(b.round_date);
+    } else if (sortBy === 'score-asc') {
+      return a.score - b.score;
+    } else if (sortBy === 'score-desc') {
+      return b.score - a.score;
+    }
+    return 0;
   });
   
   var msg = document.getElementById('svRoundsMsg');
