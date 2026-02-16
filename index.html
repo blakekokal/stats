@@ -202,6 +202,12 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
         <option value="3">Last 3 Months</option>
         <option value="6">Last 6 Months</option>
       </select>
+      <select id="roundSortBy" onchange="filterRoundsList()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 6px;font-size:11px;">
+        <option value="date-desc">Date: Newest</option>
+        <option value="date-asc">Date: Oldest</option>
+        <option value="score-asc">Score: Low→High</option>
+        <option value="score-desc">Score: High→Low</option>
+      </select>
     </div>
     <div id="roundsListMsg" style="font-size:13px;color:#888;min-height:20px;text-align:center;"></div>
     <div id="roundsList" style="width:100%;"></div>
@@ -214,7 +220,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <div id="homePage" class="page active" style="justify-content:center;">
   <div style="font-size:32px;font-weight:800;letter-spacing:-0.5px;">Blake Kokal Golf</div>
-  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.4.2</div>
+  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.5.2</div>
   <div id="homeAuthStatus" style="font-size:13px;color:#888;margin-bottom:16px;"></div>
   <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;">
     <button onclick="goToNewRound()" style="height:56px;font-size:16px;font-weight:700;background:#2E7D32;border-radius:12px;">⛳ Enter New Round</button>
@@ -1785,7 +1791,7 @@ function renderSummary(){
   sumPar.innerText=totalPar;
   const d=totalStrokes-totalPar;
   sumToPar.innerText=d===0?'E':`${d>0?'+':''}${d}`;
-  const dt=new Date(roundDate.value);
+  const dt=new Date(roundDate.value + 'T12:00:00');
   roundMeta.innerText=`${playerName.value||'Player'} · ${courseName.value||'Course'} · ${dt.getMonth()+1}/${dt.getDate()}/${dt.getFullYear()} · ${document.getElementById('roundType').value}`;
 
   fwHitS.innerText=fwHit;fwOppS.innerText=fwOpp;fwPctS.innerText=fwOpp?Math.round(fwHit/fwOpp*100):0;
@@ -1882,13 +1888,13 @@ function renderSummary(){
 
 function formatDateForDisplay(dateStr){
   if(!dateStr) return '';
-  const d = new Date(dateStr);
+  const d = new Date(dateStr + 'T12:00:00');
   return `${d.getMonth()+1}/${d.getDate()}/${d.getFullYear()}`;
 }
 
 function formatDateForFilename(dateStr){
   if(!dateStr) return 'round';
-  const d = new Date(dateStr);
+  const d = new Date(dateStr + 'T12:00:00');
   return `${d.getMonth()+1}-${d.getDate()}-${d.getFullYear()}`;
 }
 
@@ -3635,6 +3641,7 @@ async function loadMyRounds() {
   document.getElementById('roundFilterType').value = 'all';
   document.getElementById('roundFilterHoles').value = 'all';
   document.getElementById('roundFilterTime').value = 'all';
+  document.getElementById('roundSortBy').value = 'date-desc';
   
   filterRoundsList();
 }
@@ -3646,6 +3653,7 @@ function filterRoundsList() {
   var typeFilter = document.getElementById('roundFilterType').value;
   var holesFilter = document.getElementById('roundFilterHoles').value;
   var timeFilter = document.getElementById('roundFilterTime').value;
+  var sortBy = document.getElementById('roundSortBy').value;
   
   var now = new Date();
   var cutoff = null;
@@ -3671,6 +3679,20 @@ function filterRoundsList() {
       if (rd < cutoff) return false;
     }
     return true;
+  });
+  
+  // Sort the filtered results
+  filtered.sort(function(a, b) {
+    if (sortBy === 'date-desc') {
+      return new Date(b.round_date) - new Date(a.round_date);
+    } else if (sortBy === 'date-asc') {
+      return new Date(a.round_date) - new Date(b.round_date);
+    } else if (sortBy === 'score-asc') {
+      return a.score - b.score;
+    } else if (sortBy === 'score-desc') {
+      return b.score - a.score;
+    }
+    return 0;
   });
   
   var msg = document.getElementById('roundsListMsg');
@@ -4647,8 +4669,12 @@ function parseExcelRound(wb) {
 function parseImportDate(val) {
   // Handle Excel date serial number
   if (typeof val === 'number') {
-    var d = new Date((val - 25569) * 86400 * 1000);
-    return d.toISOString().split('T')[0];
+    // Excel serial date to YYYY-MM-DD without timezone issues
+    var d = new Date((val - 25569) * 86400 * 1000 + 43200000); // Add 12 hours to avoid timezone shift
+    var yr = d.getUTCFullYear();
+    var mo = String(d.getUTCMonth() + 1).padStart(2, '0');
+    var dy = String(d.getUTCDate()).padStart(2, '0');
+    return yr + '-' + mo + '-' + dy;
   }
   // Handle string dates
   var s = String(val).trim();
@@ -5271,21 +5297,34 @@ function showFullStats() {
   
   var player = document.getElementById('playerName').value || 'Player';
   var course = document.getElementById('courseName').value || 'Course';
-  var dt = new Date(document.getElementById('roundDate').value);
+  var dt = new Date(document.getElementById('roundDate').value + 'T12:00:00');
   var dateStr = (dt.getMonth()+1)+'/'+dt.getDate()+'/'+dt.getFullYear();
   var d = totalStrokes - totalPar;
   var toParStr = d===0?'E':(d>0?'+':'')+d;
   
   document.getElementById('fullStatsSubject').textContent = player+' \u00b7 '+course+' \u00b7 '+dateStr+' \u00b7 '+totalStrokes+' ('+toParStr+')';
   
-  // Build tab buttons
+  // Build tab buttons with handicap selector
   var tabNames = ['Scoring','Strokes Gained','Off The Tee','Approach','Short Game','Putting','Play by Play'];
-  var tabsHtml = '<span style="font-size:12px;color:#aaa;">View:</span>';
+  var tabsHtml = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;">';
+  tabsHtml += '<span style="font-size:12px;color:#aaa;">View:</span>';
   tabsHtml += '<select id="fstSelect" onchange="showFullStatTab(parseInt(this.value))" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 10px;font-size:13px;max-width:none;width:auto;">';
   for (var i = 0; i < tabNames.length; i++) {
     tabsHtml += '<option value="'+i+'">'+tabNames[i]+'</option>';
   }
   tabsHtml += '</select>';
+  tabsHtml += '<span style="font-size:12px;color:#aaa;">vs:</span>';
+  tabsHtml += '<select id="fstHandicapSelect" onchange="changeFullStatsHandicap(this.value)" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 10px;font-size:13px;max-width:none;width:auto;">';
+  tabsHtml += '<option value="pro"'+(hcp==='pro'?' selected':'')+'>Tour Pro</option>';
+  tabsHtml += '<option value="0"'+(hcp==='0'?' selected':'')+'>Scratch</option>';
+  tabsHtml += '<option value="5"'+(hcp==='5'?' selected':'')+'>5 HCP</option>';
+  tabsHtml += '<option value="10"'+(hcp==='10'?' selected':'')+'>10 HCP</option>';
+  tabsHtml += '<option value="15"'+(hcp==='15'?' selected':'')+'>15 HCP</option>';
+  tabsHtml += '<option value="20"'+(hcp==='20'?' selected':'')+'>20 HCP</option>';
+  tabsHtml += '<option value="25"'+(hcp==='25'?' selected':'')+'>25 HCP</option>';
+  tabsHtml += '<option value="30"'+(hcp==='30'?' selected':'')+'>30 HCP</option>';
+  tabsHtml += '</select>';
+  tabsHtml += '</div>';
   document.getElementById('fullStatsTabs').innerHTML = tabsHtml;
   
   // Helpers
@@ -5516,7 +5555,7 @@ function showFullStats() {
   var pR=[];puttRangesF.forEach(function(r){pR.push([r.l,r.t>0?r.m+'/'+r.t:'0/0',r.t>0?Math.round(r.m/r.t*100)+'%':'\u2013']);});
   t5+=tbl(['Distance','Made/Total','Make %'],pR);
   t5+=hdr('HOLE BY HOLE');
-  var phRows=[];allHoles.forEach(function(h4){if(h4.firstPuttDist){phRows.push([''+h4.hole,h4.firstPuttDist+' ft',''+(h4.putts||0),h4.expectedPutts?h4.expectedPutts.toFixed(2):'N/A','<span style="color:'+sgC(h4.sgPutting||0)+'">'+sgFmt(h4.sgPutting||0)+'</span>']);}});
+  var phRows=[];allHoles.forEach(function(h4){if(h4.firstPuttDist){var expPutts=getExpectedPutts(h4.firstPuttDist,hcp);phRows.push([''+h4.hole,h4.firstPuttDist+' ft',''+(h4.putts||0),expPutts.toFixed(2),'<span style="color:'+sgC(h4.sgPutting||0)+'">'+sgFmt(h4.sgPutting||0)+'</span>']);}});
   t5+=tbl(['#','1st Putt','Putts','Exp','SG'],phRows);
   tabs.push(t5);
   
@@ -5575,8 +5614,11 @@ function showFullStats() {
         if(s.lie==='WATER'||s.lie==='OB'||s.lie==='RECOVERY'){
           var nxR2=null;for(var ni2=idx+1;ni2<(h5.shots||[]).length;ni2++){var ns2=(h5.shots||[])[ni2];if(ns2.lie!=='PENALTY'&&ns2.lie!=='WATER'&&ns2.lie!=='OB'&&ns2.lie!=='RECOVERY'){nxR2=ns2;break;}}
           if(nxR2&&nxR2.distanceAfter!=null)rem=nxR2.distanceAfter+' yds';
-        }else if(s.distanceAfter!=null){if((nextShot&&nextShot.isPutt)||s.isPutt)rem=s.distanceAfter+' ft';else rem=s.distanceAfter+' yds';}
-        else if(nextShot){if(nextShot.isPutt)rem=nextShot.distanceBefore!=null?nextShot.distanceBefore+' ft':'';else rem=nextShot.distanceBefore!=null?nextShot.distanceBefore+' yds':'';}
+        }else if(s.lie==='GREEN'&&nextShot&&(nextShot.lie==='GREEN'||nextShot.lie==='HOLED')){
+          // Shot landed on green and next shot is a putt - use nextShot.distanceBefore as feet
+          rem=nextShot.distanceBefore!=null?nextShot.distanceBefore+' ft':'';
+        }else if(s.distanceAfter!=null){if(s.isPutt)rem=s.distanceAfter+' ft';else rem=s.distanceAfter+' yds';}
+        else if(nextShot){if(nextShot.lie==='GREEN'||nextShot.lie==='HOLED')rem=nextShot.distanceBefore!=null?nextShot.distanceBefore+' ft':'';else rem=nextShot.distanceBefore!=null?nextShot.distanceBefore+' yds':'';}
         if(s.isPutt)desc='Shot '+s.shotNum+' - '+shotDist+' putt to '+rem+' from hole';
         else desc='Shot '+s.shotNum+' - '+shotDist+' to '+endLie+', '+rem+' to hole';}
       var sgVal=s.sg||0;
@@ -5595,11 +5637,386 @@ function showFullStats() {
   show('fullStatsPage');
 }
 
+function refreshFullStats(preserveTab) {
+  var hcp = document.getElementById('summaryHandicapSelect').value || 'pro';
+  var hcpLabels = {'pro':'Tour Pro','0':'Scratch','5':'5 HCP','10':'10 HCP','15':'15 HCP','20':'20 HCP','25':'25 HCP','30':'30 HCP'};
+  var hcpLabel = hcpLabels[hcp] || hcp;
+  
+  var player = document.getElementById('playerName').value || 'Player';
+  var course = document.getElementById('courseName').value || 'Course';
+  var dt = new Date(document.getElementById('roundDate').value + 'T12:00:00');
+  var dateStr = (dt.getMonth()+1)+'/'+dt.getDate()+'/'+dt.getFullYear();
+  var d = totalStrokes - totalPar;
+  var toParStr = d===0?'E':(d>0?'+':'')+d;
+  
+  document.getElementById('fullStatsSubject').textContent = player+' \u00b7 '+course+' \u00b7 '+dateStr+' \u00b7 '+totalStrokes+' ('+toParStr+')';
+  
+  // Build tab buttons with handicap selector
+  var tabNames = ['Scoring','Strokes Gained','Off The Tee','Approach','Short Game','Putting','Play by Play'];
+  var tabsHtml = '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:center;">';
+  tabsHtml += '<span style="font-size:12px;color:#aaa;">View:</span>';
+  tabsHtml += '<select id="fstSelect" onchange="showFullStatTab(parseInt(this.value))" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 10px;font-size:13px;max-width:none;width:auto;">';
+  for (var i = 0; i < tabNames.length; i++) {
+    tabsHtml += '<option value="'+i+'"'+(i===preserveTab?' selected':'')+'>'+tabNames[i]+'</option>';
+  }
+  tabsHtml += '</select>';
+  tabsHtml += '<span style="font-size:12px;color:#aaa;">vs:</span>';
+  tabsHtml += '<select id="fstHandicapSelect" onchange="changeFullStatsHandicap(this.value)" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 10px;font-size:13px;max-width:none;width:auto;">';
+  tabsHtml += '<option value="pro"'+(hcp==='pro'?' selected':'')+'>Tour Pro</option>';
+  tabsHtml += '<option value="0"'+(hcp==='0'?' selected':'')+'>Scratch</option>';
+  tabsHtml += '<option value="5"'+(hcp==='5'?' selected':'')+'>5 HCP</option>';
+  tabsHtml += '<option value="10"'+(hcp==='10'?' selected':'')+'>10 HCP</option>';
+  tabsHtml += '<option value="15"'+(hcp==='15'?' selected':'')+'>15 HCP</option>';
+  tabsHtml += '<option value="20"'+(hcp==='20'?' selected':'')+'>20 HCP</option>';
+  tabsHtml += '<option value="25"'+(hcp==='25'?' selected':'')+'>25 HCP</option>';
+  tabsHtml += '<option value="30"'+(hcp==='30'?' selected':'')+'>30 HCP</option>';
+  tabsHtml += '</select>';
+  tabsHtml += '</div>';
+  document.getElementById('fullStatsTabs').innerHTML = tabsHtml;
+  
+  // Helpers
+  function sgFmt(v) { return v >= 0 ? '+' + v.toFixed(2) : v.toFixed(2); }
+  function sgC(v) { return v >= 0 ? '#66bb6a' : '#ef5350'; }
+  function hdr(t) { return '<div style="font-size:14px;font-weight:800;color:#2E7D32;margin:14px 0 4px;border-bottom:2px solid #2E7D32;padding-bottom:2px;">'+t+'</div>'; }
+  function row(l,v,s) { return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #2a2a2a;"><span style="color:#ccc;">'+l+'</span><span style="font-weight:700;">'+v+(s?' <span style="font-size:11px;color:#888;">'+s+'</span>':'')+'</span></div>'; }
+  function sgRow(l,v,s) { return '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #2a2a2a;"><span style="color:#ccc;">'+l+'</span><span style="font-weight:700;color:'+sgC(v)+';">'+sgFmt(v)+(s?' <span style="font-size:11px;color:#888;">'+s+'</span>':'')+'</span></div>'; }
+  function tbl(headers,rows) { var h='<div style="overflow-x:auto;margin:4px 0;"><table style="width:100%;font-size:12px;border-collapse:collapse;"><tr>';headers.forEach(function(c){h+='<td style="padding:4px 6px;font-weight:700;color:#aaa;border-bottom:1px solid #444;">'+c+'</td>';});h+='</tr>';rows.forEach(function(r){h+='<tr>';r.forEach(function(c){h+='<td style="padding:3px 6px;border-bottom:1px solid #2a2a2a;">'+c+'</td>';});h+='</tr>';});return h+'</table></div>';}
+  function pct(n,t){return t>0?Math.round(n/t*100)+'%':'0%';}
+  function davg(arr){if(!arr||arr.length===0)return 0;return Math.round(arr.reduce(function(a,b){return a+b;},0)/arr.length);}
+  
+  // Pre-calculate all stats from allHoles
+  var eagles=0,birdies=0,pars2=0,bogeys=0,dblPlus=0;
+  allHoles.forEach(function(h){ var diff=h.score-h.par; if(diff<=-2)eagles++;else if(diff===-1)birdies++;else if(diff===0)pars2++;else if(diff===1)bogeys++;else dblPlus++; });
+  
+  // Drives
+  var driveDetails=[], longestDr=0, shortestDr=999;
+  allHoles.forEach(function(h){
+    if((h.par===4||h.par===5)&&h.shots.length>0){
+      var ts=h.shots[0];
+      if(ts.lie!=='PENALTY'&&ts.lie!=='WATER'&&ts.lie!=='OB'){
+        var dd=h.yards-(ts.distanceAfter||0);
+        if(ts.lie==='RECOVERY'){dd=h.yards-(ts.distanceAfter||0);}
+        if(dd>0){driveDetails.push({hole:h.hole,dist:dd,lie:ts.lie});if(dd>longestDr)longestDr=dd;if(dd<shortestDr)shortestDr=dd;}
+      }else if(ts.lie==='WATER'||ts.lie==='OB'){
+        for(var si=1;si<h.shots.length;si++){var rs=h.shots[si];if(rs.lie!=='PENALTY'){var dd2=rs.distanceBefore-(rs.distanceAfter||0);if(dd2>0){driveDetails.push({hole:h.hole,dist:dd2,lie:rs.lie,rehit:true});if(dd2>longestDr)longestDr=dd2;if(dd2<shortestDr)shortestDr=dd2;}break;}}
+      }
+    }
+  });
+  var avgDrive=driveDetails.length>0?Math.round(driveDetails.reduce(function(a,b){return a+b.dist;},0)/driveDetails.length):0;
+  if(shortestDr===999)shortestDr=0;
+  
+  // FW stats
+  var fwHitF=0,fwOppF=0,fwLeftF=0,fwRightF=0;
+  allHoles.forEach(function(h){if((h.par===4||h.par===5)&&h.shots.length>0){fwOppF++;var ts=h.shots[0];if(ts.lie==='FAIRWAY')fwHitF++;else if(ts.lie==='ROUGH_LEFT'||ts.lie==='BUNKER_LEFT')fwLeftF++;else if(ts.lie==='ROUGH_RIGHT'||ts.lie==='BUNKER_RIGHT')fwRightF++;}});
+  
+  // GIR and approach
+  var gir=0,girPutts=0,girFirstPuttDist=0;
+  allHoles.forEach(function(h){
+    var shotsToGreen=0;
+    for(var i=0;i<h.shots.length;i++){if(h.shots[i].lie==='GREEN'){shotsToGreen=i+1;break;}}
+    if(shotsToGreen>0&&shotsToGreen<=h.par-2){gir++;girPutts+=h.putts||0;if(h.firstPuttDist)girFirstPuttDist+=h.firstPuttDist;}
+  });
+  
+  // Missed green directions
+  var missShort=0,missLong=0,missLeft=0,missRight=0;
+  allHoles.forEach(function(h){if(h.missedGreenDir){if(h.missedGreenDir==='SHORT')missShort++;else if(h.missedGreenDir==='LONG')missLong++;else if(h.missedGreenDir==='LEFT')missLeft++;else if(h.missedGreenDir==='RIGHT')missRight++;}});
+  
+  // Approach by distance ranges
+  var appRangesF=[{l:'<100',s:[]},{l:'100-125',s:[]},{l:'125-150',s:[]},{l:'150-175',s:[]},{l:'175-200',s:[]},{l:'>200',s:[]}];
+  allHoles.forEach(function(h){h.shots.forEach(function(s,i){if(s.lie!=='GREEN'&&s.lie!=='PENALTY'&&s.lie!=='WATER'&&s.lie!=='OB'){var ns=h.shots[i+1];if(ns&&ns.lie==='GREEN'){var d=s.distanceBefore||0;var prox=ns.distanceBefore||0;if(d<100)appRangesF[0].s.push(prox);else if(d<125)appRangesF[1].s.push(prox);else if(d<150)appRangesF[2].s.push(prox);else if(d<175)appRangesF[3].s.push(prox);else if(d<200)appRangesF[4].s.push(prox);else appRangesF[5].s.push(prox);}}});});
+  
+  // Approach by par
+  var par3AppD=[],par3AppP=[],par4AppD=[],par4AppP=[],par5AppD=[],par5AppP=[];
+  allHoles.forEach(function(h){if(h.par===3&&h.shots.length>0){par3AppD.push(h.yards);var ns=h.shots[0];if(ns&&ns.lie==='GREEN')par3AppP.push(ns.distanceAfter||0);}});
+  allHoles.forEach(function(h){if(h.par===4){h.shots.forEach(function(s,i){if(i>0&&s.lie!=='GREEN'&&s.lie!=='PENALTY'){var ns=h.shots[i+1];if(ns&&ns.lie==='GREEN'){par4AppD.push(s.distanceBefore||0);par4AppP.push(ns.distanceBefore||0);}}});}});
+  allHoles.forEach(function(h){if(h.par===5){h.shots.forEach(function(s,i){if(i>0&&s.lie!=='GREEN'&&s.lie!=='PENALTY'){var ns=h.shots[i+1];if(ns&&ns.lie==='GREEN'){par5AppD.push(s.distanceBefore||0);par5AppP.push(ns.distanceBefore||0);}}});}});
+  
+  // Penalties
+  var ottPenF=0,appPenF=0,sgPenF=0;
+  allHoles.forEach(function(h){h.shots.forEach(function(s,i){if(s.lie==='PENALTY'||s.lie==='WATER'||s.lie==='OB'){if(i===0)ottPenF++;else if((s.distanceBefore||0)>50)appPenF++;else sgPenF++;}});});
+  
+  // Scrambling
+  var scr=0,scrOpp=0;
+  allHoles.forEach(function(h){if(h.scrambleOpp){scrOpp++;if(h.scrambled)scr++;}});
+  
+  // Bunker
+  var bun=0,bunOpp=0,bunkerProxF=[];
+  allHoles.forEach(function(h){h.shots.forEach(function(s,i){if(s.lie&&s.lie.indexOf('BUNKER')>=0&&(s.distanceBefore||0)<=50){bunOpp++;var ns=h.shots[i+1];if(ns){if(ns.lie==='GREEN'){bunkerProxF.push(ns.distanceBefore||0);if(h.putts===1)bun++;}}}});});
+  
+  // Short game by distance
+  var shortRangesF=[{l:'<10',s:[]},{l:'10-20',s:[]},{l:'20-30',s:[]},{l:'30-50',s:[]}];
+  allHoles.forEach(function(h){h.shots.forEach(function(s,i){if(s.lie!=='GREEN'&&s.lie!=='PENALTY'&&(s.distanceBefore||0)<=50){var ns=h.shots[i+1];if(ns&&ns.lie==='GREEN'){var d=s.distanceBefore||0;var prox=ns.distanceBefore||0;if(d<10)shortRangesF[0].s.push(prox);else if(d<20)shortRangesF[1].s.push(prox);else if(d<30)shortRangesF[2].s.push(prox);else shortRangesF[3].s.push(prox);}}});});
+  
+  // Putting
+  var totalPutts=0,onePuttMade=0,twoPuttsF=0,threePlusPutts=0,longestMadeP=0;
+  var firstPuttDistsF=[];
+  allHoles.forEach(function(h){totalPutts+=(h.putts||0);if(h.putts===1)onePuttMade++;else if(h.putts===2)twoPuttsF++;else if(h.putts>=3)threePlusPutts++;if(h.firstPuttDist)firstPuttDistsF.push(h.firstPuttDist);});
+  var avgFirstPuttF=davg(firstPuttDistsF);
+  
+  // Putt ranges
+  var puttRangesF=[{l:'0-3 ft',m:0,t:0},{l:'3-5 ft',m:0,t:0},{l:'5-10 ft',m:0,t:0},{l:'10-15 ft',m:0,t:0},{l:'15-20 ft',m:0,t:0},{l:'20-30 ft',m:0,t:0},{l:'30+ ft',m:0,t:0}];
+  allHoles.forEach(function(h){(h.shots||[]).forEach(function(s,i){if(s.lie==='GREEN'){var d=s.distanceBefore||0;var made=(h.shots[i+1]&&h.shots[i+1].lie==='HOLED')||(i===h.shots.length-1);var rIdx=d<=3?0:d<=5?1:d<=10?2:d<=15?3:d<=20?4:d<=30?5:6;puttRangesF[rIdx].t++;if(made){puttRangesF[rIdx].m++;if(d>longestMadeP)longestMadeP=d;}}});});
+  
+  // Build tabs
+  var tabs=[];
+  
+  // TAB 0: SCORING
+  var t0='';
+  t0+=hdr('ROUND INFO');
+  t0+=row('Player',player);
+  t0+=row('Course',course);
+  t0+=row('Date',dateStr);
+  t0+=row('Handicap Comparison',hcpLabel);
+  t0+=row('Round Type',document.getElementById('roundType').value||'Casual');
+  
+  // SCORECARD - with yardages and totals
+  t0+=hdr('SCORECARD');
+  var front9=allHoles.slice(0,Math.min(9,allHoles.length));
+  var back9h=allHoles.slice(9);
+  
+  // Front 9
+  var f9Par=0,f9Score=0,f9Putts=0,f9Yds=0;
+  front9.forEach(function(h){f9Par+=h.par;f9Score+=h.score;f9Putts+=(h.putts||0);f9Yds+=h.yards;});
+  function scColor(h){var diff=h.score-h.par;return diff<=-2?'#1565C0':diff===-1?'#2E7D32':diff===0?'transparent':diff===1?'#E65100':'#B71C1C';}
+  function scSpan(h){return'<span style="background:'+scColor(h)+';padding:1px 4px;border-radius:3px;">'+h.score+'</span>';}
+  
+  var fHeaders=[''].concat(front9.map(function(h){return''+h.hole;})).concat(['Out']);
+  var fYds=['Yds'].concat(front9.map(function(h){return''+h.yards;})).concat([''+f9Yds]);
+  var fPar=['Par'].concat(front9.map(function(h){return''+h.par;})).concat([''+f9Par]);
+  var fScr=['Scr'].concat(front9.map(function(h){return scSpan(h);})).concat(['<b>'+f9Score+'</b>']);
+  var fPtt=['Ptt'].concat(front9.map(function(h){return''+(h.putts||0);})).concat([''+f9Putts]);
+  t0+=tbl(fHeaders,[fYds,fPar,fScr,fPtt]);
+  
+  // Back 9
+  if(back9h.length>0){
+    var b9Par=0,b9Score=0,b9Putts=0,b9Yds=0;
+    back9h.forEach(function(h){b9Par+=h.par;b9Score+=h.score;b9Putts+=(h.putts||0);b9Yds+=h.yards;});
+    var bHeaders=[''].concat(back9h.map(function(h){return''+h.hole;})).concat(['In']);
+    var bYds=['Yds'].concat(back9h.map(function(h){return''+h.yards;})).concat([''+b9Yds]);
+    var bPar=['Par'].concat(back9h.map(function(h){return''+h.par;})).concat([''+b9Par]);
+    var bScr=['Scr'].concat(back9h.map(function(h){return scSpan(h);})).concat(['<b>'+b9Score+'</b>']);
+    var bPtt=['Ptt'].concat(back9h.map(function(h){return''+(h.putts||0);})).concat([''+b9Putts]);
+    t0+=tbl(bHeaders,[bYds,bPar,bScr,bPtt]);
+    
+    // Totals row
+    t0+='<div style="display:flex;justify-content:space-around;padding:6px 0;font-size:13px;font-weight:700;border-top:2px solid #444;margin-top:2px;">';
+    t0+='<span>Total: '+(f9Yds+b9Yds)+' yds</span>';
+    t0+='<span>Par '+(f9Par+b9Par)+'</span>';
+    var totDiff=(f9Score+b9Score)-(f9Par+b9Par);
+    t0+='<span style="color:'+(totDiff>0?'#ef5350':totDiff<0?'#66bb6a':'#aaa')+'">'+(f9Score+b9Score)+' ('+(totDiff>0?'+':'')+totDiff+')</span>';
+    t0+='<span>'+(f9Putts+b9Putts)+' putts</span>';
+    t0+='</div>';
+  }
+  
+  t0+=hdr('SCORE BREAKDOWN');
+  t0+=row('Eagles',''+eagles,pct(eagles,totalHoles));
+  t0+=row('Birdies',''+birdies,pct(birdies,totalHoles));
+  t0+=row('Pars',''+pars2,pct(pars2,totalHoles));
+  t0+=row('Bogeys',''+bogeys,pct(bogeys,totalHoles));
+  t0+=row('Double+',''+dblPlus,pct(dblPlus,totalHoles));
+  t0+=hdr('BY PAR');
+  var p3s=[],p4s=[],p5s=[];
+  allHoles.forEach(function(h){if(h.par===3)p3s.push(h.score-h.par);else if(h.par===4)p4s.push(h.score-h.par);else p5s.push(h.score-h.par);});
+  function avgToPar(arr){if(arr.length===0)return'N/A';var a=arr.reduce(function(x,y){return x+y;},0)/arr.length;return(a>=0?'+':'')+a.toFixed(2);}
+  t0+=row('Par 3 Avg',avgToPar(p3s),p3s.length+' holes');
+  t0+=row('Par 4 Avg',avgToPar(p4s),p4s.length+' holes');
+  t0+=row('Par 5 Avg',avgToPar(p5s),p5s.length+' holes');
+  tabs.push(t0);
+  
+  // TAB 1: STROKES GAINED
+  var t1='';
+  var sgT=sgOTTTotal+sgAPPTotal+sgARGTotal+sgPuttingTotal;
+  t1+=hdr('STROKES GAINED vs '+hcpLabel);
+  t1+=sgRow('Total SG',sgT);
+  t1+=sgRow('SG: Off The Tee',sgOTTTotal);
+  t1+=sgRow('SG: Approach',sgAPPTotal);
+  t1+=sgRow('SG: Around Green',sgARGTotal);
+  t1+=sgRow('SG: Putting',sgPuttingTotal);
+  t1+=hdr('SG BY HOLE');
+  var sgHoleRows=[];allHoles.forEach(function(h3){var ht=((h3.sgOTT||0)+(h3.sgAPP||0)+(h3.sgARG||0)+(h3.sgPutting||0));sgHoleRows.push([''+h3.hole,'Par '+h3.par,'<span style="color:'+sgC(ht)+'">'+sgFmt(ht)+'</span>','<span style="color:'+sgC(h3.sgOTT||0)+'">'+sgFmt(h3.sgOTT||0)+'</span>','<span style="color:'+sgC(h3.sgAPP||0)+'">'+sgFmt(h3.sgAPP||0)+'</span>','<span style="color:'+sgC(h3.sgARG||0)+'">'+sgFmt(h3.sgARG||0)+'</span>','<span style="color:'+sgC(h3.sgPutting||0)+'">'+sgFmt(h3.sgPutting||0)+'</span>']);});
+  t1+=tbl(['#','','Total','OTT','APP','ARG','Putt'],sgHoleRows);
+  tabs.push(t1);
+  
+  // TAB 2: OFF THE TEE
+  var t2='';
+  t2+=hdr('SG: OFF THE TEE vs '+hcpLabel);
+  t2+=sgRow('SG: Off The Tee',sgOTTTotal);
+  t2+=hdr('DRIVING');
+  t2+=row('Avg Distance',avgDrive+' yds',driveDetails.length+' drives');
+  t2+=row('Longest',longestDr+' yds');
+  t2+=row('Shortest',shortestDr+' yds');
+  t2+=hdr('ACCURACY');
+  t2+=row('Fairways Hit',fwHitF+'/'+fwOppF,pct(fwHitF,fwOppF));
+  t2+=row('Missed Left',''+fwLeftF,pct(fwLeftF,fwOppF));
+  t2+=row('Missed Right',''+fwRightF,pct(fwRightF,fwOppF));
+  t2+=hdr('PENALTIES');
+  t2+=row('OTT Penalties',''+ottPenF);
+  tabs.push(t2);
+  
+  // TAB 3: APPROACH
+  var t3='';
+  t3+=hdr('SG: APPROACH vs '+hcpLabel);
+  t3+=sgRow('SG: Approach',sgAPPTotal);
+  t3+=hdr('GREENS IN REGULATION');
+  t3+=row('GIR',gir+'/'+totalHoles,totalHoles?Math.round(gir/totalHoles*100)+'%':'0%');
+  t3+=row('Proximity when GIR',gir?Math.round(girFirstPuttDist/gir)+' ft':'N/A');
+  t3+=hdr('MISSED GREENS');
+  t3+=row('Short',''+missShort);t3+=row('Long',''+missLong);t3+=row('Left',''+missLeft);t3+=row('Right',''+missRight);
+  t3+=hdr('APPROACH BY DISTANCE');
+  var apR=[];appRangesF.forEach(function(r){if(r.s.length>0)apR.push([r.l+' yds',r.s.length+' shots',davg(r.s)+' ft']);});
+  t3+=tbl(['Distance','Shots','Avg Prox'],apR);
+  t3+=hdr('APPROACH BY PAR');
+  t3+=row('Par 3 Avg Distance',davg(par3AppD)+' yds',par3AppD.length+' shots');
+  t3+=row('Par 3 Avg Proximity',par3AppP.length>0?davg(par3AppP)+' ft':'N/A');
+  t3+=row('Par 4 Avg Distance',davg(par4AppD)+' yds',par4AppD.length+' shots');
+  t3+=row('Par 4 Avg Proximity',par4AppP.length>0?davg(par4AppP)+' ft':'N/A');
+  t3+=row('Par 5 Avg Distance',davg(par5AppD)+' yds',par5AppD.length+' shots');
+  t3+=row('Par 5 Avg Proximity',par5AppP.length>0?davg(par5AppP)+' ft':'N/A');
+  t3+=hdr('PENALTIES');
+  t3+=row('Approach Penalties',''+appPenF);
+  tabs.push(t3);
+  
+  // TAB 4: SHORT GAME
+  var t4='';
+  t4+=hdr('SG: AROUND THE GREEN vs '+hcpLabel);
+  t4+=sgRow('SG: Around Green',sgARGTotal);
+  t4+=hdr('SCRAMBLING');
+  t4+=row('Scrambling',scr+'/'+scrOpp,scrOpp?Math.round(scr/scrOpp*100)+'%':'0%');
+  t4+=row('Bunker Saves',bun+'/'+bunOpp,bunOpp?Math.round(bun/bunOpp*100)+'%':'0%');
+  t4+=row('Avg Bunker Proximity',bunkerProxF.length>0?davg(bunkerProxF)+' ft':'N/A',bunkerProxF.length+' shots');
+  t4+=hdr('SHORT GAME BY DISTANCE');
+  var sgR2=[];shortRangesF.forEach(function(r){if(r.s.length>0)sgR2.push([r.l+' yds',r.s.length+' shots',davg(r.s)+' ft']);});
+  t4+=tbl(['Distance','Shots','Avg Prox'],sgR2);
+  t4+=hdr('PENALTIES');
+  t4+=row('Short Game Penalties',''+sgPenF);
+  tabs.push(t4);
+  
+  // TAB 5: PUTTING
+  var t5='';
+  t5+=hdr('SG: PUTTING vs '+hcpLabel);
+  t5+=sgRow('SG: Putting',sgPuttingTotal);
+  t5+=hdr('PUTTING SUMMARY');
+  t5+=row('Total Putts',''+totalPutts,(totalPutts/totalHoles).toFixed(1)+'/hole');
+  t5+=row('Putts per GIR',gir?(girPutts/gir).toFixed(1):'N/A');
+  t5+=row('Avg First Putt Dist',avgFirstPuttF+' ft');
+  t5+=hdr('PERFORMANCE');
+  t5+=row('One-Putts',''+onePuttMade,pct(onePuttMade,totalHoles));
+  t5+=row('Two-Putts',''+twoPuttsF,pct(twoPuttsF,totalHoles));
+  t5+=row('Three-Putts',''+threePlusPutts,pct(threePlusPutts,totalHoles));
+  t5+=row('Longest Made',''+longestMadeP+' ft');
+  t5+=hdr('MAKE % BY DISTANCE');
+  var pR=[];puttRangesF.forEach(function(r){pR.push([r.l,r.t>0?r.m+'/'+r.t:'0/0',r.t>0?Math.round(r.m/r.t*100)+'%':'\u2013']);});
+  t5+=tbl(['Distance','Made/Total','Make %'],pR);
+  t5+=hdr('HOLE BY HOLE');
+  var phRows=[];allHoles.forEach(function(h4){if(h4.firstPuttDist){var expPutts=getExpectedPutts(h4.firstPuttDist,hcp);phRows.push([''+h4.hole,h4.firstPuttDist+' ft',''+(h4.putts||0),expPutts.toFixed(2),'<span style="color:'+sgC(h4.sgPutting||0)+'">'+sgFmt(h4.sgPutting||0)+'</span>']);}});
+  t5+=tbl(['#','1st Putt','Putts','Exp','SG'],phRows);
+  tabs.push(t5);
+  
+  // TAB 6: PLAY BY PLAY
+  var t6='';
+  allHoles.forEach(function(h5){
+    var diff=h5.score-h5.par;
+    var scoreLabel=diff<=-2?'Eagle':diff===-1?'Birdie':diff===0?'Par':diff===1?'Bogey':diff===2?'Double':'+'+diff;
+    var scoreBg=diff<=-2?'#1565C0':diff===-1?'#2E7D32':diff===0?'#333':diff===1?'#E65100':'#B71C1C';
+    t6+='<div style="background:#1a1a1a;padding:6px 10px;border-bottom:1px solid #333;margin-bottom:2px;">';
+    t6+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;">';
+    t6+='<span style="font-weight:700;font-size:13px;">Hole '+h5.hole+' \u00b7 Par '+h5.par+' \u00b7 '+h5.yards+' yds</span>';
+    t6+='<span style="font-size:12px;font-weight:700;background:'+scoreBg+';padding:2px 8px;border-radius:4px;">'+h5.score+' ('+scoreLabel+')</span>';
+    t6+='</div>';
+    (h5.shots||[]).forEach(function(s,idx){
+      var nextShot=(h5.shots||[])[idx+1];
+      var shotNum=idx+1;
+      var distDesc='';
+      
+      // PENALTY shots
+      if(s.lie==='PENALTY'){
+        distDesc='Penalty stroke';
+      }
+      // HOLED (final putt or hole-out)
+      else if(s.lie==='HOLED'){
+        var puttDist=s.distanceBefore||0;
+        distDesc=puttDist+' ft putt, in the hole';
+      }
+      // GREEN (putting)
+      else if(s.lie==='GREEN'){
+        var puttDist=s.distanceBefore||0;
+        var remaining=s.distanceAfter||0;
+        if(nextShot&&nextShot.lie==='HOLED'){
+          distDesc=puttDist+' ft putt, in the hole';
+        }else{
+          distDesc=puttDist+' ft putt to '+remaining+' ft from hole';
+        }
+      }
+      // Tee shot on par 4/5
+      else if(idx===0&&(h5.par===4||h5.par===5)){
+        var endLie=(s.lie||'unknown').toLowerCase().replace(/_/g,' ');
+        var driveDist=h5.yards-(s.distanceAfter||0);
+        var remaining=s.distanceAfter||0;
+        // Handle water/OB/recovery - find next real shot for drive distance
+        if(s.lie==='WATER'||s.lie==='OB'||s.lie==='RECOVERY'){
+          var nextReal=null;
+          for(var j=idx+1;j<h5.shots.length;j++){
+            var ns=h5.shots[j];
+            if(ns.lie!=='PENALTY'&&ns.lie!=='WATER'&&ns.lie!=='OB'&&ns.lie!=='RECOVERY'){
+              nextReal=ns;break;
+            }
+          }
+          if(nextReal&&nextReal.distanceAfter!=null){
+            driveDist=h5.yards-nextReal.distanceAfter;
+            remaining=nextReal.distanceAfter;
+          }
+        }
+        distDesc=driveDist+' yds to '+endLie+', '+remaining+' yds to hole';
+      }
+      // Par 3 tee shot or approach/chip shots
+      else{
+        var shotDist=s.distanceBefore||0;
+        var endLie=(s.lie||'unknown').toLowerCase().replace(/_/g,' ');
+        var remaining=s.distanceAfter||0;
+        // Check if THIS shot landed on green and next shot is a putt
+        if(s.lie==='GREEN'&&nextShot&&(nextShot.lie==='GREEN'||nextShot.lie==='HOLED')){
+          // Shot landed on green - use nextShot.distanceBefore as the first putt distance in feet
+          var puttDist=nextShot.distanceBefore||0;
+          distDesc=shotDist+' yds to '+endLie+', '+puttDist+' ft to hole';
+        }else if(nextShot&&(nextShot.lie==='GREEN'||nextShot.lie==='HOLED')){
+          // Next shot is a putt but this shot didn't land on green - show yards
+          distDesc=shotDist+' yds to '+endLie+', '+remaining+' yds to hole';
+        }else{
+          distDesc=shotDist+' yds to '+endLie+', '+remaining+' yds to hole';
+        }
+      }
+      
+      t6+='<div style="font-size:11px;color:#aaa;padding:1px 0;">Shot '+shotNum+' - '+distDesc+'</div>';
+    });
+    t6+='</div>';
+  });
+  tabs.push(t6);
+  
+  // Store tabs and update content
+  window._fullStatTabs = tabs;
+  document.getElementById('fullStatsContent').innerHTML = '<div id="fstContent">'+tabs[preserveTab||0]+'</div>';
+}
+
 function showFullStatTab(idx) {
   if (!window._fullStatTabs) return;
   document.getElementById('fstContent').innerHTML = window._fullStatTabs[idx];
   var sel = document.getElementById('fstSelect');
   if (sel) sel.value = idx;
+}
+
+function changeFullStatsHandicap(newHcp) {
+  // Update the summary handicap select to match
+  document.getElementById('summaryHandicapSelect').value = newHcp;
+  // Also sync the start-page dropdown
+  document.getElementById('playerHandicap').value = newHcp;
+  // Recalculate stats with new handicap
+  recalculateAllSG(newHcp);
+  // Get current tab
+  var currentTab = 0;
+  var sel = document.getElementById('fstSelect');
+  if (sel) currentTab = parseInt(sel.value) || 0;
+  // Refresh full stats keeping current tab
+  refreshFullStats(currentTab);
 }
 
 // Check auth on load
