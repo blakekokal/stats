@@ -202,7 +202,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
 <div id="homePage" class="page active" style="justify-content:center;">
   <div style="font-size:32px;font-weight:800;letter-spacing:-0.5px;">Blake Kokal Golf</div>
-  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.2.7</div>
+  <div style="font-size:12px;color:#666;margin-top:-4px;margin-bottom:20px;">v2.3.4</div>
   <div id="homeAuthStatus" style="font-size:13px;color:#888;margin-bottom:16px;"></div>
   <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:12px;">
     <button onclick="goToNewRound()" style="height:56px;font-size:16px;font-weight:700;background:#2E7D32;border-radius:12px;">⛳ Enter New Round</button>
@@ -1302,10 +1302,11 @@ function selectLie(lie){
       }
       girThisHole=true; // Mark that we hit GIR on this hole
     }else{
-      if(!girThisHole && !scrCountedThisHole){
+      // Only count scrambling if shot was from 50 yards or closer
+      if(!girThisHole && !scrCountedThisHole && approachDist <= 50){
         scrOpp++;
         scrCountedThisHole=true;
-        console.log('Not GIR, counted scrambling opp. scrOpp='+scrOpp);
+        console.log('Not GIR, shot from '+approachDist+' yds, counted scrambling opp. scrOpp='+scrOpp);
       }
     }
     
@@ -1349,12 +1350,7 @@ function selectLie(lie){
     if(lie==='MISS RIGHT') missRight++;
     if(lie==='MISS SHORT') missShort++;
     if(lie==='MISS LONG') missLong++;
-    // Count scrambling opportunity
-    if(!girThisHole && !scrCountedThisHole){
-      scrOpp++;
-      scrCountedThisHole=true;
-      console.log('Green miss - counted scrambling opp. scrOpp='+scrOpp);
-    }
+    // Don't count scrambling here - it's counted when player hits green from ≤50 yards
     shots++;
     currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:15,distanceAfter:null,isPutt:false,fwCounted:false,bunkerCounted:false});
     distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
@@ -1372,12 +1368,7 @@ function selectLie(lie){
       lastShot.bunkerCounted=true;
       console.log('bunOpp after: '+bunOpp);
     }
-    // GS bunker always counts as scrambling opportunity (missed green)
-    if(!girThisHole && !scrCountedThisHole){
-      scrOpp++;
-      scrCountedThisHole=true;
-      console.log('GS Bunker - counted scrambling opp. scrOpp='+scrOpp);
-    }
+    // Don't count scrambling here - it's counted when player hits green from ≤50 yards
     shots++;
     currentHoleShots.push({shotNum:shots,lie:null,distanceBefore:30,distanceAfter:null,isPutt:false,fwCounted:false,bunkerCounted:false});
     distanceTitle.innerText=`${ordinal(shots)} Shot Distance`;
@@ -1468,12 +1459,7 @@ function handleMissedGreen(direction){
   if(direction==='SHORT') missShort++;
   if(direction==='LONG') missLong++;
   
-  // Count scrambling opportunity
-  if(!girThisHole && !scrCountedThisHole){
-    scrOpp++;
-    scrCountedThisHole=true;
-    console.log('Green miss - counted scrambling opp. scrOpp='+scrOpp);
-  }
+  // Don't count scrambling here - it's counted when player hits green from ≤50 yards
   
   // Move to next shot with default 15 yards
   shots++;
@@ -1556,7 +1542,6 @@ function holeOut(){
   
   putts++;
   if(putts >= 3) threePlusPutts++;
-  if(girThisHole) girPutts += putts;
   if(firstPuttThisHole !== null){
     console.log('Adding to girFirstPuttDist:', firstPuttThisHole, ', was:', girFirstPuttDist);
     girFirstPuttDist += firstPuttThisHole;
@@ -1587,6 +1572,9 @@ function finishHole(){
   currentHoleData.score=holeStrokes;
   currentHoleData.putts=putts;
   currentHoleData.shots=currentHoleShots;
+  
+  // Add putts for GIR holes (only once at end of hole)
+  if(girThisHole) girPutts += putts;
   
   // Calculate Strokes Gained for each shot
   let holeSgOTT = 0, holeSgAPP = 0, holeSgARG = 0, holeSgPutt = 0;
@@ -2147,12 +2135,29 @@ function generateExcelWorkbook(){
   let longestDrive = 0;
   let shortestDrive = 999;
   allHoles.forEach(h=>{
-    if((h.par===4||h.par===5)&&h.shots.length>0&&h.shots[0].distanceAfter!=null&&h.shots[0].lie!=='WATER'&&h.shots[0].lie!=='OB'&&h.shots[0].lie!=='PENALTY'){
-      const driveDistance = h.yards - h.shots[0].distanceAfter;
-      drivingDistances.push(driveDistance);
-      driveDetails.push({hole: h.hole, distance: driveDistance, par: h.par, yards: h.yards});
-      if(driveDistance > longestDrive) longestDrive = driveDistance;
-      if(driveDistance < shortestDrive) shortestDrive = driveDistance;
+    if((h.par===4||h.par===5)&&h.shots.length>0){
+      const teeShot = h.shots[0];
+      let driveDistance = null;
+      
+      if(teeShot.lie==='WATER'||teeShot.lie==='OB'||teeShot.lie==='RECOVERY'){
+        // Find the re-hit shot after penalty
+        for(let j=1; j<h.shots.length; j++){
+          const s = h.shots[j];
+          if(s.lie!=='PENALTY'&&s.lie!=='WATER'&&s.lie!=='OB'&&s.lie!=='RECOVERY'&&s.distanceAfter!=null){
+            driveDistance = h.yards - s.distanceAfter;
+            break;
+          }
+        }
+      } else if(teeShot.distanceAfter!=null&&teeShot.lie!=='PENALTY'){
+        driveDistance = h.yards - teeShot.distanceAfter;
+      }
+      
+      if(driveDistance !== null){
+        drivingDistances.push(driveDistance);
+        driveDetails.push({hole: h.hole, distance: driveDistance, par: h.par, yards: h.yards});
+        if(driveDistance > longestDrive) longestDrive = driveDistance;
+        if(driveDistance < shortestDrive) shortestDrive = driveDistance;
+      }
     }
   });
   const avgDrive=drivingDistances.length?Math.round(drivingDistances.reduce((a,b)=>a+b,0)/drivingDistances.length):0;
@@ -2486,9 +2491,24 @@ function generateExcelWorkbook(){
       let shotDist = '';
       if(s.isPutt){
         if(s.distanceBefore != null) shotDist = s.distanceBefore + ' ft';
-      } else if(s.shotNum === 1 && (h.par === 4 || h.par === 5) && s.distanceAfter != null && s.lie !== 'WATER' && s.lie !== 'OB'){
+      } else if(s.shotNum === 1 && (h.par === 4 || h.par === 5) && s.distanceAfter != null && s.lie !== 'WATER' && s.lie !== 'OB' && s.lie !== 'RECOVERY'){
         const driveDist = h.yards - s.distanceAfter;
         shotDist = driveDist + ' yds';
+      } else if(s.shotNum === 1 && (h.par === 4 || h.par === 5) && (s.lie === 'WATER' || s.lie === 'OB' || s.lie === 'RECOVERY')){
+        // For water/OB/recovery tee shots, find the next non-penalty shot to calculate drive distance
+        let nextRealShot = null;
+        for(let j = idx + 1; j < h.shots.length; j++){
+          if(h.shots[j].lie !== 'PENALTY' && h.shots[j].lie !== 'WATER' && h.shots[j].lie !== 'OB' && h.shots[j].lie !== 'RECOVERY'){
+            nextRealShot = h.shots[j];
+            break;
+          }
+        }
+        if(nextRealShot && nextRealShot.distanceAfter != null){
+          const driveDist = h.yards - nextRealShot.distanceAfter;
+          shotDist = driveDist + ' yds';
+        } else {
+          shotDist = h.yards + ' yds';
+        }
       } else if(s.shotNum === 1){
         shotDist = h.yards + ' yds';
       } else if(s.distanceBefore != null){
@@ -2499,7 +2519,19 @@ function generateExcelWorkbook(){
         shotDesc = `Shot ${s.shotNum} - ${shotDist} putt, in the hole`;
       } else {
         let remaining = '';
-        if(s.distanceAfter != null){
+        // For water/OB/recovery tee shots, get remaining from next real shot
+        if(s.shotNum === 1 && (s.lie === 'WATER' || s.lie === 'OB' || s.lie === 'RECOVERY')){
+          let nextRealShot = null;
+          for(let j = idx + 1; j < h.shots.length; j++){
+            if(h.shots[j].lie !== 'PENALTY' && h.shots[j].lie !== 'WATER' && h.shots[j].lie !== 'OB' && h.shots[j].lie !== 'RECOVERY'){
+              nextRealShot = h.shots[j];
+              break;
+            }
+          }
+          if(nextRealShot && nextRealShot.distanceAfter != null){
+            remaining = nextRealShot.distanceAfter + ' yds';
+          }
+        } else if(s.distanceAfter != null){
           if(nextShot && nextShot.isPutt) remaining = s.distanceAfter + ' ft';
           else if(s.isPutt) remaining = s.distanceAfter + ' ft';
           else remaining = s.distanceAfter + ' yds';
@@ -2882,10 +2914,26 @@ function generateCSV(){
   let drivingDistances=[];
   let driveDetailsCSV=[];
   allHoles.forEach(h=>{
-    if((h.par===4||h.par===5)&&h.shots.length>0&&h.shots[0].distanceAfter!=null){
-      const driveDistance = h.yards - h.shots[0].distanceAfter;
-      drivingDistances.push(driveDistance);
-      driveDetailsCSV.push({hole: h.hole, distance: driveDistance, par: h.par, yards: h.yards});
+    if((h.par===4||h.par===5)&&h.shots.length>0){
+      const teeShot = h.shots[0];
+      let driveDistance = null;
+      
+      if(teeShot.lie==='WATER'||teeShot.lie==='OB'||teeShot.lie==='RECOVERY'){
+        for(let j=1; j<h.shots.length; j++){
+          const s = h.shots[j];
+          if(s.lie!=='PENALTY'&&s.lie!=='WATER'&&s.lie!=='OB'&&s.lie!=='RECOVERY'&&s.distanceAfter!=null){
+            driveDistance = h.yards - s.distanceAfter;
+            break;
+          }
+        }
+      } else if(teeShot.distanceAfter!=null&&teeShot.lie!=='PENALTY'){
+        driveDistance = h.yards - teeShot.distanceAfter;
+      }
+      
+      if(driveDistance !== null){
+        drivingDistances.push(driveDistance);
+        driveDetailsCSV.push({hole: h.hole, distance: driveDistance, par: h.par, yards: h.yards});
+      }
     }
   });
   const avgDrive=drivingDistances.length?Math.round(drivingDistances.reduce((a,b)=>a+b,0)/drivingDistances.length):0;
@@ -3105,6 +3153,19 @@ function generateCSV(){
       let shotDist = '';
       if(s.isPutt){
         if(s.distanceBefore != null) shotDist = s.distanceBefore + ' ft';
+      } else if(s.shotNum === 1 && (h.par === 4 || h.par === 5) && (s.lie === 'WATER' || s.lie === 'OB' || s.lie === 'RECOVERY')){
+        // For water/OB/recovery tee shots, find next real shot to calc drive distance
+        let nextRealShot = null;
+        for(let j = idx + 1; j < h.shots.length; j++){
+          if(h.shots[j].lie !== 'PENALTY' && h.shots[j].lie !== 'WATER' && h.shots[j].lie !== 'OB' && h.shots[j].lie !== 'RECOVERY'){
+            nextRealShot = h.shots[j]; break;
+          }
+        }
+        if(nextRealShot && nextRealShot.distanceAfter != null){
+          shotDist = (h.yards - nextRealShot.distanceAfter) + ' yds';
+        } else {
+          shotDist = h.yards + ' yds';
+        }
       } else if(s.shotNum === 1 && (h.par === 4 || h.par === 5) && s.distanceAfter != null){
         const driveDist = h.yards - s.distanceAfter;
         shotDist = driveDist + ' yds';
@@ -3118,7 +3179,18 @@ function generateCSV(){
         shotDesc = `Shot ${s.shotNum} - ${shotDist} putt in the hole`;
       } else {
         let remaining = '';
-        if(s.distanceAfter != null){
+        // For water/OB/recovery, get remaining from next real shot
+        if(s.lie === 'WATER' || s.lie === 'OB' || s.lie === 'RECOVERY'){
+          let nextRealShot = null;
+          for(let j = idx + 1; j < h.shots.length; j++){
+            if(h.shots[j].lie !== 'PENALTY' && h.shots[j].lie !== 'WATER' && h.shots[j].lie !== 'OB' && h.shots[j].lie !== 'RECOVERY'){
+              nextRealShot = h.shots[j]; break;
+            }
+          }
+          if(nextRealShot && nextRealShot.distanceAfter != null){
+            remaining = nextRealShot.distanceAfter + ' yds';
+          }
+        } else if(s.distanceAfter != null){
           if(nextShot && nextShot.isPutt) remaining = s.distanceAfter + ' ft';
           else if(s.isPutt) remaining = s.distanceAfter + ' ft';
           else remaining = s.distanceAfter + ' yds';
@@ -4743,7 +4815,7 @@ function renderDashboard(data, hcp, targetId) {
         holePBP.shots.push({ desc: desc, sg: sgVal });
         
         // Non-SG aggregations
-        if ((h.par===4||h.par===5)&&s.shotNum===1&&s.distanceAfter!=null&&s.lie!=='PENALTY'&&s.lie!=='OB'&&s.lie!=='WATER') {
+        if ((h.par===4||h.par===5)&&s.shotNum===1&&s.distanceAfter!=null&&s.lie!=='PENALTY'&&s.lie!=='OB'&&s.lie!=='WATER'&&s.lie!=='RECOVERY') {
           var dd=h.yards-s.distanceAfter; A.drives.push(dd);
           if (dd>A.longestDrive) A.longestDrive=dd; if (dd<A.shortestDrive) A.shortestDrive=dd;
         }
@@ -5035,9 +5107,23 @@ function showFullStats() {
   // Drives
   var driveDetails=[], longestDr=0, shortestDr=999;
   allHoles.forEach(function(h){
-    if((h.par===4||h.par===5)&&h.shots.length>0&&h.shots[0].distanceAfter!=null&&h.shots[0].lie!=='PENALTY'&&h.shots[0].lie!=='OB'&&h.shots[0].lie!=='WATER'){
-      var dd=h.yards-h.shots[0].distanceAfter; driveDetails.push({hole:h.hole,par:h.par,dist:dd});
-      if(dd>longestDr)longestDr=dd; if(dd<shortestDr)shortestDr=dd;
+    if((h.par===4||h.par===5)&&h.shots.length>0){
+      var teeShot=h.shots[0];
+      var dd=null;
+      if(teeShot.lie==='WATER'||teeShot.lie==='OB'||teeShot.lie==='RECOVERY'){
+        for(var j=1;j<h.shots.length;j++){
+          var s=h.shots[j];
+          if(s.lie!=='PENALTY'&&s.lie!=='WATER'&&s.lie!=='OB'&&s.lie!=='RECOVERY'&&s.distanceAfter!=null){
+            dd=h.yards-s.distanceAfter;break;
+          }
+        }
+      }else if(teeShot.distanceAfter!=null&&teeShot.lie!=='PENALTY'){
+        dd=h.yards-teeShot.distanceAfter;
+      }
+      if(dd!==null){
+        driveDetails.push({hole:h.hole,par:h.par,dist:dd});
+        if(dd>longestDr)longestDr=dd;if(dd<shortestDr)shortestDr=dd;
+      }
     }
   });
   if(driveDetails.length===0)shortestDr=0;
@@ -5269,11 +5355,14 @@ function showFullStats() {
       else if(endLie==='MISS LONG')endLie='long of green';
       else endLie=endLie.toLowerCase();
       var shotDist='';
+      // Check if this is a re-hit after penalty (previous shot was PENALTY and distanceBefore equals hole yards)
+      var prevShot=idx>0?(h5.shots||[])[idx-1]:null;
+      var isRehit=prevShot&&prevShot.lie==='PENALTY'&&s.distanceBefore===h5.yards;
       if(s.isPutt){if(s.distanceBefore!=null)shotDist=s.distanceBefore+' ft';}
-      else if(s.shotNum===1&&(h5.par===4||h5.par===5)){
-        if(s.lie==='WATER'||s.lie==='OB'){
-          var nxR=null;for(var ni=idx+1;ni<(h5.shots||[]).length;ni++){if((h5.shots||[])[ni].lie!=='PENALTY'){nxR=(h5.shots||[])[ni];break;}}
-          if(nxR&&nxR.distanceBefore!=null)shotDist=(h5.yards-nxR.distanceBefore)+' yds';
+      else if((s.shotNum===1||isRehit)&&(h5.par===4||h5.par===5)){
+        if(s.lie==='WATER'||s.lie==='OB'||s.lie==='RECOVERY'){
+          var nxR=null;for(var ni=idx+1;ni<(h5.shots||[]).length;ni++){var ns=(h5.shots||[])[ni];if(ns.lie!=='PENALTY'&&ns.lie!=='WATER'&&ns.lie!=='OB'&&ns.lie!=='RECOVERY'){nxR=ns;break;}}
+          if(nxR&&nxR.distanceAfter!=null)shotDist=(h5.yards-nxR.distanceAfter)+' yds';
           else shotDist=h5.yards+' yds';
         }else if(s.distanceAfter!=null){shotDist=(h5.yards-s.distanceAfter)+' yds';}
         else{shotDist=h5.yards+' yds';}
@@ -5283,9 +5372,9 @@ function showFullStats() {
       var desc='';
       if(s.lie==='HOLED'){desc='Shot '+s.shotNum+' - '+shotDist+(s.isPutt?' putt':'')+', in the hole';}
       else{var rem='';
-        if(s.lie==='WATER'||s.lie==='OB'){
-          var nxR2=null;for(var ni2=idx+1;ni2<(h5.shots||[]).length;ni2++){if((h5.shots||[])[ni2].lie!=='PENALTY'){nxR2=(h5.shots||[])[ni2];break;}}
-          if(nxR2&&nxR2.distanceBefore!=null)rem=nxR2.distanceBefore+' yds';
+        if(s.lie==='WATER'||s.lie==='OB'||s.lie==='RECOVERY'){
+          var nxR2=null;for(var ni2=idx+1;ni2<(h5.shots||[]).length;ni2++){var ns2=(h5.shots||[])[ni2];if(ns2.lie!=='PENALTY'&&ns2.lie!=='WATER'&&ns2.lie!=='OB'&&ns2.lie!=='RECOVERY'){nxR2=ns2;break;}}
+          if(nxR2&&nxR2.distanceAfter!=null)rem=nxR2.distanceAfter+' yds';
         }else if(s.distanceAfter!=null){if((nextShot&&nextShot.isPutt)||s.isPutt)rem=s.distanceAfter+' ft';else rem=s.distanceAfter+' yds';}
         else if(nextShot){if(nextShot.isPutt)rem=nextShot.distanceBefore!=null?nextShot.distanceBefore+' ft':'';else rem=nextShot.distanceBefore!=null?nextShot.distanceBefore+' yds':'';}
         if(s.isPutt)desc='Shot '+s.shotNum+' - '+shotDist+' putt to '+rem+' from hole';
