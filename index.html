@@ -83,6 +83,79 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 .summary-title{text-decoration:underline;font-size:22px;font-weight:600;margin:0;line-height:1.2;}
 .score-summary{font-size:18px;font-weight:600;margin:0;line-height:1.2;}
 .round-meta{font-size:14px;opacity:.85;margin:0;line-height:1.2;}
+
+/* ───────────────────────────────────────────
+   SHORT GAME COMBINES - Styles
+─────────────────────────────────────────── */
+.comb-menu-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px;
+}
+.comb-grid-btn {
+  color:#fff; border:none; padding:14px 8px; font-size:0.92rem; font-weight:700;
+  border-radius:10px; cursor:pointer; min-height:66px; line-height:1.4;
+  touch-action:manipulation; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; text-align:center;
+  width:100%; max-width:none;
+}
+.comb-grid-btn small { font-size:0.75rem; font-weight:400; opacity:.85; }
+.comb-green { background:#2E7D32; }
+.comb-blue  { background:#1565C0; }
+.comb-grid-btn:active { filter:brightness(.8); }
+
+/* Table styles for combines */
+#comb-table thead th {
+  background:#2c2c2c; color:#999; font-size:0.62rem; text-transform:uppercase;
+  font-weight:600; padding:7px 3px; border:1px solid #333; white-space:nowrap;
+  text-align:center;
+}
+#comb-table tbody td {
+  border:1px solid #333; text-align:center; height:44px; padding:0;
+}
+.comb-hnum { background:#2c2c2c; font-weight:700; color:#fff; width:24px; font-size:0.8rem; }
+.comb-ro   { background:rgba(255,255,255,.04); font-weight:700; font-size:0.85rem; padding:2px; }
+.comb-tap input {
+  width:100%; height:44px; border:none; background:transparent;
+  color:#e0e0e0; text-align:center; font-size:1rem; font-weight:600; padding:0 2px;
+}
+.comb-tap input:focus { background:#1a2a1a; outline:2px solid #4caf50; }
+.comb-sel-cell {
+  width:100%; height:44px; border:none; background:transparent;
+  color:#e0e0e0; font-size:0.88rem; text-align:center; padding:0 2px;
+  cursor:pointer; -webkit-appearance:none; appearance:none; max-width:none;
+}
+.comb-putt-grp  { display:flex; gap:3px; padding:3px; align-items:center; height:44px; }
+.comb-pbtn {
+  flex:1; height:36px; border:1px solid #333; border-radius:6px;
+  background:#2a2a2a; color:#999; font-size:1rem; font-weight:700;
+  cursor:pointer; touch-action:manipulation; max-width:none; width:auto;
+}
+.comb-pbtn:active { background:#388e3c; color:#fff; }
+.comb-pbtn.comb-on { background:#4caf50; color:#fff; border-color:#4caf50; }
+.comb-xbtn {
+  background:transparent; color:#ff5252; border:none; font-size:1rem;
+  padding:10px 7px; cursor:pointer; max-width:none; width:auto; height:auto;
+}
+.comb-pos { color:#69f0ae; font-weight:700; }
+.comb-neg { color:#ff5252; font-weight:700; }
+.comb-col-dist  { width:66px; }
+.comb-col-score { width:68px; }
+.comb-col-lie   { width:90px; }
+.comb-wsg { /* visible only in SG wedge mode */ }
+
+/* Combine history cards */
+.comb-hist-card {
+  background:#1e1e1e; border:1px solid #333; border-radius:8px;
+  padding:10px 12px; margin-bottom:8px; font-size:13px;
+}
+.comb-hist-card .ch-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; }
+.comb-hist-card .ch-type { font-weight:700; color:#4caf50; font-size:14px; }
+.comb-hist-card .ch-date { font-size:11px; color:#888; }
+.comb-hist-card .ch-score { font-size:22px; font-weight:800; }
+.comb-hist-card .ch-note { font-size:11px; color:#aaa; margin-top:3px; font-style:italic; }
+.comb-hist-card .ch-meta { font-size:11px; color:#666; margin-top:2px; }
+.comb-hist-del { background:transparent; border:none; color:#f44336; font-size:12px; cursor:pointer; padding:0; height:auto; max-width:none; width:auto; }
+.comb-dimmed { opacity:.35; pointer-events:none; }
+
 </style>
 </head>
 
@@ -117,6 +190,13 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 <!-- PROFILE HUB -->
 <div id="profilePage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:hidden;padding-bottom:0;position:relative;">
   <button class="back-btn-top" onclick="show('homePage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <!-- Profile Tab Bar -->
+  <div id="profileTabBar" style="display:flex;gap:0;width:100%;flex-shrink:0;border-radius:10px;overflow:hidden;margin-bottom:0;">
+    <button onclick="showProfileTab('dashboard')" id="ptabDash" style="flex:1;height:38px;font-size:11px;background:#333;border:none;color:#fff;font-weight:700;cursor:pointer;touch-action:manipulation;padding:0;margin:0;max-width:none;width:auto;">📊 Stats</button>
+    <button onclick="showProfileTab('rounds')" id="ptabRounds" style="flex:1;height:38px;font-size:11px;background:#222;border:none;color:#888;font-weight:600;cursor:pointer;touch-action:manipulation;padding:0;margin:0;max-width:none;width:auto;">📋 Rounds</button>
+    <button onclick="showProfileTab('combines')" id="ptabCombines" style="flex:1;height:38px;font-size:11px;background:#222;border:none;color:#888;font-weight:600;cursor:pointer;touch-action:manipulation;padding:0;margin:0;max-width:none;width:auto;">🏌️ Combines</button>
+    <button onclick="showProfileTab('account')" id="ptabAccount" style="flex:1;height:38px;font-size:11px;background:#222;border:none;color:#888;font-weight:600;cursor:pointer;touch-action:manipulation;padding:0;margin:0;max-width:none;width:auto;">⚙️ Settings</button>
+  </div>
   <!-- Scrollable content area -->
   <div id="profileScrollArea" style="flex:1;overflow-y:auto;width:100%;display:flex;flex-direction:column;align-items:center;padding:0 0 30px;">
 
@@ -232,6 +312,28 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
     <div id="roundsFilteredMsg" style="font-size:12px;color:#666;text-align:center;margin-top:6px;"></div>
   </div>
 
+  <!-- COMBINES TAB -->
+  <div id="profileCombinesTab" style="width:100%;max-width:360px;display:none;">
+    <div style="font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;">🏌️ Combine History</div>
+    <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;">
+      <select id="profileCombFilterType" onchange="loadMyCombines()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 8px;font-size:12px;">
+        <option value="all">All Types</option>
+        <option value="Putting">Putting</option>
+        <option value="Chipping (Prox)">Chipping Prox</option>
+        <option value="Chip Hole Out">Chip Hole Out</option>
+        <option value="Wedge">Wedge</option>
+      </select>
+      <select id="profileCombFilterTime" onchange="loadMyCombines()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 8px;font-size:12px;">
+        <option value="all">All Time</option>
+        <option value="1">Last Month</option>
+        <option value="3">Last 3 Months</option>
+        <option value="6">Last 6 Months</option>
+      </select>
+    </div>
+    <div id="profileCombMsg" style="font-size:13px;color:#888;min-height:20px;text-align:center;"></div>
+    <div id="profileCombList" style="width:100%;"></div>
+  </div>
+
   <button style="background:#555;margin-top:16px;width:100%;max-width:320px;" onclick="show('homePage')">← HOME</button>
   </div><!-- end profileScrollArea -->
 </div>
@@ -310,6 +412,7 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
   <div style="display:flex;gap:0;width:100%;max-width:360px;margin-bottom:0;border-radius:10px;overflow:hidden;flex-shrink:0;">
     <button onclick="showStudentTab('dashboard')" id="svTabDash" style="flex:1;height:38px;font-size:13px;background:#333;border-radius:0;border:none;color:#fff;font-weight:700;max-width:none;width:auto;padding:0;margin:0;">Dashboard</button>
     <button onclick="showStudentTab('rounds')" id="svTabRounds" style="flex:1;height:38px;font-size:13px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Rounds</button>
+    <button onclick="showStudentTab('combines')" id="svTabCombines" style="flex:1;height:38px;font-size:12px;background:#222;border-radius:0;border:none;color:#888;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Combines</button>
   </div>
   <div id="studentViewScroll" style="flex:1;overflow-y:auto;width:100%;display:flex;flex-direction:column;align-items:center;padding:12px 0 30px;">
     
@@ -361,9 +464,168 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
       <div id="svRoundsList" style="width:100%;"></div>
     </div>
     
+    <!-- Student Combines Tab -->
+    <div id="svCombinesTab" style="width:100%;max-width:360px;display:none;">
+      <div style="font-size:16px;font-weight:800;text-align:center;margin-bottom:8px;">🏌️ Combine History</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;">
+        <select id="svCombFilterType" onchange="loadStudentCombines()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 8px;font-size:12px;">
+          <option value="all">All Types</option>
+          <option value="Putting">Putting</option>
+          <option value="Chipping (Prox)">Chipping Prox</option>
+          <option value="Chip Hole Out">Chip Hole Out</option>
+          <option value="Wedge">Wedge</option>
+        </select>
+        <select id="svCombFilterTime" onchange="loadStudentCombines()" style="background:#222;color:#fff;border:1px solid #444;border-radius:6px;padding:4px 8px;font-size:12px;">
+          <option value="all">All Time</option>
+          <option value="1">Last Month</option>
+          <option value="3">Last 3 Months</option>
+          <option value="6">Last 6 Months</option>
+        </select>
+      </div>
+      <div id="svCombMsg" style="font-size:13px;color:#888;min-height:20px;text-align:center;"></div>
+      <div id="svCombList" style="width:100%;"></div>
+    </div>
+
     <button style="background:#555;margin-top:16px;" onclick="show('studentsPage')">← BACK TO STUDENTS</button>
   </div>
 </div>
+
+<!-- SHORT GAME COMBINES PAGE -->
+<div id="combinesPage" class="page" style="justify-content:flex-start;padding:0;overflow:hidden;">
+
+  <!-- Fixed header -->
+  <div style="background:#111;border-bottom:2px solid #4caf50;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
+    <button onclick="show('homePage')" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:#333;border:none;color:#fff;border-radius:8px;padding:6px 12px;font-size:0.85rem;cursor:pointer;height:auto;max-width:none;width:auto;">← Home</button>
+    <div style="font-size:1.2rem;font-weight:800;color:#fff;">🏌️ Short Game Combines</div>
+  </div>
+
+  <!-- Scrollable body -->
+  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100%;">
+    <div style="max-width:520px;margin:0 auto;padding:14px 12px 50px;">
+
+      <!-- HOME VIEW (menu grid) -->
+      <div id="comb-home-view">
+        <div class="comb-menu-grid">
+          <button class="comb-grid-btn comb-green" onclick="combOpen('putting','custom')">Putting<br><small>Custom</small></button>
+          <button class="comb-grid-btn comb-blue"  onclick="combOpen('putting','combine')">Putting<br><small>Combine</small></button>
+          <button class="comb-grid-btn comb-green" onclick="combOpen('chip-prox','custom')">Chipping Prox<br><small>Custom</small></button>
+          <button class="comb-grid-btn comb-blue"  onclick="combOpen('chip-prox','combine')">Chipping Prox<br><small>Combine</small></button>
+          <button class="comb-grid-btn comb-green" onclick="combOpen('chip-hole','custom')">Chip Hole Out<br><small>Custom</small></button>
+          <button class="comb-grid-btn comb-blue"  onclick="combOpen('chip-hole','combine')">Chip Hole Out<br><small>Combine</small></button>
+          <button class="comb-grid-btn comb-green" onclick="combOpen('wedge','custom')">Wedge<br><small>Custom</small></button>
+          <button class="comb-grid-btn comb-blue"  onclick="combOpen('wedge','combine')">Wedge<br><small>Combine</small></button>
+        </div>
+      </div>
+
+      <!-- TRACKER VIEW -->
+      <div id="comb-tracker-view" style="display:none;">
+
+        <!-- Settings bar -->
+        <div id="comb-settings-bar" style="background:#1c1c1c;border:1px solid #333;border-radius:10px;padding:10px 12px;margin-bottom:10px;">
+          <div style="display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;">
+            <div id="comb-hcp-group" style="display:flex;align-items:center;gap:6px;font-size:0.84rem;">
+              <span style="color:#888;font-size:0.75rem;">HCP</span>
+              <select id="comb-handicap" onchange="combRecalcAll()" style="background:#2a2a2a;color:#e0e0e0;border:1px solid #333;border-radius:6px;font-size:0.9rem;padding:5px 8px;-webkit-appearance:none;appearance:none;">
+                <option value="Tour Pro">Tour Pro</option>
+                <option value="Scratch" selected>Scratch</option>
+                <option value="5">5</option><option value="10">10</option>
+                <option value="15">15</option><option value="20">20</option>
+                <option value="25">25</option><option value="30">30</option>
+              </select>
+            </div>
+            <div id="comb-wedge-score-grp" style="display:none;align-items:center;gap:6px;font-size:0.84rem;">
+              <span style="color:#888;font-size:0.75rem;">Mode</span>
+              <div style="display:flex;background:#2a2a2a;border-radius:6px;padding:2px;border:1px solid #333;">
+                <div id="comb-tbtn-sg"  onclick="combSetWedge('sg')"  style="padding:4px 10px;border-radius:5px;cursor:pointer;font-size:0.78rem;font-weight:700;color:#fff;background:#4caf50;">SG</div>
+                <div id="comb-tbtn-pts" onclick="combSetWedge('pts')" style="padding:4px 10px;border-radius:5px;cursor:pointer;font-size:0.78rem;font-weight:700;color:#888;">0–100</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:0.84rem;">
+              <span style="color:#888;font-size:0.75rem;"># Holes</span>
+              <input type="number" inputmode="numeric" id="comb-holes-custom" value="9" min="1" onchange="combSetup()" style="width:50px;background:#2a2a2a;color:#e0e0e0;border:1px solid #333;border-radius:6px;font-size:0.9rem;padding:5px 6px;text-align:center;">
+              <select id="comb-holes-combine" onchange="combSetup()" style="display:none;background:#2a2a2a;color:#e0e0e0;border:1px solid #333;border-radius:6px;font-size:0.9rem;padding:5px 8px;-webkit-appearance:none;appearance:none;">
+                <option id="comb-opt-6" value="6">6</option>
+                <option value="9" selected>9</option>
+                <option value="18">18</option>
+              </select>
+            </div>
+            <div id="comb-wedge-range-grp" style="display:none;align-items:center;gap:4px;font-size:0.84rem;">
+              <span style="color:#888;font-size:0.75rem;">Yds</span>
+              <input type="number" inputmode="numeric" id="comb-w-min" value="40" style="width:52px;background:#2a2a2a;color:#e0e0e0;border:1px solid #333;border-radius:6px;font-size:0.9rem;padding:5px 6px;text-align:center;">
+              <span style="color:#888;">–</span>
+              <input type="number" inputmode="numeric" id="comb-w-max" value="125" style="width:52px;background:#2a2a2a;color:#e0e0e0;border:1px solid #333;border-radius:6px;font-size:0.9rem;padding:5px 6px;text-align:center;">
+              <button onclick="combSetup()" style="padding:6px 14px;background:#4caf50;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:0.82rem;white-space:nowrap;height:auto;max-width:none;width:auto;">Gen</button>
+            </div>
+            <div id="comb-putting-type-grp" style="display:none;align-items:center;gap:6px;font-size:0.84rem;">
+              <span style="color:#888;font-size:0.75rem;">Type</span>
+              <select id="comb-p-type" onchange="combSetup()" style="background:#2a2a2a;color:#e0e0e0;border:1px solid #333;border-radius:6px;font-size:0.9rem;padding:5px 8px;-webkit-appearance:none;appearance:none;">
+                <option value="normal">Normal</option>
+                <option value="short">Short</option>
+              </select>
+            </div>
+            <div id="comb-wedge-type-grp" style="display:none;align-items:center;gap:6px;font-size:0.84rem;">
+              <span style="color:#888;font-size:0.75rem;">Type</span>
+              <select id="comb-w-type" onchange="combSetup()" style="background:#2a2a2a;color:#e0e0e0;border:1px solid #333;border-radius:6px;font-size:0.9rem;padding:5px 8px;-webkit-appearance:none;appearance:none;">
+                <option value="std">Std 40–125</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Nav bar -->
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+          <button onclick="combGoHome()" style="background:#3a3a3a;color:#fff;border:none;padding:9px 14px;border-radius:8px;font-size:0.9rem;cursor:pointer;touch-action:manipulation;max-width:none;width:auto;height:auto;">← Menu</button>
+          <h2 id="comb-title" style="margin:0;color:#4caf50;font-size:1rem;font-weight:800;text-align:center;flex:1;padding:0 6px;"></h2>
+          <div style="width:70px;"></div>
+        </div>
+
+        <!-- Scoreboard -->
+        <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:8px;background:#1a3320;border:1px solid #388e3c;padding:10px;border-radius:10px;margin-bottom:10px;text-align:center;">
+          <div id="comb-exp-box">
+            <div style="font-size:0.65rem;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Expected</div>
+            <div id="comb-total-exp" style="font-size:1.4rem;font-weight:700;">0.00</div>
+          </div>
+          <div id="comb-strokes-box" style="display:none;">
+            <div style="font-size:0.65rem;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Strokes</div>
+            <div id="comb-total-strokes" style="font-size:1.4rem;font-weight:700;">0</div>
+          </div>
+          <div>
+            <div id="comb-total-label" style="font-size:0.65rem;color:#999;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Total SG</div>
+            <div id="comb-total-val" style="font-size:1.4rem;font-weight:700;">0.00</div>
+          </div>
+        </div>
+
+        <!-- Date & Note toggle -->
+        <button id="comb-meta-toggle" onclick="combToggleMeta()" style="width:100%;background:transparent;border:1px dashed #444;color:#888;border-radius:8px;padding:8px;font-size:0.85rem;cursor:pointer;margin-bottom:8px;touch-action:manipulation;height:auto;max-width:none;">＋ Add Date &amp; Note</button>
+        <div id="comb-meta-panel" style="display:none;background:#1c1c1c;border:1px solid #333;border-radius:8px;padding:10px 12px;margin-bottom:8px;">
+          <div style="display:flex;gap:10px;flex-wrap:wrap;">
+            <div style="display:flex;flex-direction:column;gap:4px;flex:1;min-width:110px;">
+              <label style="font-size:0.68rem;color:#999;text-transform:uppercase;letter-spacing:.5px;">Date</label>
+              <input type="date" id="comb-date" style="background:#2a2a2a;color:#e0e0e0;border:1px solid #333;border-radius:6px;padding:7px 10px;font-size:0.92rem;width:100%;-webkit-appearance:none;appearance:none;">
+            </div>
+            <div style="display:flex;flex-direction:column;gap:4px;flex:2;min-width:130px;">
+              <label style="font-size:0.68rem;color:#999;text-transform:uppercase;letter-spacing:.5px;">Note</label>
+              <input type="text" id="comb-note" placeholder="e.g. tried new grip, using Scotty Cameron…" style="background:#2a2a2a;color:#e0e0e0;border:1px solid #333;border-radius:6px;padding:7px 10px;font-size:0.92rem;width:100%;">
+            </div>
+          </div>
+        </div>
+
+        <!-- Save button -->
+        <button id="comb-save-btn" onclick="combSave()" style="width:100%;padding:11px;background:#2E7D32;color:#fff;border:none;border-radius:8px;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:6px;touch-action:manipulation;height:auto;max-width:none;">💾 Save to Profile</button>
+        <div id="comb-save-msg" style="font-size:0.78rem;text-align:center;min-height:16px;margin-bottom:8px;color:#4caf50;"></div>
+
+        <!-- Table -->
+        <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:8px;">
+          <table id="comb-table" style="width:100%;border-collapse:collapse;">
+            <thead id="comb-head"></thead>
+            <tbody id="comb-body"></tbody>
+          </table>
+        </div>
+      </div><!-- /tracker-view -->
+
+    </div><!-- /inner -->
+  </div><!-- /scroll -->
+</div><!-- /combinesPage -->
 
 <div id="roundPage" class="page">
   <button class="back-btn-top" onclick="show('homePage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
@@ -6975,5 +7237,519 @@ function renderFullStatsPuttingRadar() {
 
 </script>
 
+<script>
+
+// =====================================================
+// SHORT GAME COMBINES - All Logic
+// =====================================================
+
+/* ── Handicap lookup tables ── */
+const combHcpData = {
+  putting:{
+    2:  {'Tour Pro':1,'Scratch':1,'5':1.01,'10':1.02,'15':1.055,'20':1.09,'25':1.13,'30':1.17},
+    4:  {'Tour Pro':1.19,'Scratch':1.23,'5':1.275,'10':1.32,'15':1.36,'20':1.4,'25':1.45,'30':1.5},
+    10: {'Tour Pro':1.64,'Scratch':1.74,'5':1.80,'10':1.86,'15':1.915,'20':1.97,'25':2.04,'30':2.11},
+    20: {'Tour Pro':1.88,'Scratch':2.02,'5':2.09,'10':2.16,'15':2.22,'20':2.28,'25':2.36,'30':2.44},
+    30: {'Tour Pro':1.98,'Scratch':2.14,'5':2.215,'10':2.29,'15':2.355,'20':2.42,'25':2.51,'30':2.6},
+    40: {'Tour Pro':2.06,'Scratch':2.22,'5':2.30,'10':2.38,'15':2.45,'20':2.52,'25':2.61,'30':2.7},
+    50: {'Tour Pro':2.14,'Scratch':2.31,'5':2.405,'10':2.5,'15':2.565,'20':2.63,'25':2.72,'30':2.81}
+  },
+  chipping:{
+    'Fairway':{
+      10: {'Tour Pro':2.2,'Scratch':2.36,'5':2.50,'10':2.64,'15':2.80,'20':2.96,'25':3.095,'30':3.23},
+      30: {'Tour Pro':2.5,'Scratch':2.68,'5':2.845,'10':3.01,'15':3.19,'20':3.37,'25':3.52,'30':3.67},
+      50: {'Tour Pro':2.65,'Scratch':2.85,'5':3.02,'10':3.19,'15':3.38,'20':3.57,'25':3.73,'30':3.89},
+      100:{'Tour Pro':2.8,'Scratch':3.01,'5':3.19,'10':3.37,'15':3.57,'20':3.77,'25':3.94,'30':4.11},
+      125:{'Tour Pro':2.84,'Scratch':3.05,'5':3.23,'10':3.41,'15':3.62,'20':3.83,'25':4.01,'30':4.19}
+    },
+    'Rough':{
+      10: {'Tour Pro':2.49,'Scratch':2.57,'5':2.74,'10':2.91,'15':3.085,'20':3.26,'25':3.44,'30':3.62},
+      50: {'Tour Pro':2.85,'Scratch':2.95,'5':3.145,'10':3.34,'15':3.535,'20':3.73,'25':3.94,'30':4.15},
+      100:{'Tour Pro':3.02,'Scratch':3.12,'5':3.325,'10':3.53,'15':3.74,'20':3.95,'25':4.17,'30':4.39}
+    },
+    'Sand':{
+      10: {'Tour Pro':2.41,'Scratch':2.58,'5':2.725,'10':2.87,'15':3.04,'20':3.21,'25':3.365,'30':3.52},
+      50: {'Tour Pro':2.98,'Scratch':3.19,'5':3.37,'10':3.55,'15':3.755,'20':3.96,'25':4.16,'30':4.36},
+      100:{'Tour Pro':3.23,'Scratch':3.46,'5':3.655,'10':3.85,'15':4.075,'20':4.3,'25':4.51,'30':4.72}
+    }
+  }
+};
+const combPutDistances = {
+  short:[4,9,13,5,7,14,11,6,8,12,15,6,10,14,4,10,9,7],
+  normal:[4,9,14,30,6,18,25,7,11,35,22,5,10,16,4,10,20,7]
+};
+const combChipScenarios = {
+  6: [{d:10,l:'Sand'},{d:10,l:'Fairway'},{d:20,l:'Fairway'},{d:30,l:'Fairway'},{d:15,l:'Rough'},{d:25,l:'Rough'}],
+  9: [{d:10,l:'Sand'},{d:20,l:'Sand'},{d:10,l:'Fairway'},{d:15,l:'Fairway'},{d:20,l:'Fairway'},{d:30,l:'Fairway'},{d:10,l:'Rough'},{d:20,l:'Rough'},{d:25,l:'Rough'}],
+  18:[{d:10,l:'Sand'},{d:15,l:'Sand'},{d:20,l:'Sand'},{d:30,l:'Sand'},
+      {d:10,l:'Fairway'},{d:15,l:'Fairway'},{d:20,l:'Fairway'},{d:20,l:'Fairway'},{d:25,l:'Fairway'},{d:25,l:'Fairway'},{d:30,l:'Fairway'},{d:30,l:'Fairway'},
+      {d:10,l:'Rough'},{d:15,l:'Rough'},{d:20,l:'Rough'},{d:25,l:'Rough'},{d:25,l:'Rough'},{d:30,l:'Rough'}]
+};
+
+/* ── State ── */
+let combCurMode='custom', combCurType='', combWedgeMode='sg', combState={};
+
+function combVis(id,show){
+  var el=document.getElementById(id);
+  if(el){ el.style.display=show?(id==='comb-wedge-score-grp'||id==='comb-wedge-range-grp'||id==='comb-putting-type-grp'||id==='comb-wedge-type-grp'?'flex':''):'none'; }
+}
+
+function combGetE(t,d,l,h){
+  var ds = t==='putting' ? combHcpData.putting : combHcpData.chipping[l];
+  var ks = Object.keys(ds).map(Number).sort((a,b)=>a-b);
+  var c  = ks.reduce((p,n)=>Math.abs(n-d)<Math.abs(p-d)?n:p);
+  return ds[c][h];
+}
+
+function combFmt(v){
+  return v>0 ? '<span class="comb-pos">+'+v.toFixed(2)+'</span>' : '<span class="comb-neg">'+v.toFixed(2)+'</span>';
+}
+
+function combGenUnique(n,min,max,gap){
+  var res=[],pool=Array.from({length:max-min+1},(_,i)=>i+min);
+  for(var i=0;i<n;i++){
+    var ok=pool.filter(x=>res.length===0||Math.abs(x-res[res.length-1])>=gap);
+    if(!ok.length) ok=pool;
+    var p=ok[Math.floor(Math.random()*ok.length)];
+    res.push(p); pool=pool.filter(x=>x!==p);
+  }
+  return res;
+}
+
+function combOpen(type, mode) {
+  combCurType=type; combCurMode=mode;
+  document.getElementById('comb-home-view').style.display='none';
+  document.getElementById('comb-tracker-view').style.display='block';
+
+  var isCombine = mode==='combine', isWedge = type==='wedge', isPut = type==='putting';
+
+  // holes selector
+  document.getElementById('comb-holes-custom').style.display  = isCombine ? 'none' : '';
+  document.getElementById('comb-holes-combine').style.display = isCombine ? '' : 'none';
+  document.getElementById('comb-opt-6').style.display = isWedge ? 'none' : '';
+
+  // extra controls
+  combVis('comb-wedge-score-grp', isWedge);
+  combVis('comb-wedge-range-grp', isWedge && !isCombine);
+  combVis('comb-putting-type-grp', isPut && isCombine);
+  combVis('comb-wedge-type-grp', isWedge && isCombine);
+
+  // title
+  var names={putting:'Putting','chip-prox':'Chipping (Prox)','chip-hole':'Chip Hole Out',wedge:'Wedge'};
+  document.getElementById('comb-title').textContent = (isCombine ? '[COMBINE] ' : '') + names[type];
+
+  // strokes box
+  document.getElementById('comb-strokes-box').style.display = (type==='putting'||type==='chip-hole') ? '' : 'none';
+
+  // HCP dim for wedge pts mode
+  if(isWedge) combSetWedge(combWedgeMode, false);
+  else {
+    document.getElementById('comb-hcp-group').classList.remove('comb-dimmed');
+    document.getElementById('comb-exp-box').style.display='';
+  }
+
+  // reset save
+  document.getElementById('comb-save-msg').textContent='';
+  document.getElementById('comb-save-btn').disabled=false;
+  document.getElementById('comb-save-btn').textContent='💾 Save to Profile';
+
+  combSetup();
+}
+
+function combGoHome(){
+  document.getElementById('comb-home-view').style.display='';
+  document.getElementById('comb-tracker-view').style.display='none';
+  // reset meta panel
+  document.getElementById('comb-meta-panel').style.display='none';
+  document.getElementById('comb-meta-toggle').textContent='＋ Add Date & Note';
+  document.getElementById('comb-meta-toggle').style.borderColor='#444';
+  document.getElementById('comb-meta-toggle').style.color='#888';
+  document.getElementById('comb-date').value='';
+  document.getElementById('comb-note').value='';
+  document.getElementById('comb-save-msg').textContent='';
+}
+
+function combToggleMeta(){
+  var panel = document.getElementById('comb-meta-panel');
+  var btn   = document.getElementById('comb-meta-toggle');
+  var open  = panel.style.display === 'block';
+  panel.style.display = open ? 'none' : 'block';
+  btn.textContent = open ? '＋ Add Date & Note' : '✕ Hide Date & Note';
+  btn.style.borderColor = open ? '#444' : '#4caf50';
+  btn.style.color = open ? '#888' : '#e0e0e0';
+}
+
+function combSetup(){
+  var isCombine = combCurMode==='combine';
+  var holes = isCombine ? +document.getElementById('comb-holes-combine').value
+                        : +document.getElementById('comb-holes-custom').value;
+  var head = document.getElementById('comb-head');
+  var body = document.getElementById('comb-body');
+  head.innerHTML=''; body.innerHTML=''; combState={};
+
+  // Build header
+  var h = '<tr><th class="comb-hnum">#</th>';
+  if(combCurType==='putting')       h+='<th>Dist ft</th><th>Putts</th><th>Exp</th><th>SG</th>';
+  else if(combCurType==='wedge')    h+='<th>Target</th><th>Carry</th><th>Prox ft</th><th class="comb-wsg">Exp S</th><th class="comb-wsg">Exp P</th><th class="comb-wsg">Total</th><th id="comb-w-last">SG</th>';
+  else if(combCurType==='chip-prox') h+='<th class="comb-col-dist">Dist yd</th><th class="comb-col-lie">Lie</th><th class="comb-col-score">Prox ft</th><th>Exp S</th><th>Exp P</th><th>Total</th><th>SG</th>';
+  else h+='<th class="comb-col-dist">Dist yd</th><th class="comb-col-lie">Lie</th><th class="comb-col-score">Score</th><th>Exp</th><th>SG</th>';
+  head.innerHTML = h + '<th></th></tr>';
+
+  // Prepare combine data
+  var pD=[], wD=[], cS=[];
+  if(isCombine){
+    if(combCurType==='putting'){
+      var ptype = document.getElementById('comb-p-type').value;
+      pD = combPutDistances[ptype].slice(0,holes).sort(()=>Math.random()-.5);
+    }
+    if(combCurType==='wedge'){
+      var pool9  = [40,50,60,70,80,90,100,110,120];
+      var pool18 = [40,45,50,55,60,65,70,75,80,85,90,95,100,105,110,115,120,125];
+      wD = (holes<=9 ? [...pool9] : [...pool18]).sort(()=>Math.random()-.5).slice(0,holes);
+    }
+    var src = combChipScenarios[holes] || combChipScenarios[18].slice(0,holes);
+    cS = [...src].sort(()=>Math.random()-.5);
+  } else if(combCurType==='wedge'){
+    wD = combGenUnique(holes, +document.getElementById('comb-w-min').value, +document.getElementById('comb-w-max').value, 5);
+  }
+
+  // Build rows
+  var rows='';
+  for(var i=1;i<=holes;i++){
+    combState[i]={d:'',l:'Fairway',v:'',sg:0,pts:0,exp1:0};
+    var r='<tr><td class="comb-hnum">'+i+'</td>';
+
+    if(combCurType==='putting'){
+      var pd = isCombine ? pD[i-1] : '';
+      combState[i].d = pd;
+      r += isCombine
+        ? '<td class="comb-ro">'+pd+'</td>'
+        : '<td class="comb-tap"><input type="number" inputmode="numeric" pattern="[0-9]*" placeholder="–" onchange="combUpd('+i+',\'d\',+this.value)"></td>';
+      r += '<td><div class="comb-putt-grp" id="cpg-'+i+'"><button class="comb-pbtn" onclick="combSetPutts('+i+',1)">1</button><button class="comb-pbtn" onclick="combSetPutts('+i+',2)">2</button><button class="comb-pbtn" onclick="combSetPutts('+i+',3)">3</button></div></td>';
+      r += '<td class="comb-ro" id="ce1-'+i+'">–</td><td class="comb-ro" id="csg-'+i+'">–</td>';
+
+    } else if(combCurType==='wedge'){
+      combState[i].d = wD[i-1];
+      r += '<td class="comb-ro">'+(wD[i-1]||'')+'</td>';
+      r += '<td class="comb-tap"><input type="number" inputmode="numeric" pattern="[0-9]*" placeholder="–" onchange="combUpd('+i+',\'v\',+this.value)"></td>';
+      r += '<td class="comb-ro" id="cpx-'+i+'">–</td>';
+      r += '<td class="comb-ro comb-wsg" id="ce1-'+i+'">–</td><td class="comb-ro comb-wsg" id="ce2-'+i+'">–</td><td class="comb-ro comb-wsg" id="cts-'+i+'">–</td>';
+      r += '<td class="comb-ro" id="csg-'+i+'">–</td>';
+
+    } else if(combCurType==='chip-prox'){
+      var cd = isCombine ? cS[i-1].d : '', cl = isCombine ? cS[i-1].l : 'Fairway';
+      combState[i].d=cd; combState[i].l=cl;
+      r += isCombine
+        ? '<td class="comb-ro comb-col-dist">'+cd+'</td><td class="comb-ro comb-col-lie">'+cl+'</td>'
+        : '<td class="comb-tap comb-col-dist"><input type="number" inputmode="numeric" pattern="[0-9]*" placeholder="–" onchange="combUpd('+i+',\'d\',+this.value)"></td>'
+          +'<td class="comb-col-lie"><select class="comb-sel-cell" onchange="combUpd('+i+',\'l\',this.value)"><option>Fairway</option><option>Rough</option><option>Sand</option></select></td>';
+      r += '<td class="comb-tap comb-col-score"><input type="number" inputmode="decimal" placeholder="–" onchange="combUpd('+i+',\'v\',+this.value)"></td>';
+      r += '<td class="comb-ro" id="ce1-'+i+'">–</td><td class="comb-ro" id="ce2-'+i+'">–</td><td class="comb-ro" id="cts-'+i+'">–</td><td class="comb-ro" id="csg-'+i+'">–</td>';
+
+    } else { // chip-hole
+      var cd = isCombine ? cS[i-1].d : '', cl = isCombine ? cS[i-1].l : 'Fairway';
+      combState[i].d=cd; combState[i].l=cl;
+      r += isCombine
+        ? '<td class="comb-ro comb-col-dist">'+cd+'</td><td class="comb-ro comb-col-lie">'+cl+'</td>'
+        : '<td class="comb-tap comb-col-dist"><input type="number" inputmode="numeric" pattern="[0-9]*" placeholder="–" onchange="combUpd('+i+',\'d\',+this.value)"></td>'
+          +'<td class="comb-col-lie"><select class="comb-sel-cell" onchange="combUpd('+i+',\'l\',this.value)"><option>Fairway</option><option>Rough</option><option>Sand</option></select></td>';
+      r += '<td class="comb-tap comb-col-score"><input type="number" inputmode="numeric" pattern="[0-9]*" placeholder="–" onchange="combUpd('+i+',\'v\',+this.value)"></td>';
+      r += '<td class="comb-ro" id="ce1-'+i+'">–</td><td class="comb-ro" id="csg-'+i+'">–</td>';
+    }
+
+    r += '<td><button class="comb-xbtn" onclick="combDelRow('+i+')">✕</button></td></tr>';
+    rows += r;
+  }
+  body.innerHTML = rows;
+
+  if(combCurType==='wedge') combSetWedge(combWedgeMode, false);
+  combRecalcAll();
+}
+
+function combSetPutts(i,val){
+  document.getElementById('cpg-'+i).querySelectorAll('.comb-pbtn').forEach(function(b,idx){
+    b.classList.toggle('comb-on', idx+1===val);
+  });
+  combUpd(i,'v',val);
+}
+
+function combDelRow(i){
+  delete combState[i];
+  document.querySelectorAll('#comb-body tr').forEach(function(row){
+    var hn = row.querySelector('.comb-hnum');
+    if(hn && +hn.textContent===i) row.remove();
+  });
+  combUpdateTotals();
+}
+
+function combUpd(i,f,v){ combState[i][f]=v; combCalcRow(i); }
+
+function combCalcRow(i){
+  var r = combState[i]; if(!r) return;
+  var h = document.getElementById('comb-handicap').value;
+  if(r.d==='' || r.v==='') return;
+
+  if(combCurType==='putting'){
+    r.exp1 = combGetE('putting',r.d,null,h);
+    r.sg   = r.exp1 - r.v;
+    document.getElementById('ce1-'+i).textContent = r.exp1.toFixed(2);
+    document.getElementById('csg-'+i).innerHTML   = combFmt(r.sg);
+
+  } else if(combCurType==='wedge'){
+    var px = Math.abs(r.d - r.v) * 3;
+    document.getElementById('cpx-'+i).textContent = px.toFixed(1);
+    if(combWedgeMode==='sg'){
+      r.exp1 = combGetE('chipping',r.d,'Fairway',h);
+      var e2 = combGetE('putting',px,null,h), ts = 1+e2;
+      r.sg   = r.exp1 - ts;
+      document.getElementById('ce1-'+i).textContent = r.exp1.toFixed(2);
+      document.getElementById('ce2-'+i).textContent = e2.toFixed(2);
+      document.getElementById('cts-'+i).textContent = ts.toFixed(2);
+      document.getElementById('csg-'+i).innerHTML   = combFmt(r.sg);
+    } else {
+      r.pts = Math.max(0, 100-px);
+      document.getElementById('csg-'+i).textContent = r.pts.toFixed(0);
+    }
+
+  } else if(combCurType==='chip-prox'){
+    r.exp1 = combGetE('chipping',r.d,r.l,h);
+    var e2 = combGetE('putting',r.v,null,h), ts = 1+e2;
+    r.sg   = r.exp1 - ts;
+    document.getElementById('ce1-'+i).textContent = r.exp1.toFixed(2);
+    document.getElementById('ce2-'+i).textContent = e2.toFixed(2);
+    document.getElementById('cts-'+i).textContent = ts.toFixed(2);
+    document.getElementById('csg-'+i).innerHTML   = combFmt(r.sg);
+
+  } else { // chip-hole
+    r.exp1 = combGetE('chipping',r.d,r.l,h);
+    r.sg   = r.exp1 - r.v;
+    document.getElementById('ce1-'+i).textContent = r.exp1.toFixed(2);
+    document.getElementById('csg-'+i).innerHTML   = combFmt(r.sg);
+  }
+  combUpdateTotals();
+}
+
+function combRecalcAll(){ for(var k in combState) combCalcRow(k); }
+
+function combUpdateTotals(){
+  var sg=0, e=0, strokes=0, c=0;
+  for(var k in combState){
+    var r=combState[k];
+    if(r.v!==''){
+      sg += (combCurType==='wedge' && combWedgeMode==='pts') ? r.pts : r.sg;
+      e  += r.exp1;
+      strokes += parseFloat(r.v)||0;
+      c++;
+    }
+  }
+  document.getElementById('comb-total-exp').textContent = e.toFixed(2);
+  var totalEl = document.getElementById('comb-total-val');
+  if(combCurType==='wedge' && combWedgeMode==='pts'){
+    totalEl.textContent = c ? (sg/c).toFixed(1) : '0.0';
+  } else {
+    totalEl.innerHTML = combFmt(sg);
+  }
+  if(combCurType==='putting'||combCurType==='chip-hole'){
+    document.getElementById('comb-total-strokes').textContent = strokes;
+  }
+}
+
+function combSetWedge(m, recalc){
+  if(recalc===undefined) recalc=true;
+  combWedgeMode = m;
+  // Toggle SG/pts buttons
+  var sgBtn  = document.getElementById('comb-tbtn-sg');
+  var ptsBtn = document.getElementById('comb-tbtn-pts');
+  if(sgBtn)  { sgBtn.style.background=m==='sg'?'#4caf50':'transparent'; sgBtn.style.color=m==='sg'?'#fff':'#888'; }
+  if(ptsBtn) { ptsBtn.style.background=m==='pts'?'#4caf50':'transparent'; ptsBtn.style.color=m==='pts'?'#fff':'#888'; }
+  // Dim HCP when in pts mode (layout stays stable)
+  document.getElementById('comb-hcp-group').classList.toggle('comb-dimmed', m==='pts');
+  // Show/hide wsg columns
+  document.querySelectorAll('.comb-wsg').forEach(function(el){ el.style.display = m==='sg' ? '' : 'none'; });
+  document.getElementById('comb-exp-box').style.display = m==='sg' ? '' : 'none';
+  var wl = document.getElementById('comb-w-last');
+  if(wl) wl.textContent = m==='sg' ? 'SG' : 'Score';
+  document.getElementById('comb-total-label').textContent = m==='sg' ? 'Total SG' : 'Avg Pts';
+  if(recalc) combRecalcAll();
+}
+
+/* ── SAVE to Supabase ── */
+async function combSave(){
+  if(!currentUser){ showAuthPage(); return; }
+  var btn = document.getElementById('comb-save-btn');
+  var msg = document.getElementById('comb-save-msg');
+
+  // Gather scores
+  var holes=0, totalSg=0, totalExp=0, totalStrokes=0, filled=0;
+  for(var k in combState){
+    var r=combState[k];
+    holes++;
+    if(r.v!==''){
+      totalSg  += (combCurType==='wedge' && combWedgeMode==='pts') ? r.pts : r.sg;
+      totalExp += r.exp1;
+      totalStrokes += parseFloat(r.v)||0;
+      filled++;
+    }
+  }
+  if(filled===0){ msg.style.color='#f44'; msg.textContent='Enter at least one score first.'; return; }
+
+  var scoreDisplay = (combCurType==='wedge' && combWedgeMode==='pts')
+    ? (filled ? (totalSg/filled).toFixed(1) : '0.0') + ' avg pts'
+    : (totalSg>=0?'+':'') + totalSg.toFixed(2) + ' SG';
+
+  var isCombine = combCurMode==='combine';
+  var typeNames = {putting:'Putting','chip-prox':'Chipping (Prox)','chip-hole':'Chip Hole Out',wedge:'Wedge'};
+  var combineType = typeNames[combCurType] || combCurType;
+  var hcp = document.getElementById('comb-handicap').value;
+  var dateVal  = document.getElementById('comb-date').value || new Date().toISOString().split('T')[0];
+  var noteVal  = document.getElementById('comb-note').value || '';
+
+  btn.disabled=true; btn.textContent='Saving...'; msg.textContent='';
+
+  var payload = {
+    user_id:      currentUser.id,
+    combine_date: dateVal,
+    combine_type: combineType,
+    is_combine:   isCombine,
+    holes_count:  holes,
+    filled_count: filled,
+    total_sg:     combCurType==='wedge' && combWedgeMode==='pts' ? null : parseFloat(totalSg.toFixed(3)),
+    avg_pts:      combCurType==='wedge' && combWedgeMode==='pts' ? parseFloat((filled?totalSg/filled:0).toFixed(1)) : null,
+    total_exp:    parseFloat(totalExp.toFixed(3)),
+    total_strokes:combCurType==='putting'||combCurType==='chip-hole' ? totalStrokes : null,
+    handicap:     hcp,
+    score_mode:   combCurType==='wedge' ? combWedgeMode : 'sg',
+    note:         noteVal,
+    row_data:     JSON.stringify(combState)
+  };
+
+  var resp = await _sb.from('combine_scores').insert(payload);
+  if(resp.error){
+    btn.disabled=false; btn.textContent='💾 Save to Profile';
+    msg.style.color='#f44'; msg.textContent='Save failed: '+resp.error.message;
+    return;
+  }
+  btn.textContent='✅ Saved!';
+  msg.style.color='#4caf50'; msg.textContent='Score saved — view in your profile Combines tab.';
+}
+
+/* ── LOAD my combines (profile tab) ── */
+async function loadMyCombines(){
+  if(!currentUser) return;
+  var msg  = document.getElementById('profileCombMsg');
+  var list = document.getElementById('profileCombList');
+  var typeF = document.getElementById('profileCombFilterType').value;
+  var timeF = document.getElementById('profileCombFilterTime').value;
+  msg.textContent='Loading...'; list.innerHTML='';
+
+  var query = _sb.from('combine_scores').select('*').eq('user_id',currentUser.id).order('combine_date',{ascending:false}).order('created_at',{ascending:false});
+  if(typeF!=='all') query=query.eq('combine_type',typeF);
+  if(timeF!=='all'){
+    var cutoff=new Date(); cutoff.setMonth(cutoff.getMonth()-parseInt(timeF));
+    query=query.gte('combine_date',cutoff.toISOString().split('T')[0]);
+  }
+  var {data,error} = await query;
+  if(error){msg.textContent='Error: '+error.message;return;}
+  if(!data||data.length===0){msg.textContent='No combine scores saved yet.';return;}
+  msg.textContent='';
+  list.innerHTML = data.map(function(c){ return renderCombCard(c, true); }).join('');
+}
+
+/* ── LOAD student combines (coach view) ── */
+async function loadStudentCombines(){
+  if(!_currentStudentId) return;
+  var msg  = document.getElementById('svCombMsg');
+  var list = document.getElementById('svCombList');
+  var typeF = document.getElementById('svCombFilterType').value;
+  var timeF = document.getElementById('svCombFilterTime').value;
+  msg.textContent='Loading...'; list.innerHTML='';
+
+  var query = _sb.from('combine_scores').select('*').eq('user_id',_currentStudentId).order('combine_date',{ascending:false}).order('created_at',{ascending:false});
+  if(typeF!=='all') query=query.eq('combine_type',typeF);
+  if(timeF!=='all'){
+    var cutoff=new Date(); cutoff.setMonth(cutoff.getMonth()-parseInt(timeF));
+    query=query.gte('combine_date',cutoff.toISOString().split('T')[0]);
+  }
+  var {data,error} = await query;
+  if(error){msg.textContent='Error: '+error.message;return;}
+  if(!data||data.length===0){msg.textContent='No combine scores found for this student.';return;}
+  msg.textContent='';
+  list.innerHTML = data.map(function(c){ return renderCombCard(c, false); }).join('');
+}
+
+function renderCombCard(c, canDelete){
+  var scoreStr='';
+  if(c.total_sg!==null && c.total_sg!==undefined){
+    var s=parseFloat(c.total_sg);
+    var col=s>=0?'#69f0ae':'#ff5252';
+    scoreStr='<span style="color:'+col+';font-size:22px;font-weight:800;">'+(s>=0?'+':'')+s.toFixed(2)+' SG</span>';
+  } else if(c.avg_pts!==null && c.avg_pts!==undefined){
+    scoreStr='<span style="font-size:22px;font-weight:800;">'+parseFloat(c.avg_pts).toFixed(1)+' avg pts</span>';
+  }
+  var dateStr=c.combine_date?new Date(c.combine_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
+  var combBadge = c.is_combine ? '<span style="font-size:10px;background:#1565c0;color:#fff;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:600;">COMBINE</span>' : '';
+  var delBtn = canDelete ? '<button class="comb-hist-del" onclick="deleteCombScore(\''+c.id+'\')" title="Delete">🗑 Delete</button>' : '';
+  var metaStr = c.holes_count + '-hole • vs '+c.handicap+(c.note?' • <em style="color:#aaa;">'+escHtml(c.note)+'</em>':'');
+  return '<div class="comb-hist-card" id="combcard-'+c.id+'">'
+    +'<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px;">'
+    +'<div><span style="font-weight:700;color:#4caf50;font-size:14px;">'+escHtml(c.combine_type||'')+combBadge+'</span></div>'
+    +'<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:11px;color:#888;">'+dateStr+'</span>'+delBtn+'</div>'
+    +'</div>'
+    +scoreStr
+    +'<div style="font-size:11px;color:#666;margin-top:3px;">'+metaStr+'</div>'
+    +'</div>';
+}
+
+function escHtml(s){
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function deleteCombScore(id){
+  if(!confirm('Delete this combine score?')) return;
+  var {error} = await _sb.from('combine_scores').delete().eq('id',id).eq('user_id',currentUser.id);
+  if(error){ alert('Delete failed: '+error.message); return; }
+  var card = document.getElementById('combcard-'+id);
+  if(card) card.remove();
+}
+
+/* ── Navigation helpers ── */
+function goToCombines(){
+  show('combinesPage');
+}
+
+/* ── Update showProfileTab to include combines ── */
+var _origShowProfileTab = showProfileTab;
+showProfileTab = function(tab){
+  // Handle combines tab
+  document.getElementById('profileCombinesTab').style.display = tab==='combines' ? 'block' : 'none';
+  // Update tab bar buttons
+  var tabs = ['dashboard','rounds','combines','account'];
+  var ids  = ['ptabDash','ptabRounds','ptabCombines','ptabAccount'];
+  tabs.forEach(function(t,i){
+    var btn = document.getElementById(ids[i]);
+    if(!btn) return;
+    btn.style.background = t===tab ? '#333' : '#222';
+    btn.style.color      = t===tab ? '#fff' : '#888';
+    btn.style.fontWeight = t===tab ? '700' : '600';
+  });
+  if(tab==='combines'){ loadMyCombines(); return; }
+  _origShowProfileTab(tab);
+};
+
+/* ── Update showStudentTab to include combines ── */
+var _origShowStudentTab = showStudentTab;
+showStudentTab = function(tab){
+  document.getElementById('svCombinesTab').style.display = tab==='combines' ? 'block' : 'none';
+  var cBtn = document.getElementById('svTabCombines');
+  if(cBtn){
+    cBtn.style.background = tab==='combines' ? '#333' : '#222';
+    cBtn.style.color      = tab==='combines' ? '#fff' : '#888';
+    cBtn.style.fontWeight = tab==='combines' ? '700' : '600';
+  }
+  if(tab==='combines'){ loadStudentCombines(); return; }
+  _origShowStudentTab(tab);
+};
+
+</script>
 </body>
 </html>
