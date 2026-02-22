@@ -420,7 +420,13 @@ input{width:100%;max-width:320px;height:44px;background:#222;color:#fff;border-r
 
   <div style="width:100%;max-width:420px;padding:0 14px;box-sizing:border-box;">
     <div style="font-size:22px;font-weight:800;margin-bottom:2px;text-align:center;">Performance Analysis</div>
-    <div id="perfAnalysisSubtitle" style="font-size:12px;color:#444;text-align:center;margin-bottom:14px;">Loading...</div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+      <div id="perfAnalysisSubtitle" style="font-size:12px;color:#444;">Loading...</div>
+      <div id="perfHcpBadge" style="display:none;background:#1a1a2e;border:1px solid #2a2a4a;border-radius:20px;padding:4px 10px;align-items:center;gap:5px;">
+        <span style="font-size:10px;color:#6b7280;">vs</span>
+        <span id="perfHcpLabel" style="font-size:11px;font-weight:700;color:#93c5fd;">—</span>
+      </div>
+    </div>
 
     <!-- No rounds state -->
     <div id="perfNoRounds" style="display:none;background:#1a1a1a;border-radius:12px;padding:24px;text-align:center;color:#555;font-size:14px;line-height:1.6;margin-bottom:16px;">
@@ -1119,7 +1125,11 @@ function show(id){
   processingClick=false; // Reset processing flag when changing pages
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.getElementById(id).classList.add('active');
-  if(id === 'performanceAnalysisPage') { setTimeout(loadPerformanceAnalysis, 50); }
+  if(id === 'performanceAnalysisPage') {
+    // Reset cache so navigating away and back re-fetches fresh data
+    _perfCachedRounds = null;
+    setTimeout(loadPerformanceAnalysis, 50);
+  }
   // Hide score bar on non-scoring pages
   var scoringPages = ['parPage','shotPage','liePage','distancePage','puttPage','penaltyPage','obPenaltyPage','recoveryPage','missedGreenPage'];
   if(scoringPages.indexOf(id) === -1) { var sb=document.getElementById('scoreBar'); if(sb) sb.style.display='none'; }
@@ -5234,6 +5244,17 @@ function showDrillDetail(drillId, cat) {
 // ═══════════════════════════════════════════════════════════════
 
 var _perfActiveTabs = {};
+var _perfCachedRounds = null;  // Cache fetched rounds so hcp change doesn't re-fetch
+
+function onPerfHcpChange() {
+  // No-op — hcp is now read from user profile only
+}
+
+function perfHcpLabel(hcp) {
+  if (hcp === 'pro') return 'Tour Pro averages';
+  if (hcp === '0')   return 'Scratch (0 HCP) averages';
+  return hcp + ' HCP averages';
+}
 
 function togglePerfTab(tab) {
   var el = document.getElementById('perfTab-' + tab);
@@ -5288,7 +5309,20 @@ async function loadPerformanceAnalysis() {
     subtitle.textContent = 'Last ' + rounds.length + ' round' + (rounds.length > 1 ? 's' : '');
     content.style.display = 'block';
 
-    var analysis = computePerfAnalysis(rounds);
+    // Cache rounds for re-use
+    _perfCachedRounds = rounds;
+
+    // Read hcp from user's saved profile setting — read-only, matches their profile
+    var profileHcp = (currentUser && currentUser.user_metadata && currentUser.user_metadata.hcp_preference) || 'pro';
+
+    // Show the hcp badge so user can confirm it matches their profile
+    var badge = document.getElementById('perfHcpBadge');
+    if (badge) badge.style.display = 'flex';
+    var hcpLabelEl = document.getElementById('perfHcpLabel');
+    if (hcpLabelEl) hcpLabelEl.textContent = perfHcpLabel(profileHcp).replace(' averages', '');
+
+    var analysis = computePerfAnalysis(rounds, profileHcp);
+    analysis.displayHcp = profileHcp;
     renderPerfAnalysis(analysis);
 
   } catch(e) {
@@ -5298,7 +5332,9 @@ async function loadPerformanceAnalysis() {
   }
 }
 
-function computePerfAnalysis(rounds) {
+function computePerfAnalysis(rounds, displayHcp) {
+  // hcp alias used throughout SG recalculation
+  var hcp = displayHcp || 'pro';
   // Aggregate totals across all rounds
   var totals = {
     sgOTT: 0, sgAPP: 0, sgARG: 0, sgPutt: 0, roundCount: rounds.length,
@@ -5312,6 +5348,8 @@ function computePerfAnalysis(rounds) {
     appBuckets: {},
     // ARG by bucket
     argBuckets: { '1-15': {upDown:0,opp:0}, '15-30': {upDown:0,opp:0}, '30-75rough': {upDown:0,opp:0}, bunker: {saves:0,opp:0} },
+    scrMade: 0, scrOpp: 0,
+    totalPutts: 0, totalHoles: 0,
     // Putting by bucket
     puttBuckets: { '0-3':{makes:0,att:0}, '4-7':{makes:0,att:0}, '8-15':{makes:0,att:0}, '15-25':{makes:0,att:0}, '25+':{threePutts:0,att:0} },
     // Trend: SG last 3 vs prior
@@ -5330,8 +5368,46 @@ function computePerfAnalysis(rounds) {
     var holes = rd.allHoles || [];
 
     holes.forEach(function(h) {
-      var holeSgOTT = h.sgOTT || 0, holeSgAPP = h.sgAPP || 0;
-      var holeSgARG = h.sgARG || 0, holeSgPutt = h.sgPutting || 0;
+      // Recompute SG live from raw shots against the selected hcp baseline
+      var holeSgOTT = 0, holeSgAPP = 0, holeSgARG = 0, holeSgPutt = 0;
+      var holeShots = h.shots || [];
+      holeShots.forEach(function(s, idx) {
+        if (!s.lie || s.lie === 'PENALTY') return;
+        var db = s.distanceBefore || 0, da = s.distanceAfter || 0;
+        var isTeeShotPar45 = s.shotNum === 1 && (h.par === 4 || h.par === 5);
+        var isTeeShotPar3  = s.shotNum === 1 && h.par === 3;
+        var isPutt = s.isPutt;
+        var isShortGame = !isPutt && db <= 50 && !isTeeShotPar45;
+        var prevLie = idx > 0 ? (holeShots[idx-1].lie || 'FAIRWAY') : 'FAIRWAY';
+        var sg = 0;
+        if (isPutt) {
+          var eb = getExpectedPutts(db, hcp);
+          var ea = (s.lie === 'HOLED' || da === 0) ? 0 : getExpectedPutts(da, hcp);
+          sg = eb - ea - 1;
+          holeSgPutt += sg;
+        } else if (s.lie === 'HOLED') {
+          if (isTeeShotPar45)     { sg = getExpectedStrokes(h.yards, 'TEE', hcp) - 1; holeSgOTT += sg; }
+          else if (isTeeShotPar3) { sg = getExpectedStrokes(h.yards, 'TEE', hcp) - 1; holeSgAPP += sg; }
+          else if (isShortGame)   { sg = getExpectedStrokes(db, prevLie, hcp) - 1;     holeSgARG += sg; }
+          else                    { sg = getExpectedStrokes(db, prevLie, hcp) - 1;     holeSgAPP += sg; }
+        } else if (isTeeShotPar45) {
+          var eb = getExpectedStrokes(h.yards, 'TEE', hcp);
+          var ea = s.lie === 'GREEN' ? getExpectedPutts(da, hcp) : (da > 0 ? getExpectedStrokes(da, s.lie, hcp) : 2.5);
+          sg = eb - ea - 1; holeSgOTT += sg;
+        } else if (isTeeShotPar3) {
+          var eb = getExpectedStrokes(h.yards, 'TEE', hcp);
+          var ea = s.lie === 'GREEN' ? getExpectedPutts(da, hcp) : (da > 0 ? getExpectedStrokes(da, s.lie, hcp) : 2.5);
+          sg = eb - ea - 1; holeSgAPP += sg;
+        } else if (isShortGame) {
+          var eb = getExpectedStrokes(db, prevLie, hcp);
+          var ea = s.lie === 'GREEN' ? getExpectedPutts(da, hcp) : (da > 0 ? getExpectedStrokes(da, s.lie, hcp) : 2.5);
+          sg = eb - ea - 1; holeSgARG += sg;
+        } else {
+          var eb = getExpectedStrokes(db, prevLie, hcp);
+          var ea = s.lie === 'GREEN' ? getExpectedPutts(da, hcp) : (da > 0 ? getExpectedStrokes(da, s.lie, hcp) : 2.5);
+          sg = eb - ea - 1; holeSgAPP += sg;
+        }
+      });
 
       totals.sgOTT  += holeSgOTT;  totals.sgAPP  += holeSgAPP;
       totals.sgARG  += holeSgARG;  totals.sgPutt += holeSgPutt;
@@ -5360,19 +5436,16 @@ function computePerfAnalysis(rounds) {
         // ARG: chip/pitch shots close to the green, excludes all tee shots
         var isARG = !s.isPutt && !isPar45TeeShot && !isPar3TeeShot && s.shotNum > 1 && db <= 75;
 
-        // ── OTT ──────────────────────────────────────────
+        // ── OTT ─ drive distance only (fw/opp/left/right come from rd.stats) ──
         if (isPar45TeeShot && h.par >= 4) {
-          totals.fwOpp++;
-          if (isRecent) totals.recentFwOpp++; else totals.priorFwOpp++;
-          if (lie === 'FAIRWAY') { totals.fwHit++; }
-          else if (lie === 'LEFT ROUGH' || lie === 'RECOVERY' && s.recoveryDirection === 'LEFT') {
-            totals.fwLeft++;
+          // Track recent vs prior miss direction from shots (rd.stats has totals not per-round split)
+          if (lie === 'LEFT ROUGH' || (lie === 'RECOVERY' && s.recoveryDirection === 'LEFT')) {
             if (isRecent) totals.recentFwLeft++; else totals.priorFwLeft++;
-          } else if (lie === 'RIGHT ROUGH' || lie === 'RECOVERY' && s.recoveryDirection === 'RIGHT') {
-            totals.fwRight++;
+          } else if (lie === 'RIGHT ROUGH' || (lie === 'RECOVERY' && s.recoveryDirection === 'RIGHT')) {
             if (isRecent) totals.recentFwRight++; else totals.priorFwRight++;
           }
-          // Drive distance: yards to hole minus distance remaining
+          if (isRecent) totals.recentFwOpp++; else totals.priorFwOpp++;
+          // Drive distance
           if (da > 0 && lie !== 'OB' && lie !== 'PENALTY' && lie !== 'WATER') {
             totals.driveDistTotal += (db - da);
             totals.driveCount++;
@@ -5456,6 +5529,17 @@ function computePerfAnalysis(rounds) {
 
     if (isRecent) totals.recentCount += holes.length;
     else totals.priorCount += holes.length;
+
+    // ── Pull aggregates from saved rd.stats — matches dashboard exactly ────
+    var st = round.round_data.stats || {};
+    totals.fwHit   += st.fwHit   || 0;
+    totals.fwOpp   += st.fwOpp   || 0;
+    totals.fwLeft  += st.fwLeft  || 0;
+    totals.fwRight += st.fwRight || 0;
+    totals.scrMade += st.scrMade || 0;
+    totals.scrOpp  += st.scrOpp  || 0;
+    totals.totalPutts += st.totalPutts || 0;
+    totals.totalHoles += holes.length;
   });
 
   // Normalize SG per round
@@ -5490,6 +5574,12 @@ function computePerfAnalysis(rounds) {
   var totalGir = 0, totalGirOpp = 0;
   Object.values(totals.appBuckets).forEach(function(b){ totalGir += b.gir; totalGirOpp += b.opp; });
   totals.girPct = totalGirOpp > 0 ? Math.round(100 * totalGir / totalGirOpp) : 0;
+
+  // Scramble %
+  totals.scrPct = totals.scrOpp > 0 ? Math.round(100 * totals.scrMade / totals.scrOpp) : null;
+
+  // Putts per hole
+  totals.puttsPerHole = totals.totalHoles > 0 ? (totals.totalPutts / totals.totalHoles).toFixed(2) : null;
 
   // Determine priority category
   var sgCats = [
@@ -5561,9 +5651,10 @@ function renderPerfAnalysis(a) {
   var pc = a.priorityCat;
   var pcColor = sgColor(pc.val);
   var pcBadge = pc.val < 0 ? '⚠ Priority Area' : '✓ Your Focus';
+  var hcpCtx = perfHcpLabel(a.displayHcp || 'pro');
   var pcMsg = pc.val < 0
-    ? 'Averaging <strong style="color:' + pcColor + ';">' + pc.val.toFixed(1) + ' per round</strong> — biggest opportunity to score lower'
-    : 'Your weakest category right now. Still room to improve.';
+    ? 'Averaging <strong style="color:' + pcColor + ';">' + pc.val.toFixed(1) + ' per round</strong> vs ' + hcpCtx
+    : 'Weakest category vs ' + hcpCtx + '. Room to improve.';
   document.getElementById('perfPriorityCard').innerHTML =
     '<div style="background:linear-gradient(135deg,#1e0a0a,#2a0d0d);border:1px solid #5a1a1a;border-radius:12px;padding:16px;">' +
     '<div style="font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:' + pcColor + ';margin-bottom:8px;">' + pcBadge + '</div>' +
@@ -5576,18 +5667,20 @@ function renderPerfAnalysis(a) {
     '</div></div>';
 
   // ── SG Cards ───────────────────────────────────────────────
-  function sgCard(key, label, val, recentPer, priorPer, subtitle, bgClass, borderColor) {
+  function sgCard(key, label, val, recentPer, priorPer, stat1, stat2) {
     var color  = sgColor(val);
     var trend  = sgTrend(recentPer, priorPer);
     var active = document.getElementById('perfTab-' + key).style.display !== 'none';
-    return '<div style="font-size:10px;color:#555;font-weight:600;margin-bottom:4px;">' + label + '</div>' +
-      '<div style="display:flex;align-items:baseline;gap:5px;margin-bottom:5px;">' +
-      '<span style="font-size:22px;font-weight:800;color:' + color + ';">' + (val >= 0 ? '+' : '') + val.toFixed(2) + '</span>' +
-      '<span style="font-size:10px;color:' + trend.color + ';">' + trend.icon + '</span></div>' +
-      '<div style="font-size:10px;color:' + color + ';">' + subtitle + '</div>' +
+    var stat2Html = stat2 ? '<span style="color:#555;margin:0 4px;">·</span><span style="color:#888;">' + stat2 + '</span>' : '';
+    return '<div style="font-size:10px;color:#555;font-weight:600;margin-bottom:6px;text-align:center;">' + label + '</div>' +
+      '<div style="text-align:center;margin-bottom:6px;">' +
+      '<div style="font-size:26px;font-weight:800;color:' + color + ';line-height:1;">' + (val >= 0 ? '+' : '') + val.toFixed(2) + '</div>' +
+      '<div style="font-size:10px;color:' + trend.color + ';margin-top:3px;">' + trend.icon + '</div>' +
+      '</div>' +
+      '<div style="font-size:10px;text-align:center;color:' + color + ';">' + stat1 + stat2Html + '</div>' +
       '<div style="height:3px;background:rgba(255,255,255,0.06);border-radius:2px;margin-top:8px;">' +
       '<div style="width:' + Math.max(5, Math.min(100, (val + 2) / 4 * 100)) + '%;height:3px;background:' + color + ';border-radius:2px;"></div></div>' +
-      '<div style="font-size:9px;color:' + color + ';margin-top:6px;text-align:right;">' + (active ? 'Close ▲' : 'View detail →') + '</div>';
+      '<div style="font-size:9px;color:#444;margin-top:6px;text-align:right;">' + (active ? 'Close ▲' : 'View detail →') + '</div>';
   }
 
   var ottCard  = document.getElementById('perfCardOtt');
@@ -5600,10 +5693,14 @@ function renderPerfAnalysis(a) {
   argCard.style.cssText  = 'background:#130d1a;border:1px solid #2d1a40;border-radius:11px;padding:12px;cursor:pointer;';
   puttCard.style.cssText = 'background:#0d1525;border:1px solid #1a3050;border-radius:11px;padding:12px;cursor:pointer;';
 
-  ottCard.innerHTML  = sgCard('ott',  'SG: Off the Tee',    a.sgOTTperRound,  a.recentSgOTTper,  a.priorSgOTTper,  'FW ' + a.fwPct + '% · ' + a.avgDrive + ' yds avg');
-  appCard.innerHTML  = sgCard('app',  'SG: Approach',       a.sgAPPperRound,  a.recentSgAPPper,  a.priorSgAPPper,  'GIR ' + a.girPct + '%');
-  argCard.innerHTML  = sgCard('arg',  'SG: Around Green',   a.sgARGperRound,  a.recentSgARGper,  a.priorSgARGper,  'Scramble up/down');
-  puttCard.innerHTML = sgCard('putt', 'SG: Putting',        a.sgPuttperRound, a.recentSgPuttper, a.priorSgPuttper, 'Putts per round');
+  ottCard.innerHTML  = sgCard('ott',  'SG: Off the Tee',  a.sgOTTperRound,  a.recentSgOTTper,  a.priorSgOTTper,
+    'FW ' + a.fwPct + '%', a.avgDrive > 0 ? a.avgDrive + ' yds avg' : null);
+  appCard.innerHTML  = sgCard('app',  'SG: Approach',     a.sgAPPperRound,  a.recentSgAPPper,  a.priorSgAPPper,
+    'GIR ' + a.girPct + '%', null);
+  argCard.innerHTML  = sgCard('arg',  'SG: Arnd Green',   a.sgARGperRound,  a.recentSgARGper,  a.priorSgARGper,
+    a.scrPct !== null ? 'Scrambling ' + a.scrPct + '%' : 'Scrambling', null);
+  puttCard.innerHTML = sgCard('putt', 'SG: Putting',      a.sgPuttperRound, a.recentSgPuttper, a.priorSgPuttper,
+    a.puttsPerHole !== null ? a.puttsPerHole + ' putts/hole' : 'Putting', null);
 
   // ── OTT Detail ─────────────────────────────────────────────
   var ottTrend = '';
