@@ -1,0 +1,17 @@
+{
+  "id": "bridlewood",
+  "name": "Bridlewood Golf Club",
+  "location": "Flower Mound, TX",
+  "par": [4,5,3,4,4,5,4,3,4, 4,4,3,5,4,4,5,3,4],
+  "hcp": [3,13,15,17,5,11,1,9,7, 6,8,14,2,18,10,16,12,4],
+  "tees": [
+    {"name": "Black", "rating": 73.6, "slope": 130, "yards": [428,536,187,347,410,535,447,195,463, 392,429,191,568,402,405,507,231,438]},
+    {"name": "Blue",  "rating": 71.0, "slope": 123, "yards": [403,501,147,303,396,507,417,171,443, 381,390,168,533,301,384,490,215,407]},
+    {"name": "White", "rating": 68.5, "slope": 117, "yards": [391,495,130,271,371,495,372,142,401, 353,375,144,474,279,364,468,173,363]},
+    {"name": "Red",   "rating": 70.7, "slope": 120, "yards": [354,458,103,252,315,405,327,123,364, 315,331,117,432,236,294,416,127,309]}
+  ],
+  "_comment_holeFix": "OSM tags two ways as hole 10. The one whose first point is nearest each coordinate gets that number.",
+  "holeFix": {"1": [33.050349, -97.0908661], "10": [33.0501835, -97.0913506]},
+  "_comment_drop": "Polygons containing these points are not part of the course (driving range and its tee).",
+  "drop": [[33.0522, -97.0904], [33.0510, -97.0898]]
+}
