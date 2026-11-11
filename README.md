@@ -15,7 +15,9 @@ server, or host the repo with GitHub Pages.
 - **Holes**: each hole is shown with the tee at the bottom and the green at
   the top. A crosshair dot stays a third of the way down the screen; pan, zoom
   or rotate the map under it to see how far that spot is from the tee, how far
-  is left to the pin, and what it is sitting on. **Width** measures the fairway
+  is left to the pin, and the strokes gained by a tee shot finishing there.
+  The top-right corner shows the expected strokes for the hole and a handicap
+  dropdown that sets the benchmark. **Width** measures the fairway
   along an arc through the crosshair (every point on it is the same distance
   from the tee). **Arc** draws a dispersion arc there, 10 to 80 yards wide in
   total, set with the slider. The tee and pin dots can be dragged; tee
@@ -37,6 +39,13 @@ Rounds are stored on the device and, optionally, synced through a free
 
 Each document (a round, the outline edits, settings) syncs whole; the most
 recently changed copy wins.
+
+## Expected strokes
+
+`js/expected-data.js` is generated from the expected-strokes workbook (strokes
+to hole out by lie, distance and handicap level):
+
+    python3 tools/build_expected.py expected_strokes.xlsx js/expected-data.js
 
 ## Course data
 
