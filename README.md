@@ -1,9 +1,8 @@
 # Shot Tracker
 
-A golf stat tracker for Bridlewood Golf Club (Flower Mound, TX). Tap where each
-shot finished on a satellite map; the app works out the lie (fairway, rough,
-bunker, water, green) from mapped course outlines and computes strokes gained.
-No GPS is used.
+A golf stat tracker for Bridlewood Golf Club (Flower Mound, TX). It shows each hole on
+satellite imagery with mapped outlines for fairway, rough, bunker, water and
+green, and a movable target for measuring distances. No GPS is used.
 
 It is a static site with no build step: open `index.html` through any web
 server, or host the repo with GitHub Pages.
@@ -12,18 +11,16 @@ server, or host the repo with GitHub Pages.
 
 ## Using it
 
-- **Rounds**: pick a date and tees, then *New round*.
-- **Playing a hole**: the tee marker (1) and the pin are placed for you; drag
-  either to the real position (tee positions are remembered per tee set).
-  Tap where each shot finished. A tap in water adds a penalty stroke and asks
-  for the drop spot. On the green, set the putt length in feet, then *Holed* or
-  *+ Putt*. *OB / lost* adds a penalty and replays from the same spot. The lie
-  of any shot can be overridden in the shot list.
-- **Stats**: strokes gained per 18 holes by category (off the tee, approach,
-  around the green, putting), by distance, and per round. The baseline is PGA
-  Tour averages.
+- **Holes**: each hole is shown with the tee at the bottom and the green at
+  the top. Drag the target point (or tap the map) to see how far it is from
+  the tee, how far is left to the pin, and what it is sitting on. The tee and
+  pin markers can be dragged too; tee positions are remembered per tee set.
+  The menu button picks the tees.
 - **Course**: fix or redraw any outline. Anything inside no outline is rough.
-- **Settings**: sync, offline imagery, backup, delete rounds.
+- **Settings**: sync, offline imagery, backup.
+
+Shot logging and strokes-gained stats are switched off for now; their code
+(`js/model.js`, `js/sg.js`, `js/stats.js`) is kept for when they return.
 
 ## Sync across devices
 
