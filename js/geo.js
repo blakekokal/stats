@@ -46,3 +46,19 @@ export function boundsOf(points, padMeters = 0) {
   const dLat = padMeters / M_PER_DEG, dLng = dLat / Math.cos(s * Math.PI / 180);
   return [[s - dLat, w - dLng], [n + dLat, e + dLng]];
 }
+
+// Shortest distance in metres from point p to a line of [lat, lng] points.
+export function distToLine(p, line) {
+  const k = Math.cos((p[0] * Math.PI) / 180);
+  const xy = q => [(q[1] - p[1]) * M_PER_DEG * k, (q[0] - p[0]) * M_PER_DEG];
+  let best = Infinity, a = xy(line[0]);
+  if (line.length === 1) return Math.hypot(a[0], a[1]);
+  for (let i = 1; i < line.length; i++) {
+    const b = xy(line[i]);
+    const dx = b[0] - a[0], dy = b[1] - a[1], len2 = dx * dx + dy * dy;
+    const t = len2 ? Math.max(0, Math.min(1, -(a[0] * dx + a[1] * dy) / len2)) : 0;
+    best = Math.min(best, Math.hypot(a[0] + t * dx, a[1] + t * dy));
+    a = b;
+  }
+  return best;
+}

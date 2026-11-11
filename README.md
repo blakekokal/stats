@@ -13,11 +13,12 @@ server, or host the repo with GitHub Pages.
 
 - **Home**: version number, tee choice and the list of holes.
 - **Holes**: each hole is shown with the tee at the bottom and the green at
-  the top. A crosshair dot stays a third of the way down the screen; pan, zoom
+  the top, with only that hole's fairways, green and tees outlined (plus any
+  bunker or water near it). A crosshair dot stays a third of the way down the screen; pan, zoom
   or rotate the map under it to see how far that spot is from the tee, how far
   is left to the pin, and the strokes gained by a tee shot finishing there.
   The top-right corner shows the expected strokes for the hole and a handicap
-  dropdown that sets the benchmark. **Heat** colours the whole hole by that
+  dropdown that sets the benchmark. **Heat** colours the hole's corridor by that
   strokes-gained figure, red for a stroke lost through to green for a stroke
   gained. **Width** measures the fairway
   along an arc through the crosshair (every point on it is the same distance
