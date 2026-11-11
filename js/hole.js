@@ -1,16 +1,19 @@
 // Hole viewer: the hole drawn tee-at-bottom, green-at-top. A crosshair dot is
 // fixed a third of the way down the screen; panning, zooming or rotating the map
 // moves the course underneath it, and the distances from the tee and to the pin
-// follow. Two optional arcs, both centred on the tee and passing through the
+// follow, along with the strokes gained by a tee shot finishing there for the
+// chosen handicap level. Two optional arcs, both centred on the tee and passing through the
 // crosshair: the fairway width, and a dispersion arc of adjustable width.
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, rememberTee } from './app.js';
 import { store } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
+import { expected, LEVELS } from './sg.js';
 
 const maplibregl = window.maplibregl;
-const LIE_NAME = { tee: 'Tee box', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', green: 'Green', water: 'Water' };
+const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR' };
+const levelName = l => (l === 'Pro' || l === 'Scratch' ? l : `${l} hcp`);
 const ll = p => [p[1], p[0]]; // [lat, lng] -> MapLibre's [lng, lat]
 const M_PER_DEG = 111320;
 const CROSSHAIR_Y = 1 / 3; // fraction of the screen height, from the top
@@ -93,6 +96,7 @@ export function renderHole(view, n) {
   let showWidth = flag('gs:fairwayWidth', '0');
   let showArc = flag('gs:arc', '0');
   let arcYd = Math.min(80, Math.max(10, +localStorage.getItem('gs:arcYd') || 40));
+  let level = LEVELS.includes(localStorage.getItem('gs:level')) ? localStorage.getItem('gs:level') : 'Scratch';
 
   const mapEl = h('div', { id: 'gmap' });
   const toPinEl = h('div', { class: 'readout to' });
@@ -113,6 +117,12 @@ export function renderHole(view, n) {
   const widthBtn = toggle('width', 'Width', '↔', 'Fairway width at the crosshair', () => showWidth, v => { showWidth = v; localStorage.setItem('gs:fairwayWidth', v ? '1' : '0'); });
   const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); arcSlider.hidden = !v; });
 
+  const expValue = h('strong', {});
+  const expPill = h('div', { class: 'exppill' },
+    h('div', {}, h('small', {}, 'Expected'), expValue),
+    h('select', { 'aria-label': 'Handicap level', onchange: e => { level = e.target.value; localStorage.setItem('gs:level', level); update(); } },
+      LEVELS.map(l => h('option', { value: l, selected: l === level }, levelName(l)))));
+
   const menu = h('div', { class: 'sheet', hidden: true },
     h('label', {}, 'Tees ', h('select', { onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHole(view, n); } },
       course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
@@ -121,7 +131,7 @@ export function renderHole(view, n) {
     h('a', { class: 'btn', href: '#/settings' }, 'Settings'));
 
   view.replaceChildren(h('div', { class: 'holeview' }, mapEl,
-    h('div', { class: 'vertag' }, `v${VERSION}`),
+    h('div', { class: 'vertag' }, `v${VERSION}`), expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
     arcBtn, widthBtn, arcSlider, menu,
@@ -141,7 +151,7 @@ export function renderHole(view, n) {
     maxZoom: 21, pitchWithRotate: false, touchPitch: false,
     attributionControl: false,
   });
-  m.addControl(new maplibregl.AttributionControl({ compact: true }), 'top-right');
+  m.addControl(new maplibregl.AttributionControl({ compact: true }), 'top-left');
   window.holeMap = m; // handy for debugging from the console
 
   // Opening view: the crosshair on a typical drive (par 4s and 5s) or on the pin
@@ -153,7 +163,7 @@ export function renderHole(view, n) {
     const line = [tee, ...ch.line.slice(1, -1), pin];
     const holeYd = line.slice(1).reduce((a, p, i) => a + yards(line[i], p), 0);
     const start = ch.par === 3 ? pin : alongLine(line, Math.min(250, holeYd * 0.7));
-    const below = hgt * (1 - CROSSHAIR_Y) - 150, above = hgt * CROSSHAIR_Y - 60; // pixels free below and above the crosshair
+    const below = hgt * (1 - CROSSHAIR_Y) - 150, above = hgt * CROSSHAIR_Y - 110; // pixels free below and above the crosshair
     const mPerPx = Math.max(yards(tee, start) / YD_PER_M / below, yards(start, pin) / YD_PER_M / above, 0.05);
     const zoom = Math.log2((78271.517 * Math.cos((start[0] * Math.PI) / 180)) / mPerPx);
     m.jumpTo({ center: ll(start), zoom, bearing: bearing(tee, pin), padding: { top: 0, left: 0, right: 0, bottom: hgt * (1 - 2 * CROSSHAIR_Y) } });
@@ -167,9 +177,21 @@ export function renderHole(view, n) {
     target = [c.lat, c.lng];
     const lie = lieAt(target, course.features);
     const w = showWidth ? fairwayWidth(tee, target, fairways) : null;
-    toPinEl.replaceChildren(h('b', {}, `${Math.round(yards(target, pin))} yd`));
-    fromTeeEl.replaceChildren(h('b', {}, `${Math.round(yards(tee, target))} yd`),
-      h('span', { class: 'lie', style: `color:${LIE_COLOR[lie]}` }, LIE_NAME[lie]),
+    const fromTee = yards(tee, target), toPin = yards(target, pin);
+
+    // Strokes gained by a tee shot that finishes on the crosshair: expected strokes
+    // from the tee, minus expected strokes from here, minus the stroke played.
+    // The tee box counts as fairway; water costs a penalty stroke and a drop in the rough.
+    const teeExp = expected('tee', yards(tee, pin), level);
+    const hereExp = lie === 'green' ? expected('green', toPin * 3, level)
+      : lie === 'water' ? expected('rough', toPin, level) + 1
+      : expected(lie === 'tee' ? 'fairway' : lie, toPin, level);
+    const sg = teeExp - hereExp - 1;
+    expValue.textContent = teeExp.toFixed(2);
+
+    toPinEl.replaceChildren(h('b', {}, `${Math.round(toPin)} yd`));
+    fromTeeEl.replaceChildren(h('b', {}, `${Math.round(fromTee)} yd`),
+      h('span', { class: 'sg ' + (sg >= 0 ? 'gain' : 'loss') }, `${sg >= 0 ? '+' : '−'}${Math.abs(sg).toFixed(2)} (${LIE_TAG[lie]})`),
       h('span', { class: 'wide', hidden: !showWidth }, w ? `${Math.round(w.yards)} yd wide` : 'No fairway here'));
 
     const arc = showArc ? arcThrough(tee, target) : null;
