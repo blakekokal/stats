@@ -2,7 +2,8 @@
 // fixed a third of the way down the screen; panning, zooming or rotating the map
 // moves the course underneath it, and the distances from the tee and to the pin
 // follow, along with the strokes gained by a tee shot finishing there for the
-// chosen handicap level. Two optional arcs, both centred on the tee and passing through the
+// chosen handicap level. An optional heat map colours the whole hole by that
+// same strokes-gained figure. Two optional arcs, both centred on the tee and passing through the
 // crosshair: the fairway width, and a dispersion arc of adjustable width.
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, rememberTee } from './app.js';
@@ -96,6 +97,7 @@ export function renderHole(view, n) {
   let showWidth = flag('gs:fairwayWidth', '0');
   let showArc = flag('gs:arc', '0');
   let arcYd = Math.min(80, Math.max(10, +localStorage.getItem('gs:arcYd') || 40));
+  let showHeat = flag('gs:heat', '0');
   let level = LEVELS.includes(localStorage.getItem('gs:level')) ? localStorage.getItem('gs:level') : 'Scratch';
 
   const mapEl = h('div', { id: 'gmap' });
@@ -115,12 +117,15 @@ export function renderHole(view, n) {
       oninput: e => { arcYd = +e.target.value; arcValue.textContent = `${arcYd} yd`; localStorage.setItem('gs:arcYd', arcYd); update(); } }),
     arcValue);
   const widthBtn = toggle('width', 'Width', '↔', 'Fairway width at the crosshair', () => showWidth, v => { showWidth = v; localStorage.setItem('gs:fairwayWidth', v ? '1' : '0'); });
+  const heatBtn = toggle('heat', 'Heat', '▦', 'Strokes-gained heat map', () => showHeat, v => { showHeat = v; localStorage.setItem('gs:heat', v ? '1' : '0'); refreshHeat(); });
+  const legend = h('div', { class: 'heatlegend', hidden: !showHeat }, h('small', {}, 'Strokes gained'), h('div', { class: 'ramp' }),
+    h('div', { class: 'ticks' }, h('span', {}, '−1'), h('span', {}, '0'), h('span', {}, '+1')));
   const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); arcSlider.hidden = !v; });
 
   const expValue = h('strong', {});
   const expPill = h('div', { class: 'exppill' },
     h('div', {}, h('small', {}, 'Expected'), expValue),
-    h('select', { 'aria-label': 'Handicap level', onchange: e => { level = e.target.value; localStorage.setItem('gs:level', level); update(); } },
+    h('select', { 'aria-label': 'Handicap level', onchange: e => { level = e.target.value; localStorage.setItem('gs:level', level); update(); refreshHeat(); } },
       LEVELS.map(l => h('option', { value: l, selected: l === level }, levelName(l)))));
 
   const menu = h('div', { class: 'sheet', hidden: true },
@@ -134,7 +139,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    arcBtn, widthBtn, arcSlider, menu,
+    heatBtn, arcBtn, widthBtn, arcSlider, legend, menu,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${n === 1 ? 18 : n - 1}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, h('small', {}, `Hole ${n} · Par ${ch.par}`), h('strong', {}, `${teeSet.yards[n - 1]} Yards`)),
@@ -170,6 +175,56 @@ export function renderHole(view, n) {
   };
   place();
 
+  // Expected strokes to hole out from a lie `yd` yards from the pin. The tee box
+  // counts as fairway, as does any green other than this hole's (more than 50
+  // yards from the pin); water costs a penalty stroke and a drop in the rough.
+  const expectedFrom = (lie, yd) => (lie === 'green' && yd <= 50 ? expected('green', yd * 3, level)
+    : lie === 'green' ? expected('fairway', yd, level)
+    : lie === 'water' ? expected('rough', yd, level) + 1
+    : expected(lie === 'tee' ? 'fairway' : lie, yd, level));
+
+  // Heat map: strokes gained by a tee shot finishing at each point around the
+  // hole, painted red (lost a stroke or more) through pale (even) to green
+  // (gained a stroke or more) and laid over the imagery.
+  const heatBox = boundsOf([tee, pin, ...ch.line], 75);
+  // Only outlines near the hole matter, and each carries its bounding box so most
+  // points can be ruled out without a full point-in-polygon test.
+  const heatFeatures = course.features
+    .filter(f => f.p[0].some(p => p[0] > heatBox[0][0] && p[0] < heatBox[1][0] && p[1] > heatBox[0][1] && p[1] < heatBox[1][1]))
+    .map(f => ({ ...f, box: boundsOf(f.p[0]) }));
+  const heatLie = p => lieAt(p, heatFeatures.filter(f => p[0] >= f.box[0][0] && p[0] <= f.box[1][0] && p[1] >= f.box[0][1] && p[1] <= f.box[1][1]));
+  const heatCorners = [[heatBox[0][1], heatBox[1][0]], [heatBox[1][1], heatBox[1][0]], [heatBox[1][1], heatBox[0][0]], [heatBox[0][1], heatBox[0][0]]];
+  function heatImage() {
+    const CELL = 2.5; // metres
+    const [[s0, w0], [n0, e0]] = heatBox;
+    const rows = Math.ceil(((n0 - s0) * M_PER_DEG) / CELL), cols = Math.ceil(((e0 - w0) * M_PER_DEG * Math.cos((s0 * Math.PI) / 180)) / CELL);
+    const canvas = document.createElement('canvas'); canvas.width = cols; canvas.height = rows;
+    const ctx = canvas.getContext('2d'), img = ctx.createImageData(cols, rows);
+    const teeExp = expected('tee', yards(tee, pin), level);
+    const LOSS = [229, 57, 53], EVEN = [245, 240, 225], GAIN = [34, 197, 94];
+    for (let r = 0; r < rows; r++) {
+      const lat = n0 - ((r + 0.5) / rows) * (n0 - s0);
+      for (let c = 0; c < cols; c++) {
+        const p = [lat, w0 + ((c + 0.5) / cols) * (e0 - w0)];
+        const sg = teeExp - expectedFrom(heatLie(p), yards(p, pin)) - 1;
+        const t = Math.max(-1, Math.min(1, sg)), end = t < 0 ? LOSS : GAIN, k = Math.abs(t), i = (r * cols + c) * 4;
+        for (let j = 0; j < 3; j++) img.data[i + j] = EVEN[j] + (end[j] - EVEN[j]) * k;
+        img.data[i + 3] = 150;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return canvas.toDataURL();
+  }
+  function refreshHeat() {
+    legend.hidden = !showHeat;
+    if (!m.getLayer('outlines')) return; // map not loaded yet; the load handler calls this again
+    if (showHeat && !m.getSource('heat')) {
+      m.addSource('heat', { type: 'image', url: heatImage(), coordinates: heatCorners });
+      m.addLayer({ id: 'heat', type: 'raster', source: 'heat', paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' } }, 'outlines');
+    } else if (showHeat) m.getSource('heat').updateImage({ url: heatImage(), coordinates: heatCorners });
+    if (m.getLayer('heat')) m.setLayoutProperty('heat', 'visibility', showHeat ? 'visible' : 'none');
+  }
+
   const line = pts => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: pts.map(ll) } });
 
   function update() {
@@ -183,12 +238,8 @@ export function renderHole(view, n) {
 
     // Strokes gained by a tee shot that finishes on the crosshair: expected strokes
     // from the tee, minus expected strokes from here, minus the stroke played.
-    // The tee box counts as fairway; water costs a penalty stroke and a drop in the rough.
     const teeExp = expected('tee', yards(tee, pin), level);
-    const hereExp = lie === 'green' ? expected('green', toPin * 3, level)
-      : lie === 'water' ? expected('rough', toPin, level) + 1
-      : expected(lie === 'tee' ? 'fairway' : lie, toPin, level);
-    const sg = teeExp - hereExp - 1;
+    const sg = teeExp - expectedFrom(lie, toPin) - 1;
     expValue.textContent = teeExp.toFixed(2);
 
     toPinEl.replaceChildren(h('b', {}, `${Math.round(toPin)} yd`));
@@ -210,8 +261,8 @@ export function renderHole(view, n) {
     mk.on('dragend', () => { const p = mk.getLngLat(); onMove([p.lat, p.lng], true); });
     return mk;
   };
-  dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, (p, done) => { tee = p; if (done) rememberTee(teeName, ch, p); update(); });
-  dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }), pin, p => { pin = p; update(); });
+  dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, (p, done) => { tee = p; if (done) { rememberTee(teeName, ch, p); refreshHeat(); } update(); });
+  dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }), pin, (p, done) => { pin = p; if (done) refreshHeat(); update(); });
 
   m.on('move', update);
   // The browser's toolbars showing or hiding changes the screen height: keep the
@@ -234,6 +285,7 @@ export function renderHole(view, n) {
     };
     addLine('path', 4, { 'line-color': '#fff', 'line-width': 2 });
     addLine('arc', 5, { 'line-color': '#fff', 'line-width': 2.5 }, { 'line-cap': 'round' });
+    refreshHeat();
     addLine('width', 5, { 'line-color': '#ffe14d', 'line-width': 3, 'line-dasharray': [0.1, 2] }, { 'line-cap': 'round' });
     update();
   });

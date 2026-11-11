@@ -124,8 +124,14 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .exppill small { display: block; font-size: 11px; opacity: .85; line-height: 1.1; } .exppill strong { font-size: 22px; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .exppill select { min-height: 36px; padding: 4px 8px; border-radius: 10px; background: #2a2f2c; border-color: #444; }
 .holeview .maplibregl-ctrl-top-left { top: calc(30px + env(safe-area-inset-top)); }
-.fab.width, .fab.arc { left: auto; right: 14px; display: grid; place-content: center; line-height: 1; font-size: 18px; }
+.fab.width, .fab.arc, .fab.heat { left: auto; right: 14px; display: grid; place-content: center; line-height: 1; font-size: 18px; }
 .fab.arc { bottom: calc(80px + env(safe-area-inset-bottom)); }
+.fab.heat { bottom: calc(138px + env(safe-area-inset-bottom)); }
+.fab.heat.on { background: linear-gradient(90deg, #e53935, #f5f0e1, #22c55e); }
+.heatlegend { position: absolute; top: calc(66px + env(safe-area-inset-top)); right: 10px; z-index: 3; width: 132px; background: #111c; backdrop-filter: blur(8px); border-radius: 10px; padding: 5px 9px 4px; color: #fff; font-size: 11px; text-align: center; pointer-events: none; }
+.heatlegend[hidden] { display: none; }
+.heatlegend .ramp { height: 8px; border-radius: 4px; margin: 3px 0 2px; background: linear-gradient(90deg, #e53935, #f5f0e1, #22c55e); }
+.heatlegend .ticks { display: flex; justify-content: space-between; font-variant-numeric: tabular-nums; }
 .fab small { font-size: 9px; font-weight: 600; }
 .fab.on { background: #ffe14d; color: #111; }
 .fab.arc.on { background: #fff; }

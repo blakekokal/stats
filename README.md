@@ -17,7 +17,9 @@ server, or host the repo with GitHub Pages.
   or rotate the map under it to see how far that spot is from the tee, how far
   is left to the pin, and the strokes gained by a tee shot finishing there.
   The top-right corner shows the expected strokes for the hole and a handicap
-  dropdown that sets the benchmark. **Width** measures the fairway
+  dropdown that sets the benchmark. **Heat** colours the whole hole by that
+  strokes-gained figure, red for a stroke lost through to green for a stroke
+  gained. **Width** measures the fairway
   along an arc through the crosshair (every point on it is the same distance
   from the tee). **Arc** draws a dispersion arc there, 10 to 80 yards wide in
   total, set with the slider. The tee and pin dots can be dragged; tee
