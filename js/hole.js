@@ -8,7 +8,7 @@
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, rememberTee } from './app.js';
 import { store } from './store.js';
-import { lieAt, yards, inPolygon, boundsOf, YD_PER_M } from './geo.js';
+import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
 
@@ -28,16 +28,6 @@ export const lastHole = () => +sessionStorage.getItem('hole') || 1;
 function bearing(a, b) {
   const k = Math.cos((a[0] * Math.PI) / 180);
   return (Math.atan2((b[1] - a[1]) * k, b[0] - a[0]) * 180) / Math.PI;
-}
-
-// A point `yd` yards along a line of [lat, lng] points.
-function alongLine(line, yd) {
-  for (let i = 0; i < line.length - 1; i++) {
-    const seg = yards(line[i], line[i + 1]);
-    if (yd <= seg) { const t = yd / seg; return [line[i][0] + t * (line[i + 1][0] - line[i][0]), line[i][1] + t * (line[i + 1][1] - line[i][1])]; }
-    yd -= seg;
-  }
-  return line[line.length - 1];
 }
 
 // The arc through `target` centred on `tee`: every point on it is the same
@@ -79,6 +69,20 @@ export function fairwayWidth(tee, target, fairways, reachYd = 80) {
   while (l > -limit && on(l - STEP)) l -= STEP;
   while (r < limit && on(r + STEP)) r += STEP;
   return { arc, l, r, yards: (r - l) * YD_PER_M };
+}
+
+// The outlines worth drawing for one hole: its own fairways, greens and tee
+// boxes (each belongs to the hole whose centre line it is nearest), plus any
+// bunker or water within 70 m of the hole's line, since those can be shared.
+function holeFeatures(ch) {
+  const centre = ring => [ring.reduce((a, p) => a + p[0], 0) / ring.length, ring.reduce((a, p) => a + p[1], 0) / ring.length];
+  return course.features.filter(f => {
+    if (f.t === 'bunker' || f.t === 'water') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
+    const c = centre(f.p[0]);
+    if (f.t === 'green') return yards(c, ch.pin) <= 60; // the hole's own green, not a neighbour's or a practice green
+    const own = distToLine(c, ch.line);
+    return own <= 120 && course.holes.every(o => o === ch || distToLine(c, o.line) >= own);
+  });
 }
 
 export function renderHole(view, n) {
@@ -159,27 +163,32 @@ export function renderHole(view, n) {
   m.addControl(new maplibregl.AttributionControl({ compact: true }), 'top-left');
   window.holeMap = m; // handy for debugging from the console
 
-  // Opening view: the crosshair on a typical drive (par 4s and 5s) or on the pin
-  // (par 3s), zoomed so the tee sits just above the hole pill and the green is
-  // on screen above the crosshair. Bottom padding makes the map's centre, and so
-  // its rotation and zoom pivot, the crosshair itself.
+  // Opening view, the same for every hole: the tee just above the hole pill, the
+  // pin just below the readouts at the top, and the hole centred left to right,
+  // zoomed out further only if a dogleg would not fit the width. Bottom padding
+  // makes the map's centre, and so its rotation and zoom pivot, the crosshair.
   const place = () => {
-    const hgt = mapEl.clientHeight;
-    const line = [tee, ...ch.line.slice(1, -1), pin];
-    const holeYd = line.slice(1).reduce((a, p, i) => a + yards(line[i], p), 0);
-    const start = ch.par === 3 ? pin : alongLine(line, Math.min(250, holeYd * 0.7));
-    const below = hgt * (1 - CROSSHAIR_Y) - 150, above = hgt * CROSSHAIR_Y - 110; // pixels free below and above the crosshair
-    const mPerPx = Math.max(yards(tee, start) / YD_PER_M / below, yards(start, pin) / YD_PER_M / above, 0.05);
+    const hgt = mapEl.clientHeight, wid = mapEl.clientWidth;
+    const TOP = 125, BOTTOM = 150, SIDE = 30; // pixels kept clear of the hole
+    const brg = (bearing(tee, pin) * Math.PI) / 180, k = Math.cos((tee[0] * Math.PI) / 180);
+    const local = p => { // metres along the tee-to-pin axis, and to the right of it
+      const e = (p[1] - tee[1]) * M_PER_DEG * k, n = (p[0] - tee[0]) * M_PER_DEG;
+      return [e * Math.sin(brg) + n * Math.cos(brg), e * Math.cos(brg) - n * Math.sin(brg)];
+    };
+    const length = local(pin)[0];
+    const offLine = Math.max(...ch.line.slice(1, -1).map(p => Math.abs(local(p)[1])), 0) + 30; // widest point of the route, plus half a fairway
+    const mPerPx = Math.max(length / (hgt - TOP - BOTTOM), (2 * offLine) / (wid - 2 * SIDE), 0.05);
+    const teeY = (TOP + hgt - BOTTOM) / 2 + length / mPerPx / 2; // screen position of the tee
+    const along = (teeY - hgt * CROSSHAIR_Y) * mPerPx; // how far up the axis the crosshair sits
+    const start = [tee[0] + (along * Math.cos(brg)) / M_PER_DEG, tee[1] + (along * Math.sin(brg)) / (M_PER_DEG * k)];
     const zoom = Math.log2((78271.517 * Math.cos((start[0] * Math.PI) / 180)) / mPerPx);
     m.jumpTo({ center: ll(start), zoom, bearing: bearing(tee, pin), padding: { top: 0, left: 0, right: 0, bottom: hgt * (1 - 2 * CROSSHAIR_Y) } });
   };
   place();
 
   // Expected strokes to hole out from a lie `yd` yards from the pin. The tee box
-  // counts as fairway, as does any green other than this hole's (more than 50
-  // yards from the pin); water costs a penalty stroke and a drop in the rough.
-  const expectedFrom = (lie, yd) => (lie === 'green' && yd <= 50 ? expected('green', yd * 3, level)
-    : lie === 'green' ? expected('fairway', yd, level)
+  // counts as fairway; water costs a penalty stroke and a drop in the rough.
+  const expectedFrom = (lie, yd) => (lie === 'green' ? expected('green', yd * 3, level)
     : lie === 'water' ? expected('rough', yd, level) + 1
     : expected(lie === 'tee' ? 'fairway' : lie, yd, level));
 
@@ -192,7 +201,7 @@ export function renderHole(view, n) {
   const heatFeatures = course.features
     .filter(f => f.p[0].some(p => p[0] > heatBox[0][0] && p[0] < heatBox[1][0] && p[1] > heatBox[0][1] && p[1] < heatBox[1][1]))
     .map(f => ({ ...f, box: boundsOf(f.p[0]) }));
-  const heatLie = p => lieAt(p, heatFeatures.filter(f => p[0] >= f.box[0][0] && p[0] <= f.box[1][0] && p[1] >= f.box[0][1] && p[1] <= f.box[1][1]));
+  const heatLie = p => lieOn(p, heatFeatures.filter(f => p[0] >= f.box[0][0] && p[0] <= f.box[1][0] && p[1] >= f.box[0][1] && p[1] <= f.box[1][1]));
   const heatCorners = [[heatBox[0][1], heatBox[1][0]], [heatBox[1][1], heatBox[1][0]], [heatBox[1][1], heatBox[0][0]], [heatBox[0][1], heatBox[0][0]]];
   function heatImage() {
     const CELL = 2.5; // metres
@@ -200,6 +209,7 @@ export function renderHole(view, n) {
     const rows = Math.ceil(((n0 - s0) * M_PER_DEG) / CELL), cols = Math.ceil(((e0 - w0) * M_PER_DEG * Math.cos((s0 * Math.PI) / 180)) / CELL);
     const canvas = document.createElement('canvas'); canvas.width = cols; canvas.height = rows;
     const ctx = canvas.getContext('2d'), img = ctx.createImageData(cols, rows);
+    const route = [tee, ...ch.line.slice(1, -1), pin];
     const teeExp = expected('tee', yards(tee, pin), level);
     const LOSS = [229, 57, 53], EVEN = [245, 240, 225], GAIN = [34, 197, 94];
     for (let r = 0; r < rows; r++) {
@@ -209,7 +219,8 @@ export function renderHole(view, n) {
         const sg = teeExp - expectedFrom(heatLie(p), yards(p, pin)) - 1;
         const t = Math.max(-1, Math.min(1, sg)), end = t < 0 ? LOSS : GAIN, k = Math.abs(t), i = (r * cols + c) * 4;
         for (let j = 0; j < 3; j++) img.data[i + j] = EVEN[j] + (end[j] - EVEN[j]) * k;
-        img.data[i + 3] = 150;
+        // Full strength within 55 m of the hole's route, fading out by 70 m.
+        img.data[i + 3] = 150 * Math.max(0, Math.min(1, (70 - distToLine(p, route)) / 15));
       }
     }
     ctx.putImageData(img, 0, 0);
@@ -225,6 +236,14 @@ export function renderHole(view, n) {
     if (m.getLayer('heat')) m.setLayoutProperty('heat', 'visibility', showHeat ? 'visible' : 'none');
   }
 
+  // The lie at a point, for scoring this hole: another hole's green (or a
+  // practice green) is just short grass here, so it counts as fairway.
+  const ownGreens = holeFeatures(ch).filter(f => f.t === 'green');
+  function lieOn(p, features) {
+    const lie = lieAt(p, features);
+    return lie === 'green' && !ownGreens.some(g => inPolygon(p, g.p)) ? 'fairway' : lie;
+  }
+
   const line = pts => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: pts.map(ll) } });
 
   function update() {
@@ -232,7 +251,7 @@ export function renderHole(view, n) {
     // line always meets the dot even if the screen size changed since the last layout.
     const c = m.unproject([mapEl.clientWidth / 2, mapEl.clientHeight * CROSSHAIR_Y]);
     target = [c.lat, c.lng];
-    const lie = lieAt(target, course.features);
+    const lie = lieOn(target, course.features);
     const w = showWidth ? fairwayWidth(tee, target, fairways) : null;
     const fromTee = yards(tee, target), toPin = yards(target, pin);
 
@@ -275,7 +294,7 @@ export function renderHole(view, n) {
     m.resize(); place();
     const credit = mapEl.querySelector('.maplibregl-ctrl-attrib'); // start collapsed to the (i) button
     if (credit) credit.classList.remove('maplibregl-compact-show');
-    m.addSource('outlines', { type: 'geojson', data: { type: 'FeatureCollection', features: course.features.map(f => ({
+    m.addSource('outlines', { type: 'geojson', data: { type: 'FeatureCollection', features: holeFeatures(ch).map(f => ({
       type: 'Feature', properties: { color: LIE_COLOR[f.t] }, geometry: { type: 'Polygon', coordinates: f.p.map(r => r.map(ll)) } })) } });
     m.addLayer({ id: 'outlines', type: 'line', source: 'outlines', paint: { 'line-color': ['get', 'color'], 'line-width': 1.25, 'line-opacity': 0.7 } });
     const addLine = (id, shadow, paint, layout = {}) => {
