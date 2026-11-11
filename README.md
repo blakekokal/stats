@@ -12,10 +12,12 @@ server, or host the repo with GitHub Pages.
 ## Using it
 
 - **Holes**: each hole is shown with the tee at the bottom and the green at
-  the top. Drag the target point (or tap the map) to see how far it is from
-  the tee, how far is left to the pin, and what it is sitting on. The tee and
-  pin markers can be dragged too; tee positions are remembered per tee set.
-  The menu button picks the tees.
+  the top. A crosshair dot stays at the centre of the screen; pan, zoom or
+  rotate the map under it to see how far that spot is from the tee, how far is
+  left to the pin, and what it is sitting on. The Width button measures the
+  fairway at the crosshair, square to the line from the tee. The tee and pin
+  markers can be dragged; tee positions are remembered per tee set. The menu
+  button picks the tees.
 - **Course**: fix or redraw any outline. Anything inside no outline is rough.
 - **Settings**: sync, offline imagery, backup.
 
