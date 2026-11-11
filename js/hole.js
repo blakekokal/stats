@@ -173,7 +173,9 @@ export function renderHole(view, n) {
   const line = pts => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: pts.map(ll) } });
 
   function update() {
-    const c = m.getCenter(); // the padded centre is where the crosshair is drawn
+    // Read what is under the crosshair from its actual screen position, so the
+    // line always meets the dot even if the screen size changed since the last layout.
+    const c = m.unproject([mapEl.clientWidth / 2, mapEl.clientHeight * CROSSHAIR_Y]);
     target = [c.lat, c.lng];
     const lie = lieAt(target, course.features);
     const w = showWidth ? fairwayWidth(tee, target, fairways) : null;
@@ -212,6 +214,9 @@ export function renderHole(view, n) {
   dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }), pin, p => { pin = p; update(); });
 
   m.on('move', update);
+  // The browser's toolbars showing or hiding changes the screen height: keep the
+  // map's pivot on the crosshair and refresh the readout.
+  m.on('resize', () => { m.setPadding({ top: 0, left: 0, right: 0, bottom: mapEl.clientHeight * (1 - 2 * CROSSHAIR_Y) }); update(); });
   m.on('click', () => { menu.hidden = true; });
 
   m.on('load', () => {
