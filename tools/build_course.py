@@ -5,12 +5,13 @@ Usage: build_course.py feat.json config.json out.json
 Query used:
   (nwr["golf"](bbox);nwr["natural"="water"](bbox););out geom;
 """
-import json, sys
+import json, math, sys
 
 R = 6  # coordinate decimals (~0.1 m)
+SHIFT = [0.0, 0.0]  # degrees [lat, lon], set from the config before parsing
 
 def pt(p):
-    return [round(p["lat"], R), round(p["lon"], R)]
+    return [round(p["lat"] + SHIFT[0], R), round(p["lon"] + SHIFT[1], R)]
 
 def rings_from_relation(el):
     """Assemble member ways into closed rings; returns (outers, inners)."""
@@ -33,6 +34,12 @@ def rings_from_relation(el):
                 out[role].append(ring)
     return out["outer"], out["inner"]
 
+def els_lat(src):
+    for el in json.load(open(src))["elements"]:
+        if "bounds" in el:
+            return el["bounds"]["minlat"]
+    return 0.0
+
 def inside(p, ring):
     y, x = p; c = False
     for i in range(len(ring) - 1):
@@ -49,6 +56,10 @@ KIND = {"green": "green", "fairway": "fairway", "bunker": "bunker", "tee": "tee"
         "water_hazard": "water", "lateral_water_hazard": "water"}
 
 def main(src, cfg_path, dst):
+    cfg = json.load(open(cfg_path))
+    sh = cfg.get("shift", {})
+    SHIFT[0] = sh.get("north", 0) / 111320
+    SHIFT[1] = sh.get("east", 0) / (111320 * math.cos(math.radians(els_lat(src))))
     els = json.load(open(src))["elements"]
     feats, holes = [], {}
     for el in els:
@@ -72,7 +83,6 @@ def main(src, cfg_path, dst):
                 polys.append([o] + [i for i in inners if inside(i[0], o)])
         for p in polys:
             feats.append({"t": kind, "p": p})
-    cfg = json.load(open(cfg_path))
     feats = [f for f in feats if not any(inside(d, f["p"][0]) for d in cfg.get("drop", []))]
     lines = {}
     for ref, hs in holes.items():

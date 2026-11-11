@@ -12,6 +12,8 @@
   ],
   "_comment_holeFix": "OSM tags two ways as hole 10. The one whose first point is nearest each coordinate gets that number.",
   "holeFix": {"1": [33.050349, -97.0908661], "10": [33.0501835, -97.0913506]},
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting all bunkers); every point is moved by it.",
+  "shift": {"east": 3.8, "north": 3.4},
   "_comment_drop": "Polygons containing these points are not part of the course (driving range and its tee).",
   "drop": [[33.0522, -97.0904], [33.0510, -97.0898]]
 }
