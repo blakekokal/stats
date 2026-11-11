@@ -1,16 +1,19 @@
 // Hole viewer: the hole drawn tee-at-bottom, green-at-top. A crosshair dot is
-// fixed at the centre of the screen; panning, zooming or rotating the map moves
-// the course underneath it, and the distances from the tee and to the pin
-// follow. An optional overlay measures the fairway width at the crosshair.
+// fixed a third of the way down the screen; panning, zooming or rotating the map
+// moves the course underneath it, and the distances from the tee and to the pin
+// follow. Two optional arcs, both centred on the tee and passing through the
+// crosshair: the fairway width, and a dispersion arc of adjustable width.
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, rememberTee } from './app.js';
 import { store } from './store.js';
-import { lieAt, yards, YD_PER_M } from './geo.js';
+import { lieAt, yards, inPolygon, boundsOf, YD_PER_M } from './geo.js';
+import { VERSION } from './version.js';
 
 const maplibregl = window.maplibregl;
 const LIE_NAME = { tee: 'Tee box', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', green: 'Green', water: 'Water' };
 const ll = p => [p[1], p[0]]; // [lat, lng] -> MapLibre's [lng, lat]
 const M_PER_DEG = 111320;
+const CROSSHAIR_Y = 1 / 3; // fraction of the screen height, from the top
 
 let map = null;
 
@@ -23,42 +26,55 @@ function bearing(a, b) {
   return (Math.atan2((b[1] - a[1]) * k, b[0] - a[0]) * 180) / Math.PI;
 }
 
-// Fairway width at `target`, measured square to the line of play from `tee`.
-// Returns the two fairway edges and the width in yards, or null when no fairway
-// crosses that line within reach. If the target is just off the fairway, the
-// nearest stretch of fairway is measured.
-export function fairwayWidth(tee, target, features, reachYd = 80) {
-  const k = Math.cos((target[0] * Math.PI) / 180);
-  const local = p => [(p[1] - target[1]) * M_PER_DEG * k, (p[0] - target[0]) * M_PER_DEG]; // metres east, north
-  const t0 = local(tee);
-  const len = Math.hypot(t0[0], t0[1]);
-  if (len < 1) return null;
-  const right = [-t0[1] / len, t0[0] / len]; // unit vector pointing right of the line of play
-  const reach = reachYd / YD_PER_M;
-  let best = null;
-  for (const f of features) {
-    if (f.t !== 'fairway') continue;
-    // Where the cross line meets this fairway's edges, as metres right (+) or left (-) of the target.
-    const hits = [];
-    for (const ring of f.p) {
-      for (let i = 0; i < ring.length; i++) {
-        const a = local(ring[i]), b = local(ring[(i + 1) % ring.length]);
-        const da = right[0] * a[1] - right[1] * a[0], db = right[0] * b[1] - right[1] * b[0];
-        if ((da > 0) === (db > 0)) continue;
-        const s = da / (da - db);
-        hits.push((a[0] + s * (b[0] - a[0])) * right[0] + (a[1] + s * (b[1] - a[1])) * right[1]);
-      }
-    }
-    hits.sort((x, y) => x - y);
-    for (let i = 0; i + 1 < hits.length; i += 2) {
-      const [l, r] = [hits[i], hits[i + 1]];
-      const gap = l <= 0 && r >= 0 ? 0 : Math.min(Math.abs(l), Math.abs(r));
-      if (gap <= reach && (!best || gap < best.gap)) best = { gap, l, r };
-    }
+// A point `yd` yards along a line of [lat, lng] points.
+function alongLine(line, yd) {
+  for (let i = 0; i < line.length - 1; i++) {
+    const seg = yards(line[i], line[i + 1]);
+    if (yd <= seg) { const t = yd / seg; return [line[i][0] + t * (line[i + 1][0] - line[i][0]), line[i][1] + t * (line[i + 1][1] - line[i][1])]; }
+    yd -= seg;
   }
-  if (!best) return null;
-  const at = t => [target[0] + (t * right[1]) / M_PER_DEG, target[1] + (t * right[0]) / (M_PER_DEG * k)];
-  return { left: at(best.l), right: at(best.r), yards: (best.r - best.l) * YD_PER_M, onFairway: best.gap === 0 };
+  return line[line.length - 1];
+}
+
+// The arc through `target` centred on `tee`: every point on it is the same
+// distance from the tee. Returns a function giving the point `s` metres along
+// the arc, right of the target (+) or left of it (-).
+export function arcThrough(tee, target) {
+  const k = Math.cos((tee[0] * Math.PI) / 180);
+  const e = (target[1] - tee[1]) * M_PER_DEG * k, n = (target[0] - tee[0]) * M_PER_DEG;
+  const r = Math.hypot(e, n), theta0 = Math.atan2(e, n);
+  if (r < 1) return null;
+  return s => {
+    const th = theta0 + s / r;
+    return [tee[0] + (r * Math.cos(th)) / M_PER_DEG, tee[1] + (r * Math.sin(th)) / (M_PER_DEG * k)];
+  };
+}
+
+function arcPoints(arc, from, to) {
+  const pts = [];
+  const steps = Math.max(2, Math.ceil((to - from) / 1.5));
+  for (let i = 0; i <= steps; i++) pts.push(arc(from + ((to - from) * i) / steps));
+  return pts;
+}
+
+// Fairway width at `target`, measured along the arc through it. Returns the
+// arc's extent in metres left (l) and right (r) of the target and the width in
+// yards, or null when there is no fairway on the arc within reach. If the
+// target is just off the fairway, the nearest stretch of fairway is measured.
+export function fairwayWidth(tee, target, fairways, reachYd = 80) {
+  const arc = arcThrough(tee, target);
+  if (!arc) return null;
+  const STEP = 0.5, reach = reachYd / YD_PER_M, limit = 200 / YD_PER_M;
+  const near = fairways.filter(f => target[0] > f.box[0][0] && target[0] < f.box[1][0] && target[1] > f.box[0][1] && target[1] < f.box[1][1]);
+  const on = s => { const p = arc(s); return near.some(f => inPolygon(p, f.p)); };
+  let start = null;
+  if (on(0)) start = 0;
+  else for (let s = STEP; s <= reach && start == null; s += STEP) { if (on(s)) start = s; else if (on(-s)) start = -s; }
+  if (start == null) return null;
+  let l = start, r = start;
+  while (l > -limit && on(l - STEP)) l -= STEP;
+  while (r < limit && on(r + STEP)) r += STEP;
+  return { arc, l, r, yards: (r - l) * YD_PER_M };
 }
 
 export function renderHole(view, n) {
@@ -68,29 +84,47 @@ export function renderHole(view, n) {
   const settings = store.get('settings') || {};
   const teeName = settings.tee || 'Blue';
   const teeSet = course.tees.find(t => t.name === teeName) || course.tees[0];
+  const fairways = course.features.filter(f => f.t === 'fairway').map(f => ({ p: f.p, box: boundsOf(f.p[0], 200) }));
 
   let tee = teePosition(teeName, ch);
   let pin = ch.pin;
   let target = tee;
-  let showWidth = sessionStorage.getItem('fairwayWidth') === '1';
+  const flag = (key, def) => (localStorage.getItem(key) ?? def) === '1';
+  let showWidth = flag('gs:fairwayWidth', '0');
+  let showArc = flag('gs:arc', '0');
+  let arcYd = Math.min(80, Math.max(10, +localStorage.getItem('gs:arcYd') || 40));
 
   const mapEl = h('div', { id: 'gmap' });
-  const widthLabel = h('div', { class: 'widthlabel', hidden: true });
-  const widthBtn = h('button', { class: 'fab width' + (showWidth ? ' on' : ''), 'aria-pressed': String(showWidth), title: 'Fairway width at the crosshair',
-    onclick: () => {
-      showWidth = !showWidth; sessionStorage.setItem('fairwayWidth', showWidth ? '1' : '0');
-      widthBtn.classList.toggle('on', showWidth); widthBtn.setAttribute('aria-pressed', String(showWidth)); update();
-    } }, h('span', {}, '↔'), h('small', {}, 'Width'));
+  const toPinEl = h('div', { class: 'readout to' });
+  const fromTeeEl = h('div', { class: 'readout from' });
+
+  const toggle = (cls, text, icon, title, get, set) => {
+    const btn = h('button', { class: `fab ${cls}` + (get() ? ' on' : ''), 'aria-pressed': String(get()), title,
+      onclick: () => { set(!get()); btn.classList.toggle('on', get()); btn.setAttribute('aria-pressed', String(get())); update(); } },
+      h('span', {}, icon), h('small', {}, text));
+    return btn;
+  };
+  const arcValue = h('b', {}, `${arcYd} yd`);
+  const arcSlider = h('div', { class: 'arcslider', hidden: !showArc },
+    h('span', {}, 'Arc'),
+    h('input', { type: 'range', min: 10, max: 80, step: 1, value: arcYd, 'aria-label': 'Arc width in yards',
+      oninput: e => { arcYd = +e.target.value; arcValue.textContent = `${arcYd} yd`; localStorage.setItem('gs:arcYd', arcYd); update(); } }),
+    arcValue);
+  const widthBtn = toggle('width', 'Width', '↔', 'Fairway width at the crosshair', () => showWidth, v => { showWidth = v; localStorage.setItem('gs:fairwayWidth', v ? '1' : '0'); });
+  const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); arcSlider.hidden = !v; });
+
   const menu = h('div', { class: 'sheet', hidden: true },
     h('label', {}, 'Tees ', h('select', { onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHole(view, n); } },
       course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
+    h('a', { class: 'btn', href: '#/' }, 'Home'),
     h('a', { class: 'btn', href: '#/course' }, 'Edit course outlines'),
     h('a', { class: 'btn', href: '#/settings' }, 'Settings'));
 
   view.replaceChildren(h('div', { class: 'holeview' }, mapEl,
-    h('div', { class: 'crosshair' }), widthLabel,
+    h('div', { class: 'vertag' }, `v${VERSION}`),
+    h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    widthBtn, menu,
+    arcBtn, widthBtn, arcSlider, menu,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${n === 1 ? 18 : n - 1}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, h('small', {}, `Hole ${n} · Par ${ch.par}`), h('strong', {}, `${teeSet.yards[n - 1]} Yards`)),
@@ -103,74 +137,77 @@ export function renderHole(view, n) {
       sources: { sat: { type: 'raster', tiles: [TILE_URL], tileSize: 256, maxzoom: 19, attribution: 'Esri, Maxar · © OpenStreetMap' } },
       layers: [{ id: 'sat', type: 'raster', source: 'sat' }],
     },
-    center: ll(ch.line[Math.floor(ch.line.length / 2)]), zoom: 16, bearing: bearing(tee, pin),
+    center: ll(pin), zoom: 16, bearing: bearing(tee, pin),
     maxZoom: 21, pitchWithRotate: false, touchPitch: false,
     attributionControl: false,
   });
   m.addControl(new maplibregl.AttributionControl({ compact: true }), 'top-right');
   window.holeMap = m; // handy for debugging from the console
 
-  // Fit the whole hole with the tee at the bottom and the green at the top.
-  // Padding is even top and bottom so the crosshair (screen centre) starts mid-hole.
-  const fit = () => {
-    const b = new maplibregl.LngLatBounds();
-    [tee, pin, ...ch.line].forEach(p => b.extend(ll(p)));
-    m.fitBounds(b, { bearing: bearing(tee, pin), padding: { top: 110, bottom: 110, left: 50, right: 50 }, animate: false });
+  // Opening view: the crosshair on a typical drive (par 4s and 5s) or on the pin
+  // (par 3s), zoomed so the tee sits just above the hole pill and the green is
+  // on screen above the crosshair. Bottom padding makes the map's centre, and so
+  // its rotation and zoom pivot, the crosshair itself.
+  const place = () => {
+    const hgt = mapEl.clientHeight;
+    const line = [tee, ...ch.line.slice(1, -1), pin];
+    const holeYd = line.slice(1).reduce((a, p, i) => a + yards(line[i], p), 0);
+    const start = ch.par === 3 ? pin : alongLine(line, Math.min(250, holeYd * 0.7));
+    const below = hgt * (1 - CROSSHAIR_Y) - 150, above = hgt * CROSSHAIR_Y - 60; // pixels free below and above the crosshair
+    const mPerPx = Math.max(yards(tee, start) / YD_PER_M / below, yards(start, pin) / YD_PER_M / above, 0.05);
+    const zoom = Math.log2((78271.517 * Math.cos((start[0] * Math.PI) / 180)) / mPerPx);
+    m.jumpTo({ center: ll(start), zoom, bearing: bearing(tee, pin), padding: { top: 0, left: 0, right: 0, bottom: hgt * (1 - 2 * CROSSHAIR_Y) } });
   };
-  fit();
+  place();
 
-  // Distance labels sit at the middle of each leg and stay upright.
-  const label = cls => { const el = h('div', { class: 'dist ' + cls }); return { el, marker: new maplibregl.Marker({ element: el }).setLngLat(ll(tee)).addTo(m) }; };
-  const fromTee = label('from');
-  const toPin = label('to');
-  const mid = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
   const line = pts => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: pts.map(ll) } });
 
   function update() {
-    // The crosshair is drawn at the centre of the map element; read what is under it.
-    const c = m.unproject([mapEl.clientWidth / 2, mapEl.clientHeight / 2]);
+    const c = m.getCenter(); // the padded centre is where the crosshair is drawn
     target = [c.lat, c.lng];
-    const d1 = yards(tee, target), d2 = yards(target, pin);
     const lie = lieAt(target, course.features);
-    fromTee.marker.setLngLat(ll(mid(tee, target)));
-    fromTee.el.replaceChildren(h('b', {}, `${Math.round(d1)} yd`), h('span', { class: 'lie', style: `color:${LIE_COLOR[lie]}` }, LIE_NAME[lie]));
-    toPin.marker.setLngLat(ll(mid(target, pin)));
-    toPin.el.replaceChildren(h('b', {}, `${Math.round(d2)} yd`));
+    const w = showWidth ? fairwayWidth(tee, target, fairways) : null;
+    toPinEl.replaceChildren(h('b', {}, `${Math.round(yards(target, pin))} yd`));
+    fromTeeEl.replaceChildren(h('b', {}, `${Math.round(yards(tee, target))} yd`),
+      h('span', { class: 'lie', style: `color:${LIE_COLOR[lie]}` }, LIE_NAME[lie]),
+      h('span', { class: 'wide', hidden: !showWidth }, w ? `${Math.round(w.yards)} yd wide` : 'No fairway here'));
 
-    const w = showWidth ? fairwayWidth(tee, target, course.features) : null;
-    widthLabel.hidden = !showWidth;
-    widthLabel.textContent = w ? `${Math.round(w.yards)} yd wide` : 'No fairway here';
-    const path = m.getSource('path'), width = m.getSource('width');
-    if (path) path.setData(line([tee, target, pin]));
-    if (width) width.setData(line(w ? [w.left, w.right] : []));
+    const arc = showArc ? arcThrough(tee, target) : null;
+    const half = arcYd / 2 / YD_PER_M;
+    const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
+    set('path', line([tee, target, pin]));
+    set('width', line(w ? arcPoints(w.arc, w.l, w.r) : []));
+    set('arc', line(arc ? arcPoints(arc, -half, half) : []));
   }
 
-  const dragMarker = (el, pos, opts, onMove) => {
-    const mk = new maplibregl.Marker({ element: el, draggable: true, ...opts }).setLngLat(ll(pos)).addTo(m);
+  const dragMarker = (el, pos, onMove) => {
+    const mk = new maplibregl.Marker({ element: el, draggable: true }).setLngLat(ll(pos)).addTo(m);
     mk.on('drag', () => { const p = mk.getLngLat(); onMove([p.lat, p.lng], false); });
     mk.on('dragend', () => { const p = mk.getLngLat(); onMove([p.lat, p.lng], true); });
     return mk;
   };
-  dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, {}, (p, done) => { tee = p; if (done) rememberTee(teeName, ch, p); update(); });
-  dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }, h('div', { class: 'flag' })), pin, { anchor: 'bottom-left', offset: [-3, 1] }, p => { pin = p; update(); });
+  dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, (p, done) => { tee = p; if (done) rememberTee(teeName, ch, p); update(); });
+  dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }), pin, p => { pin = p; update(); });
 
   m.on('move', update);
   m.on('click', () => { menu.hidden = true; });
 
   m.on('load', () => {
     if (map !== m) return;
-    m.resize(); fit();
+    m.resize(); place();
     const credit = mapEl.querySelector('.maplibregl-ctrl-attrib'); // start collapsed to the (i) button
     if (credit) credit.classList.remove('maplibregl-compact-show');
     m.addSource('outlines', { type: 'geojson', data: { type: 'FeatureCollection', features: course.features.map(f => ({
       type: 'Feature', properties: { color: LIE_COLOR[f.t] }, geometry: { type: 'Polygon', coordinates: f.p.map(r => r.map(ll)) } })) } });
     m.addLayer({ id: 'outlines', type: 'line', source: 'outlines', paint: { 'line-color': ['get', 'color'], 'line-width': 1.25, 'line-opacity': 0.7 } });
-    m.addSource('path', { type: 'geojson', data: line([]) });
-    m.addLayer({ id: 'path-shadow', type: 'line', source: 'path', paint: { 'line-color': '#000', 'line-width': 4, 'line-opacity': 0.35 } });
-    m.addLayer({ id: 'path', type: 'line', source: 'path', paint: { 'line-color': '#fff', 'line-width': 2 } });
-    m.addSource('width', { type: 'geojson', data: line([]) });
-    m.addLayer({ id: 'width-shadow', type: 'line', source: 'width', paint: { 'line-color': '#000', 'line-width': 5, 'line-opacity': 0.4 } });
-    m.addLayer({ id: 'width', type: 'line', source: 'width', layout: { 'line-cap': 'round' }, paint: { 'line-color': '#ffe14d', 'line-width': 3, 'line-dasharray': [0.1, 2] } });
+    const addLine = (id, shadow, paint, layout = {}) => {
+      m.addSource(id, { type: 'geojson', data: line([]) });
+      m.addLayer({ id: id + '-shadow', type: 'line', source: id, paint: { 'line-color': '#000', 'line-width': shadow, 'line-opacity': 0.35 } });
+      m.addLayer({ id, type: 'line', source: id, layout, paint });
+    };
+    addLine('path', 4, { 'line-color': '#fff', 'line-width': 2 });
+    addLine('arc', 5, { 'line-color': '#fff', 'line-width': 2.5 }, { 'line-cap': 'round' });
+    addLine('width', 5, { 'line-color': '#ffe14d', 'line-width': 3, 'line-dasharray': [0.1, 2] }, { 'line-cap': 'round' });
     update();
   });
   update();

@@ -3,6 +3,7 @@ import { store, sync, init as initSync } from './store.js';
 import { renderHole, closeHole, lastHole } from './hole.js';
 import { renderCourseEditor } from './editor.js';
 import { renderSettings } from './settings.js';
+import { VERSION } from './version.js';
 
 const L = window.L;
 const view = document.getElementById('view');
@@ -91,18 +92,39 @@ export function rememberTee(teeName, ch, pos) {
   store.set('settings', s);
 }
 
+// ---------- start page ----------
+
+function renderHome() {
+  const teeName = (store.get('settings') || {}).tee || 'Blue';
+  const teeSet = course.tees.find(t => t.name === teeName) || course.tees[0];
+  const teeSel = h('select', { 'aria-label': 'Tees', onchange: e => store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }) },
+    course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)));
+  const resume = lastHole();
+  view.replaceChildren(h('div', { class: 'page home' },
+    h('p', { class: 'muted version' }, `Shot Tracker v${VERSION}`),
+    h('h1', {}, course.name),
+    h('p', { class: 'muted' }, `${course.location} · Par ${course.holes.reduce((a, c) => a + c.par, 0)}`),
+    h('div', { class: 'card row' }, h('label', {}, 'Tees ', teeSel),
+      h('a', { class: 'btn primary', href: `#/hole/${resume}` }, resume > 1 ? `Continue at hole ${resume}` : 'Start at hole 1')),
+    h('h2', {}, 'Holes'),
+    h('div', { class: 'holegrid' }, course.holes.map(c =>
+      h('a', { class: 'card', href: `#/hole/${c.n}` }, h('strong', {}, c.n), h('small', { class: 'muted' }, `Par ${c.par} · ${teeSet.yards[c.n - 1]}`)))),
+  ));
+}
+
 // ---------- router ----------
 
 async function route() {
   await loadCourse();
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  const tab = ['course', 'settings'].includes(parts[0]) ? parts[0] : 'hole';
+  const tab = ['hole', 'course', 'settings'].includes(parts[0]) ? parts[0] : 'home';
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   document.body.classList.toggle('playing', tab === 'hole');
   if (tab !== 'hole') closeHole();
   if (tab === 'hole') renderHole(view, Math.min(18, Math.max(1, parseInt(parts[1], 10) || lastHole())));
   else if (tab === 'course') renderCourseEditor(view);
-  else renderSettings(view);
+  else if (tab === 'settings') renderSettings(view);
+  else renderHome();
 }
 
 window.addEventListener('hashchange', route);
