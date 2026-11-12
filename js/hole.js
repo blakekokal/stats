@@ -674,18 +674,24 @@ export function renderHole(view, n) {
   // Club for a shot: anything played from the green is a putter; other clubs
   // come once the bag is set up.
   const clubOf = s => (s.lie === 'green' ? h('b', {}, 'Putter') : h('b', { class: 'muted' }, '— (coming soon)'));
-  // One line for a shot: club (when known), how far it went, and what was left
-  // after it — e.g. "Putter hit 15 ft to 2 ft from hole", "Hit 152 yds to 14 ft
-  // from hole", "Hit 88 yds into the hole". Clubs other than the putter come later.
-  function shotLine(hl, i) {
+  // Two lines for a shot: what was hit and where it went, then what was left —
+  //   "Hit 275 yds from tee to fwy" / "261 yds to hole"
+  //   "Hit putter 12 ft" / "2 ft to hole" (or "In the hole")
+  // The club goes after "Hit" once clubs are set up (putts are always the putter).
+  const SHORT_LIE = { tee: 'tee', fairway: 'fwy', rough: 'rough', bunker: 'bunker', green: 'green', water: 'water', recovery: 'trees' };
+  function shotLines(hl, i) {
     const shots = hl.shots || [], s = shots[i], next = shots[i + 1];
     if (!s || (!next && !hl.done)) return null;
     const hp = hl.pin || pin, isPutt = s.lie === 'green', travel = yards(s.pos, next ? next.pos : hp);
     const went = isPutt ? `${Math.round(travel * FT_PER_YD)} ft` : `${Math.round(travel)} yds`;
-    const left = !next ? 'into the hole' : `to ${next.lie === 'green' ? `${next.ft ?? Math.round(yards(next.pos, hp) * FT_PER_YD)} ft` : `${Math.round(yards(next.pos, hp))} yds`} from hole`;
-    // e.g. "Putter hit 15 ft to 2 ft from hole", "Hit 175 yds to 12 ft from hole"
-    return `${isPutt ? 'Putter hit' : 'Hit'} ${went} ${left}`;
+    const first = isPutt ? `Hit putter ${went}` : `Hit ${went} from ${SHORT_LIE[s.lie] || s.lie} to ${next ? SHORT_LIE[next.lie] || next.lie : 'the hole'}`;
+    const second = !next ? 'In the hole' : `${next.lie === 'green' ? `${next.ft ?? Math.round(yards(next.pos, hp) * FT_PER_YD)} ft` : `${Math.round(yards(next.pos, hp))} yds`} to hole`;
+    return [first, second];
   }
+  const shotLineEls = (hl, i, fallback) => {
+    const l = shotLines(hl, i);
+    return l ? [h('div', { class: 'line' }, h('b', {}, l[0])), h('div', { class: 'line sub' }, h('span', {}, l[1]))] : [h('div', { class: 'line' }, h('b', {}, fallback))];
+  };
   let sgViewKey = null;
   const fmtSgV = v => (v == null ? '–' : (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2));
   const sgCls = v => (v == null ? '' : v >= 0 ? 'pos' : 'neg');
@@ -715,9 +721,7 @@ export function renderHole(view, n) {
       if (isPutt) puttNo++;
       const key = 'shot' + i, label = isPutt ? `Putt ${puttNo}` : `Shot ${i + 1} · ${CAT_LABEL[x.cat]}`;
       return [toggleRow(key, label, x.sg), sgOpen.has(key) ? h('div', { class: 'shotinfo' },
-        h('div', { class: 'line' }, h('b', {}, shotLine(hl, i) || dist)),
-        h('div', {}, h('span', {}, 'Lie'), h('b', {}, `${LIE_NAME[s.lie] || s.lie} → ${end}`)),
-        h('div', {}, h('span', {}, 'From the hole'), h('b', {}, isPutt ? `${s.ft ?? Math.round(x.dist)} ft` : `${Math.round(x.dist)} yd`)),
+        ...shotLineEls(hl, i, dist),
         h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: sgCls(x.sg) }, fmtSgV(x.sg)))) : null];
     }).flat().filter(Boolean);
     sgView.replaceChildren(...[
@@ -1029,8 +1033,7 @@ export function renderHole(view, n) {
     let puttNo = 0; for (let k = 0; k <= i; k++) if (shots[k].lie === 'green') puttNo++;
     const el = h('div', { class: 'shotpop' },
       h('strong', {}, isPutt ? `Putt ${puttNo}` : `Shot ${i + 1}`, h('small', {}, row.cat ? ` · ${CAT_LABEL[row.cat]}` : '')),
-      h('div', { class: 'line' }, h('b', {}, shotLine(hl, i) || (isPutt ? `${Math.round(travel * 3)} ft` : `${Math.round(travel)} yd`))),
-      h('div', {}, h('span', {}, 'Lie'), h('b', {}, `${name(s.lie)} → ${end ? name(end.lie) : 'Holed'}`)),
+      ...shotLineEls(hl, i, isPutt ? `${Math.round(travel * 3)} ft` : `${Math.round(travel)} yd`),
       h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: row.sg == null ? '' : row.sg >= 0 ? 'pos' : 'neg' }, sgTxt)));
     shotPopup?.remove();
     shotPopup = new maplibregl.Popup({ offset: 14, closeButton: true, className: 'shotpopup', maxWidth: '240px' }).setLngLat(ll(at)).setDOMContent(el).addTo(m);
