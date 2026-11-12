@@ -205,7 +205,7 @@ export function renderHole(view, n) {
   let showSgt = flag('gs:sgTarget', '0');
   const sgtBtn = toggle('sgt', 'SG', '⊙', 'Strokes-gained target around the hole', () => showSgt, v => { showSgt = v; localStorage.setItem('gs:sgTarget', v ? '1' : '0'); });
   // What SG draws, set from the ⚙ beside it and kept on this device:
-  //  zones — tee shot on a par 4/5: n bands splitting an SG range (-1 to +1)
+  //  (off the tee on a par 4/5, SG shows the drive heat map instead)
   //  rings — around the pin: 1 ring at one SG value, or 2/3 rings across a
   //          range (3 rings: the middle one is 0 when the range crosses 0)
   const SG_DEFAULT = { zones: { n: 3, min: 0, max: 0.5 }, rings: { n: 1, value: 0, min: -0.5, max: 0.5 } };
@@ -225,14 +225,12 @@ export function renderHole(view, n) {
     if (n === 2) return [min, max];
     return [min, min < 0 && max > 0 ? 0 : (min + max) / 2, max];
   };
-  const zoneBands = () => {
-    const { n, min, max } = sgCfg.zones, step = (max - min) / n;
-    return Array.from({ length: n }, (_, i) => [min + i * step, min + (i + 1) * step]);
-  };
   const zoneLegend = h('div', { class: 'zonelegend', hidden: true });
+  const HAZARD_KEY = [255, 0, 40];
   function drawLegend() {
-    zoneLegend.replaceChildren(h('small', {}, 'Drive SG'),
-      ...zoneBands().map(([a, b]) => h('span', {}, h('i', { style: `background:rgb(${sgColor((a + b) / 2).join(',')})` }), `${fmtSg(a)} to ${fmtSg(b)}`)));
+    const rows = [['Hazard', HAZARD_KEY], ['+.75 or more', [20, 83, 45]], ['+.5 to +.75', [22, 163, 74]], ['+.25 to +.5', [74, 222, 128]], ['0 to +.25', [187, 247, 208]],
+      ['−.25 to 0', [252, 165, 165]], ['−.5 to −.25', [248, 113, 113]], ['−.75 to −.5', [220, 38, 38]], ['−.75 or less', [153, 27, 27]]];
+    zoneLegend.replaceChildren(h('small', {}, 'Drive SG'), ...rows.map(([t, c]) => h('span', {}, h('i', { style: `background:rgb(${c.join(',')})` }), t)));
   }
   drawLegend();
   const ringLegend = h('div', { class: 'zonelegend', hidden: true });
@@ -250,8 +248,6 @@ export function renderHole(view, n) {
       onchange: e => { sgCfg[part][key] = e.target.value; saveSgCfg(); } });
     const r = sgCfg.rings;
     sgPanel.replaceChildren(...[
-      h('strong', {}, 'Drive zones'), h('small', {}, 'Tee shot on par 4s and 5s'), counts('zones'),
-      h('div', { class: 'range' }, 'SG', num('zones', 'min'), 'to', num('zones', 'max')),
       h('strong', {}, 'Approach rings'), h('small', {}, 'Around the pin'), counts('rings'),
       r.n === 1 ? h('div', { class: 'range' }, 'SG', num('rings', 'value'))
         : h('div', { class: 'range' }, 'SG', num('rings', 'min'), 'to', num('rings', 'max')),
@@ -276,22 +272,24 @@ export function renderHole(view, n) {
   // into three bands. Bunkers and water are left out. Drawn as an image laid
   // over the map and only recomputed when the tee, pin or handicap changes.
   let zoneKey = null, zoneImg = null;
+  // Drive SG heat map: every spot within ~45 yd of the hole's route, from 60 yd
+  // off the tee to past the green, coloured by the strokes a drive landing there
+  // gains for the selected handicap (from its actual lie, fairway or rough), in
+  // 0.25 bands: reds below 0, greens above. Bunkers and water are bright red.
+  const HEAT_BANDS = [ // [lowest SG in the band, colour], highest first
+    [0.75, [20, 83, 45]], [0.5, [22, 163, 74]], [0.25, [74, 222, 128]], [0, [187, 247, 208]],
+    [-0.25, [252, 165, 165]], [-0.5, [248, 113, 113]], [-0.75, [220, 38, 38]], [-Infinity, [153, 27, 27]]];
+  const HAZARD = [255, 0, 40];
+  const heatColor = sg => HEAT_BANDS.find(([lo]) => sg >= lo)[1];
   function sgZoneImage() {
-    const key = [tee, pin, level, JSON.stringify(sgCfg.zones)].join('|');
+    const key = [tee, pin, level].join('|');
     if (key === zoneKey) return zoneImg;
     zoneKey = key; zoneImg = null;
     const teeExp = expected('tee', yards(tee, pin), level);
-    // Remaining distances worth looking at: from where a fairway drive gains
-    // 0.5 (closest) out to where it gains 0 (farthest); rough needs to be closer.
-    const { min, max } = sgCfg.zones, bands = zoneBands(), step = (max - min) / bands.length;
-    const colors = bands.map(([a, b]) => sgColor((a + b) / 2));
-    // Remaining distance at which a drive from `lie` gains `goal` (gains shrink with distance).
     const total = yards(tee, pin);
-    const remFor = (lie, goal) => { let lo = 0, hi = total; for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (teeExp - expectedFrom(lie, mid) - 1 > goal) lo = mid; else hi = mid; } return lo; };
-    const near = Math.max(0, remFor('rough', max) - 10), far = Math.min(total, remFor('fairway', min) + 10);
     const back = [...route()].reverse();
     const span = [];
-    for (let d = near; d <= far; d += 5) span.push(pointAlong(back, d));
+    for (let d = 0; d <= Math.max(0, total - 60); d += 5) span.push(pointAlong(back, d));
     if (span.length < 2) return null;
     const box = boundsOf(span, 50);
     const routeLine = route();
@@ -309,12 +307,11 @@ export function renderHole(view, n) {
       for (let c = 0; c < cols; c++) {
         const q = [lat, w0 + ((c + 0.5) / cols) * (e0 - w0)];
         if (distToLine(q, routeLine) * YD_PER_M > 45) continue; // stay on this hole
+        if (yards(q, tee) < 60) continue; // not a drive
         const lie = lieHere(q);
-        if (lie === 'bunker' || lie === 'water' || lie === 'recovery') continue;
-        const sg = teeExp - expectedFrom(lie, yards(q, pin)) - 1;
-        if (sg < min || sg > max || step <= 0) continue;
-        const z = colors[Math.min(bands.length - 1, Math.floor((sg - min) / step))], i = (r * cols + c) * 4;
-        img.data[i] = z[0]; img.data[i + 1] = z[1]; img.data[i + 2] = z[2]; img.data[i + 3] = 140;
+        const hazard = lie === 'bunker' || lie === 'water';
+        const z = hazard ? HAZARD : heatColor(teeExp - expectedFrom(lie, yards(q, pin)) - 1), i = (r * cols + c) * 4;
+        img.data[i] = z[0]; img.data[i + 1] = z[1]; img.data[i + 2] = z[2]; img.data[i + 3] = hazard ? 210 : 130;
       }
     }
     ctx.putImageData(img, 0, 0);
