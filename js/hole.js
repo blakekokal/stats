@@ -538,7 +538,8 @@ export function renderHole(view, n) {
       const onGreen = shots.filter(x => x.lie === 'green').length;
       if (hl.pin && onGreen === 1) return saveHole({ pin: null });
       const rest = shots.slice(0, -1);
-      if (shots.at(-1).replay && rest.length) { const { pen, obAt, ...p } = rest.at(-1); rest[rest.length - 1] = { ...p, ...(pen > 1 ? { pen: pen - 1 } : {}) }; }
+      const back = shots.at(-1).penalty || (shots.at(-1).replay ? 1 : 0); // a penalty re-hit or drop: take the penalty back too
+      if (back && rest.length) { const { pen, obAt, penKind, ...p } = rest.at(-1); rest[rest.length - 1] = { ...p, ...(pen > back ? { pen: pen - back } : {}) }; }
       saveHole({ shots: rest.length > 1 ? rest : [], pin: rest.some(x => x.lie === 'green') ? hl.pin : null });
       if (stage() === 'play') place();
     } }, '↶');
@@ -703,13 +704,7 @@ export function renderHole(view, n) {
     const shots = s.length ? [...s] : [{ pos: tee, lie: 'tee' }];
     shots[shots.length - 1] = { ...shots[shots.length - 1], ...(club ? { club } : {}), ...(swing && swing !== 'full' ? { swing } : {}) };
     const lie = stage() === 'putt' ? 'green' : lieOn(target, course.features);
-    if (lie === 'ob') { // stroke and distance: a penalty, and the next shot is played from the same spot
-      const prev = shots[shots.length - 1];
-      shots[shots.length - 1] = { ...prev, pen: (prev.pen || 0) + 1, obAt: target };
-      shots.push({ pos: prev.pos, lie: prev.lie, replay: true });
-      pickedClub = null;
-      return saveShots(shots);
-    }
+    if (lie === 'ob' || lie === 'water') { pickedClub = null; return openPenalty(shots, lie, target); }
     const shot = { pos: target, lie };
     if (lie === 'green' && holeNow().pin) shot.ft = Math.max(1, Math.round(yards(target, pin) * FT_PER_YD));
     shots.push(shot);
@@ -717,6 +712,36 @@ export function renderHole(view, n) {
     pickedClub = null;
     saveShots(shots);
     if (wasPlaying && lie === 'green') zoomToGreen();
+  }
+  // Penalty: a shot into water or out of bounds asks how the player carried on.
+  //  Re-hit from where it was played (stroke and distance): 1 penalty stroke.
+  //  Drop: 1 penalty stroke for water, 2 for out of bounds (the local rule), then
+  //  the crosshair is moved to where the ball was dropped and Set drop records it.
+  // The penalty is charged to the shot that went in; the next shot carries
+  // `penalty` so Undo can take it back off.
+  let dropping = null; // { shots, n } while placing a drop
+  const penaltySheet = h('div', { class: 'clubsheet', hidden: true, onclick: e => { if (e.target === penaltySheet) penaltySheet.hidden = true; } });
+  const setDropBtn = h('button', { class: 'setnext drop', hidden: true, onclick: () => {
+    if (!dropping) return;
+    const { shots, n } = dropping;
+    dropping = null; setDropBtn.hidden = true; holeEl()?.classList.remove('dropping');
+    saveShots([...shots, { pos: target, lie: lieOn(target, course.features), drop: true, penalty: n }]);
+  } }, 'Set drop');
+  function openPenalty(shots, kind, at) {
+    const prev = shots[shots.length - 1], water = kind === 'water';
+    const charge = n => [...shots.slice(0, -1), { ...prev, pen: (prev.pen || 0) + n, obAt: at, penKind: kind }];
+    const opt = (label, sub, fn) => h('button', { class: 'penopt', onclick: () => { penaltySheet.hidden = true; fn(); } }, h('b', {}, label), h('small', {}, sub));
+    penaltySheet.replaceChildren(h('div', { class: 'clubbox' },
+      h('div', { class: 'clubhead' }, h('strong', {}, water ? 'In the water' : 'Out of bounds'), h('button', { class: 'x', onclick: () => { penaltySheet.hidden = true; } }, '✕')),
+      h('div', { class: 'penopts' },
+        opt(prev.lie === 'tee' ? 'Re-tee' : 'Replay', '+1 stroke · hit again from the same spot', () => saveShots([...charge(1), { pos: prev.pos, lie: prev.lie, replay: true, penalty: 1 }])),
+        opt('Drop', `+${water ? 1 : 2} stroke${water ? '' : 's'} · move the crosshair to the drop, then Set drop`, () => {
+          const n = water ? 1 : 2;
+          dropping = { shots: charge(n), n };
+          setDropBtn.textContent = `Set drop (+${n})`; setDropBtn.hidden = false; holeEl()?.classList.add('dropping');
+          update();
+        }))));
+    penaltySheet.hidden = false;
   }
   const shotConfirm = h('div', { class: 'clubsheet', hidden: true, onclick: e => { if (e.target === shotConfirm) shotConfirm.hidden = true; } });
   function openShotConfirm() {
@@ -810,7 +835,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, compBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1183,7 +1208,7 @@ export function renderHole(view, n) {
     const w = showWidth && !onGreen ? fairwayWidth(from, target, fairways) : null;
     const fromTee = yards(from, target), toPin = yards(target, pin);
     undoBtn.hidden = !shots.length && !holeNow().done;
-    addBtn.hidden = st === 'pin' || st === 'done';
+    addBtn.hidden = st === 'pin' || st === 'done' || !!dropping;
     holedBtn.hidden = st !== 'putt';
     widthBtn.hidden = arcBtn.hidden = apprBtn.hidden = onGreen;
     clubBtn.hidden = onGreen || viewing();

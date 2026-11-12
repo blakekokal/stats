@@ -377,6 +377,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.38.0', ['Water or OB: choose Re-tee/Replay (+1) or Drop (+1 water, +2 OB) and place the drop; strokes and SG count the penalty']],
   ['0.37.4', ['Cowboys: ponds redrawn from the imagery and kept out of bunkers; the mown grass around greens counts as fairway']],
   ['0.37.3', ['Cowboys: bunkers, fairways and greens redrawn from current imagery (after the renovation)']],
   ['0.37.2', ['Bear Creek West: fairways and greens redrawn to match the satellite imagery']],
