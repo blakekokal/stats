@@ -675,14 +675,16 @@ export function renderHole(view, n) {
   // come once the bag is set up.
   const clubOf = s => (s.lie === 'green' ? h('b', {}, 'Putter') : h('b', { class: 'muted' }, '— (coming soon)'));
   // One line for a shot: club (when known), how far it went, and what was left
-  // after it — e.g. "Putter · 15 ft to 2 ft", "152 yd to 14 ft", "88 yd to holed".
+  // after it — e.g. "Putter hit 15 ft to 2 ft from hole", "Hit 152 yds to 14 ft
+  // from hole", "Hit 88 yds into the hole". Clubs other than the putter come later.
   function shotLine(hl, i) {
     const shots = hl.shots || [], s = shots[i], next = shots[i + 1];
     if (!s || (!next && !hl.done)) return null;
     const hp = hl.pin || pin, isPutt = s.lie === 'green', travel = yards(s.pos, next ? next.pos : hp);
-    const went = isPutt ? `${Math.round(travel * FT_PER_YD)} ft` : `${Math.round(travel)} yd`;
-    const left = !next ? 'holed' : next.lie === 'green' ? `${next.ft ?? Math.round(yards(next.pos, hp) * FT_PER_YD)} ft` : `${Math.round(yards(next.pos, hp))} yd`;
-    return `${isPutt ? 'Putter · ' : ''}${went} to ${left}`;
+    const went = isPutt ? `${Math.round(travel * FT_PER_YD)} ft` : `${Math.round(travel)} yds`;
+    const left = !next ? 'into the hole' : `to ${next.lie === 'green' ? `${next.ft ?? Math.round(yards(next.pos, hp) * FT_PER_YD)} ft` : `${Math.round(yards(next.pos, hp))} yds`} from hole`;
+    // e.g. "Putter hit 15 ft to 2 ft from hole", "Hit 175 yds to 12 ft from hole"
+    return `${isPutt ? 'Putter hit' : 'Hit'} ${went} ${left}`;
   }
   let sgViewKey = null;
   const fmtSgV = v => (v == null ? '–' : (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2));
