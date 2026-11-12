@@ -52,7 +52,7 @@ export function renderHome(view) {
       go('⛳', 'Enter New Round', 'Track every shot', '#007a52', '#/new'),
       go('📋', 'Round History', 'All past rounds', '#00402c', '#/history'),
       divider(),
-      soon('📊', 'Stats Dashboard', 'Analytics & trends', '#3d96ee'),
+      go('📊', 'Stats Dashboard', 'Analytics & trends', '#3d96ee', '#/dashboard'),
       soon('🔍', 'Performance Analysis', 'Uncover your biggest misses & areas to improve', '#2d7abc'),
       soon('🎒', 'My Bag', 'Club distances & yardages', '#1a4a8a'),
       divider(),
@@ -296,6 +296,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.23.0', ['Stats Dashboard: strokes gained, scoring, off the tee, approach, around the green and putting, with radar charts and handicap index']],
   ['0.22.3', ["What's new works again", 'Rounds always show in Round History, whatever date the phone is set to']],
   ['0.22.2', ['Tapping Tee or Pin zooms in on the tee box or green; Set or cancel returns to your view']],
   ['0.22.1', ['SG key is a slim bar in the top-left so it no longer covers the yardages']],

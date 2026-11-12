@@ -5,6 +5,7 @@ import { renderCourseEditor } from './editor.js';
 import { renderSettings } from './settings.js';
 import { renderStats } from './stats.js';
 import { renderAccount } from './account.js';
+import { renderStatsDashboard } from './dashboard.js';
 import { renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin, renderWhatsNew } from './coach.js';
 import { VERSION } from './version.js';
 
@@ -116,9 +117,9 @@ export function rememberTee(teeName, ch, pos) {
 async function route() {
   await loadCourse();
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew'].includes(parts[0]) ? parts[0] : 'home';
+  const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard'].includes(parts[0]) ? parts[0] : 'home';
   // Pages laid out like the coaching app hide this app's top bar.
-  document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew'].includes(tab));
+  document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard'].includes(tab));
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   document.body.classList.toggle('playing', tab === 'hole');
   if (tab !== 'hole') closeHole();
@@ -131,6 +132,7 @@ async function route() {
   else if (tab === 'new') renderNewRound(view);
   else if (tab === 'history') renderHistory(view);
   else if (tab === 'whatsnew') renderWhatsNew(view);
+  else if (tab === 'dashboard') renderStatsDashboard(view, renderLogin);
   else renderHome(view);
 }
 
