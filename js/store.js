@@ -61,6 +61,22 @@ export const sync = {
   get email() { return sync.user?.email || ''; },
   get name() { return sync.user?.user_metadata?.display_name || sync.email; },
   get level() { return levelFromPref(sync.user?.user_metadata?.hcp_preference); },
+  // Average total drive in yards, saved on the account (and on this device for
+  // when logged out); null when not entered.
+  get avgDrive() {
+    let local = null;
+    try { local = localStorage.getItem('gs:avgDrive'); } catch { /* ignore */ }
+    const v = Number(sync.user ? sync.user.user_metadata?.avg_drive ?? local : local);
+    return v > 0 ? Math.round(v) : null;
+  },
+  async setAvgDrive(yds) {
+    const v = yds > 0 ? Math.round(yds) : null;
+    try { v ? localStorage.setItem('gs:avgDrive', v) : localStorage.removeItem('gs:avgDrive'); } catch { /* ignore */ }
+    const c = getClient(); if (!c || !sync.user) return;
+    const { data, error } = await c.auth.updateUser({ data: { avg_drive: v } });
+    if (error) throw error;
+    sync.user = data.user;
+  },
   async signIn(email, password) {
     const c = getClient(); if (!c) throw new Error('Accounts are unavailable right now.');
     const { error } = await c.auth.signInWithPassword({ email, password });
