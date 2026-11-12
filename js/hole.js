@@ -101,6 +101,10 @@ function holeFeatures(ch) {
 function leaveView() { sessionStorage.removeItem('gs:viewOnly'); sessionStorage.removeItem('gs:editingPast'); setCurrentRound(null); }
 
 export function renderHole(view, n) {
+  // A view to keep when the hole is re-rendered for Edit / Save / Cancel.
+  let keepCam = null;
+  try { const c = sessionStorage.getItem('gs:cam'); if (c) keepCam = JSON.parse(c); } catch { /* none */ }
+  sessionStorage.removeItem('gs:cam');
   closeHole();
   sessionStorage.setItem('hole', n);
   const ch = course.holes[n - 1];
@@ -387,13 +391,79 @@ export function renderHole(view, n) {
   // Viewing a past round from Round History: holes open on the normal tee view
   // with the shots drawn and no recording controls, until Edit is tapped.
   const viewing = () => sessionStorage.getItem('gs:viewOnly') === '1';
-  const editBtn = h('button', { class: 'fab viewedit', hidden: !viewing(), onclick: () => { sessionStorage.removeItem('gs:viewOnly'); sessionStorage.setItem('gs:editingPast', '1'); renderHole(view, n); } }, '✎ Edit');
+  // Re-render this hole keeping the current view (zoom, position, rotation).
+  const rerenderHere = () => {
+    const c = m.getCenter();
+    sessionStorage.setItem('gs:cam', JSON.stringify({ center: [c.lng, c.lat], zoom: m.getZoom(), bearing: m.getBearing() }));
+    renderHole(view, n);
+  };
+  const editBtn = h('button', { class: 'fab viewedit', hidden: !viewing(), onclick: () => {
+    const r = currentRound();
+    if (r) sessionStorage.setItem('gs:editSnap', JSON.stringify(r.holes || {})); // for Cancel
+    sessionStorage.removeItem('gs:viewOnly'); sessionStorage.setItem('gs:editingPast', '1'); rerenderHere();
+  } }, '✎ Edit');
   // Editing a past round: Save (beside Undo) goes back to view mode. Changes are
   // already stored as they're made; Save just finishes editing.
   const editingPast = () => sessionStorage.getItem('gs:editingPast') === '1' && !viewing();
-  const saveBtn = h('button', { class: 'fab savehole', hidden: !editingPast(), onclick: () => {
-    sessionStorage.removeItem('gs:editingPast'); sessionStorage.setItem('gs:viewOnly', '1'); renderHole(view, n);
-  } }, '✓ Save');
+  const finishEdit = () => { sessionStorage.removeItem('gs:editingPast'); sessionStorage.removeItem('gs:editSnap'); sessionStorage.setItem('gs:viewOnly', '1'); rerenderHere(); };
+  const saveBtn = h('button', { class: 'fab savehole', hidden: !editingPast(), onclick: finishEdit }, '✓ Save');
+  // Cancel puts every hole back the way it was when Edit was tapped.
+  const cancelBtn = h('button', { class: 'fab cancelhole', hidden: !editingPast(), onclick: () => {
+    const r = currentRound(), snap = sessionStorage.getItem('gs:editSnap');
+    if (r && snap) { try { store.set(roundKeyOf(r.id), { ...r, holes: JSON.parse(snap), updated: Date.now() }); } catch { /* keep as is */ } }
+    finishEdit();
+  } }, 'Cancel');
+
+  // Shot list (editing a past round): each shot with its length and where it
+  // finished. Tap one to move where it finished: the view jumps there, the
+  // crosshair moves it, then Set (or Cancel).
+  const shotList = h('div', { class: 'shotlist', hidden: true });
+  let movingShot = null; // index into the hole's shots of the spot being moved
+  function drawShotList() {
+    shotList.hidden = !editingPast();
+    if (shotList.hidden) return;
+    const shots = shotsNow(), done = holeNow().done, rows = [];
+    let putt = 0;
+    for (let i = 1; i <= shots.length; i++) {
+      const a = shots[i - 1], b = shots[i], isPutt = a.lie === 'green';
+      if (!b && !done) break;
+      if (isPutt) putt++;
+      const len = isPutt ? `${a.ft ?? Math.round(yards(a.pos, pin) * FT_PER_YD)} ft` : `${Math.round(yards(a.pos, b ? b.pos : pin))} yd`;
+      const to = !b ? 'holed' : b.lie === 'green' ? (isPutt ? `${b.ft ?? Math.round(yards(b.pos, pin) * FT_PER_YD)} ft` : 'GRN') : LIE_TAG[b.lie] || b.lie;
+      const label = `${isPutt ? `Putt ${putt}` : `Shot ${i}`} · ${len} → ${to}`;
+      rows.push(b
+        ? h('button', { class: 'shotrow' + (movingShot === i ? ' on' : ''), onclick: () => (movingShot === i ? endShotMove() : startShotMove(i)) }, label)
+        : h('div', { class: 'shotrow last' }, label));
+    }
+    if (!rows.length) rows.push(h('div', { class: 'shotrow last' }, 'No shots yet'));
+    if (movingShot != null) rows.push(h('div', { class: 'shotmove' },
+      h('button', { class: 'go', onclick: setShotMove }, `Set shot ${movingShot}`), h('button', { onclick: endShotMove }, 'Cancel')));
+    shotList.replaceChildren(...rows);
+  }
+  let shotCam = null;
+  function startShotMove(i) {
+    if (moving) endMove(false);
+    movingShot = i;
+    const c = m.getCenter(); shotCam = { center: c, zoom: m.getZoom() };
+    m.easeTo({ center: ll(shotsNow()[i].pos), duration: 400 });
+    drawShotList();
+  }
+  function endShotMove() {
+    movingShot = null;
+    if (shotCam) m.easeTo({ center: shotCam.center, zoom: shotCam.zoom, duration: 400 });
+    shotCam = null;
+    drawShotList();
+  }
+  function setShotMove() {
+    const i = movingShot, shots = [...shotsNow()];
+    const lie = lieOn(target, course.features);
+    const moved = { ...shots[i], pos: target, lie };
+    if (lie === 'green') moved.ft = Math.max(1, Math.round(yards(target, pin) * FT_PER_YD)); else delete moved.ft;
+    shots[i] = moved;
+    movingShot = null; shotCam = null;
+    saveShots(shots);
+    drawShotList();
+  }
   const undoBtn = h('button', { class: 'fab undo', 'aria-label': 'Undo', title: 'Undo',
     onclick: () => {
       const hl = holeNow(), shots = hl.shots || [];
@@ -469,7 +539,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -641,9 +711,9 @@ export function renderHole(view, n) {
     apprSlider.hidden = !showAppr || onGreen;
     setPinBtn.hidden = st !== 'pin';
     banner.hidden = st !== 'done';
-    holeEl()?.classList.toggle('holedbar', !banner.hidden); // the version tag makes room for it
     teeBtn.hidden = onGreen;
     pinBtn.hidden = st === 'pin' || st === 'done';
+    drawShotList();
     if (viewing()) addBtn.hidden = holedBtn.hidden = setPinBtn.hidden = undoBtn.hidden = teeBtn.hidden = pinBtn.hidden = true;
     if ((moving === 'tee' && teeBtn.hidden) || (moving === 'pin' && pinBtn.hidden)) endMove(false);
     // The hole pill: the hole's yardage, or on the green the putt to come.
@@ -658,7 +728,14 @@ export function renderHole(view, n) {
     if (st === 'done') {
       const strokes = shots.length + shots.filter(x => x.lie === 'water').length, diff = strokes - ch.par;
       const word = { '-3': 'Albatross', '-2': 'Eagle', '-1': 'Birdie', 0: 'Par', 1: 'Bogey', 2: 'Double bogey' }[diff] || `${diff > 0 ? '+' : ''}${diff}`;
-      bannerText.replaceChildren(h('strong', {}, `Holed in ${strokes}`), h('span', {}, `${word} on a par ${ch.par}`));
+      // Score card: (+1) 6 for the hole, and the round so far against par.
+      const rr = currentRound(), toPar = v => (v === 0 ? 'E' : v > 0 ? `+${v}` : `−${-v}`);
+      let tot = 0;
+      for (const o of course.holes) {
+        const hh = rr?.holes?.[o.n];
+        if (hh?.done) tot += (hh.shots || []).length + (hh.shots || []).filter(x => x.lie === 'water').length - o.par;
+      }
+      bannerText.replaceChildren(h('strong', { title: word }, h('em', {}, `(${toPar(diff)})`), ` ${strokes}`), h('span', {}, `${toPar(tot)} total`));
       // After the round's last hole, finish to Round History.
       const r = currentRound(), allDone = r && Array.from({ length: holeCount }, (_, i) => r.holes?.[i + 1]?.done).every(Boolean);
       const last = n >= holeCount;
@@ -808,7 +885,8 @@ export function renderHole(view, n) {
     m.addSource('sgt', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     m.addLayer({ id: 'sgt-shadow', type: 'line', source: 'sgt', paint: { 'line-color': '#000', 'line-width': 4.5, 'line-opacity': 0.35 } });
     m.addLayer({ id: 'sgt', type: 'line', source: 'sgt', paint: { 'line-color': ['get', 'color'], 'line-width': 2.5, 'line-dasharray': [2, 1.2] } });
-    if (stage() !== 'play' && !viewing()) zoomToGreen();
+    if (keepCam) m.jumpTo(keepCam);
+    else if (stage() !== 'play' && !viewing()) zoomToGreen();
     update();
   });
   update();
