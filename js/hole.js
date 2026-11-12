@@ -228,7 +228,7 @@ export function renderHole(view, n) {
   const zoneLegend = h('div', { class: 'zonelegend', hidden: true });
   function drawLegend() {
     const rows = [['+.75 or more', [20, 83, 45]], ['+.5 to +.75', [22, 163, 74]], ['+.25 to +.5', [74, 222, 128]], ['0 to +.25', [187, 247, 208]],
-      ['−.25 to 0', [252, 165, 165]], ['−.5 to −.25', [248, 113, 113]], ['−.75 to −.5', [220, 38, 38]], ['−.75 or less', [153, 27, 27]]];
+      ['0 to −.25', [252, 165, 165]], ['−.25 to −.5', [248, 113, 113]], ['−.5 to −.75', [220, 38, 38]], ['−.75 or less', [153, 27, 27]]];
     zoneLegend.replaceChildren(h('small', {}, 'Drive SG'), ...rows.map(([t, c]) => h('span', {}, h('i', { style: `background:rgb(${c.join(',')})` }), t)));
   }
   drawLegend();
