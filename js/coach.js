@@ -377,6 +377,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.37.2', ['Bear Creek West: fairways and greens redrawn to match the satellite imagery']],
   ['0.37.1', ['Bear Creek West: groves of trees between holes are now Recovery instead of OB']],
   ['0.37.0', ['New course: Cowboys Golf Club (Grapevine)']],
   ['0.36.0', ['New course: Bear Creek Golf Club – West (DFW). Pick it on New Round or GPS Scouting']],
