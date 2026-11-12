@@ -374,6 +374,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.34.0', ['Disp button: a dispersion oval with 15 shots in it (right ones a bit shorter, left a bit longer), showing their average SG', 'Arc, Disp and Appr are never on together']],
   ['0.33.1', ['GPS Scouting opens a short setup page: pick the tee box and press Start']],
   ['0.33.0', ['Arc and Appr are never on together — turning one on turns the other off', 'Appr has an Adj button beside it for the circle size, like Arc']],
   ['0.32.5', ['Comp: no white aiming line — each club has its own coloured line from the ball']],
