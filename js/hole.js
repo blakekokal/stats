@@ -549,6 +549,13 @@ export function renderHole(view, n) {
         if (!confirm('Delete this round? This cannot be undone.')) return;
         leaveTo('#/', r => store.remove(roundKeyOf(r.id)))();
       } }, 'Home and delete round'),
+      // Editing a past round: put every hole back as it was when Edit was tapped.
+      sessionStorage.getItem('gs:editingPast') === '1' && sessionStorage.getItem('gs:editSnap')
+        ? h('button', { class: 'nosave', onclick: leaveTo('#/', r => {
+          try { store.set(roundKeyOf(r.id), { ...r, holes: JSON.parse(sessionStorage.getItem('gs:editSnap')), updated: Date.now() }); } catch { /* keep as is */ }
+          sessionStorage.removeItem('gs:editSnap');
+        }) }, 'Leave without saving')
+        : null,
       h('button', { class: 'cancel', onclick: () => { leave.hidden = true; } }, 'Cancel')));
 
   view.replaceChildren(h('div', { class: 'holeview' }, mapEl,

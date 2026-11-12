@@ -198,6 +198,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .leavebox .pause { background: #2d7abc; }
 .leavebox .submit { background: #007a52; }
 .leavebox .delete { background: #e06060; }
+.leavebox .nosave { background: #3d3d3d; }
 .leavebox .cancel { background: transparent; color: #9a9a9a; min-height: 36px; }
 .keys { position: absolute; left: 10px; top: calc(76px + env(safe-area-inset-top)); z-index: 3; display: grid; gap: 6px; justify-items: start; pointer-events: none; }
 .zonelegend { display: grid; gap: 3px; background: #111d; backdrop-filter: blur(8px); border-radius: 10px; padding: 5px 7px; color: #fff; font: 600 11px/1.1 system-ui, sans-serif; }
