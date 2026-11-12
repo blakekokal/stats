@@ -233,14 +233,17 @@ export function renderHole(view, n) {
     const end = v < 0 ? [220, 38, 38] : [21, 128, 61];
     return pale.map((p0, i) => Math.round(p0 + (end[i] - p0) * t));
   }
-  const zoneLegend = h('div', { class: 'zonelegend', hidden: true });
+  const zoneLegend = h('div', { class: 'zonelegend heat', hidden: true });
+  // A slim colour bar in the top-left corner, labelled at the band edges, so it
+  // stays clear of the readouts around the crosshair on narrow screens.
   function drawLegend() {
-    const rows = [['+.75 or more', [20, 83, 45]], ['+.5 to +.75', [22, 163, 74]], ['+.25 to +.5', [74, 222, 128]], ['0 to +.25', [187, 247, 208]],
-      ['0 to −.25', [252, 165, 165]], ['−.25 to −.5', [248, 113, 113]], ['−.5 to −.75', [220, 38, 38]], ['−.75 or less', [153, 27, 27]]];
-    zoneLegend.replaceChildren(h('small', {}, 'Drive SG'), ...rows.map(([t, c]) => h('span', {}, h('i', { style: `background:rgb(${c.join(',')})` }), t)));
+    const blocks = HEAT_BANDS.map(([, c]) => c);
+    const edges = ['+.75', '+.5', '+.25', '0', '−.25', '−.5', '−.75'];
+    zoneLegend.replaceChildren(h('small', {}, 'SG'),
+      h('div', { class: 'heatbar' }, blocks.map((c, i) => h('div', { class: 'blk', style: `background:rgb(${c.join(',')})` },
+        edges[i] ? h('em', {}, edges[i]) : null))));
   }
-  drawLegend();
-  const ringLegend = h('div', { class: 'zonelegend', hidden: true });
+  const ringLegend = h('div', { class: 'zonelegend ringkey', hidden: true });
   drawApprSlider();
   // Feet from the hole at which a ball on the green gains `sg` strokes for an
   // approach from `from` (expected putts there = expected strokes from `from` - 1 - sg).
@@ -268,6 +271,7 @@ export function renderHole(view, n) {
     [0.75, [20, 83, 45]], [0.5, [22, 163, 74]], [0.25, [74, 222, 128]], [0, [187, 247, 208]],
     [-0.25, [252, 165, 165]], [-0.5, [248, 113, 113]], [-0.75, [220, 38, 38]], [-Infinity, [153, 27, 27]]];
   const heatColor = sg => HEAT_BANDS.find(([lo]) => sg >= lo)[1];
+  drawLegend();
   function sgZoneImage() {
     const key = [tee, pin, level].join('|');
     if (key === zoneKey) return zoneImg;
@@ -438,7 +442,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, zoneLegend, ringLegend,
+    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),

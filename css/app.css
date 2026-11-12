@@ -199,7 +199,13 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .leavebox .submit { background: #007a52; }
 .leavebox .delete { background: #e06060; }
 .leavebox .cancel { background: transparent; color: #9a9a9a; min-height: 36px; }
-.zonelegend { position: absolute; right: 112px; bottom: calc(262px + env(safe-area-inset-bottom)); z-index: 3; display: grid; gap: 3px; background: #111d; backdrop-filter: blur(8px); border-radius: 10px; padding: 6px 9px; color: #fff; font: 600 11px/1.1 system-ui, sans-serif; pointer-events: none; }
+.keys { position: absolute; left: 10px; top: calc(76px + env(safe-area-inset-top)); z-index: 3; display: grid; gap: 6px; justify-items: start; pointer-events: none; }
+.zonelegend { display: grid; gap: 3px; background: #111d; backdrop-filter: blur(8px); border-radius: 10px; padding: 5px 7px; color: #fff; font: 600 11px/1.1 system-ui, sans-serif; }
+.zonelegend.heat { padding: 5px 6px 6px; }
+.heatbar { display: grid; width: 14px; margin-right: 30px; }
+.heatbar .blk { height: 13px; position: relative; }
+.heatbar .blk:first-child { border-radius: 4px 4px 0 0; } .heatbar .blk:last-child { border-radius: 0 0 4px 4px; }
+.heatbar em { position: absolute; left: 18px; bottom: 0; transform: translateY(50%); font-style: normal; font-size: 10px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .zonelegend small { font-size: 10px; opacity: .8; }
 .zonelegend span { display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
 .zonelegend i { width: 12px; height: 10px; border-radius: 3px; display: inline-block; }
