@@ -223,6 +223,10 @@ export function renderHole(view, n) {
   // opens the width slider.
   let arcAdjOpen = false;
   const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); if (!v) arcAdjOpen = false; });
+  // Arc sizes, stacked down the right side while the arc is on.
+  const arcStack = h('div', { class: 'arcstack', hidden: true },
+    ...[['auto', 'Auto'], [60, '60y'], [50, '50y'], [40, '40y'], [30, '30y'], [20, '20y']].map(([v, label]) =>
+      h('button', { value: v, onclick: () => setArc(v) }, label)));
   const arcAdjBtn = h('button', { class: 'fab arcadj', 'aria-label': 'Adjust arc width', title: 'Adjust arc width', hidden: true,
     onclick: () => { arcAdjOpen = !arcAdjOpen; update(); } }, h('span', {}, '⇔'), h('small', {}, 'Adj'));
 
@@ -667,8 +671,12 @@ export function renderHole(view, n) {
   view.replaceChildren(h('div', { class: 'holeview' }, mapEl,
     h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
-    h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, sgtBtn, apprBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
+    // Tools in one slim strip down the left (menu at the bottom), arc sizes stacked
+    // down the right while the arc is on, + in the bottom-right corner.
+    h('div', { class: 'toolbar' }, clubBtn, sgtBtn, apprBtn, arcBtn, widthBtn, pinBtn, teeBtn, outlineBtn,
+      h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, h('span', {}, '☰'), h('small', {}, 'Menu'))),
+    arcStack,
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, setTeeBtn, setPinHereBtn, clubPicker, shotConfirm, h('div', { class: 'sliders' }, apprSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1010,8 +1018,10 @@ export function renderHole(view, n) {
     clubBtn.hidden = onGreen || viewing();
     if (!clubBtn.hidden) { const c = currentClub(); clubBtn.firstChild.textContent = c ? clubShort(c) : '–'; clubBtn.classList.toggle('on', !!pickedClub); }
     sgtBtn.hidden = onGreen || shots.length > 0; // SG is the drive heat map, from the tee only
-    arcSlider.hidden = !showArc || onGreen || !arcAdjOpen;
-    arcAdjBtn.hidden = !showArc || onGreen;
+    arcSlider.hidden = true; // sizes are picked from the stack on the right
+    arcStack.hidden = !showArc || onGreen;
+    if (!arcStack.hidden) arcStack.querySelectorAll('button').forEach(b => b.classList.toggle('on', arcAuto ? b.value === 'auto' : +b.value === arcYd));
+    arcAdjBtn.hidden = true;
     arcAdjBtn.classList.toggle('on', arcAdjOpen);
     apprSlider.hidden = !showAppr || onGreen;
     setPinBtn.hidden = st !== 'pin';
