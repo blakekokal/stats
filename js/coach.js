@@ -377,6 +377,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.39.0', ['Auto button: picks the best club and aiming point (by the average SG of its dispersion), moves the crosshair there and shows the dots; key lists the top clubs']],
   ['0.38.0', ['Water or OB: choose Re-tee/Replay (+1) or Drop (+1 water, +2 OB) and place the drop; strokes and SG count the penalty']],
   ['0.37.4', ['Cowboys: ponds redrawn from the imagery and kept out of bunkers; the mown grass around greens counts as fairway']],
   ['0.37.3', ['Cowboys: bunkers, fairways and greens redrawn from current imagery (after the renovation)']],
