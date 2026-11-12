@@ -224,30 +224,50 @@ export function renderHole(view, n) {
 
   // Undo steps back one stage at a time: un-hole, then un-place the pin (if the
   // ball is still on its first spot on the green), then remove the last shot.
-  // Move tee / Move pin: tap, move the crosshair to the new spot, then Set.
+  // Move pin: tap Pin, move the crosshair onto the hole, tap Set beside it.
+  // Move tee: tap Tee and the aim spot stays put on the map (shown as a ring)
+  // while the view jumps to the tee; the screen crosshair now drags the tee
+  // around. Set keeps the new tee and brings the crosshair back to the aim spot.
+  // Tapping Tee or Pin again cancels.
   let moving = null; // 'tee' | 'pin' | null
-  const moveText = h('span', {});
-  const endMove = () => { moving = null; moveBar.hidden = true; teeBtn.classList.remove('on'); pinBtn.classList.remove('on'); };
-  const startMove = kind => {
-    if (moving === kind) return endMove();
-    moving = kind; moveBar.hidden = false;
-    moveText.textContent = kind === 'tee' ? 'Move the crosshair to the new tee spot' : 'Move the crosshair onto the hole';
-    teeBtn.classList.toggle('on', kind === 'tee'); pinBtn.classList.toggle('on', kind === 'pin');
-  };
-  const moveBar = h('div', { class: 'movebar', hidden: true }, moveText,
-    h('button', { class: 'go', onclick: () => {
-      if (moving === 'tee') {
-        tee = target; teeMark.setLngLat(ll(tee)); rememberTee(teeName, ch, tee);
-        const shots = shotsNow();
-        if (shots.length && shots[0].lie === 'tee') saveShots([{ ...shots[0], pos: tee }, ...shots.slice(1)]);
-      } else if (moving === 'pin') {
-        pin = target;
-        if (roundKey()) saveHole({ pin, shots: shotsNow().map(x => (x.lie === 'green' ? { ...x, ft: Math.max(1, Math.round(yards(x.pos, pin) * FT_PER_YD)) } : x)) });
-        else syncPin();
-      }
-      endMove(); update();
-    } }, 'Set'),
-    h('button', { onclick: endMove }, 'Cancel'));
+  let aim = null, aimMark = null, teeBefore = null;
+  const holeEl = () => mapEl.parentElement;
+  const backToAim = () => m.easeTo({ center: ll(aim), duration: 400 });
+  function endMove(keep) {
+    const was = moving;
+    if (was === 'tee' && !keep) { tee = teeBefore; teeMark.setLngLat(ll(tee)); }
+    moving = null;
+    teeBtn.classList.remove('on'); pinBtn.classList.remove('on');
+    setTeeBtn.hidden = setPinHereBtn.hidden = true;
+    holeEl()?.classList.remove('movingtee');
+    if (was === 'tee') { backToAim(); aimMark?.remove(); aimMark = null; }
+    update();
+  }
+  function startMove(kind) {
+    if (moving === kind) return endMove(false);
+    if (moving) endMove(false);
+    moving = kind;
+    (kind === 'tee' ? teeBtn : pinBtn).classList.add('on');
+    (kind === 'tee' ? setTeeBtn : setPinHereBtn).hidden = false;
+    if (kind === 'tee') {
+      aim = target; teeBefore = tee;
+      aimMark = new maplibregl.Marker({ element: h('div', { class: 'aimmark', title: 'Aim spot' }) }).setLngLat(ll(aim)).addTo(m);
+      holeEl()?.classList.add('movingtee');
+      m.easeTo({ center: ll(tee), duration: 400 });
+    }
+  }
+  const setTeeBtn = h('button', { class: 'setnext tee', hidden: true, onclick: () => {
+    rememberTee(teeName, ch, tee);
+    const shots = shotsNow();
+    if (shots.length && shots[0].lie === 'tee') saveShots([{ ...shots[0], pos: tee }, ...shots.slice(1)]);
+    endMove(true);
+  } }, 'Set tee');
+  const setPinHereBtn = h('button', { class: 'setnext pin', hidden: true, onclick: () => {
+    pin = target;
+    if (roundKey()) saveHole({ pin, shots: shotsNow().map(x => (x.lie === 'green' ? { ...x, ft: Math.max(1, Math.round(yards(x.pos, pin) * FT_PER_YD)) } : x)) });
+    else syncPin();
+    endMove(true);
+  } }, 'Set pin');
   const teeBtn = h('button', { class: 'fab movetee', 'aria-label': 'Move tee', title: 'Move the tee', onclick: () => startMove('tee') }, h('span', {}, '▲'), h('small', {}, 'Tee'));
   const pinBtn = h('button', { class: 'fab movepin', 'aria-label': 'Move pin', title: 'Move the pin', onclick: () => startMove('pin') }, h('span', {}, '⚑'), h('small', {}, 'Pin'));
 
@@ -306,7 +326,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, moveBar, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu,
+    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -413,7 +433,8 @@ export function renderHole(view, n) {
     // Read what is under the crosshair from its actual screen position, so the
     // line always meets the dot even if the screen size changed since the last layout.
     const c = m.unproject([mapEl.clientWidth / 2, mapEl.clientHeight * CROSSHAIR_Y]);
-    target = [c.lat, c.lng];
+    if (moving === 'tee') { tee = [c.lat, c.lng]; teeMark.setLngLat(ll(tee)); target = aim; } // the crosshair is dragging the tee
+    else target = [c.lat, c.lng];
     const lie = lieOn(target, course.features);
     const shots = shotsNow(), last = shots[shots.length - 1], st = stage();
     const from = last ? last.pos : tee;
@@ -431,7 +452,7 @@ export function renderHole(view, n) {
     undoBtn.classList.toggle('low', !banner.hidden); // keep clear of the score banner
     teeBtn.hidden = onGreen;
     pinBtn.hidden = st === 'pin' || st === 'done';
-    if ((moving === 'tee' && teeBtn.hidden) || (moving === 'pin' && pinBtn.hidden)) endMove();
+    if ((moving === 'tee' && teeBtn.hidden) || (moving === 'pin' && pinBtn.hidden)) endMove(false);
     // The hole pill: the hole's yardage, or on the green the putt to come.
     const putts = shots.filter(x => x.lie === 'green').length - 1;
     if (st === 'putt') {
@@ -478,10 +499,15 @@ export function renderHole(view, n) {
       if (sgtMark) sgtMark.getElement().style.display = 'none';
       return;
     }
+    if (moving === 'tee') { // the crosshair is the tee: show how far it is to the aim spot
+      toPinEl.replaceChildren(h('b', {}, `${Math.round(yards(tee, aim))} yd`), h('span', { class: 'note' }, 'to aim spot'));
+      fromTeeEl.replaceChildren(h('span', { class: 'note' }, 'Move the tee, then Set tee'));
+    } else {
     toPinEl.replaceChildren(h('b', {}, `${Math.round(toPin)} yd`));
     fromTeeEl.replaceChildren(h('b', {}, `${Math.round(fromTee)} yd`),
       h('span', { class: 'sg ' + (sg >= 0 ? 'gain' : 'loss') }, `${sg >= 0 ? '+' : '−'}${Math.abs(sg).toFixed(2)} (${LIE_TAG[lie]})`),
       h('span', { class: 'wide', hidden: !showWidth }, w ? `${Math.round(w.yards)} yd wide` : 'No fairway here'));
+    }
 
     const arc = showArc ? arcThrough(from, target) : null;
     const half = arcYd / 2 / YD_PER_M;

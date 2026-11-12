@@ -139,10 +139,13 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .fab.undo.low { top: calc(136px + env(safe-area-inset-top)); }
 .fab.movetee { bottom: calc(138px + env(safe-area-inset-bottom)); }
 .fab.movepin { bottom: calc(196px + env(safe-area-inset-bottom)); }
-.movebar { position: absolute; top: calc(66px + env(safe-area-inset-top)); left: 54px; right: 62px; z-index: 5; display: flex; align-items: center; gap: 6px; background: #111e; backdrop-filter: blur(8px); border-radius: 14px; padding: 8px 8px 8px 12px; color: #fff; font-size: 13px; font-weight: 600; line-height: 1.2; }
-.movebar span { flex: 1; }
-.movebar button { min-height: 34px; padding: 0 12px; border-radius: 999px; border: 0; background: #ffffff22; color: #fff; font-weight: 700; }
-.movebar button.go { background: #ffb020; color: #111; }
+.setnext { position: absolute; left: 70px; height: 44px; padding: 0 16px; border-radius: 999px; border: 0; background: #ffb020; color: #111; font-size: 15px; font-weight: 700; box-shadow: 0 1px 6px #0008; z-index: 4; }
+.setnext.tee { bottom: calc(140px + env(safe-area-inset-bottom)); }
+.setnext.pin { bottom: calc(198px + env(safe-area-inset-bottom)); }
+/* Moving the tee: the screen crosshair becomes the tee dot; the real tee marker hides under it. */
+.holeview.movingtee .crosshair { width: 22px; height: 22px; margin: -11px 0 0 -11px; background: #fff; border: 2px solid #111; box-shadow: 0 0 0 3px #ffb020, 0 1px 4px #000; }
+.holeview.movingtee .teemark { visibility: hidden; }
+.aimmark { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1.5px #111, 0 1px 4px #000; background: transparent; pointer-events: none; }
 .fab[hidden] { display: none; }
 .holed { position: absolute; right: 9px; bottom: calc(88px + env(safe-area-inset-bottom)); height: 44px; padding: 0 16px; border-radius: 999px; border: 0; background: #22c55e; color: #fff; font-size: 16px; font-weight: 700; box-shadow: 0 1px 6px #0008; z-index: 3; }
 .holed[hidden] { display: none; }
