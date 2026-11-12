@@ -567,6 +567,39 @@ export function renderHole(view, n) {
     if (src) src.setData({ type: 'FeatureCollection', features: feats });
   }
 
+  // Lines that follow the crosshair (tee to crosshair to pin, the arc, the
+  // fairway width and the approach circle) are drawn in an SVG laid over the
+  // map and re-projected on every move, so they stay locked to the crosshair.
+  // (Map layers update a frame or two late while panning.) It sits under the
+  // markers so the tee, pin and shot dots stay on top.
+  const SVGNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(SVGNS, 'svg');
+  svg.setAttribute('class', 'liveoverlay');
+  const STYLES = {
+    path: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 4 }, { stroke: '#fff', 'stroke-width': 2 }],
+    arc: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#fff', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
+    appr: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 4.5, 'stroke-linecap': 'round' }, { stroke: '#4dd0ff', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
+    width: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round', 'stroke-dasharray': '0.1 6' }, { stroke: '#ffe14d', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-dasharray': '0.1 6' }],
+  };
+  const svgPaths = {};
+  for (const [name, layers] of Object.entries(STYLES)) {
+    svgPaths[name] = layers.map(attrs => {
+      const el = document.createElementNS(SVGNS, 'path');
+      el.setAttribute('fill', 'none');
+      for (const [k, v] of Object.entries(attrs)) el.setAttribute(k, v);
+      svg.appendChild(el);
+      return el;
+    });
+  }
+  m.getCanvasContainer().insertBefore(svg, m.getCanvas().nextSibling);
+  function overlay(lines) {
+    for (const [name, els] of Object.entries(svgPaths)) {
+      const pts = lines[name] || [];
+      const d = pts.length > 1 ? pts.map((q, i) => { const p = m.project(ll(q)); return `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`; }).join('') : '';
+      els.forEach(el => el.setAttribute('d', d));
+    }
+  }
+
   function update() {
     // Read what is under the crosshair from its actual screen position, so the
     // line always meets the dot even if the screen size changed since the last layout.
@@ -631,9 +664,9 @@ export function renderHole(view, n) {
       } else { toPinEl.replaceChildren(); fromTeeEl.replaceChildren(); }
       expValue.textContent = teeExp.toFixed(2);
       const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
-      set('path', line(st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin]));
+      overlay({ path: st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin] });
       set('shots', line(trace(shots)));
-      set('width', line([])); set('arc', line([])); set('appr', line([])); setRings([]); showZones(false);
+      setRings([]); showZones(false);
       sgGear.hidden = sgPanel.hidden = true;
       return;
     }
@@ -650,11 +683,12 @@ export function renderHole(view, n) {
     const arc = showArc ? arcThrough(from, target) : null;
     const half = arcYd / 2 / YD_PER_M;
     const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
-    set('path', line([from, target, pin]));
+    const lines = { path: [from, target, pin] };
     set('shots', line(trace(shots)));
-    set('width', line(w ? arcPoints(w.arc, w.l, w.r) : []));
-    set('arc', line(arc ? arcPoints(arc, -half, half) : []));
-    set('appr', line(showAppr ? ring(target, apprFt * 0.3048) : []));
+    if (w) lines.width = arcPoints(w.arc, w.l, w.r);
+    if (arc) lines.arc = arcPoints(arc, -half, half);
+    if (showAppr) lines.appr = ring(target, apprFt * 0.3048);
+    overlay(lines);
     // From the tee on a par 4 or 5, SG shows the tee-shot zones; otherwise the
     // 0-SG ring around the pin.
     const teeZones = showSgt && !shots.length && ch.par >= 4;
@@ -745,13 +779,9 @@ export function renderHole(view, n) {
       m.addLayer({ id, type: 'line', source: id, layout, paint });
     };
     addLine('shots', 5, { 'line-color': '#ffb020', 'line-width': 2.5 }, { 'line-cap': 'round' });
-    addLine('path', 4, { 'line-color': '#fff', 'line-width': 2 });
-    addLine('arc', 5, { 'line-color': '#fff', 'line-width': 2.5 }, { 'line-cap': 'round' });
-    addLine('appr', 4.5, { 'line-color': '#4dd0ff', 'line-width': 2.5 }, { 'line-cap': 'round' });
     m.addSource('sgt', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     m.addLayer({ id: 'sgt-shadow', type: 'line', source: 'sgt', paint: { 'line-color': '#000', 'line-width': 4.5, 'line-opacity': 0.35 } });
     m.addLayer({ id: 'sgt', type: 'line', source: 'sgt', paint: { 'line-color': ['get', 'color'], 'line-width': 2.5, 'line-dasharray': [2, 1.2] } });
-    addLine('width', 5, { 'line-color': '#ffe14d', 'line-width': 3, 'line-dasharray': [0.1, 2] }, { 'line-cap': 'round' });
     if (stage() !== 'play') zoomToGreen();
     update();
   });
