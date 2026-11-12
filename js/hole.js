@@ -651,26 +651,33 @@ export function renderHole(view, n) {
   // scorecard overlay when either is tapped. Only while a round is under way.
   const toPar = v => (v === 0 ? 'E' : v > 0 ? `+${v}` : `−${-v}`);
   const strokesOf = hh => (hh.shots || []).length + (hh.shots || []).filter(x => x.lie === 'water').length;
+  // Totals for the whole round, and to par through this hole (holes 1..n), so
+  // stepping through a round shows the running score hole by hole.
   function roundTotals() {
     const r = currentRound();
-    let strokes = 0, par = 0, thru = 0;
-    for (const o of course.holes) { const hh = r?.holes?.[o.n]; if (hh?.done) { strokes += strokesOf(hh); par += o.par; thru++; } }
-    return { r, strokes, toPar: strokes - par, thru };
+    let strokes = 0, par = 0, thruPar = 0, thruStrokes = 0, thru = 0;
+    for (const o of course.holes) {
+      const hh = r?.holes?.[o.n];
+      if (!hh?.done) continue;
+      strokes += strokesOf(hh); par += o.par;
+      if (o.n <= n) { thruStrokes += strokesOf(hh); thruPar += o.par; thru++; }
+    }
+    return { r, strokes, toPar: strokes - par, thru, thruToPar: thruStrokes - thruPar };
   }
   let chipKey = null;
   function drawScoreChips() {
-    const { r, strokes, toPar: tp, thru } = roundTotals();
+    const { r, strokes, toPar: tp, thru, thruToPar } = roundTotals();
     const show = !!r;
-    const key = show ? [strokes, tp, thru, r.holes?.[n]?.done ? strokesOf(r.holes[n]) : '-'].join('|') : 'none';
+    const key = show ? [strokes, tp, thru, thruToPar, r.holes?.[n]?.done ? strokesOf(r.holes[n]) : '-'].join('|') : 'none';
     if (key === chipKey) return;
     chipKey = key;
     chips.hidden = !show;
     holeEl()?.classList.toggle('haschips', show);
     if (!show) return;
-    totalChip.replaceChildren(h('small', {}, 'Total'), h('strong', {}, thru ? `${strokes}` : '–', h('em', {}, thru ? ` (${toPar(tp)})` : '')));
+    totalChip.replaceChildren(h('small', {}, 'Total'), h('strong', {}, strokes ? `${strokes}` : '–', h('em', {}, strokes ? ` (${toPar(tp)})` : '')));
     const hh = r.holes?.[n];
     holeChip.replaceChildren(h('small', {}, `Hole ${n}`), h('strong', {}, hh?.done ? String(strokesOf(hh)) : '–'),
-      h('em', {}, thru ? `${toPar(tp)} thru ${thru}` : 'not started'));
+      h('em', {}, thru ? `${toPar(thruToPar)} thru ${thru}` : 'not started'));
   }
   function openScorecard() {
     const { r, strokes, toPar: tp } = roundTotals();

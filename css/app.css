@@ -230,15 +230,12 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .shotmove { display: flex; gap: 4px; }
 .shotmove button { flex: 1; min-height: 32px; padding: 0 6px; border: 0; border-radius: 8px; background: #ffffff22; color: #fff; font-weight: 700; font-size: 12px; }
 .shotmove button.go { background: #ffb020; color: #111; }
-.chips { position: absolute; top: calc(8px + env(safe-area-inset-top)); left: 10px; z-index: 3; display: flex; gap: 6px; }
+.chips { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 3; display: flex; gap: 6px; }
 .chips[hidden] { display: none; }
 .scorechip { height: 50px; min-height: 0; padding: 4px 10px; border: 0; border-radius: 14px; background: #111c; backdrop-filter: blur(8px); color: #fff; display: grid; align-content: center; justify-items: center; gap: 1px; line-height: 1.05; }
 .scorechip small { font-size: 10px; opacity: .75; font-weight: 600; }
 .scorechip strong { font-size: 20px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .scorechip strong em, .scorechip > em { font-style: normal; font-size: 12px; font-weight: 700; opacity: .9; }
-.holeview.haschips .vertag { display: none; }
-.holeview.haschips .compass { top: calc(66px + env(safe-area-inset-top)); }
-.holeview.haschips .keys { top: calc(108px + env(safe-area-inset-top)); }
 .scorecard { position: absolute; inset: 0; z-index: 30; background: #000b; display: grid; place-items: center; padding: 14px; }
 .scorecard[hidden] { display: none; }
 .scbox { width: min(560px, 100%); background: #1e1e1e; color: #fff; border-radius: 16px; padding: 12px; display: grid; gap: 10px; box-shadow: 0 8px 30px #000a; }
@@ -254,3 +251,4 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .scbox tr.score td { cursor: pointer; } .scbox tr.score span { display: inline-grid; place-items: center; min-width: 22px; height: 22px; font-weight: 800; }
 .scbox span.eagle { border-radius: 50%; background: #f0c830; color: #111; } .scbox span.birdie { border-radius: 50%; border: 2px solid #00b87a; }
 .scbox span.bogey { border: 2px solid #d4706e; } .scbox span.dbl { background: #d4706e; }
+.holeview.haschips .sliders { bottom: calc(146px + env(safe-area-inset-bottom)); }
