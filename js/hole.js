@@ -2,8 +2,7 @@
 // fixed a third of the way down the screen; panning, zooming or rotating the map
 // moves the course underneath it, and the distances from the tee and to the pin
 // follow, along with the strokes gained by a tee shot finishing there for the
-// chosen handicap level. An optional heat map colours the whole hole by that
-// same strokes-gained figure. Two optional arcs, both centred on the tee and passing through the
+// chosen handicap level. The course outlines can be switched off. Two optional arcs, both centred on the tee and passing through the
 // crosshair: the fairway width, and a dispersion arc of adjustable width.
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, rememberTee } from './app.js';
@@ -71,15 +70,22 @@ export function fairwayWidth(tee, target, fairways, reachYd = 80) {
   return { arc, l, r, yards: (r - l) * YD_PER_M };
 }
 
-// The outlines worth drawing for one hole: its own fairways, greens and tee
+// The outlines worth drawing for one hole: its own fairways, green and tee
 // boxes (each belongs to the hole whose centre line it is nearest), plus any
 // bunker or water within 70 m of the hole's line, since those can be shared.
+const centre = ring => [ring.reduce((a, p) => a + p[0], 0) / ring.length, ring.reduce((a, p) => a + p[1], 0) / ring.length];
+// The hole's own green: the one the pin is on, or failing that the nearest.
+function ownGreen(ch) {
+  const greens = course.features.filter(f => f.t === 'green');
+  return greens.find(g => inPolygon(ch.pin, g.p))
+    || greens.reduce((best, g) => (!best || yards(centre(g.p[0]), ch.pin) < yards(centre(best.p[0]), ch.pin) ? g : best), null);
+}
 function holeFeatures(ch) {
-  const centre = ring => [ring.reduce((a, p) => a + p[0], 0) / ring.length, ring.reduce((a, p) => a + p[1], 0) / ring.length];
+  const green = ownGreen(ch);
   return course.features.filter(f => {
     if (f.t === 'bunker' || f.t === 'water') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
+    if (f.t === 'green') return f === green; // not a neighbour's or a practice green
     const c = centre(f.p[0]);
-    if (f.t === 'green') return yards(c, ch.pin) <= 60; // the hole's own green, not a neighbour's or a practice green
     const own = distToLine(c, ch.line);
     return own <= 120 && course.holes.every(o => o === ch || distToLine(c, o.line) >= own);
   });
@@ -101,7 +107,7 @@ export function renderHole(view, n) {
   let showWidth = flag('gs:fairwayWidth', '0');
   let showArc = flag('gs:arc', '0');
   let arcYd = Math.min(80, Math.max(10, +localStorage.getItem('gs:arcYd') || 40));
-  let showHeat = flag('gs:heat', '0');
+  let showOutlines = flag('gs:outlines', '1');
   let level = LEVELS.includes(localStorage.getItem('gs:level')) ? localStorage.getItem('gs:level') : 'Scratch';
 
   const mapEl = h('div', { id: 'gmap' });
@@ -121,15 +127,16 @@ export function renderHole(view, n) {
       oninput: e => { arcYd = +e.target.value; arcValue.textContent = `${arcYd} yd`; localStorage.setItem('gs:arcYd', arcYd); update(); } }),
     arcValue);
   const widthBtn = toggle('width', 'Width', '↔', 'Fairway width at the crosshair', () => showWidth, v => { showWidth = v; localStorage.setItem('gs:fairwayWidth', v ? '1' : '0'); });
-  const heatBtn = toggle('heat', 'Heat', '▦', 'Strokes-gained heat map', () => showHeat, v => { showHeat = v; localStorage.setItem('gs:heat', v ? '1' : '0'); refreshHeat(); });
-  const legend = h('div', { class: 'heatlegend', hidden: !showHeat }, h('small', {}, 'Strokes gained'), h('div', { class: 'ramp' }),
-    h('div', { class: 'ticks' }, h('span', {}, '−1'), h('span', {}, '0'), h('span', {}, '+1')));
+  const outlineBtn = toggle('outline', 'Lines', '⬭', 'Show bunker, fairway, water and green outlines', () => showOutlines, v => {
+    showOutlines = v; localStorage.setItem('gs:outlines', v ? '1' : '0');
+    if (m.getLayer('outlines')) m.setLayoutProperty('outlines', 'visibility', v ? 'visible' : 'none');
+  });
   const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); arcSlider.hidden = !v; });
 
   const expValue = h('strong', {});
   const expPill = h('div', { class: 'exppill' },
     h('div', {}, h('small', {}, 'Expected'), expValue),
-    h('select', { 'aria-label': 'Handicap level', onchange: e => { level = e.target.value; localStorage.setItem('gs:level', level); update(); refreshHeat(); } },
+    h('select', { 'aria-label': 'Handicap level', onchange: e => { level = e.target.value; localStorage.setItem('gs:level', level); update(); } },
       LEVELS.map(l => h('option', { value: l, selected: l === level }, levelName(l)))));
 
   const menu = h('div', { class: 'sheet', hidden: true },
@@ -143,7 +150,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    heatBtn, arcBtn, widthBtn, arcSlider, legend, menu,
+    outlineBtn, arcBtn, widthBtn, arcSlider, menu,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${n === 1 ? 18 : n - 1}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, h('small', {}, `Hole ${n} · Par ${ch.par}`), h('strong', {}, `${teeSet.yards[n - 1]} Yards`)),
@@ -192,56 +199,12 @@ export function renderHole(view, n) {
     : lie === 'water' ? expected('rough', yd, level) + 1
     : expected(lie === 'tee' ? 'fairway' : lie, yd, level));
 
-  // Heat map: strokes gained by a tee shot finishing at each point around the
-  // hole, painted red (lost a stroke or more) through pale (even) to green
-  // (gained a stroke or more) and laid over the imagery.
-  const heatBox = boundsOf([tee, pin, ...ch.line], 75);
-  // Only outlines near the hole matter, and each carries its bounding box so most
-  // points can be ruled out without a full point-in-polygon test.
-  const heatFeatures = course.features
-    .filter(f => f.p[0].some(p => p[0] > heatBox[0][0] && p[0] < heatBox[1][0] && p[1] > heatBox[0][1] && p[1] < heatBox[1][1]))
-    .map(f => ({ ...f, box: boundsOf(f.p[0]) }));
-  const heatLie = p => lieOn(p, heatFeatures.filter(f => p[0] >= f.box[0][0] && p[0] <= f.box[1][0] && p[1] >= f.box[0][1] && p[1] <= f.box[1][1]));
-  const heatCorners = [[heatBox[0][1], heatBox[1][0]], [heatBox[1][1], heatBox[1][0]], [heatBox[1][1], heatBox[0][0]], [heatBox[0][1], heatBox[0][0]]];
-  function heatImage() {
-    const CELL = 2.5; // metres
-    const [[s0, w0], [n0, e0]] = heatBox;
-    const rows = Math.ceil(((n0 - s0) * M_PER_DEG) / CELL), cols = Math.ceil(((e0 - w0) * M_PER_DEG * Math.cos((s0 * Math.PI) / 180)) / CELL);
-    const canvas = document.createElement('canvas'); canvas.width = cols; canvas.height = rows;
-    const ctx = canvas.getContext('2d'), img = ctx.createImageData(cols, rows);
-    const route = [tee, ...ch.line.slice(1, -1), pin];
-    const teeExp = expected('tee', yards(tee, pin), level);
-    const LOSS = [229, 57, 53], EVEN = [245, 240, 225], GAIN = [34, 197, 94];
-    for (let r = 0; r < rows; r++) {
-      const lat = n0 - ((r + 0.5) / rows) * (n0 - s0);
-      for (let c = 0; c < cols; c++) {
-        const p = [lat, w0 + ((c + 0.5) / cols) * (e0 - w0)];
-        const sg = teeExp - expectedFrom(heatLie(p), yards(p, pin)) - 1;
-        const t = Math.max(-1, Math.min(1, sg)), end = t < 0 ? LOSS : GAIN, k = Math.abs(t), i = (r * cols + c) * 4;
-        for (let j = 0; j < 3; j++) img.data[i + j] = EVEN[j] + (end[j] - EVEN[j]) * k;
-        // Full strength within 55 m of the hole's route, fading out by 70 m.
-        img.data[i + 3] = 150 * Math.max(0, Math.min(1, (70 - distToLine(p, route)) / 15));
-      }
-    }
-    ctx.putImageData(img, 0, 0);
-    return canvas.toDataURL();
-  }
-  function refreshHeat() {
-    legend.hidden = !showHeat;
-    if (!m.getLayer('outlines')) return; // map not loaded yet; the load handler calls this again
-    if (showHeat && !m.getSource('heat')) {
-      m.addSource('heat', { type: 'image', url: heatImage(), coordinates: heatCorners });
-      m.addLayer({ id: 'heat', type: 'raster', source: 'heat', paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' } }, 'outlines');
-    } else if (showHeat) m.getSource('heat').updateImage({ url: heatImage(), coordinates: heatCorners });
-    if (m.getLayer('heat')) m.setLayoutProperty('heat', 'visibility', showHeat ? 'visible' : 'none');
-  }
-
   // The lie at a point, for scoring this hole: another hole's green (or a
   // practice green) is just short grass here, so it counts as fairway.
-  const ownGreens = holeFeatures(ch).filter(f => f.t === 'green');
+  const green = ownGreen(ch);
   function lieOn(p, features) {
     const lie = lieAt(p, features);
-    return lie === 'green' && !ownGreens.some(g => inPolygon(p, g.p)) ? 'fairway' : lie;
+    return lie === 'green' && !(green && inPolygon(p, green.p)) ? 'fairway' : lie;
   }
 
   const line = pts => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: pts.map(ll) } });
@@ -280,8 +243,8 @@ export function renderHole(view, n) {
     mk.on('dragend', () => { const p = mk.getLngLat(); onMove([p.lat, p.lng], true); });
     return mk;
   };
-  dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, (p, done) => { tee = p; if (done) { rememberTee(teeName, ch, p); refreshHeat(); } update(); });
-  dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }), pin, (p, done) => { pin = p; if (done) refreshHeat(); update(); });
+  dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, (p, done) => { tee = p; if (done) rememberTee(teeName, ch, p); update(); });
+  dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }), pin, p => { pin = p; update(); });
 
   m.on('move', update);
   // The browser's toolbars showing or hiding changes the screen height: keep the
@@ -296,7 +259,7 @@ export function renderHole(view, n) {
     if (credit) credit.classList.remove('maplibregl-compact-show');
     m.addSource('outlines', { type: 'geojson', data: { type: 'FeatureCollection', features: holeFeatures(ch).map(f => ({
       type: 'Feature', properties: { color: LIE_COLOR[f.t] }, geometry: { type: 'Polygon', coordinates: f.p.map(r => r.map(ll)) } })) } });
-    m.addLayer({ id: 'outlines', type: 'line', source: 'outlines', paint: { 'line-color': ['get', 'color'], 'line-width': 1.25, 'line-opacity': 0.7 } });
+    m.addLayer({ id: 'outlines', type: 'line', source: 'outlines', layout: { visibility: showOutlines ? 'visible' : 'none' }, paint: { 'line-color': ['get', 'color'], 'line-width': 1.25, 'line-opacity': 0.7 } });
     const addLine = (id, shadow, paint, layout = {}) => {
       m.addSource(id, { type: 'geojson', data: line([]) });
       m.addLayer({ id: id + '-shadow', type: 'line', source: id, paint: { 'line-color': '#000', 'line-width': shadow, 'line-opacity': 0.35 } });
@@ -304,7 +267,6 @@ export function renderHole(view, n) {
     };
     addLine('path', 4, { 'line-color': '#fff', 'line-width': 2 });
     addLine('arc', 5, { 'line-color': '#fff', 'line-width': 2.5 }, { 'line-cap': 'round' });
-    refreshHeat();
     addLine('width', 5, { 'line-color': '#ffe14d', 'line-width': 3, 'line-dasharray': [0.1, 2] }, { 'line-cap': 'round' });
     update();
   });
