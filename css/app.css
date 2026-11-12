@@ -215,3 +215,6 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .arcslider.appr.sgmode .modes button.on { background: #c084fc; }
 .arcslider.appr.sgmode .preset.on { background: #c084fc; color: #111; }
 .arcslider.appr.sgmode input { accent-color: #c084fc; }
+.fab.viewedit { top: calc(66px + env(safe-area-inset-top)); bottom: auto; left: auto; right: 10px; width: auto; height: 40px; padding: 0 16px; border-radius: 999px; font-size: 15px; font-weight: 700; background: #ffb020; color: #111; box-shadow: 0 1px 6px #0008; z-index: 4; }
+.fab.viewedit[hidden] { display: none; }
+.fab.viewedit.low { top: calc(136px + env(safe-area-inset-top)); }

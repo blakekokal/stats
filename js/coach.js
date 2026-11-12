@@ -98,7 +98,7 @@ export function renderNewRound(view) {
     const r = { ...newRound(course, tee.value, date.value || today()), courseName: course.name, player: name.value.trim() || (sync.user ? sync.name : ''),
       level: level.value, type: type.value, place: type.value === 'Tournament' && place.value ? +place.value : null, holeCount: holes };
     store.set(roundKeyOf(r.id), r);
-    setCurrentRound(r.id);
+    setCurrentRound(r.id); sessionStorage.removeItem('gs:viewOnly');
     store.set('settings', { ...(store.get('settings') || {}), tee: tee.value });
     sessionStorage.removeItem('gs:level');
     location.hash = '#/hole/1';
@@ -166,7 +166,7 @@ export function renderHistory(view) {
       e.stopPropagation();
       if (confirm(`Delete the round from ${fmtDate(r.date)}? This removes it from every device.`)) { store.remove(roundKeyOf(r.id)); draw(); }
     } }, 'Del');
-    const resume = () => { setCurrentRound(r.id); store.set('settings', { ...(store.get('settings') || {}), tee: r.tee }); sessionStorage.removeItem('gs:level'); location.hash = `#/hole/${s.firstOpen || 1}`; };
+    const resume = () => { sessionStorage.removeItem('gs:viewOnly'); setCurrentRound(r.id); store.set('settings', { ...(store.get('settings') || {}), tee: r.tee }); sessionStorage.removeItem('gs:level'); location.hash = `#/hole/${s.firstOpen || 1}`; };
     const holesInfo = s.done < s.count ? `${s.done}/${s.count} holes` : `${s.count} holes`;
     return h('div', { class: 'card', style: s.incomplete ? 'border-left:3px solid #d4706e;cursor:pointer;' : '', onclick: s.incomplete ? resume : null },
       h('div', { style: 'display:flex;justify-content:space-between;align-items:center;' },
@@ -180,7 +180,12 @@ export function renderHistory(view) {
             h('div', { style: `font-size:13px;color:${s.toPar > 0 ? '#d4706e' : s.toPar < 0 ? '#00a06d' : '#9a9a9a'}` }, tp)])),
       h('div', { style: 'display:flex;gap:6px;margin-top:8px;' }, s.incomplete
         ? [h('button', { style: 'flex:2;max-width:none;height:34px;font-size:13px;font-weight:700;background:#d4706e;border-radius:6px;', onclick: e => { e.stopPropagation(); resume(); } }, '▶ Resume Round'), del(60, 34)]
-        : [h('button', { style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#007a52;border-radius:6px;font-weight:700;', onclick: e => { e.stopPropagation(); location.hash = `#/round/${r.id}/edit`; } }, 'Edit'),
+        : [h('button', { style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#007a52;border-radius:6px;font-weight:700;', onclick: e => {
+            e.stopPropagation();
+            setCurrentRound(r.id); sessionStorage.setItem('gs:viewOnly', '1'); sessionStorage.removeItem('gs:level');
+            store.set('settings', { ...(store.get('settings') || {}), tee: r.tee });
+            location.hash = '#/hole/1';
+          } }, 'View/Edit'),
           h('button', { style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#2d7abc;border-radius:6px;', onclick: e => { e.stopPropagation(); location.hash = `#/dashboard/${r.id}`; } }, 'Stats'),
           h('button', { title: 'Download scorecard (CSV)', style: 'width:50px;max-width:none;height:30px;font-size:12px;background:#00402c;border-radius:6px;', onclick: e => { e.stopPropagation(); downloadRoundCsv(r); } }, '📥'),
           del(50, 30)]));
@@ -221,7 +226,7 @@ export function renderEditRound(view, id) {
     name, h('div', { class: 'row' }, level, date), tee, type, placeWrap,
     h('button', { class: 'holes9', onclick: () => { save(); msg.textContent = '✓ Saved'; msg.className = 'msg ok'; setTimeout(() => { location.hash = '#/history'; }, 500); } }, 'SAVE'),
     h('button', { class: 'holes18', onclick: () => {
-      save(); setCurrentRound(id); store.set('settings', { ...(store.get('settings') || {}), tee: tee.value }); sessionStorage.removeItem('gs:level');
+      save(); setCurrentRound(id); sessionStorage.removeItem('gs:viewOnly'); store.set('settings', { ...(store.get('settings') || {}), tee: tee.value }); sessionStorage.removeItem('gs:level');
       location.hash = '#/hole/1';
     } }, 'EDIT SHOTS ON THE MAP'),
     h('div', { style: 'font-size:11px;color:#606060;max-width:300px;' }, 'Opens the round on hole 1. Use Undo to change shots, then leave with Home → End and submit round.'),
@@ -325,6 +330,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.24.1', ['Round History: View/Edit opens each hole on the tee view with your shots; tap Edit to change them']],
   ['0.24.0', ['Round History: Edit, Stats and scorecard download work on past rounds', 'Removed the template, upload and photo buttons']],
   ['0.23.0', ['Stats Dashboard: strokes gained, scoring, off the tee, approach, around the green and putting, with radar charts and handicap index']],
   ['0.22.3', ["What's new works again", 'Rounds always show in Round History, whatever date the phone is set to']],
