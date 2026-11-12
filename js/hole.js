@@ -165,11 +165,16 @@ export function renderHole(view, n) {
     return btn;
   };
   const arcValue = h('b', {}, `${arcYd} yd`);
+  const setArc = v => {
+    arcYd = v; arcValue.textContent = `${v} yd`; arcRange.value = v; localStorage.setItem('gs:arcYd', v);
+    presets.forEach(b => b.classList.toggle('on', +b.value === v));
+    update();
+  };
+  const arcRange = h('input', { type: 'range', min: 10, max: 80, step: 1, value: arcYd, 'aria-label': 'Arc width in yards', oninput: e => setArc(+e.target.value) });
+  const presets = [20, 30, 40, 50, 60].map(v => h('button', { class: 'preset' + (v === arcYd ? ' on' : ''), value: v, onclick: () => setArc(v) }, String(v)));
   const arcSlider = h('div', { class: 'arcslider', hidden: !showArc },
-    h('span', {}, 'Arc'),
-    h('input', { type: 'range', min: 10, max: 80, step: 1, value: arcYd, 'aria-label': 'Arc width in yards',
-      oninput: e => { arcYd = +e.target.value; arcValue.textContent = `${arcYd} yd`; localStorage.setItem('gs:arcYd', arcYd); update(); } }),
-    arcValue);
+    h('div', { class: 'presets' }, presets),
+    h('div', { class: 'slide' }, h('span', {}, 'Arc'), arcRange, arcValue));
   const widthBtn = toggle('width', 'Width', '↔', 'Fairway width at the crosshair', () => showWidth, v => { showWidth = v; localStorage.setItem('gs:fairwayWidth', v ? '1' : '0'); });
   const outlineBtn = toggle('outline', 'Lines', '⬭', 'Show bunker, fairway, water and green outlines', () => showOutlines, v => {
     showOutlines = v; localStorage.setItem('gs:outlines', v ? '1' : '0');
@@ -224,10 +229,14 @@ export function renderHole(view, n) {
     h('a', { class: 'btn', href: '#/' }, 'Home'),
     h('a', { class: 'btn', href: '#/course' }, 'Edit course outlines'),
     h('a', { class: 'btn', href: '#/history' }, 'Round history'),
-    h('a', { class: 'btn', href: '#/settings' }, 'Settings'));
+    h('a', { class: 'btn', href: '#/settings' }, 'Settings'),
+    h('small', { class: 'muted credit' }, 'Imagery © Esri, Maxar · Outlines © OpenStreetMap contributors'));
+
+  const compass = h('button', { class: 'compass', 'aria-label': 'Compass: tap to straighten the view', title: 'Tap to straighten the view' });
+  compass.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,16 12,16" fill="#ff4d4d"/><polygon points="16,29 20,16 12,16" fill="#fff"/><text x="16" y="11.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">N</text></svg>';
 
   view.replaceChildren(h('div', { class: 'holeview' }, mapEl,
-    h('div', { class: 'vertag' }, `v${VERSION}`), expPill,
+    h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, arcBtn, widthBtn, arcSlider, banner, menu,
@@ -247,7 +256,12 @@ export function renderHole(view, n) {
     maxZoom: 21, pitchWithRotate: false, touchPitch: false,
     attributionControl: false,
   });
-  m.addControl(new maplibregl.AttributionControl({ compact: true }), 'top-left');
+  // Compass: the needle points north as the map turns; tapping it goes back to
+  // the straight-down-the-hole view.
+  const needle = compass.querySelector('svg');
+  const turnNeedle = () => { needle.style.transform = `rotate(${-m.getBearing()}deg)`; };
+  m.on('rotate', turnNeedle); turnNeedle();
+  compass.onclick = () => { if (stage() === 'play') place(); else zoomToGreen(); };
   window.holeMap = m; // handy for debugging from the console
 
   // Opening view. Par 3s show the whole hole with the crosshair on the pin.
@@ -282,24 +296,31 @@ export function renderHole(view, n) {
   const place = () => {
     const hgt = mapEl.clientHeight, wid = mapEl.clientWidth;
     const BOTTOM = 150, SIDE = 30; // pixels kept clear below the tee and at the sides
-    const brg = (bearing(tee, pin) * Math.PI) / 180, k = Math.cos((tee[0] * Math.PI) / 180);
-    const local = p => { // metres along the tee-to-pin axis, and to the right of it
+    // Where the crosshair opens: the pin on a par 3; otherwise the middle of the
+    // fairway at driving distance (measured across the fairway along the arc
+    // centred on the tee), falling back to the route if there is no fairway there.
+    let focus = pin;
+    if (ch.par !== 3) {
+      const onRoute = pointAlong(route(), sync.avgDrive || evenDrive());
+      const w = fairwayWidth(tee, onRoute, fairways, 40);
+      focus = w ? w.arc((w.l + w.r) / 2) : onRoute;
+    }
+    // Looking straight down the line from the tee to that point, as if standing on the tee.
+    const brgDeg = bearing(tee, focus);
+    const brg = (brgDeg * Math.PI) / 180, k = Math.cos((tee[0] * Math.PI) / 180);
+    const local = p => { // metres along the tee-to-focus axis, and to the right of it
       const e = (p[1] - tee[1]) * M_PER_DEG * k, n = (p[0] - tee[0]) * M_PER_DEG;
       return [e * Math.sin(brg) + n * Math.cos(brg), e * Math.cos(brg) - n * Math.sin(brg)];
     };
     const below = hgt * (1 - CROSSHAIR_Y) - BOTTOM; // pixels from the crosshair down to the tee
-    let focus, mPerPx;
-    if (ch.par === 3) {
-      focus = pin;
+    let mPerPx = local(focus)[0] / below;
+    if (ch.par === 3) { // the whole hole fits across the screen too
       const offLine = Math.max(...route().map(p => Math.abs(local(p)[1]))) + 25;
-      mPerPx = Math.max(local(pin)[0] / below, offLine / (wid / 2 - SIDE), 0.05);
-    } else {
-      focus = pointAlong(route(), sync.avgDrive || evenDrive());
-      const [a, c] = local(focus);
-      mPerPx = Math.max(a / below, (Math.abs(c) + 25) / (wid / 2 - SIDE), 0.05);
+      mPerPx = Math.max(mPerPx, offLine / (wid / 2 - SIDE));
     }
+    mPerPx = Math.max(mPerPx, 0.05);
     const zoom = Math.min(20, Math.log2((78271.517 * Math.cos((focus[0] * Math.PI) / 180)) / mPerPx));
-    m.jumpTo({ center: ll(focus), zoom, bearing: bearing(tee, pin), padding: { top: 0, left: 0, right: 0, bottom: hgt * (1 - 2 * CROSSHAIR_Y) } });
+    m.jumpTo({ center: ll(focus), zoom, bearing: brgDeg, padding: { top: 0, left: 0, right: 0, bottom: hgt * (1 - 2 * CROSSHAIR_Y) } });
   };
   place();
 
@@ -463,8 +484,6 @@ export function renderHole(view, n) {
   m.on('load', () => {
     if (map !== m) return;
     m.resize(); place();
-    const credit = mapEl.querySelector('.maplibregl-ctrl-attrib'); // start collapsed to the (i) button
-    if (credit) credit.classList.remove('maplibregl-compact-show');
     m.addSource('outlines', { type: 'geojson', data: { type: 'FeatureCollection', features: holeFeatures(ch).map(f => ({
       type: 'Feature', properties: { color: LIE_COLOR[f.t] }, geometry: { type: 'Polygon', coordinates: f.p.map(r => r.map(ll)) } })) } });
     m.addLayer({ id: 'outlines', type: 'line', source: 'outlines', layout: { visibility: showOutlines ? 'visible' : 'none' }, paint: { 'line-color': ['get', 'color'], 'line-width': 1.25, 'line-opacity': 0.7 } });
