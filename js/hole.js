@@ -609,7 +609,8 @@ export function renderHole(view, n) {
   let cleanView = false;
   // Auto: finds the best club and aiming point for the next shot. Every club
   // (with a yardage) is tried along lines up to 35° either side of the pin, each
-  // scored by the average SG of 20 shots in its dispersion; the best is picked,
+  // scored by the average SG of 20 shots in its dispersion, keeping the dots 5 yd
+  // clear of water, OB and bunkers where it can; the best is picked,
   // the crosshair moves to it and Disp shows its spread. Clubs that would fly
   // well past the pin are skipped.
   let autoPick = null; // { club, sg, from } while on
@@ -622,6 +623,19 @@ export function renderHole(view, n) {
     const feats = course.features.map(f => ({ ...f, box: boundsOf(f.p[0]) })).filter(f => overlaps(f.box, box, 0));
     const lieHere = q => lieOn(q, feats.filter(f => q[0] >= f.box[0][0] && q[0] <= f.box[1][0] && q[1] >= f.box[0][1] && q[1] <= f.box[1][1]));
     const main = bearing(from, pin), k = Math.cos((from[0] * Math.PI) / 180);
+    // Hazards (water, OB, bunkers) and how close a dot is to one, in metres.
+    const CUSHION = 5 / YD_PER_M, padDeg = CUSHION / M_PER_DEG * 1.5;
+    const hz = feats.filter(f => f.t === 'water' || f.t === 'ob' || f.t === 'bunker');
+    const segDist = (q, a, b) => {
+      const ax = (a[1] - q[1]) * k * M_PER_DEG, ay = (a[0] - q[0]) * M_PER_DEG, bx = (b[1] - q[1]) * k * M_PER_DEG, by = (b[0] - q[0]) * M_PER_DEG;
+      const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, t = l2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)) : 0;
+      return Math.hypot(ax + t * dx, ay + t * dy);
+    };
+    const nearHazard = q => hz.some(f => {
+      if (q[0] < f.box[0][0] - padDeg || q[0] > f.box[1][0] + padDeg || q[1] < f.box[0][1] - padDeg / k || q[1] > f.box[1][1] + padDeg / k) return false;
+      if (inPolygon(q, f.p)) return true;
+      return f.p.some(r => r.some((a, i) => i && segDist(q, r[i - 1], a) < CUSHION));
+    });
     const results = [];
     for (const c of bag()) {
       const yd = compYards(c.name);
@@ -631,15 +645,19 @@ export function renderHole(view, n) {
       for (let off = -35; off <= 35; off += 2.5) {
         const brg = ((main + off) * Math.PI) / 180, dm = yd / YD_PER_M;
         const aim = [from[0] + (dm * Math.cos(brg)) / M_PER_DEG, from[1] + (dm * Math.sin(brg)) / (M_PER_DEG * k)];
-        const sg = dispersion(from, aim, w, fromExp, lieHere).sg - Math.abs(off) * 0.0005; // a tiny nudge toward the straighter line on ties
-        if (!best || sg > best.sg) best = { club: c.name, yd, aim, off, sg };
+        const d = dispersion(from, aim, w, fromExp, lieHere);
+        // Keep every dot 5 yd clear of hazards: each one closer costs the line, so
+        // the pick skews away from them. A tiny nudge favours straighter lines on ties.
+        const close = d.dots.filter(x => nearHazard(x.q)).length;
+        const score = d.sg - 0.5 * close / d.dots.length - Math.abs(off) * 0.0005;
+        if (!best || score > best.score) best = { club: c.name, yd, aim, off, sg: d.sg, score, close };
       }
       if (best) results.push(best);
     }
-    return { from, results: results.sort((a, b) => b.sg - a.sg) };
+    return { from, results: results.sort((a, b) => b.score - a.score) };
   }
   const autoBtn = h('button', { class: 'fab autotarget', 'aria-label': 'Auto target', title: 'Pick the best club and aiming point', onclick: () => {
-    if (autoPick) { autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; pickedClub = null; update(); return; }
+    if (autoPick) { autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; pickedClub = null; if (showDisp) setDispOn(false); update(); return; }
     const { from, results } = findBest();
     if (!results.length) return;
     const b = results[0];
