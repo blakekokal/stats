@@ -8,6 +8,7 @@ import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
 import { VERSION } from './version.js';
 import { setCurrentRound, summarize, historyRounds, roundKeyOf } from './rounds.js';
+import { downloadRoundCsv } from './dashboard.js';
 
 const PREF_LABEL = { Pro: 'Tour Pro', Scratch: 'Scratch (0)' };
 const levelOpt = (l, sel, short) => h('option', { value: l, selected: l === sel },
@@ -136,7 +137,6 @@ export function renderHistory(view) {
   const msg = h('div', { style: 'font-size:13px;color:#606060;min-height:20px;text-align:center;' });
   const list = h('div', { style: 'width:100%;' });
   const filtMsg = h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:6px;' });
-  const disabledBtn = (text, bg) => h('button', { disabled: true, title: 'Coming soon', style: `width:100%;max-width:none;height:40px;font-size:13px;background:${bg};border-radius:8px;margin-bottom:6px;` }, text);
 
   function draw() {
     const all = historyRounds().map(r => ({ r, s: summarize(r, course, level) }));
@@ -180,24 +180,53 @@ export function renderHistory(view) {
             h('div', { style: `font-size:13px;color:${s.toPar > 0 ? '#d4706e' : s.toPar < 0 ? '#00a06d' : '#9a9a9a'}` }, tp)])),
       h('div', { style: 'display:flex;gap:6px;margin-top:8px;' }, s.incomplete
         ? [h('button', { style: 'flex:2;max-width:none;height:34px;font-size:13px;font-weight:700;background:#d4706e;border-radius:6px;', onclick: e => { e.stopPropagation(); resume(); } }, '▶ Resume Round'), del(60, 34)]
-        : [h('button', { disabled: true, title: 'Coming soon', style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#007a52;border-radius:6px;font-weight:700;' }, 'Edit'),
-          h('button', { disabled: true, title: 'Coming soon', style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#2d7abc;border-radius:6px;' }, 'Stats'),
-          h('button', { disabled: true, title: 'Coming soon', style: 'width:50px;max-width:none;height:30px;font-size:12px;background:#00402c;border-radius:6px;' }, '📥'),
+        : [h('button', { style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#007a52;border-radius:6px;font-weight:700;', onclick: e => { e.stopPropagation(); location.hash = `#/round/${r.id}/edit`; } }, 'Edit'),
+          h('button', { style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#2d7abc;border-radius:6px;', onclick: e => { e.stopPropagation(); location.hash = `#/dashboard/${r.id}`; } }, 'Stats'),
+          h('button', { title: 'Download scorecard (CSV)', style: 'width:50px;max-width:none;height:30px;font-size:12px;background:#00402c;border-radius:6px;', onclick: e => { e.stopPropagation(); downloadRoundCsv(r); } }, '📥'),
           del(50, 30)]));
   }
 
   view.replaceChildren(page('top', backBtn(),
     h('div', { style: 'width:100%;max-width:360px;' },
       h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;' }, '📋 Round History'),
-      disabledBtn('📥 Download Blank Scorecard Template', '#2d7abc'),
-      disabledBtn('📤 Upload Round (.xlsx)', '#007a52'),
-      disabledBtn('📷 Add Round from Photo', '#1a4a8a'),
       search,
       h('div', { style: 'display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;' }, fType, fHoles, fTime, fStatus, sort),
       msg, list, filtMsg)));
   draw();
 }
 const ordinal = n => (n % 100 >= 11 && n % 100 <= 13 ? n + 'th' : n + ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'));
+
+// ---------- edit a past round ----------
+
+export function renderEditRound(view, id) {
+  if (needLogin(view)) return;
+  const key = roundKeyOf(id), r = store.get(key);
+  if (!r) { location.hash = '#/history'; return; }
+  const name = h('input', { placeholder: 'Player Name', value: r.player || '' });
+  const level = h('select', { class: 'bigsel', style: 'flex:1;', 'aria-label': 'Compare to' }, LEVELS.map(l => levelOpt(l, r.level || profileLevel())));
+  const date = h('input', { type: 'date', value: r.date, style: 'flex:1;' });
+  const tee = h('select', { class: 'bigsel', 'aria-label': 'Tee box' }, course.tees.map(t => h('option', { value: t.name, selected: t.name === r.tee }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yds`)));
+  const place = h('input', { type: 'number', inputmode: 'numeric', min: 1, placeholder: 'Place (e.g. 1, 2, 3...)', value: r.place || '' });
+  const placeWrap = h('div', { style: 'width:100%;max-width:320px;', hidden: (r.type || 'Casual') !== 'Tournament' }, place);
+  const type = h('select', { class: 'bigsel', 'aria-label': 'Round type', onchange: () => { placeWrap.hidden = type.value !== 'Tournament'; } },
+    ['Casual', 'Tournament'].map(t => h('option', { value: t, selected: t === (r.type || 'Casual') }, `Round Type: ${t}`)));
+  const msg = h('div', { class: 'msg' });
+  const save = () => {
+    store.set(key, { ...store.get(key), player: name.value.trim(), level: level.value, date: date.value || r.date, tee: tee.value,
+      type: type.value, place: type.value === 'Tournament' && place.value ? +place.value : null, updated: Date.now() });
+  };
+  view.replaceChildren(page('top', backBtn('#/history'),
+    h('div', { style: 'font-size:22px;font-weight:800;' }, 'Edit Round'),
+    h('div', { style: 'font-size:12px;color:#9a9a9a;' }, r.courseName || course.name),
+    name, h('div', { class: 'row' }, level, date), tee, type, placeWrap,
+    h('button', { class: 'holes9', onclick: () => { save(); msg.textContent = '✓ Saved'; msg.className = 'msg ok'; setTimeout(() => { location.hash = '#/history'; }, 500); } }, 'SAVE'),
+    h('button', { class: 'holes18', onclick: () => {
+      save(); setCurrentRound(id); store.set('settings', { ...(store.get('settings') || {}), tee: tee.value }); sessionStorage.removeItem('gs:level');
+      location.hash = '#/hole/1';
+    } }, 'EDIT SHOTS ON THE MAP'),
+    h('div', { style: 'font-size:11px;color:#606060;max-width:300px;' }, 'Opens the round on hole 1. Use Undo to change shots, then leave with Home → End and submit round.'),
+    msg));
+}
 
 // ---------- settings ----------
 
@@ -296,6 +325,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.24.0', ['Round History: Edit, Stats and scorecard download work on past rounds', 'Removed the template, upload and photo buttons']],
   ['0.23.0', ['Stats Dashboard: strokes gained, scoring, off the tee, approach, around the green and putting, with radar charts and handicap index']],
   ['0.22.3', ["What's new works again", 'Rounds always show in Round History, whatever date the phone is set to']],
   ['0.22.2', ['Tapping Tee or Pin zooms in on the tee box or green; Set or cancel returns to your view']],
