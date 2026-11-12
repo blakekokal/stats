@@ -574,7 +574,8 @@ export function renderHole(view, n) {
       })),
       h('div', { class: 'compactions' },
         h('button', { class: 'off', onclick: () => { showComp = false; saveComp(); compSheet.hidden = true; update(); } }, 'Off'),
-        h('button', { class: 'record', disabled: sel.length < 2, onclick: () => { compClubs = sel; showComp = true; compAim = {}; saveComp(); compSheet.hidden = true; update(); } }, 'Compare'))));
+        h('button', { class: 'record', disabled: sel.length < 2, onclick: () => { compClubs = sel; showComp = true; compAim = {}; saveComp();
+          if (showArc) { showArc = false; arcAdjOpen = false; localStorage.setItem('gs:arc', '0'); arcBtn.classList.remove('on'); arcBtn.setAttribute('aria-pressed', 'false'); } /* only the Comp arcs */ compSheet.hidden = true; update(); } }, 'Compare'))));
     draw();
     compSheet.hidden = false;
   }
