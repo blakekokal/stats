@@ -60,16 +60,29 @@ def main(src, extra, cfg_path, dst):
     left = inside.difference(unary_union(cut).buffer(3).buffer(-3)).buffer(-2).buffer(2)  # tidy slivers
     left = unary_union([g for g in (left.geoms if hasattr(left, "geoms") else [left]) if any(g.intersects(x) for x in golf)])
     inside = unary_union([left, *golf])  # never cut into a fairway, green or tee
+    # "fillGaps" (metres): where the outline cuts in between holes (round groves of
+    # trees, say), close those gaps back into the course and mark them recovery.
+    recovery = []
+    if cfg.get("fillGaps"):
+        r = cfg["fillGaps"]
+        closed = inside.buffer(r, join_style=1).buffer(-r, join_style=1)
+        grown = unary_union([inside, closed.difference(unary_union(cut))])
+        extra = grown.difference(inside).buffer(-1).buffer(1)  # labelled recovery; slivers just become rough
+        recovery = [g for g in (extra.geoms if hasattr(extra, "geoms") else [extra]) if g.geom_type == "Polygon" and g.area > 300]
+        inside = grown
     ob = box(*inside.bounds).buffer(PAD, join_style=2).difference(inside).simplify(0.3)
 
-    feats = [f for f in course["features"] if f["t"] != "ob"]
+    feats = [f for f in course["features"] if f["t"] != "ob" and not f.get("filled")]
+    for g in recovery:
+        g = g.simplify(0.6)
+        feats.append({"t": "recovery", "filled": 1, "p": [[back(x, y) for x, y in r.coords] for r in [g.exterior, *g.interiors]]})
     for poly in (ob.geoms if hasattr(ob, "geoms") else [ob]):
         feats.append({"t": "ob", "p": [[back(x, y) for x, y in r.coords] for r in [poly.exterior, *poly.interiors]]})
     course["features"] = feats
     json.dump(course, open(dst, "w"), separators=(",", ":"))
     # Anything of the course that falls outside the boundary (worth checking).
     out = sorted({h["n"] for h in course["holes"] for p in (h["tee"], h["pin"]) if not inside.contains(Point(p[1] * M * k, p[0] * M))})
-    print(f"{sum(f['t'] == 'ob' for f in feats)} OB feature(s); tees/pins outside the boundary: {out or 'none'}")
+    print(f"{len(recovery)} recovery area(s) filled in; {sum(f['t'] == 'ob' for f in feats)} OB feature(s); tees/pins outside the boundary: {out or 'none'}")
 
 
 if __name__ == "__main__":

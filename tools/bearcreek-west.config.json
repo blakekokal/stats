@@ -13,6 +13,8 @@
     {"name": "Silver", "rating": null, "slope": null, "yards": [330,304,335,425,142,445,320,142,335, 457,335,346,321,161,442,306,117,355]},
     {"name": "Red",    "rating": 68.1, "slope": 123, "yards": [330,304,335,425,142,445,320,142,335, 457,335,325,321,134,442,306,117,355]}
   ],
+  "_comment_fillGaps": "The OSM outline cuts in around groves of trees between holes; fill gaps up to this many metres back in as recovery.",
+  "fillGaps": 60,
   "shift": {"east": 0, "north": 0},
   "drop": []
 }
