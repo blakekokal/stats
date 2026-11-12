@@ -98,7 +98,7 @@ function holeFeatures(ch) {
 }
 
 // Leave a past round that was opened from Round History.
-function leaveView() { sessionStorage.removeItem('gs:viewOnly'); setCurrentRound(null); }
+function leaveView() { sessionStorage.removeItem('gs:viewOnly'); sessionStorage.removeItem('gs:editingPast'); setCurrentRound(null); }
 
 export function renderHole(view, n) {
   closeHole();
@@ -387,7 +387,13 @@ export function renderHole(view, n) {
   // Viewing a past round from Round History: holes open on the normal tee view
   // with the shots drawn and no recording controls, until Edit is tapped.
   const viewing = () => sessionStorage.getItem('gs:viewOnly') === '1';
-  const editBtn = h('button', { class: 'fab viewedit', hidden: !viewing(), onclick: () => { sessionStorage.removeItem('gs:viewOnly'); renderHole(view, n); } }, '✎ Edit');
+  const editBtn = h('button', { class: 'fab viewedit', hidden: !viewing(), onclick: () => { sessionStorage.removeItem('gs:viewOnly'); sessionStorage.setItem('gs:editingPast', '1'); renderHole(view, n); } }, '✎ Edit');
+  // Editing a past round: Save (beside Undo) goes back to view mode. Changes are
+  // already stored as they're made; Save just finishes editing.
+  const editingPast = () => sessionStorage.getItem('gs:editingPast') === '1' && !viewing();
+  const saveBtn = h('button', { class: 'fab savehole', hidden: !editingPast(), onclick: () => {
+    sessionStorage.removeItem('gs:editingPast'); sessionStorage.setItem('gs:viewOnly', '1'); renderHole(view, n);
+  } }, '✓ Save');
   const undoBtn = h('button', { class: 'fab undo', 'aria-label': 'Undo', title: 'Undo',
     onclick: () => {
       const hl = holeNow(), shots = hl.shots || [];
@@ -447,7 +453,7 @@ export function renderHole(view, n) {
   compass.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,16 12,16" fill="#ff4d4d"/><polygon points="16,29 20,16 12,16" fill="#fff"/><text x="16" y="11.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">N</text></svg>';
 
   // Leaving a round from the menu's Home button.
-  const leaveTo = (hash, fn) => () => { const r = currentRound(); if (r) fn(r); setCurrentRound(null); sessionStorage.removeItem('gs:viewOnly'); location.hash = hash; };
+  const leaveTo = (hash, fn) => () => { const r = currentRound(); if (r) fn(r); setCurrentRound(null); sessionStorage.removeItem('gs:viewOnly'); sessionStorage.removeItem('gs:editingPast'); location.hash = hash; };
   const leave = h('div', { class: 'leave', hidden: true, onclick: e => { if (e.target === leave) leave.hidden = true; } },
     h('div', { class: 'leavebox' },
       h('strong', {}, 'Leave this round?'),
@@ -463,7 +469,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
