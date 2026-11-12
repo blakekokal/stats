@@ -60,8 +60,27 @@ function centroid(ring) {
   return [la / ring.length, lo / ring.length];
 }
 
+// The point `yd` yards back from the pin along the hole's route, carrying on
+// past the far end of the line if the route is shorter than that.
+function alongRoute(ch, yd) {
+  const pts = [...ch.line].reverse(); // pin first
+  let left = yd;
+  for (let i = 0; i < pts.length - 1; i++) {
+    const a = pts[i], b = pts[i + 1], seg = yards(a, b);
+    if (left <= seg || i === pts.length - 2) {
+      const k = seg ? left / seg : 0;
+      return [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];
+    }
+    left -= seg;
+  }
+  return ch.tee;
+}
+
 // Pick the tee box whose distance to the green best matches the scorecard
-// yardage for the chosen tees; remembered once the user drags the tee marker.
+// yardage for the chosen tees. If no outlined tee box is within 12 yards of
+// it (some tee boxes are missing from the map), put the tee on the hole's
+// route at the scorecard distance instead. Remembered once the user drags
+// the tee marker.
 export function teePosition(teeName, ch) {
   const saved = (store.get('settings') || {}).teePos || {};
   const key = `${course.id}:${teeName}:${ch.n}`;
@@ -83,7 +102,7 @@ export function teePosition(teeName, ch) {
     const err = Math.abs(pathFrom(c) - target);
     if (err < bestErr) { best = c; bestErr = err; }
   }
-  return best;
+  return bestErr <= 12 ? best : alongRoute(ch, target);
 }
 
 export function rememberTee(teeName, ch, pos) {
@@ -97,7 +116,7 @@ export function rememberTee(teeName, ch, pos) {
 function renderHome() {
   const teeName = (store.get('settings') || {}).tee || 'Blue';
   const teeSet = course.tees.find(t => t.name === teeName) || course.tees[0];
-  const teeSel = h('select', { 'aria-label': 'Tees', onchange: e => store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }) },
+  const teeSel = h('select', { 'aria-label': 'Tees', onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHome(); } },
     course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)));
   const resume = lastHole();
   view.replaceChildren(h('div', { class: 'page home' },
