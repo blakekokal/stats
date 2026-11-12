@@ -590,7 +590,8 @@ export function renderHole(view, n) {
       const yd = compYards(club);
       if (!yd) return null;
       const dm = yd / YD_PER_M;
-      const arc = arcThrough(from, [from[0] + (dm * Math.cos(brg)) / M_PER_DEG, from[1] + (dm * Math.sin(brg)) / (M_PER_DEG * k)]);
+      const mid = [from[0] + (dm * Math.cos(brg)) / M_PER_DEG, from[1] + (dm * Math.sin(brg)) / (M_PER_DEG * k)];
+      const arc = arcThrough(from, mid);
       if (!arc) return null;
       const half = clubArcW(club) / 2 / YD_PER_M, N = 24;
       let tot = 0;
@@ -598,7 +599,7 @@ export function renderHole(view, n) {
         const q = arc(-half + (2 * half * j) / N), lie = lieHere(q);
         tot += fromExp - expectedFrom(lie, yards(q, pin)) - 1;
       }
-      return { club, yd, color: COMP_COLORS[i], sg: tot / (N + 1), pts: arcPoints(arc, -half, half) };
+      return { club, yd, toPin: yards(mid, pin), color: COMP_COLORS[i], sg: tot / (N + 1), pts: arcPoints(arc, -half, half) };
     }).filter(Boolean);
   }
   // Slide the crosshair out to `yd` from the ball, along the line being aimed
@@ -1161,6 +1162,12 @@ export function renderHole(view, n) {
     const comps = showComp && !viewing() ? compArcs(from, yards(from, target) > 5 ? target : pin, fromExp) : [];
     comps.forEach((c, i) => { lines['comp' + i] = c.pts; });
     compLegend.hidden = !comps.length;
+    if (comps.length && moving !== 'tee') { // above the crosshair: how far each club goes, and what's left in
+      toPinEl.replaceChildren(h('div', { class: 'comprows' }, comps.map(c => h('div', {},
+        h('i', { style: `background:${c.color}` }), h('span', {}, clubShort(c.club)),
+        h('b', {}, `${c.yd}`), h('small', {}, 'out'), h('b', {}, `${Math.round(c.toPin)}`), h('small', {}, 'in')))));
+      fromTeeEl.replaceChildren();
+    }
     compLegend.replaceChildren(h('small', {}, 'Compare · avg SG'), ...comps.map(c => h('span', {},
       h('i', { style: `background:${c.color}` }), `${clubShort(c.club)} ${c.yd}y · `,
       h('b', { class: c.sg >= 0 ? 'pos' : 'neg' }, `${c.sg >= 0 ? '+' : '−'}${Math.abs(c.sg).toFixed(2)}`))));
