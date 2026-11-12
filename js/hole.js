@@ -529,7 +529,7 @@ export function renderHole(view, n) {
   // Strokes Gained panel while viewing a past round (filled in by drawSgView).
   const sgView = h('div', { class: 'sgview', hidden: true });
   const sgViewBtn = h('button', { class: 'fab sgviewbtn', hidden: true, 'aria-label': 'Strokes gained', title: 'Strokes gained',
-    onclick: () => { sgView.hidden = !sgView.hidden; sgViewBtn.classList.toggle('on', !sgView.hidden); drawSgView(); } }, h('span', {}, 'Σ'), h('small', {}, 'SG'));
+    onclick: () => { sgView.hidden = !sgView.hidden; sgViewBtn.classList.toggle('on', !sgView.hidden); drawSgView(); } }, h('span', {}, 'Strokes'), h('span', {}, 'Gained'));
   // Score chips and scorecard (filled in by drawScoreChips / openScorecard below).
   const totalChip = h('button', { class: 'scorechip total', onclick: () => openScorecard() });
   const holeChip = h('button', { class: 'scorechip hole', onclick: () => openScorecard() });
@@ -662,6 +662,9 @@ export function renderHole(view, n) {
   // opening to Off the tee / Approach / Around green / Putting, then this hole's
   // shots, each opening to its distance, lies, SG and club.
   const sgOpen = new Set(['round']);
+  // Club for a shot: anything played from the green is a putter; other clubs
+  // come once the bag is set up.
+  const clubOf = s => (s.lie === 'green' ? h('b', {}, 'Putter') : h('b', { class: 'muted' }, '— (coming soon)'));
   let sgViewKey = null;
   const fmtSgV = v => (v == null ? '–' : (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2));
   const sgCls = v => (v == null ? '' : v >= 0 ? 'pos' : 'neg');
@@ -695,11 +698,11 @@ export function renderHole(view, n) {
         h('div', {}, h('span', {}, 'Lie'), h('b', {}, `${LIE_NAME[s.lie] || s.lie} → ${end}`)),
         h('div', {}, h('span', {}, 'From the hole'), h('b', {}, isPutt ? `${s.ft ?? Math.round(x.dist)} ft` : `${Math.round(x.dist)} yd`)),
         h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: sgCls(x.sg) }, fmtSgV(x.sg))),
-        h('div', {}, h('span', {}, 'Club'), h('b', { class: 'muted' }, '— (coming soon)'))) : null];
+        h('div', {}, h('span', {}, 'Club'), clubOf(s))) : null];
     }).flat().filter(Boolean);
     sgView.replaceChildren(...[
       h('div', { class: 'sghead' }, h('strong', {}, 'Strokes Gained'), h('small', {}, `vs ${level === 'Pro' ? 'Tour Pro' : level === 'Scratch' ? 'Scratch' : level + ' HCP'}`)),
-      toggleRow('round', 'Round total', ra.holes ? ra.sg.total : null, `${ra.holes} holes`),
+      toggleRow('round', 'Round total', ra.holes ? ra.sg.total : null, `${ra.holes} hole${ra.holes === 1 ? '' : 's'}`),
       sgOpen.has('round') ? cats(ra.sg, rCounts) : null,
       toggleRow('hole', `Hole ${n}`, hasHole ? hSg.total : null, hl?.done ? `${hl.shots.length + hl.shots.filter(x => x.lie === 'water').length} strokes` : 'not finished'),
       sgOpen.has('hole') ? cats(hSg, hCounts) : null,
@@ -977,7 +980,7 @@ export function renderHole(view, n) {
       h('div', {}, h('span', {}, 'Traveled'), h('b', {}, isPutt ? `${Math.round(travel * 3)} ft` : `${Math.round(travel)} yd`)),
       h('div', {}, h('span', {}, 'Lie'), h('b', {}, `${name(s.lie)} → ${end ? name(end.lie) : 'Holed'}`)),
       h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: row.sg == null ? '' : row.sg >= 0 ? 'pos' : 'neg' }, sgTxt)),
-      h('div', {}, h('span', {}, 'Club'), h('b', { class: 'muted' }, '— (coming soon)')));
+      h('div', {}, h('span', {}, 'Club'), clubOf(s)));
     shotPopup?.remove();
     shotPopup = new maplibregl.Popup({ offset: 14, closeButton: true, className: 'shotpopup', maxWidth: '240px' }).setLngLat(ll(at)).setDOMContent(el).addTo(m);
   }
