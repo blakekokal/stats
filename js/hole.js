@@ -574,6 +574,14 @@ export function renderHole(view, n) {
   }
   const compBtn = h('button', { class: 'fab comp', 'aria-label': 'Compare clubs', title: 'Compare 2-3 clubs on one line', onclick: openCompPicker }, h('span', {}, '⫶'), h('small', {}, 'Comp'));
   const compLegend = h('div', { class: 'zonelegend compkey', hidden: true });
+  // View: a clean look at the hole — no ball-to-crosshair-to-pin line, no shot
+  // tracer or shot dots. Comp arcs and their dots stay, to compare the clubs.
+  let cleanView = false;
+  const viewBtn = toggle('cleanview', 'View', '◉', 'Hide the aiming line and shot tracer', () => cleanView, v => {
+    cleanView = v;
+    for (const id of ['shots', 'shots-shadow']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', v ? 'none' : 'visible');
+    holeEl()?.classList.toggle('clean', v);
+  });
   const compDots = h('div', { class: 'compdots' });
   // Dragging a dot swings that club onto its own line (its distance stays the
   // club's yardage); the others keep following the crosshair. Tapping a moved
@@ -768,7 +776,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, compBtn, sgtBtn, apprBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, compBtn, viewBtn, sgtBtn, apprBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1090,7 +1098,7 @@ export function renderHole(view, n) {
     });
   }
   function overlay(lines) {
-    trailLabels();
+    if (cleanView) { const { path, ...rest } = lines; lines = rest; labelLayer.replaceChildren(); } else trailLabels();
     for (const [name, els] of Object.entries(svgPaths)) {
       const pts = lines[name] || [];
       const d = pts.length > 1 ? pts.map((q, i) => { const p = m.project(ll(q)); return `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`; }).join('') : '';
