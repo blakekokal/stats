@@ -330,6 +330,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.25.0', ['Editing a past round: shot list to move shots, Cancel beside Save, view stays put', 'Score card sits above the hole pill: (+1) 6 · +3 total']],
   ['0.24.4', ['Editing a past round: Save beside Undo goes back to view mode']],
   ['0.24.3', ['Viewing a past round: the menu has just Back to Round History and Home']],
   ['0.24.2', ['Smaller score bar at the top, beside Expected, with a round › button']],
