@@ -313,8 +313,6 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .compdots { position: absolute; inset: 0; pointer-events: none; z-index: 2; overflow: hidden; }
 .compdot { position: absolute; width: 0; height: 0; color: #fff; white-space: nowrap; line-height: 1.1; text-shadow: 0 0 3px #000, 0 0 6px #000, 0 1px 2px #000; }
 .compdot i { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; border-radius: 50%; background: var(--c); border: 2px solid #fff; box-sizing: border-box; box-shadow: 0 1px 4px #000a; }
-.compdot .lab { position: absolute; left: var(--gap); top: 0; transform: translateY(-50%); }
-.compdot b { display: block; font-size: 18px; font-weight: 800; }
-.compdot .down { display: flex; gap: 5px; align-items: baseline; font-size: 13px; font-weight: 700; }
-.compdot em { font-style: normal; color: var(--c); } .compdot .gain { color: #4ade80; } .compdot .loss { color: #ff6b6b; }
+.compdot b { position: absolute; left: 0; transform: translateX(-50%); font-size: 17px; font-weight: 800; }
+.compdot .up { bottom: 8px; } .compdot .down { top: 8px; color: var(--c); }
 .holeview.comparing .readout { display: none; }
