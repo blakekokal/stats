@@ -303,22 +303,3 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .arcslider { min-width: 0; }
 .arcslider .presets { min-width: 0; gap: 4px; }
 .arcslider .preset { min-width: 0; flex: 1 1 0; font-size: 12px; }
-
-/* Compact layout: tools in one strip on the left, arc sizes on the right. */
-.toolbar { position: absolute; left: 8px; bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 3; display: flex; flex-direction: column; gap: 2px; padding: 6px 4px; background: #111d; backdrop-filter: blur(8px); border-radius: 26px; max-height: calc(100% - 200px - env(safe-area-inset-top)); overflow-y: auto; scrollbar-width: none; }
-.toolbar::-webkit-scrollbar { display: none; }
-.toolbar .fab { position: static; width: 46px; height: 46px; min-height: 46px; flex: none; border-radius: 14px; background: transparent; box-shadow: none; backdrop-filter: none; display: grid; place-content: center; line-height: 1; font-size: 18px; padding: 0; }
-.toolbar .fab small { font-size: 9px; font-weight: 600; opacity: .85; }
-.toolbar .fab.on { background: #ffe14d; color: #111; }
-.toolbar .fab.arc.on, .toolbar .fab.sgt.on { background: #fff; color: #111; }
-.toolbar .fab.appr.on { background: #4dd0ff; color: #111; }
-.toolbar .fab.club.on { background: #ffb020; color: #111; }
-.toolbar .fab[hidden] { display: none; }
-.arcstack { position: absolute; right: 10px; bottom: calc(96px + env(safe-area-inset-bottom)); z-index: 3; display: grid; background: #111d; backdrop-filter: blur(8px); border-radius: 22px; overflow: hidden; width: 58px; }
-.arcstack[hidden] { display: none; }
-.arcstack button { min-height: 44px; padding: 0; border: 0; border-radius: 0; background: transparent; color: #fff; font-size: 14px; font-weight: 700; border-top: 1px solid #ffffff1a; }
-.arcstack button:first-child { border-top: 0; font-size: 12px; }
-.arcstack button.on { background: #fff; color: #111; }
-/* the score tiles and sliders sit clear of the strip */
-.chips { left: calc(50% + 28px); }
-.sliders { left: calc(50% + 28px); }

@@ -359,7 +359,6 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
-  ['0.29.0', ['Compact layout: tools in one strip on the left, arc sizes stacked on the right']],
   ['0.28.4', ['Arc → Auto changes only when you tap a club']],
   ['0.28.3', ['Arc button just turns the arc on; a small Adj button beside it opens the slider']],
   ['0.28.2', ['Arc → Auto sizes the arc to the shot (or the club\'s arc from My Bag)', 'My Bag page with arc widths per club']],
