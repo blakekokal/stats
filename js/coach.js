@@ -359,6 +359,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.32.0', ['View button: hides the aiming line and shot tracer for a clean look (Comp arcs stay)', 'Comp moved to the right where Club was; Club moved up above it']],
   ['0.31.1', ["What's new updated"]],
   ['0.31.0', ['Comp: drag a club\'s dot to give it its own line off the tee (tap it to put it back)']],
   ['0.30.2', ['Comp: each arc has a dot with yards left above it and distance from the ball below']],
