@@ -525,6 +525,15 @@ export function renderHole(view, n) {
     return best ? best.name : null;
   }
   const currentClub = () => pickedClub || autoClub();
+  // A club's yardage from My Bag (total, else carry), or null.
+  function bagYards(name) { const c = bag().find(x => x.name === name || (name === 'Dr' && /^Dr/.test(x.name))); const y = c && +(c.total || c.carry); return y > 0 ? y : null; }
+  // Slide the crosshair out to `yd` from the ball, along the line being aimed
+  // (towards the pin if the crosshair is on the ball).
+  function snapTo(yd) {
+    const shots = shotsNow(), from = shots.length ? shots[shots.length - 1].pos : tee;
+    const brg = (bearing(from, yards(from, target) > 5 ? target : pin) * Math.PI) / 180, k = Math.cos((from[0] * Math.PI) / 180), dm = yd / YD_PER_M;
+    m.easeTo({ center: ll([from[0] + (dm * Math.cos(brg)) / M_PER_DEG, from[1] + (dm * Math.sin(brg)) / (M_PER_DEG * k)]), duration: 450 });
+  }
   const clubPicker = h('div', { class: 'clubsheet', hidden: true, onclick: e => { if (e.target === clubPicker) clubPicker.hidden = true; } });
   function openClubPicker() {
     const cur = currentClub();
@@ -532,7 +541,11 @@ export function renderHole(view, n) {
       h('div', { class: 'clubhead' }, h('strong', {}, 'Club'), h('button', { class: 'x', onclick: () => { clubPicker.hidden = true; } }, '✕')),
       h('div', { class: 'clubgrid' },
         h('button', { class: pickedClub ? '' : 'on', onclick: () => { pickedClub = null; clubPicker.hidden = true; update(); } }, h('b', {}, 'Auto'), h('small', {}, autoClub() ? clubName(autoClub()) : '–')),
-        bag().map(c => h('button', { class: pickedClub === c.name ? 'on' : '', onclick: () => { pickedClub = c.name; clubPicker.hidden = true; update(); } },
+        bag().map(c => h('button', { class: pickedClub === c.name ? 'on' : '', onclick: () => {
+          pickedClub = c.name; clubPicker.hidden = true;
+          const y = bagYards(c.name); if (y) snapTo(y); // the crosshair jumps to that club's distance
+          update();
+        } },
           h('b', {}, clubShort(c.name)), h('small', {}, c.total || c.carry ? `${c.total || c.carry} yds` : ''))))));
     clubPicker.hidden = false;
     void cur;
@@ -707,7 +720,7 @@ export function renderHole(view, n) {
     // centred on the tee), falling back to the route if there is no fairway there.
     let focus = pin;
     if (ch.par !== 3) {
-      const onRoute = pointAlong(route(), sync.avgDrive || evenDrive());
+      const onRoute = pointAlong(route(), bagYards('Dr') || sync.avgDrive || evenDrive());
       const w = fairwayWidth(tee, onRoute, fairways, 40);
       focus = w ? w.arc((w.l + w.r) / 2) : onRoute;
     }
