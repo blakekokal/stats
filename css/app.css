@@ -163,6 +163,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .fab.appr.on { background: #4dd0ff; color: #111; }
 .fab.sgt { left: auto; right: 14px; bottom: calc(262px + env(safe-area-inset-bottom)); }
 .fab.sgt.on { background: #c084fc; color: #111; }
+.zonelabel { margin-left: 4px; background: #111d; color: #bbf7d0; font: 700 11px/1 system-ui, sans-serif; padding: 3px 6px; border-radius: 999px; white-space: nowrap; pointer-events: none; }
 .sgtlabel { background: #111d; color: #e9d5ff; font: 700 12px/1 system-ui, sans-serif; padding: 4px 7px; border-radius: 999px; white-space: nowrap; pointer-events: none; border: 1px solid #c084fc; }
 .fab.outline { bottom: calc(80px + env(safe-area-inset-bottom)); }
 .fab small { font-size: 9px; font-weight: 600; }
