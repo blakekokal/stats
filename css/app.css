@@ -310,3 +310,9 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .clubgrid button:disabled { opacity: .35; }
 .compactions { display: flex; gap: 8px; } .compactions button { flex: 1; min-height: 46px; border: 0; border-radius: 12px; font-size: 16px; font-weight: 800; }
 .compactions .off { background: #3d3d3d; color: #fff; flex: 0 0 34%; } .compactions .record:disabled { opacity: .4; }
+.readout .comprows { display: grid; gap: 2px; justify-items: start; }
+.readout .comprows div { display: flex; align-items: baseline; gap: 5px; }
+.readout .comprows i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; align-self: center; box-shadow: 0 0 3px #000; }
+.readout .comprows span { font-size: 15px; font-weight: 800; min-width: 26px; }
+.readout .comprows b { display: inline; font-size: 22px; font-variant-numeric: tabular-nums; }
+.readout .comprows small { font-size: 12px; font-weight: 700; opacity: .85; margin-right: 6px; }
