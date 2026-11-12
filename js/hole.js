@@ -204,10 +204,11 @@ export function renderHole(view, n) {
   // the ball is now (the last recorded shot, or the tee). Labelled on the map.
   let showSgt = flag('gs:sgTarget', '0');
   const sgtBtn = toggle('sgt', 'SG', '⊙', 'Strokes-gained target around the hole', () => showSgt, v => { showSgt = v; localStorage.setItem('gs:sgTarget', v ? '1' : '0'); });
-  // What SG draws, set from the ⚙ beside it and kept on this device:
-  //  (off the tee on a par 4/5, SG shows the drive heat map instead)
-  //  ring — around the pin: one ring at an SG value from -1 to +1 (default 0)
-  const SG_DEFAULT = { zones: { n: 3, min: 0, max: 0.5 }, rings: { n: 1, value: 0, min: -0.5, max: 0.5 } };
+  // SG ring around the pin (off the tee on a par 4/5 SG shows the drive heat map
+  // instead), set from its slider pill and kept on this device. Two modes:
+  //  SG       — the ring where landing on the green gains this much (-1 to +1, default 0)
+  //  Distance — a ring this many feet from the hole (10 to 80), labelled with its SG
+  const SG_DEFAULT = { zones: { n: 3, min: 0, max: 0.5 }, rings: { mode: 'sg', value: 0, ft: 30 } };
   let sgCfg = SG_DEFAULT;
   try { const c = JSON.parse(localStorage.getItem('gs:sgCfg') || '{}'); sgCfg = { zones: { ...SG_DEFAULT.zones, ...c.zones }, rings: { ...SG_DEFAULT.rings, ...c.rings } }; } catch { /* defaults */ }
   const clampSg = v => Math.max(-1, Math.min(1, Math.round((+v || 0) * 100) / 100));
@@ -218,7 +219,6 @@ export function renderHole(view, n) {
     const end = v < 0 ? [220, 38, 38] : [21, 128, 61];
     return pale.map((p0, i) => Math.round(p0 + (end[i] - p0) * t));
   }
-  const ringValues = () => [sgCfg.rings.value];
   const zoneLegend = h('div', { class: 'zonelegend', hidden: true });
   function drawLegend() {
     const rows = [['+.75 or more', [20, 83, 45]], ['+.5 to +.75', [22, 163, 74]], ['+.25 to +.5', [74, 222, 128]], ['0 to +.25', [187, 247, 208]],
@@ -227,34 +227,31 @@ export function renderHole(view, n) {
   }
   drawLegend();
   const ringLegend = h('div', { class: 'zonelegend', hidden: true });
-  const sgGear = h('button', { class: 'sggear', 'aria-label': 'SG settings', title: 'SG settings', hidden: true, onclick: () => { sgPanel.hidden = !sgPanel.hidden; } }, '⚙');
-  const sgPanel = h('div', { class: 'sgpanel', hidden: true });
-  function saveSgCfg() {
-    for (const k of ['zones', 'rings']) { const c = sgCfg[k]; c.min = clampSg(c.min); c.max = clampSg(c.max); if (c.min > c.max) [c.min, c.max] = [c.max, c.min]; }
-    sgCfg.rings.value = clampSg(sgCfg.rings.value);
-    try { localStorage.setItem('gs:sgCfg', JSON.stringify(sgCfg)); } catch { /* ignore */ }
-    zoneKey = null; drawLegend(); drawSgPanel(); update();
-  }
-  function drawSgPanel() {
-    // Slider and number box stay in step; the ring moves as the slider moves.
-    const setValue = (v, from) => {
-      sgCfg.rings.value = clampSg(v);
-      if (from !== 'slider') slider.value = sgCfg.rings.value;
-      if (from !== 'box') box.value = sgCfg.rings.value;
-      shown.textContent = `${fmtSg(sgCfg.rings.value) || '0'} SG`;
-      try { localStorage.setItem('gs:sgCfg', JSON.stringify(sgCfg)); } catch { /* ignore */ }
-      update();
+  const saveRingCfg = () => { try { localStorage.setItem('gs:sgCfg', JSON.stringify(sgCfg)); } catch { /* ignore */ } };
+  const sgSlider = h('div', { class: 'arcslider sgring', hidden: true });
+  function drawSgSlider() {
+    const r = sgCfg.rings, isSg = r.mode !== 'ft';
+    const fmtVal = v => (isSg ? `${fmtSg(v) || '0'} SG` : `${v} ft`);
+    const value = h('b', {}, fmtVal(isSg ? r.value : r.ft));
+    const setVal = v => {
+      if (isSg) r.value = clampSg(v); else r.ft = Math.round(Math.max(10, Math.min(80, +v || 30)));
+      const cur = isSg ? r.value : r.ft;
+      value.textContent = fmtVal(cur); range.value = cur;
+      presets.forEach(b => b.classList.toggle('on', +b.value === cur));
+      saveRingCfg(); update();
     };
-    const slider = h('input', { type: 'range', min: -1, max: 1, step: 0.05, value: sgCfg.rings.value, 'aria-label': 'Approach ring SG', oninput: e => setValue(e.target.value, 'slider') });
-    const box = h('input', { type: 'number', inputmode: 'decimal', step: 0.05, min: -1, max: 1, value: sgCfg.rings.value, 'aria-label': 'Approach ring SG value', onchange: e => setValue(e.target.value, 'box') });
-    const shown = h('b', {}, `${fmtSg(sgCfg.rings.value) || '0'} SG`);
-    sgPanel.replaceChildren(
-      h('strong', {}, 'Approach ring'), h('small', {}, 'Around the pin: landing on the green inside it gains at least this much'),
-      h('div', { class: 'range' }, slider, shown),
-      h('div', { class: 'range' }, 'SG', box, h('button', { class: 'reset', onclick: () => setValue(0) }, 'Reset to 0')),
-      h('button', { class: 'done', onclick: () => { sgPanel.hidden = true; } }, 'Done'));
+    const range = isSg
+      ? h('input', { type: 'range', min: -1, max: 1, step: 0.05, value: r.value, 'aria-label': 'SG ring value', oninput: e => setVal(e.target.value) })
+      : h('input', { type: 'range', min: 10, max: 80, step: 1, value: r.ft, 'aria-label': 'Ring distance in feet', oninput: e => setVal(e.target.value) });
+    const presets = (isSg ? [-0.5, -0.25, 0, 0.25, 0.5] : [20, 30, 40, 50, 60]).map(v =>
+      h('button', { class: 'preset' + (v === (isSg ? r.value : r.ft) ? ' on' : ''), value: v, onclick: () => setVal(v) }, isSg ? fmtSg(v) || '0' : String(v)));
+    const mode = m => h('button', { class: r.mode === m || (m === 'sg' && isSg) ? 'on' : '', onclick: () => { r.mode = m; saveRingCfg(); drawSgSlider(); update(); } }, m === 'sg' ? 'SG' : 'Distance');
+    sgSlider.replaceChildren(
+      h('div', { class: 'modes' }, mode('sg'), mode('ft')),
+      h('div', { class: 'presets' }, presets),
+      h('div', { class: 'slide' }, h('span', {}, isSg ? 'SG' : 'Ring'), range, value));
   }
-  drawSgPanel();
+  drawSgSlider();
   // Feet from the hole at which a ball on the green gains `sg` strokes for an
   // approach from `from` (expected putts there = expected strokes from `from` - 1 - sg).
   // null when that much can't be gained; Infinity when anywhere on the green gains it.
@@ -451,7 +448,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, zoneLegend, ringLegend, sgGear, sgPanel,
+    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, sgSlider, apprSlider, arcSlider), banner, menu, leave, zoneLegend, ringLegend,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -561,9 +558,10 @@ export function renderHole(view, n) {
       if (ft && ft !== Infinity) feats.push({ type: 'Feature', properties: { color: `rgb(${sgColor(v).join(',')})` }, geometry: { type: 'LineString', coordinates: ring(pin, ft * 0.3048).map(ll) } });
     }
     ringLegend.hidden = !rings.length;
-    ringLegend.replaceChildren(h('small', {}, 'Approach SG'), ...rings.map(({ v, ft }) => h('span', {},
+    ringLegend.replaceChildren(h('small', {}, 'Approach SG'), ...rings.map(({ v, ft, byDistance }) => h('span', {},
       h('i', { style: `background:rgb(${sgColor(v).join(',')})` }),
-      `${fmtSg(v) || '0'} · ${ft == null ? 'not possible' : ft === Infinity ? 'any green' : Math.round(ft) + ' ft'}`)));
+      byDistance ? `${ft} ft · ${fmtSg(Math.round(v * 100) / 100) || '0'} SG`
+        : `${fmtSg(v) || '0'} · ${ft == null ? 'not possible' : ft === Infinity ? 'any green' : Math.round(ft) + ' ft'}`)));
     const src = m.getSource('sgt');
     if (src) src.setData({ type: 'FeatureCollection', features: feats });
   }
@@ -668,7 +666,7 @@ export function renderHole(view, n) {
       overlay({ path: st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin] });
       set('shots', line(trace(shots)));
       setRings([]); showZones(false);
-      sgGear.hidden = sgPanel.hidden = true;
+      sgSlider.hidden = true;
       return;
     }
     if (moving === 'tee') { // the crosshair is the tee: show how far it is to the aim spot
@@ -694,14 +692,14 @@ export function renderHole(view, n) {
     // 0-SG ring around the pin.
     const teeZones = showSgt && !shots.length && ch.par >= 4;
     showZones(teeZones);
-    sgGear.hidden = !showSgt;
-    if (!showSgt) sgPanel.hidden = true;
+    sgSlider.hidden = !showSgt || teeZones;
     const rings = [];
     if (showSgt && !teeZones) {
-      for (const v of ringValues()) {
-        const ft = sgFeet(last ? last.lie : 'tee', yards(from, pin), v);
-        rings.push({ v, ft });
-      }
+      const fromLie = last ? last.lie : 'tee', fromYd = yards(from, pin);
+      if (sgCfg.rings.mode === 'ft') {
+        const ft = sgCfg.rings.ft;
+        rings.push({ v: expectedFrom(fromLie, fromYd) - 1 - expected('green', ft, level), ft, byDistance: true });
+      } else rings.push({ v: sgCfg.rings.value, ft: sgFeet(fromLie, fromYd, sgCfg.rings.value) });
     }
     setRings(rings);
   }
