@@ -18,7 +18,7 @@ import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js
 import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting } from './rounds.js';
 
 const maplibregl = window.maplibregl;
-const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR' };
+const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR', ob: 'OB' };
 const levelName = l => (l === 'Pro' || l === 'Scratch' ? l : `${l} hcp`);
 const ll = p => [p[1], p[0]]; // [lat, lng] -> MapLibre's [lng, lat]
 const M_PER_DEG = 111320;
@@ -104,7 +104,7 @@ function ownGreen(ch) {
 function holeFeatures(ch) {
   const green = ownGreen(ch);
   return course.features.filter(f => {
-    if (f.t === 'bunker' || f.t === 'water') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
+    if (f.t === 'bunker' || f.t === 'water' || f.t === 'ob') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
     if (f.t === 'green') return f === green; // not a neighbour's or a practice green
     const c = centre(f.p[0]);
     const own = distToLine(c, ch.line);
@@ -306,7 +306,7 @@ export function renderHole(view, n) {
   // into three bands. Bunkers and water are left out. Drawn as an image laid
   // over the map and only recomputed when the tee, pin or handicap changes.
   let zoneKey = null, zoneImg = null;
-  // Drive SG heat map: every spot within ~45 yd of the hole's route, from 60 yd
+  // Drive SG heat map: every spot within ~70 yd of the hole's route, from 60 yd
   // off the tee to past the green, coloured by the strokes a drive landing there
   // gains for the selected handicap, from its actual lie (fairway, rough, bunker
   // or water — water counting the penalty stroke and a drop), in 0.25 bands:
@@ -326,7 +326,7 @@ export function renderHole(view, n) {
     const span = [];
     for (let d = 0; d <= Math.max(0, total - 60); d += 5) span.push(pointAlong(back, d));
     if (span.length < 2) return null;
-    const box = boundsOf(span, 50);
+    const box = boundsOf(span, 70);
     const routeLine = route();
     const feats = course.features
       .filter(f => f.p[0].some(q => q[0] > box[0][0] - 0.001 && q[0] < box[1][0] + 0.001 && q[1] > box[0][1] - 0.001 && q[1] < box[1][1] + 0.001))
@@ -341,12 +341,12 @@ export function renderHole(view, n) {
       const lat = n0 - ((r + 0.5) / rows) * (n0 - s0);
       for (let c = 0; c < cols; c++) {
         const q = [lat, w0 + ((c + 0.5) / cols) * (e0 - w0)];
-        if (distToLine(q, routeLine) * YD_PER_M > 45) continue; // stay on this hole
+        if (distToLine(q, routeLine) * YD_PER_M > 70) continue; // stay on this hole
         if (yards(q, tee) < 60) continue; // not a drive
         const lie = lieHere(q);
-        const sg = teeExp - expectedFrom(lie, yards(q, pin)) - 1;
+        const sg = sgFinish(teeExp, lie, yards(q, pin));
         const z = heatColor(lie === 'water' ? Math.min(sg, -0.01) : sg), i = (r * cols + c) * 4;
-        img.data[i] = z[0]; img.data[i + 1] = z[1]; img.data[i + 2] = z[2]; img.data[i + 3] = lie === 'water' ? 190 : 130;
+        img.data[i] = z[0]; img.data[i + 1] = z[1]; img.data[i + 2] = z[2]; img.data[i + 3] = lie === 'water' || lie === 'ob' ? 190 : 130;
       }
     }
     ctx.putImageData(img, 0, 0);
@@ -515,6 +515,7 @@ export function renderHole(view, n) {
       const onGreen = shots.filter(x => x.lie === 'green').length;
       if (hl.pin && onGreen === 1) return saveHole({ pin: null });
       const rest = shots.slice(0, -1);
+      if (shots.at(-1).replay && rest.length) { const { pen, obAt, ...p } = rest.at(-1); rest[rest.length - 1] = { ...p, ...(pen > 1 ? { pen: pen - 1 } : {}) }; }
       saveHole({ shots: rest.length > 1 ? rest : [], pin: rest.some(x => x.lie === 'green') ? hl.pin : null });
       if (stage() === 'play') place();
     } }, '↶');
@@ -597,7 +598,7 @@ export function renderHole(view, n) {
       let tot = 0;
       for (let j = 0; j <= N; j++) {
         const q = arc(-half + (2 * half * j) / N), lie = lieHere(q);
-        tot += fromExp - expectedFrom(lie, yards(q, pin)) - 1;
+        tot += sgFinish(fromExp, lie, yards(q, pin));
       }
       return { club, yd, toPin: yards(mid, pin), color: COMP_COLORS[i], sg: tot / (N + 1), pts: arcPoints(arc, -half, half) };
     }).filter(Boolean);
@@ -633,6 +634,13 @@ export function renderHole(view, n) {
     const shots = s.length ? [...s] : [{ pos: tee, lie: 'tee' }];
     shots[shots.length - 1] = { ...shots[shots.length - 1], ...(club ? { club } : {}), ...(swing && swing !== 'full' ? { swing } : {}) };
     const lie = stage() === 'putt' ? 'green' : lieOn(target, course.features);
+    if (lie === 'ob') { // stroke and distance: a penalty, and the next shot is played from the same spot
+      const prev = shots[shots.length - 1];
+      shots[shots.length - 1] = { ...prev, pen: (prev.pen || 0) + 1, obAt: target };
+      shots.push({ pos: prev.pos, lie: prev.lie, replay: true });
+      pickedClub = null;
+      return saveShots(shots);
+    }
     const shot = { pos: target, lie };
     if (lie === 'green' && holeNow().pin) shot.ft = Math.max(1, Math.round(yards(target, pin) * FT_PER_YD));
     shots.push(shot);
@@ -822,7 +830,10 @@ export function renderHole(view, n) {
   // counts as fairway; water costs a penalty stroke and a drop in the rough.
   const expectedFrom = (lie, yd) => (lie === 'green' ? expected('green', yd * 3, level)
     : lie === 'water' ? expected('rough', yd, level) + 1
-    : expected(lie === 'tee' ? 'fairway' : lie, yd, level));
+    : expected(lie === 'tee' || lie === 'ob' ? 'fairway' : lie, yd, level));
+  // Strokes gained by a shot from a spot worth `fromExp` that finishes at `lie`, `yd` from the pin.
+  // Out of bounds is stroke and distance: a penalty, then the same shot again, so -2.
+  const sgFinish = (fromExp, lie, yd) => (lie === 'ob' ? -2 : fromExp - expectedFrom(lie, yd) - 1);
 
   // The lie at a point, for scoring this hole: another hole's green (or a
   // practice green) is just short grass here, so it counts as fairway.
@@ -834,7 +845,7 @@ export function renderHole(view, n) {
 
   const line = pts => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: pts.map(ll) } });
   // The recorded shots, joined up; once holed, the last putt runs into the hole.
-  const trace = shots => [...shots.map(x => x.pos), ...(holeNow().done && shots.length ? [pin] : [])];
+  const trace = shots => [...shots.flatMap(x => (x.obAt ? [x.pos, x.obAt] : [x.pos])), ...(holeNow().done && shots.length ? [pin] : [])];
 
   // Strokes Gained panel (viewing a past round): round total and this hole, each
   // opening to Off the tee / Approach / Around green / Putting, then this hole's
@@ -880,7 +891,7 @@ export function renderHole(view, n) {
   let sgViewKey = null;
   const fmtSgV = v => (v == null ? '–' : (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2));
   const sgCls = v => (v == null ? '' : v >= 0 ? 'pos' : 'neg');
-  const LIE_NAME = { tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', green: 'Green', water: 'Water', recovery: 'Recovery' };
+  const LIE_NAME = { tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', green: 'Green', water: 'Water', recovery: 'Recovery', ob: 'Out of bounds' };
   function drawSgView() {
     if (sgView.hidden) return;
     const r = currentRound();
@@ -914,7 +925,7 @@ export function renderHole(view, n) {
         h('button', { class: 'sgclose', 'aria-label': 'Close', onclick: () => { sgView.hidden = true; sgViewBtn.classList.remove('on'); } }, '✕')),
       toggleRow('round', 'Round total', ra.holes ? ra.sg.total : null, `${ra.holes} hole${ra.holes === 1 ? '' : 's'}`),
       sgOpen.has('round') ? cats(ra.sg, rCounts) : null,
-      toggleRow('hole', `Hole ${n}`, hasHole ? hSg.total : null, hl?.done ? `${hl.shots.length + hl.shots.filter(x => x.lie === 'water').length} strokes` : 'not finished'),
+      toggleRow('hole', `Hole ${n}`, hasHole ? hSg.total : null, hl?.done ? `${strokesOf(hl)} strokes` : 'not finished'),
       sgOpen.has('hole') ? cats(hSg, hCounts) : null,
       h('div', { class: 'sgsub' }, `Shots on hole ${n}`),
       ...(shotRows.length ? shotRows : [h('small', { class: 'muted' }, 'No shots recorded on this hole.')]),
@@ -924,7 +935,7 @@ export function renderHole(view, n) {
   // Score chips at the top (total, and this hole with the round to par) and a
   // scorecard overlay when either is tapped. Only while a round is under way.
   const toPar = v => (v === 0 ? 'E' : v > 0 ? `+${v}` : `−${-v}`);
-  const strokesOf = hh => (hh.shots || []).length + (hh.shots || []).filter(x => x.lie === 'water').length;
+  const strokesOf = hh => (hh.shots || []).reduce((t, x) => t + 1 + (x.lie === 'water' ? 1 : 0) + (x.pen || 0), 0);
   // Totals for the whole round, and to par through this hole (holes 1..n), so
   // stepping through a round shows the running score hole by hole.
   function roundTotals() {
@@ -1112,7 +1123,7 @@ export function renderHole(view, n) {
     // strokes from here, minus the stroke played.
     const teeExp = expected('tee', yards(tee, pin), level);
     const fromExp = last ? expectedFrom(last.lie, yards(from, pin)) : teeExp;
-    const sg = fromExp - expectedFrom(lie, toPin) - 1;
+    const sg = sgFinish(fromExp, lie, toPin);
     expValue.textContent = teeExp.toFixed(2);
 
     if (onGreen) {
@@ -1244,7 +1255,7 @@ export function renderHole(view, n) {
     const isPutt = s.lie === 'green', end = next || (hl.done ? null : undefined);
     if (end === undefined) return;
     const travel = yards(s.pos, end ? end.pos : (hl.pin || pin));
-    const name = l => ({ tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', green: 'Green', water: 'Water', recovery: 'Recovery' }[l] || l);
+    const name = l => ({ tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', green: 'Green', water: 'Water', recovery: 'Recovery', ob: 'Out of bounds' }[l] || l);
     const sgTxt = row.sg == null ? '–' : (row.sg >= 0 ? '+' : '−') + Math.abs(row.sg).toFixed(2);
     let puttNo = 0; for (let k = 0; k <= i; k++) if (shots[k].lie === 'green') puttNo++;
     const el = h('div', { class: 'shotpop' },

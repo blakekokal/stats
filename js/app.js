@@ -13,7 +13,7 @@ import { VERSION } from './version.js';
 const L = window.L;
 const view = document.getElementById('view');
 export const TILE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-export const LIE_COLOR = { tee: '#f4f4f0', fairway: '#8fd14f', rough: '#4d7c3a', bunker: '#f2d58a', recovery: '#b98b5e', green: '#3ee08f', water: '#4aa8ff' };
+export const LIE_COLOR = { tee: '#f4f4f0', fairway: '#8fd14f', rough: '#4d7c3a', bunker: '#f2d58a', recovery: '#b98b5e', green: '#3ee08f', water: '#4aa8ff', ob: '#ffffff' };
 
 // ---------- helpers ----------
 
@@ -54,7 +54,9 @@ export let course = null;
 export async function loadCourse() {
   if (!baseCourse) baseCourse = await (await fetch('data/bridlewood.json')).json();
   const edited = store.get('course:' + baseCourse.id);
-  course = { ...baseCourse, features: edited ? edited.features : baseCourse.features };
+  // Out-of-bounds areas come from the course file; an edited course from before they existed gets them added.
+  const feats = edited ? (edited.features.some(f => f.t === 'ob') ? edited.features : [...edited.features, ...baseCourse.features.filter(f => f.t === 'ob')]) : baseCourse.features;
+  course = { ...baseCourse, features: feats };
   return course;
 }
 export const originalFeatures = () => baseCourse.features;
