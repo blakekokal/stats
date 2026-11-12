@@ -959,15 +959,38 @@ export function renderHole(view, n) {
   }
   syncPin();
 
-  // Numbered dots where each recorded shot finished.
-  let shotMarks = [];
+  // Numbered dots where each recorded shot finished. Tapping one shows that
+  // shot: how far it went, its lies, strokes gained and club.
+  let shotMarks = [], shotPopup = null;
+  function showShotInfo(i, at) {
+    const hl = holeNow(), shots = hl.shots || [], s = shots[i], next = shots[i + 1];
+    if (!s) return;
+    const row = analyzeHole(hl, ch, level).rows[i] || {};
+    const isPutt = s.lie === 'green', end = next || (hl.done ? null : undefined);
+    if (end === undefined) return;
+    const travel = yards(s.pos, end ? end.pos : (hl.pin || pin));
+    const name = l => ({ tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', green: 'Green', water: 'Water', recovery: 'Recovery' }[l] || l);
+    const sgTxt = row.sg == null ? '–' : (row.sg >= 0 ? '+' : '−') + Math.abs(row.sg).toFixed(2);
+    let puttNo = 0; for (let k = 0; k <= i; k++) if (shots[k].lie === 'green') puttNo++;
+    const el = h('div', { class: 'shotpop' },
+      h('strong', {}, isPutt ? `Putt ${puttNo}` : `Shot ${i + 1}`, h('small', {}, row.cat ? ` · ${CAT_LABEL[row.cat]}` : '')),
+      h('div', {}, h('span', {}, 'Traveled'), h('b', {}, isPutt ? `${Math.round(travel * 3)} ft` : `${Math.round(travel)} yd`)),
+      h('div', {}, h('span', {}, 'Lie'), h('b', {}, `${name(s.lie)} → ${end ? name(end.lie) : 'Holed'}`)),
+      h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: row.sg == null ? '' : row.sg >= 0 ? 'pos' : 'neg' }, sgTxt)),
+      h('div', {}, h('span', {}, 'Club'), h('b', { class: 'muted' }, '— (coming soon)')));
+    shotPopup?.remove();
+    shotPopup = new maplibregl.Popup({ offset: 14, closeButton: true, className: 'shotpopup', maxWidth: '240px' }).setLngLat(ll(at)).setDOMContent(el).addTo(m);
+  }
+  const tappable = (el, i, at) => { el.addEventListener('click', e => { e.stopPropagation(); showShotInfo(i, at); }); return el; };
   function drawShots() {
     shotMarks.forEach(mk => mk.remove());
+    shotPopup?.remove(); shotPopup = null;
     const shots = shotsNow();
-    shotMarks = shots.slice(1).map((s, i) => new maplibregl.Marker({ element: h('div', { class: 'shotmark' }, String(i + 1)) }).setLngLat(ll(s.pos)).addTo(m));
+    // The dot numbered k marks where shot k finished (shot index k-1).
+    shotMarks = shots.slice(1).map((s, i) => new maplibregl.Marker({ element: tappable(h('div', { class: 'shotmark' }, String(i + 1)), i, s.pos) }).setLngLat(ll(s.pos)).addTo(m));
     // Once holed, the number of the stroke that went in sits just above the hole.
     if (holeNow().done && shots.length) {
-      shotMarks.push(new maplibregl.Marker({ element: h('div', { class: 'shotmark holedmark', title: 'Holed' }, String(shots.length)), anchor: 'bottom', offset: [0, -9] }).setLngLat(ll(pin)).addTo(m));
+      shotMarks.push(new maplibregl.Marker({ element: tappable(h('div', { class: 'shotmark holedmark', title: 'Holed' }, String(shots.length)), shots.length - 1, pin), anchor: 'bottom', offset: [0, -9] }).setLngLat(ll(pin)).addTo(m));
     }
   }
   drawShots();
