@@ -359,6 +359,10 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.31.1', ["What's new updated"]],
+  ['0.31.0', ['Comp: drag a club\'s dot to give it its own line off the tee (tap it to put it back)']],
+  ['0.30.2', ['Comp: each arc has a dot with yards left above it and distance from the ball below']],
+  ['0.30.0', ['Out of bounds: roads and houses are OB (white outlines), scored as stroke and distance', 'SG heat map reaches 70 yd either side, so OB shows in red', 'Comp button: compare 2–3 clubs as arcs on one line, with average SG for each', 'SG button moved to the left above Pin; Club button moved down']],
   ['0.29.1', ['Back to the previous button layout']],
   ['0.28.4', ['Arc → Auto changes only when you tap a club']],
   ['0.28.3', ['Arc button just turns the arc on; a small Adj button beside it opens the slider']],
