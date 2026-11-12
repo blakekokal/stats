@@ -359,6 +359,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.32.2', ['View also hides the crosshair, its yardages and the arc, width and approach circles (Comp arcs stay)']],
   ['0.32.1', ['Out of bounds is now everything outside the course boundary, drawn as one white line']],
   ['0.32.0', ['View button: hides the aiming line and shot tracer for a clean look (Comp arcs stay)', 'Comp moved to the right where Club was; Club moved up above it']],
   ['0.31.1', ["What's new updated"]],

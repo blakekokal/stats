@@ -305,7 +305,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .arcslider .preset { min-width: 0; flex: 1 1 0; font-size: 12px; }
 .fab.comp { left: auto; right: 14px; bottom: calc(262px + env(safe-area-inset-bottom)); }
 .fab.cleanview { bottom: calc(312px + env(safe-area-inset-bottom)); }
-.holeview.clean .shotmark { display: none; }
+.holeview.clean .shotmark, .holeview.clean .crosshair, .holeview.clean .readout { display: none; }
 .fab.comp.on { background: #f472b6; color: #111; }
 .compkey b { font-variant-numeric: tabular-nums; } .compkey b.pos { color: #4ade80; } .compkey b.neg { color: #ff6b6b; }
 .clubgrid button.comp { color: #111; } .clubgrid button.comp small { color: #333; }
