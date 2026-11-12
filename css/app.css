@@ -129,6 +129,13 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .fab.add { left: auto; right: 9px; bottom: calc(18px + env(safe-area-inset-bottom)); width: 58px; height: 58px; font-size: 34px; font-weight: 600; background: #ffb020; color: #111; }
 .fab.undo { bottom: calc(138px + env(safe-area-inset-bottom)); font-size: 22px; }
 .fab[hidden] { display: none; }
+.holed { position: absolute; right: 9px; bottom: calc(88px + env(safe-area-inset-bottom)); height: 44px; padding: 0 16px; border-radius: 999px; border: 0; background: #22c55e; color: #fff; font-size: 16px; font-weight: 700; box-shadow: 0 1px 6px #0008; z-index: 3; }
+.holed[hidden] { display: none; }
+.greenbar { position: absolute; left: 10px; right: 10px; top: calc(66px + env(safe-area-inset-top)); z-index: 4; display: flex; align-items: center; gap: 10px; background: #111d; backdrop-filter: blur(8px); border-radius: 14px; padding: 10px 12px; color: #fff; }
+.greenbar[hidden] { display: none; }
+.greenbar > div { flex: 1; } .greenbar strong { display: block; font-size: 17px; } .greenbar span { display: block; font-size: 13px; opacity: .85; }
+.greenbar .btn { white-space: nowrap; }
+.readout .note { display: block; font-size: 15px; font-weight: 600; }
 .shotmark { width: 20px; height: 20px; border-radius: 50%; background: #ffb020; color: #111; border: 2px solid #111; font: 700 11px/16px system-ui, sans-serif; text-align: center; box-shadow: 0 1px 4px #000a; }
 .fab.width { bottom: calc(88px + env(safe-area-inset-bottom)); }
 .fab.arc { bottom: calc(146px + env(safe-area-inset-bottom)); }

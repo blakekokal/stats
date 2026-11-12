@@ -5,7 +5,9 @@
 // chosen handicap level. The course outlines can be switched off. Two optional arcs, both centred on the tee and passing through the
 // crosshair: the fairway width, and a dispersion arc of adjustable width.
 // The + button records the crosshair as where the ball finished; after that the
-// distances, line and arcs are measured from the last recorded shot.
+// distances, line and arcs are measured from the last recorded shot. Once a
+// shot reaches the green the map zooms onto it, the player places the pin,
+// distances switch to feet for putts, and a Holed button finishes the hole.
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, rememberTee } from './app.js';
 import { store } from './store.js';
@@ -104,7 +106,7 @@ export function renderHole(view, n) {
   const fairways = course.features.filter(f => f.t === 'fairway').map(f => ({ p: f.p, box: boundsOf(f.p[0], 200) }));
 
   let tee = teePosition(teeName, ch);
-  let pin = ch.pin;
+  let pin = ch.pin; // replaced by the round's pin for this hole once it is placed
   let target = tee;
   const flag = (key, def) => (localStorage.getItem(key) ?? def) === '1';
   let showWidth = flag('gs:fairwayWidth', '0');
@@ -120,16 +122,29 @@ export function renderHole(view, n) {
     const r = store.list('round:').find(x => x.date === today && x.course === course.id);
     return r ? 'round:' + r.id : null;
   };
-  const shotsNow = () => { const k = roundKey(); return (k && store.get(k).holes[n]?.shots) || []; };
-  function saveShots(shots) {
+  const holeNow = () => { const k = roundKey(); return (k && store.get(k).holes[n]) || { pin: null, done: false, shots: [] }; };
+  const shotsNow = () => holeNow().shots || [];
+  function saveHole(patch) {
     let k = roundKey();
     if (!k) { const r = newRound(course, teeName, today); k = 'round:' + r.id; store.set(k, r); }
     const r = store.get(k);
-    store.set(k, { ...r, updated: Date.now(), holes: { ...r.holes, [n]: { ...(r.holes[n] || { pin: null, done: false }), shots } } });
+    store.set(k, { ...r, updated: Date.now(), holes: { ...r.holes, [n]: { pin: null, done: false, shots: [], ...r.holes[n], ...patch } } });
+    syncPin();
     drawShots();
     update();
   }
-  const origin = () => { const s = shotsNow(); return s.length ? s[s.length - 1].pos : tee; };
+  const saveShots = shots => saveHole({ shots });
+  if (holeNow().pin) pin = holeNow().pin;
+
+  // Where the player is on this hole: playing up to the green, on the green
+  // waiting for the pin to be placed, putting, or holed out.
+  const stage = () => {
+    const hl = holeNow(), shots = hl.shots || [], last = shots[shots.length - 1];
+    if (hl.done) return 'done';
+    if (!last || last.lie !== 'green') return 'play';
+    return hl.pin ? 'putt' : 'pin';
+  };
+  const FT_PER_YD = 3;
 
   const mapEl = h('div', { id: 'gmap' });
   const toPinEl = h('div', { class: 'readout to' });
@@ -154,15 +169,39 @@ export function renderHole(view, n) {
   });
   const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); arcSlider.hidden = !v; });
 
-  const undoBtn = h('button', { class: 'fab undo', 'aria-label': 'Undo last shot', title: 'Undo last shot',
-    onclick: () => { const s = shotsNow().slice(0, -1); saveShots(s.length > 1 ? s : []); } }, '↶');
+  // Undo steps back one stage at a time: un-hole, then un-place the pin (if the
+  // ball is still on its first spot on the green), then remove the last shot.
+  const undoBtn = h('button', { class: 'fab undo', 'aria-label': 'Undo', title: 'Undo',
+    onclick: () => {
+      const hl = holeNow(), shots = hl.shots || [];
+      if (hl.done) return saveHole({ done: false });
+      const onGreen = shots.filter(x => x.lie === 'green').length;
+      if (hl.pin && onGreen === 1) return saveHole({ pin: null });
+      const rest = shots.slice(0, -1);
+      saveHole({ shots: rest.length > 1 ? rest : [], pin: rest.some(x => x.lie === 'green') ? hl.pin : null });
+      if (stage() === 'play') place();
+    } }, '↶');
   const addBtn = h('button', { class: 'fab add', 'aria-label': 'Record shot here', title: 'Record shot at the crosshair',
     onclick: () => {
       const s = shotsNow();
       const shots = s.length ? [...s] : [{ pos: tee, lie: 'tee' }];
-      shots.push({ pos: target, lie: lieOn(target, course.features) });
+      const lie = stage() === 'putt' ? 'green' : lieOn(target, course.features);
+      const shot = { pos: target, lie };
+      if (lie === 'green' && holeNow().pin) shot.ft = Math.max(1, Math.round(yards(target, pin) * FT_PER_YD));
+      shots.push(shot);
+      const wasPlaying = stage() === 'play';
       saveShots(shots);
+      if (wasPlaying && lie === 'green') zoomToGreen();
     } }, '+');
+  const holedBtn = h('button', { class: 'holed', onclick: () => saveHole({ done: true }) }, 'Holed');
+  const setPinBtn = h('button', { class: 'btn primary', onclick: () => {
+    pin = target;
+    const shots = shotsNow().map(x => (x.lie === 'green' ? { ...x, ft: Math.max(1, Math.round(yards(x.pos, pin) * FT_PER_YD)) } : x));
+    saveHole({ pin, shots });
+    zoomToGreen();
+  } }, 'Set pin');
+  const bannerText = h('div', {});
+  const banner = h('div', { class: 'greenbar', hidden: true }, bannerText);
 
   const expValue = h('strong', {});
   const expPill = h('div', { class: 'exppill' },
@@ -181,7 +220,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, undoBtn, outlineBtn, arcBtn, widthBtn, arcSlider, menu,
+    addBtn, holedBtn, undoBtn, outlineBtn, arcBtn, widthBtn, arcSlider, banner, menu,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${n === 1 ? 18 : n - 1}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, h('small', {}, `Hole ${n} · Par ${ch.par}`), h('strong', {}, `${teeSet.yards[n - 1]} Yards`)),
@@ -246,11 +285,31 @@ export function renderHole(view, n) {
     const c = m.unproject([mapEl.clientWidth / 2, mapEl.clientHeight * CROSSHAIR_Y]);
     target = [c.lat, c.lng];
     const lie = lieOn(target, course.features);
-    const shots = shotsNow(), last = shots[shots.length - 1];
+    const shots = shotsNow(), last = shots[shots.length - 1], st = stage();
     const from = last ? last.pos : tee;
-    const w = showWidth ? fairwayWidth(from, target, fairways) : null;
+    const onGreen = st !== 'play';
+    const w = showWidth && !onGreen ? fairwayWidth(from, target, fairways) : null;
     const fromTee = yards(from, target), toPin = yards(target, pin);
-    undoBtn.hidden = !shots.length;
+    undoBtn.hidden = !shots.length && !holeNow().done;
+    addBtn.hidden = st === 'pin' || st === 'done';
+    holedBtn.hidden = st !== 'putt';
+    widthBtn.hidden = arcBtn.hidden = onGreen;
+    arcSlider.hidden = !showArc || onGreen;
+    banner.hidden = st === 'play';
+    if (st === 'pin') {
+      bannerText.replaceChildren(h('strong', {}, 'On the green'), h('span', {}, 'Move the crosshair onto the hole, then set the pin.'));
+      banner.replaceChildren(bannerText, setPinBtn);
+    } else if (st === 'putt') {
+      const putts = shots.filter(x => x.lie === 'green').length - 1;
+      bannerText.replaceChildren(h('strong', {}, `${Math.round(yards(from, pin) * FT_PER_YD)} ft to the hole`),
+        h('span', {}, putts ? `${putts} putt${putts > 1 ? 's' : ''} so far · + to record where the putt stopped` : '+ to record where the putt stopped'));
+      banner.replaceChildren(bannerText);
+    } else if (st === 'done') {
+      const strokes = shots.length, diff = strokes - ch.par;
+      const word = { '-3': 'Albatross', '-2': 'Eagle', '-1': 'Birdie', 0: 'Par', 1: 'Bogey', 2: 'Double bogey' }[diff] || `${diff > 0 ? '+' : ''}${diff}`;
+      bannerText.replaceChildren(h('strong', {}, `Holed in ${strokes}`), h('span', {}, `${word} on a par ${ch.par}`));
+      banner.replaceChildren(bannerText, h('a', { class: 'btn primary', href: `#/hole/${n === 18 ? 1 : n + 1}` }, 'Next hole ›'));
+    }
 
     // Strokes gained by a shot from the tee (or the last recorded shot) that
     // finishes on the crosshair: expected strokes from there, minus expected
@@ -260,6 +319,18 @@ export function renderHole(view, n) {
     const sg = fromExp - expectedFrom(lie, toPin) - 1;
     expValue.textContent = teeExp.toFixed(2);
 
+    if (onGreen) {
+      // Feet on the green. Before the pin is placed, the crosshair is the hole.
+      const ballToHole = yards(from, st === 'pin' ? target : pin) * FT_PER_YD;
+      toPinEl.replaceChildren(st === 'pin' ? h('b', {}, `${Math.round(ballToHole)} ft`) : h('b', {}, `${Math.round(toPin * FT_PER_YD)} ft`));
+      fromTeeEl.replaceChildren(st === 'pin' ? h('span', { class: 'note' }, 'from your ball') : h('b', {}, `${Math.round(fromTee * FT_PER_YD)} ft`));
+      expValue.textContent = teeExp.toFixed(2);
+      const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
+      set('path', line(st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin]));
+      set('shots', line(shots.map(x => x.pos)));
+      set('width', line([])); set('arc', line([]));
+      return;
+    }
     toPinEl.replaceChildren(h('b', {}, `${Math.round(toPin)} yd`));
     fromTeeEl.replaceChildren(h('b', {}, `${Math.round(fromTee)} yd`),
       h('span', { class: 'sg ' + (sg >= 0 ? 'gain' : 'loss') }, `${sg >= 0 ? '+' : '−'}${Math.abs(sg).toFixed(2)} (${LIE_TAG[lie]})`),
@@ -281,7 +352,30 @@ export function renderHole(view, n) {
     return mk;
   };
   dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, (p, done) => { tee = p; if (done) rememberTee(teeName, ch, p); update(); });
-  dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }), pin, p => { pin = p; update(); });
+  const pinMark = dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }), pin, (p, done) => {
+    pin = p;
+    if (done && holeNow().pin) saveHole({ pin, shots: shotsNow().map(x => (x.lie === 'green' ? { ...x, ft: Math.max(1, Math.round(yards(x.pos, pin) * FT_PER_YD)) } : x)) });
+    update();
+  });
+  // Until the pin is placed on the green it is hidden: the crosshair stands in for it.
+  function syncPin() {
+    pinMark.setLngLat(ll(pin));
+    pinMark.getElement().style.visibility = stage() === 'pin' ? 'hidden' : '';
+  }
+
+  // Zoom onto the green: the green and the ball both in view, the crosshair on the
+  // pin once it is placed (or the green's centre before then).
+  function zoomToGreen() {
+    const g = ownGreen(ch), ball = shotsNow().at(-1)?.pos;
+    const pts = [...(g ? g.p[0] : [pin]), ...(ball ? [ball] : [])];
+    const lats = pts.map(p => p[0]), lngs = pts.map(p => p[1]);
+    const k = Math.cos((lats[0] * Math.PI) / 180);
+    const extent = Math.max((Math.max(...lats) - Math.min(...lats)) * M_PER_DEG, (Math.max(...lngs) - Math.min(...lngs)) * M_PER_DEG * k, 20);
+    const mPerPx = (extent * 1.3) / Math.min(mapEl.clientWidth, mapEl.clientHeight * 0.6);
+    const zoom = Math.min(21, Math.log2((78271.517 * k) / mPerPx));
+    m.easeTo({ center: ll(holeNow().pin || !g ? pin : centre(g.p[0])), zoom, duration: 600 });
+  }
+  syncPin();
 
   // Numbered dots where each recorded shot finished.
   let shotMarks = [];
@@ -314,6 +408,7 @@ export function renderHole(view, n) {
     addLine('path', 4, { 'line-color': '#fff', 'line-width': 2 });
     addLine('arc', 5, { 'line-color': '#fff', 'line-width': 2.5 }, { 'line-cap': 'round' });
     addLine('width', 5, { 'line-color': '#ffe14d', 'line-width': 3, 'line-dasharray': [0.1, 2] }, { 'line-cap': 'round' });
+    if (stage() !== 'play') zoomToGreen();
     update();
   });
   update();
