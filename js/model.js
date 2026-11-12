@@ -5,7 +5,9 @@
 // shot  = one stroke, described by where it was played from:
 //   { pos: [lat,lng] | null, lie, ft: number | null, pen: 0.. }
 //   - ft: distance to the hole in feet, used instead of the map distance on the green
-//   - pen: extra penalty strokes this stroke incurred (out of bounds)
+//   - pen: extra penalty strokes this stroke incurred (water or out of bounds:
+//     1 for a re-hit, 1 for a water drop, 2 for an OB drop); penKind says which.
+//     The next shot has `replay` (from the same spot) or `drop`, and `penalty`.
 //   - lie 'water': the previous shot found water. That costs a penalty stroke,
 //     charged to the shot that went in; the next stroke is played as from the rough.
 //

@@ -36,7 +36,7 @@ const feetOf = (s, pin) => Math.max(1, s.ft != null ? s.ft : Math.round(yards(s.
 
 function endLie(from, to, pin, isTeeShot) {
   const lie = to.lie;
-  if (from.pen) return 'OB';
+  if (from.pen) return from.penKind === 'water' ? 'WATER' : 'OB';
   if (lie === 'green') return 'GREEN';
   if (lie === 'water') return 'WATER';
   if (lie === 'recovery') return 'RECOVERY';
