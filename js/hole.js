@@ -1074,8 +1074,12 @@ export function renderHole(view, n) {
     const arc = showArc ? arcThrough(from, target) : null;
     let arcW = arcYd;
     if (arcAuto) {
-      const own = (store.get('clubArcs') || {})[currentClub()];
-      arcW = own > 0 ? own : Math.max(10, Math.min(80, Math.round(fromTee * 0.15)));
+      // Sized by club only, so it changes when a club is tapped, not as the
+      // crosshair moves: the tapped club (or the driver off a par 4/5 tee), with
+      // its arc from My Bag, else 15% of its bag yardage; otherwise the slider width.
+      const club = pickedClub || (!shots.length && ch.par >= 4 ? (bag().find(c => /^Dr/.test(c.name)) || {}).name : null);
+      const own = club ? (store.get('clubArcs') || {})[club] : null, yd = club ? bagYards(club) : null;
+      if (own > 0) arcW = own; else if (yd) arcW = Math.max(10, Math.min(80, Math.round(yd * 0.15)));
       arcValue.textContent = `Auto · ${arcW} yd`; arcRange.value = arcW;
     }
     const half = arcW / 2 / YD_PER_M;

@@ -256,7 +256,7 @@ export function renderBag(view) {
   view.replaceChildren(page('top', backBtn(),
     h('div', { style: 'width:100%;max-width:360px;' },
       h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:4px;' }, '🎒 My Bag'),
-      h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:8px;' }, 'Clubs and yardages come from your bag in the coaching app. Set an arc width per club for Arc → Auto; leave blank to use 15% of the shot distance.'),
+      h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:8px;' }, 'Clubs and yardages come from your bag in the coaching app. Set an arc width per club for Arc → Auto; leave blank to use 15% of the club’s yardage.'),
       clubs.length ? clubs.map(row) : h('div', { style: 'color:#9a9a9a;text-align:center;padding:16px;font-size:13px;' }, 'No clubs in your bag yet. Add them in the coaching app\'s My Bag.'),
       msg, refresh)));
 }
@@ -359,6 +359,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.28.4', ['Arc → Auto changes only when you tap a club']],
   ['0.28.3', ['Arc button just turns the arc on; a small Adj button beside it opens the slider']],
   ['0.28.2', ['Arc → Auto sizes the arc to the shot (or the club\'s arc from My Bag)', 'My Bag page with arc widths per club']],
   ['0.28.1', ['Holes open at your My Bag driver distance', 'Picking a club moves the crosshair to its yardage']],
