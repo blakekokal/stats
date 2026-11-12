@@ -10,7 +10,7 @@
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, rememberTee } from './app.js';
-import { store } from './store.js';
+import { store, sync } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
@@ -113,7 +113,10 @@ export function renderHole(view, n) {
   let showArc = flag('gs:arc', '0');
   let arcYd = Math.min(80, Math.max(10, +localStorage.getItem('gs:arcYd') || 40));
   let showOutlines = flag('gs:outlines', '1');
-  let level = LEVELS.includes(localStorage.getItem('gs:level')) ? localStorage.getItem('gs:level') : 'Scratch';
+  // Strokes-gained baseline: the handicap on the user's profile, unless it was
+  // changed on this screen during this visit.
+  const pick = l => (LEVELS.includes(l) ? l : null);
+  let level = pick(sessionStorage.getItem('gs:level')) || pick(sync.level) || 'Scratch';
 
   // Shots go in today's round: hole.shots is a list of where each stroke was
   // played from, starting at the tee.
@@ -207,7 +210,7 @@ export function renderHole(view, n) {
   const expValue = h('strong', {});
   const expPill = h('div', { class: 'exppill' },
     h('div', {}, h('small', {}, 'Expected'), expValue),
-    h('select', { 'aria-label': 'Handicap level', onchange: e => { level = e.target.value; localStorage.setItem('gs:level', level); update(); } },
+    h('select', { 'aria-label': 'Handicap level', onchange: e => { level = e.target.value; sessionStorage.setItem('gs:level', level); update(); } },
       LEVELS.map(l => h('option', { value: l, selected: l === level }, levelName(l)))));
 
   const menu = h('div', { class: 'sheet', hidden: true },
@@ -308,7 +311,7 @@ export function renderHole(view, n) {
       pillStrong.textContent = `${teeSet.yards[n - 1]} Yards`;
     }
     if (st === 'done') {
-      const strokes = shots.length, diff = strokes - ch.par;
+      const strokes = shots.length + shots.filter(x => x.lie === 'water').length, diff = strokes - ch.par;
       const word = { '-3': 'Albatross', '-2': 'Eagle', '-1': 'Birdie', 0: 'Par', 1: 'Bogey', 2: 'Double bogey' }[diff] || `${diff > 0 ? '+' : ''}${diff}`;
       bannerText.replaceChildren(h('strong', {}, `Holed in ${strokes}`), h('span', {}, `${word} on a par ${ch.par}`));
       banner.replaceChildren(bannerText, h('a', { class: 'btn primary', href: `#/hole/${n === 18 ? 1 : n + 1}` }, 'Next hole ›'));

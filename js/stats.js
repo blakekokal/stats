@@ -1,5 +1,7 @@
 import { h, course } from './app.js';
-import { store } from './store.js';
+import { store, sync } from './store.js';
+import { LEVELS } from './sg.js';
+import { levelName } from './account.js';
 import { analyzeRound, CATS, CAT_LABEL, fmtSg, fmtPar } from './model.js';
 
 const pct = (n, d) => (d ? Math.round((100 * n) / d) + '%' : '–');
@@ -31,8 +33,13 @@ function bucketTable(title, unit, shots, edges) {
 }
 
 export function renderStats(view) {
+  // Compared to the handicap on the user's profile, unless changed here this visit.
+  const pick = l => (LEVELS.includes(l) ? l : null);
+  const level = pick(sessionStorage.getItem('statsLevel')) || pick(sync.level) || 'Scratch';
+  const levelSel = h('select', { 'aria-label': 'Compare to', onchange: e => { sessionStorage.setItem('statsLevel', e.target.value); renderStats(view); } },
+    LEVELS.map(l => h('option', { value: l, selected: l === level }, `vs ${levelName(l)}`)));
   const all = store.list('round:').sort((a, b) => (a.date < b.date ? 1 : -1))
-    .map(r => ({ r, a: analyzeRound(r, course) })).filter(x => x.a.holes > 0);
+    .map(r => ({ r, a: analyzeRound(r, course, level) })).filter(x => x.a.holes > 0);
   const saved = sessionStorage.getItem('statsN') || 'all';
   const n = saved === 'all' ? all.length : Math.min(all.length, +saved);
   const set = all.slice(0, n);
@@ -42,7 +49,7 @@ export function renderStats(view) {
 
   if (!set.length) {
     view.replaceChildren(h('div', { class: 'page' }, h('h1', {}, 'Stats'),
-      h('p', { class: 'muted' }, 'Finish at least one hole to see strokes gained here.')));
+      h('p', { class: 'muted' }, sync.user ? 'Hole out on at least one hole (record your shots with + and tap Holed) to see strokes gained here.' : 'Log in, then record your shots with + and tap Holed to see strokes gained here.')));
     return;
   }
 
@@ -57,8 +64,8 @@ export function renderStats(view) {
   const tile = (label, value, note) => h('div', { class: 'tile' }, h('span', { class: 'muted' }, label), h('strong', {}, value), note ? h('small', { class: 'muted' }, note) : null);
 
   view.replaceChildren(h('div', { class: 'page' },
-    h('div', { class: 'row between' }, h('h1', {}, 'Stats'), filter),
-    h('p', { class: 'muted' }, `${set.length} round${set.length > 1 ? 's' : ''}, ${holes} hole${holes > 1 ? 's' : ''}. Strokes gained is measured against a PGA Tour player from the same distance and lie, so negative numbers are normal; watch which category costs the most.`),
+    h('div', { class: 'row between' }, h('h1', {}, 'Stats'), h('div', { class: 'row' }, levelSel, filter)),
+    h('p', { class: 'muted' }, `${set.length} round${set.length > 1 ? 's' : ''}, ${holes} hole${holes > 1 ? 's' : ''}. Strokes gained compares each shot with a ${levelName(level)} player from the same distance and lie: above zero you gained strokes on them, below zero you lost strokes.`),
     h('div', { class: 'tiles' },
       tile('SG total', fmtSg(sg('total')), 'per 18 holes'),
       tile('Avg score', full.length ? (full.reduce((t, x) => t + x.a.score, 0) / full.length).toFixed(1) : '–', full.length ? `${full.length} full round${full.length > 1 ? 's' : ''}` : 'no full rounds yet'),
@@ -76,7 +83,7 @@ export function renderStats(view) {
         h('thead', {}, h('tr', {}, h('th', {}, 'Date'), h('th', { class: 'num' }, 'Holes'), h('th', { class: 'num' }, 'Score'),
           CATS.map(c => h('th', { class: 'num' }, CAT_LABEL[c])), h('th', { class: 'num' }, 'Total'))),
         h('tbody', {}, set.map(({ r, a }) => h('tr', {},
-          h('td', {}, h('a', { href: `#/round/${r.id}/1` }, r.date)),
+          h('td', {}, r.date),
           h('td', { class: 'num' }, a.holes),
           h('td', { class: 'num' }, `${a.score} (${fmtPar(a.score - a.par)})`),
           CATS.map(c => h('td', { class: 'num sg ' + (a.sg[c] >= 0 ? 'pos' : 'neg') }, fmtSg(a.sg[c]))),
