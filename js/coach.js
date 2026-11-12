@@ -32,7 +32,7 @@ export function renderHome(view) {
   const go = (ic, title, sub, bg, href) => h('button', { class: 'homebtn', style: `background:${bg}`, onclick: () => { location.hash = href; } },
     h('span', { class: 'ic' }, ic), h('div', {}, h('div', { class: 't' }, title), h('div', { class: 's' }, sub)));
   const divider = () => h('div', { style: 'height:1px;background:#282828;margin:3px 0;' });
-  const search = h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon', style: 'position:absolute;right:46px;top:0;' });
+  const search = h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' });
   search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 
   const brand = h('div', { style: 'text-align:center;margin-bottom:6px;' });
@@ -41,10 +41,13 @@ export function renderHome(view) {
 
   view.replaceChildren(page('center',
     h('div', { style: 'width:100%;max-width:320px;display:flex;flex-direction:column;gap:7px;' },
-      h('div', { style: 'display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;position:relative;' },
-        h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' }, '❓'), search,
-        h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, '⚙️')),
-      brand,
+      // Help on the left and search + settings on the right, level with the
+      // "Blake Kokal" line and spread to the screen edges.
+      h('div', { style: 'position:relative;' }, brand,
+        h('div', { class: 'iconrow' },
+          h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' }, '❓'),
+          h('div', { style: 'display:flex;gap:4px;' }, search,
+            h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, '⚙️')))),
       go('⛳', 'Enter New Round', 'Track every shot', '#007a52', '#/new'),
       go('📋', 'Round History', 'All past rounds', '#00402c', '#/history'),
       divider(),
