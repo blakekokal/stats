@@ -519,6 +519,11 @@ export function renderHole(view, n) {
       h('a', { class: 'btn', href: '#/settings' }, 'Settings'),
       credit);
 
+  // Score chips and scorecard (filled in by drawScoreChips / openScorecard below).
+  const totalChip = h('button', { class: 'scorechip total', onclick: () => openScorecard() });
+  const holeChip = h('button', { class: 'scorechip hole', onclick: () => openScorecard() });
+  const chips = h('div', { class: 'chips', hidden: true }, totalChip, holeChip);
+  const scorecard = h('div', { class: 'scorecard', hidden: true, onclick: e => { if (e.target === scorecard) scorecard.hidden = true; } });
   const compass = h('button', { class: 'compass', 'aria-label': 'Compass: tap to straighten the view', title: 'Tap to straighten the view' });
   compass.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,16 12,16" fill="#ff4d4d"/><polygon points="16,29 20,16 12,16" fill="#fff"/><text x="16" y="11.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">N</text></svg>';
 
@@ -536,7 +541,7 @@ export function renderHole(view, n) {
       h('button', { class: 'cancel', onclick: () => { leave.hidden = true; } }, 'Cancel')));
 
   view.replaceChildren(h('div', { class: 'holeview' }, mapEl,
-    h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
+    h('div', { class: 'vertag' }, `v${VERSION}`), compass, chips, expPill, scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
@@ -642,6 +647,55 @@ export function renderHole(view, n) {
   // The recorded shots, joined up; once holed, the last putt runs into the hole.
   const trace = shots => [...shots.map(x => x.pos), ...(holeNow().done && shots.length ? [pin] : [])];
 
+  // Score chips at the top (total, and this hole with the round to par) and a
+  // scorecard overlay when either is tapped. Only while a round is under way.
+  const toPar = v => (v === 0 ? 'E' : v > 0 ? `+${v}` : `−${-v}`);
+  const strokesOf = hh => (hh.shots || []).length + (hh.shots || []).filter(x => x.lie === 'water').length;
+  function roundTotals() {
+    const r = currentRound();
+    let strokes = 0, par = 0, thru = 0;
+    for (const o of course.holes) { const hh = r?.holes?.[o.n]; if (hh?.done) { strokes += strokesOf(hh); par += o.par; thru++; } }
+    return { r, strokes, toPar: strokes - par, thru };
+  }
+  let chipKey = null;
+  function drawScoreChips() {
+    const { r, strokes, toPar: tp, thru } = roundTotals();
+    const show = !!r;
+    const key = show ? [strokes, tp, thru, r.holes?.[n]?.done ? strokesOf(r.holes[n]) : '-'].join('|') : 'none';
+    if (key === chipKey) return;
+    chipKey = key;
+    chips.hidden = !show;
+    holeEl()?.classList.toggle('haschips', show);
+    if (!show) return;
+    totalChip.replaceChildren(h('small', {}, 'Total'), h('strong', {}, thru ? `${strokes}` : '–', h('em', {}, thru ? ` (${toPar(tp)})` : '')));
+    const hh = r.holes?.[n];
+    holeChip.replaceChildren(h('small', {}, `Hole ${n}`), h('strong', {}, hh?.done ? String(strokesOf(hh)) : '–'),
+      h('em', {}, thru ? `${toPar(tp)} thru ${thru}` : 'not started'));
+  }
+  function openScorecard() {
+    const { r, strokes, toPar: tp } = roundTotals();
+    if (!r) return;
+    const count = holeCountOf(r), nines = count > 9 ? [[1, 9], [10, count]] : [[1, count]];
+    const cls = (sc, par) => (sc == null ? '' : sc <= par - 2 ? 'eagle' : sc === par - 1 ? 'birdie' : sc === par ? 'par' : sc === par + 1 ? 'bogey' : 'dbl');
+    const tees = course.tees.find(t => t.name === teeName) || course.tees[0];
+    const table = ([a, b], label) => {
+      const ns = Array.from({ length: b - a + 1 }, (_, i) => a + i);
+      const sc = k => { const hh = r.holes?.[k]; return hh?.done ? strokesOf(hh) : null; };
+      const sum = f => ns.reduce((t, k) => t + (f(k) || 0), 0);
+      const go = k => () => { scorecard.hidden = true; location.hash = `#/hole/${k}`; };
+      return h('table', {},
+        h('tr', {}, h('th', {}, 'Hole'), ns.map(k => h('th', { class: k === n ? 'cur' : '', onclick: go(k) }, String(k))), h('th', {}, label)),
+        h('tr', { class: 'yds' }, h('td', {}, 'Yds'), ns.map(k => h('td', {}, String(tees.yards[k - 1]))), h('td', {}, String(sum(k => tees.yards[k - 1])))),
+        h('tr', {}, h('td', {}, 'Par'), ns.map(k => h('td', {}, String(course.holes[k - 1].par))), h('td', {}, String(sum(k => course.holes[k - 1].par)))),
+        h('tr', { class: 'score' }, h('td', {}, 'Score'), ns.map(k => h('td', { onclick: go(k) }, h('span', { class: cls(sc(k), course.holes[k - 1].par) }, sc(k) ?? ''))), h('td', {}, sum(sc) ? String(sum(sc)) : '')));
+    };
+    scorecard.replaceChildren(h('div', { class: 'scbox' },
+      h('div', { class: 'schead' }, h('strong', {}, 'Scorecard'), h('span', {}, strokes ? `${strokes} (${toPar(tp)})` : ''), h('button', { 'aria-label': 'Close', onclick: () => { scorecard.hidden = true; } }, '✕')),
+      h('div', { class: 'scscroll' }, nines.map((nn, i) => table(nn, nines.length > 1 ? (i ? 'In' : 'Out') : 'Tot'))),
+      h('small', { class: 'muted' }, 'Tap a hole to go to it.')));
+    scorecard.hidden = false;
+  }
+
   // Rings around the pin for SG values, listed in a key beside the SG button.
   function setRings(rings) {
     const feats = [];
@@ -710,7 +764,7 @@ export function renderHole(view, n) {
     arcSlider.hidden = !showArc || onGreen;
     apprSlider.hidden = !showAppr || onGreen;
     setPinBtn.hidden = st !== 'pin';
-    banner.hidden = st !== 'done';
+    banner.hidden = true; // replaced by the score chips at the top
     teeBtn.hidden = onGreen;
     pinBtn.hidden = st === 'pin' || st === 'done';
     drawShotList();
@@ -725,26 +779,7 @@ export function renderHole(view, n) {
       pillSmall.textContent = `Hole ${n} · Par ${ch.par}`;
       pillStrong.textContent = `${teeSet.yards[n - 1]} Yards`;
     }
-    if (st === 'done') {
-      const strokes = shots.length + shots.filter(x => x.lie === 'water').length, diff = strokes - ch.par;
-      const word = { '-3': 'Albatross', '-2': 'Eagle', '-1': 'Birdie', 0: 'Par', 1: 'Bogey', 2: 'Double bogey' }[diff] || `${diff > 0 ? '+' : ''}${diff}`;
-      // Score card: (+1) 6 for the hole, and the round so far against par.
-      const rr = currentRound(), toPar = v => (v === 0 ? 'E' : v > 0 ? `+${v}` : `−${-v}`);
-      let tot = 0;
-      for (const o of course.holes) {
-        const hh = rr?.holes?.[o.n];
-        if (hh?.done) tot += (hh.shots || []).length + (hh.shots || []).filter(x => x.lie === 'water').length - o.par;
-      }
-      bannerText.replaceChildren(h('strong', { title: word }, h('em', {}, `(${toPar(diff)})`), ` ${strokes}`), h('span', {}, `${toPar(tot)} total`));
-      // After the round's last hole, finish to Round History.
-      const r = currentRound(), allDone = r && Array.from({ length: holeCount }, (_, i) => r.holes?.[i + 1]?.done).every(Boolean);
-      const last = n >= holeCount;
-      banner.replaceChildren(bannerText, viewing()
-        ? (last ? h('a', { class: 'btn primary', href: '#/history', onclick: leaveView, title: 'Done', 'aria-label': 'Done' }, '✓') : h('a', { class: 'btn primary', href: `#/hole/${nextHole}`, title: 'Next hole', 'aria-label': 'Next hole' }, '›'))
-        : allDone
-          ? h('a', { class: 'btn primary', href: '#/history', onclick: () => { submitRound(r.id); setCurrentRound(null); }, title: 'Finish round', 'aria-label': 'Finish round' }, '✓')
-          : h('a', { class: 'btn primary', href: `#/hole/${nextHole}`, title: 'Next hole', 'aria-label': 'Next hole' }, '›'));
-    }
+    drawScoreChips();
 
     // Strokes gained by a shot from the tee (or the last recorded shot) that
     // finishes on the crosshair: expected strokes from there, minus expected
