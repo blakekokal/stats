@@ -1,6 +1,7 @@
 # Shot Tracker
 
-A golf stat tracker for Bridlewood Golf Club (Flower Mound, TX). It shows each hole on
+A golf stat tracker for Bridlewood Golf Club (Flower Mound, TX) and Bear Creek
+Golf Club – West (DFW Airport, TX); pick the course on New Round or GPS Scouting. It shows each hole on
 satellite imagery with mapped outlines for fairway, rough, bunker, water and
 green, and a movable target for measuring distances. No GPS is used.
 
@@ -71,3 +72,13 @@ export, and `tools/bridlewood.config.json`, the scorecard and fixes).
 
 Course outlines © OpenStreetMap contributors (ODbL). Imagery © Esri and its
 data providers, loaded from Esri World Imagery at run time.
+
+## Adding a course
+
+1. Export its OpenStreetMap golf features (`nwr["golf"]`, water and the
+   `leisure=golf_course` outline) and its roads and buildings with Overpass.
+2. Write `tools/<id>.config.json` (pars, handicaps, tees; `courseName` picks
+   one course where several share the grounds).
+3. `python3 tools/build_course.py <osm> <config> data/<id>.json`, then
+   `python3 tools/add_ob.py <osm> <roads_houses> <config> data/<id>.json`.
+4. Add it to `COURSES` in `js/app.js`.

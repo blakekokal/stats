@@ -1,4 +1,4 @@
-import { h, course } from './app.js';
+import { h, courseById } from './app.js';
 import { store, sync } from './store.js';
 import { LEVELS } from './sg.js';
 import { levelName } from './account.js';
@@ -39,7 +39,7 @@ export function renderStats(view) {
   const levelSel = h('select', { 'aria-label': 'Compare to', onchange: e => { sessionStorage.setItem('statsLevel', e.target.value); renderStats(view); } },
     LEVELS.map(l => h('option', { value: l, selected: l === level }, `vs ${levelName(l)}`)));
   const all = store.list('round:').sort((a, b) => (a.date < b.date ? 1 : -1))
-    .map(r => ({ r, a: analyzeRound(r, course, level) })).filter(x => x.a.holes > 0);
+    .map(r => ({ r, a: analyzeRound(r, courseById(r.course), level) })).filter(x => x.a.holes > 0);
   const saved = sessionStorage.getItem('statsN') || 'all';
   const n = saved === 'all' ? all.length : Math.min(all.length, +saved);
   const set = all.slice(0, n);

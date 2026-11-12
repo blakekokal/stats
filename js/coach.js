@@ -2,7 +2,7 @@
 // coaching app. Only entering a round (GPS, Bridlewood), round history and the
 // account settings work for now; the other buttons are shown but disabled.
 
-import { h, course, toast } from './app.js';
+import { h, course, toast, COURSES, courseById, setActiveCourse } from './app.js';
 import { store, sync } from './store.js';
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
@@ -79,7 +79,7 @@ export function renderNewRound(view, { scout = false } = {}) {
   const par = course.holes.reduce((a, c) => a + c.par, 0);
   function showTee() {
     const t = course.tees.find(x => x.name === tee.value);
-    teeInfo.textContent = t ? `Par ${par} · ${t.yards.reduce((a, b) => a + b, 0).toLocaleString()} yds · Rating ${t.rating} / Slope ${t.slope}` : '';
+    teeInfo.textContent = t ? `Par ${par} · ${t.yards.reduce((a, b) => a + b, 0).toLocaleString()} yds` + (t.rating ? ` · Rating ${t.rating} / Slope ${t.slope}` : '') : '';
   }
   showTee();
   const place = h('input', { type: 'number', inputmode: 'numeric', min: 1, placeholder: 'Place (e.g. 1, 2, 3...)' });
@@ -98,7 +98,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     if (!tee.value) { err.textContent = 'Select a tee box.'; return; }
     if (scout) {
       store.set('settings', { ...(store.get('settings') || {}), tee: tee.value });
-      startScouting(tee.value); sessionStorage.removeItem('gs:level');
+      startScouting(tee.value, course.id); sessionStorage.removeItem('gs:level');
       location.hash = '#/hole/1';
       return;
     }
@@ -106,13 +106,16 @@ export function renderNewRound(view, { scout = false } = {}) {
     const r = { ...newRound(course, tee.value, date.value || today()), courseName: course.name, player: name.value.trim() || (sync.user ? sync.name : ''),
       level: level.value, type: type.value, place: type.value === 'Tournament' && place.value ? +place.value : null, holeCount: holes };
     store.set(roundKeyOf(r.id), r);
+    setActiveCourse(course.id);
     setCurrentRound(r.id); localStorage.removeItem('gs:viewOnly'); localStorage.removeItem('gs:editingPast');
     store.set('settings', { ...(store.get('settings') || {}), tee: tee.value });
     sessionStorage.removeItem('gs:level');
     location.hash = '#/hole/1';
   } }, 'START');
 
-  const courseBox = h('input', { value: course.name, readonly: true, 'aria-label': 'Course', title: 'Bridlewood is the only course for now' });
+  // Picking another course redraws the page with that course's tee boxes.
+  const courseBox = h('select', { class: 'bigsel', 'aria-label': 'Course', onchange: e => { setActiveCourse(e.target.value); renderNewRound(view, { scout }); } },
+    COURSES.map(c => h('option', { value: c.id, selected: c.id === course.id }, c.name)));
   if (scout) {
     view.replaceChildren(page('top', backBtn(),
       h('div', { style: 'font-size:22px;font-weight:800;' }, 'GPS Scouting'),
@@ -155,7 +158,7 @@ export function renderHistory(view) {
   const filtMsg = h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:6px;' });
 
   function draw() {
-    const all = historyRounds().map(r => ({ r, s: summarize(r, course, level) }));
+    const all = historyRounds().map(r => ({ r, s: summarize(r, courseById(r.course), level) }));
     if (!all.length) { msg.textContent = 'No rounds yet. Tap Enter New Round on the home screen to start one.'; list.replaceChildren(); filtMsg.textContent = ''; return; }
     const q = search.value.toLowerCase().trim();
     let cutoff = null;
@@ -182,7 +185,7 @@ export function renderHistory(view) {
       e.stopPropagation();
       if (confirm(`Delete the round from ${fmtDate(r.date)}? This removes it from every device.`)) { store.remove(roundKeyOf(r.id)); draw(); }
     } }, 'Del');
-    const resume = () => { localStorage.removeItem('gs:viewOnly'); localStorage.removeItem('gs:editingPast'); setCurrentRound(r.id); store.set('settings', { ...(store.get('settings') || {}), tee: r.tee }); sessionStorage.removeItem('gs:level'); location.hash = `#/hole/${s.firstOpen || 1}`; };
+    const resume = () => { setActiveCourse(r.course || 'bridlewood'); localStorage.removeItem('gs:viewOnly'); localStorage.removeItem('gs:editingPast'); setCurrentRound(r.id); store.set('settings', { ...(store.get('settings') || {}), tee: r.tee }); sessionStorage.removeItem('gs:level'); location.hash = `#/hole/${s.firstOpen || 1}`; };
     const holesInfo = s.done < s.count ? `${s.done}/${s.count} holes` : `${s.count} holes`;
     return h('div', { class: 'card', style: s.incomplete ? 'border-left:3px solid #d4706e;cursor:pointer;' : '', onclick: s.incomplete ? resume : null },
       h('div', { style: 'display:flex;justify-content:space-between;align-items:center;' },
@@ -226,7 +229,7 @@ export function renderEditRound(view, id) {
   const name = h('input', { placeholder: 'Player Name', value: r.player || '' });
   const level = h('select', { class: 'bigsel', style: 'flex:1;', 'aria-label': 'Compare to' }, LEVELS.map(l => levelOpt(l, r.level || profileLevel())));
   const date = h('input', { type: 'date', value: r.date, style: 'flex:1;' });
-  const tee = h('select', { class: 'bigsel', 'aria-label': 'Tee box' }, course.tees.map(t => h('option', { value: t.name, selected: t.name === r.tee }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yds`)));
+  const tee = h('select', { class: 'bigsel', 'aria-label': 'Tee box' }, courseById(r.course).tees.map(t => h('option', { value: t.name, selected: t.name === r.tee }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yds`)));
   const place = h('input', { type: 'number', inputmode: 'numeric', min: 1, placeholder: 'Place (e.g. 1, 2, 3...)', value: r.place || '' });
   const placeWrap = h('div', { style: 'width:100%;max-width:320px;', hidden: (r.type || 'Casual') !== 'Tournament' }, place);
   const type = h('select', { class: 'bigsel', 'aria-label': 'Round type', onchange: () => { placeWrap.hidden = type.value !== 'Tournament'; } },
@@ -238,7 +241,7 @@ export function renderEditRound(view, id) {
   };
   view.replaceChildren(page('top', backBtn('#/history'),
     h('div', { style: 'font-size:22px;font-weight:800;' }, 'Edit Round'),
-    h('div', { style: 'font-size:12px;color:#9a9a9a;' }, r.courseName || course.name),
+    h('div', { style: 'font-size:12px;color:#9a9a9a;' }, r.courseName || courseById(r.course).name),
     name, h('div', { class: 'row' }, level, date), tee, type, placeWrap,
     h('button', { class: 'holes9', onclick: () => { save(); msg.textContent = '✓ Saved'; msg.className = 'msg ok'; setTimeout(() => { location.hash = '#/history'; }, 500); } }, 'SAVE'),
     h('button', { class: 'holes18', onclick: () => {
@@ -374,6 +377,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.36.0', ['New course: Bear Creek Golf Club – West (DFW). Pick it on New Round or GPS Scouting']],
   ['0.35.0', ['Disp shows just 20 dots (no oval)', 'Comp: a button beside it switches the compared clubs between arcs and dispersion dots']],
   ['0.34.0', ['Disp button: a dispersion oval with 15 shots in it (right ones a bit shorter, left a bit longer), showing their average SG', 'Arc, Disp and Appr are never on together']],
   ['0.33.1', ['GPS Scouting opens a short setup page: pick the tee box and press Start']],

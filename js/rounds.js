@@ -13,8 +13,8 @@ export const roundKeyOf = id => 'round:' + id;
 // GPS Scouting: a throwaway round held only in memory — nothing is ever saved.
 let scoutRound = null;
 export const isScouting = () => { try { return sessionStorage.getItem('gs:scouting') === '1'; } catch { return false; } };
-const newScout = tee => ({ id: 'scout', scouting: true, holeCount: 18, holes: {}, updated: Date.now(), ...(tee ? { tee } : {}) });
-export function startScouting(tee) { try { sessionStorage.setItem('gs:scouting', '1'); } catch { /* ignore */ } scoutRound = newScout(tee); }
+const newScout = (tee, course) => ({ id: 'scout', scouting: true, holeCount: 18, holes: {}, updated: Date.now(), ...(tee ? { tee } : {}), ...(course ? { course } : {}) });
+export function startScouting(tee, course) { try { sessionStorage.setItem('gs:scouting', '1'); } catch { /* ignore */ } scoutRound = newScout(tee, course); }
 export function endScouting() { try { sessionStorage.removeItem('gs:scouting'); } catch { /* ignore */ } scoutRound = null; }
 
 export function currentRound() {

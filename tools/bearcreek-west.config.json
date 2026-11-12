@@ -1,0 +1,18 @@
+{
+  "id": "bearcreek-west",
+  "name": "Bear Creek Golf Club – West",
+  "location": "DFW Airport, TX",
+  "_comment_course": "OSM maps both Bear Creek courses in one boundary; holes are taken from the ways tagged golf:course:name=West.",
+  "courseName": "West",
+  "par": [4,4,4,5,3,5,4,3,4, 5,4,4,4,3,5,4,3,4],
+  "hcp": [17,5,3,7,15,9,1,13,11, 8,4,16,2,14,10,12,18,6],
+  "_comment_tees": "Scorecard from GolfPass. Silver has no published rating or slope.",
+  "tees": [
+    {"name": "Black",  "rating": 73.3, "slope": 137, "yards": [370,385,430,505,185,525,390,190,380, 526,420,377,372,180,503,358,178,403]},
+    {"name": "Blue",   "rating": 71.3, "slope": 134, "yards": [350,350,409,490,170,505,366,170,358, 500,399,346,349,144,485,338,160,382]},
+    {"name": "Silver", "rating": null, "slope": null, "yards": [330,304,335,425,142,445,320,142,335, 457,335,346,321,161,442,306,117,355]},
+    {"name": "Red",    "rating": 68.1, "slope": 123, "yards": [330,304,335,425,142,445,320,142,335, 457,335,325,321,134,442,306,117,355]}
+  ],
+  "shift": {"east": 0, "north": 0},
+  "drop": []
+}
