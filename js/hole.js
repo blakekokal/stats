@@ -182,33 +182,47 @@ export function renderHole(view, n) {
   });
   const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); arcSlider.hidden = !v; });
 
-  // Approach circle: a ring of a set size in feet around the crosshair, i.e.
-  // around where the player is aiming (presets and slider, like the arc).
+  // Approach circle, with a Distance | SG toggle at the top of its pill:
+  //  Distance — a ring of a set size in feet around the crosshair (where you're aiming)
+  //  SG       — a ring around the pin where landing on the green gains this much
+  //             (-1 to +1, default 0) for an approach from where the ball is now
   let showAppr = flag('gs:appr', '0');
   let apprFt = Math.min(80, Math.max(10, +localStorage.getItem('gs:apprFt') || 40));
-  const apprValue = h('b', {}, `${apprFt} ft`);
-  const setAppr = v => {
-    apprFt = v; apprRange.value = v; apprValue.textContent = `${v} ft`; localStorage.setItem('gs:apprFt', v);
-    apprPresets.forEach(b => b.classList.toggle('on', +b.value === v));
-    update();
-  };
-  const apprRange = h('input', { type: 'range', min: 10, max: 80, step: 1, value: apprFt, 'aria-label': 'Approach circle radius in feet', oninput: e => setAppr(+e.target.value) });
-  const apprPresets = [20, 30, 40, 50, 60].map(v => h('button', { class: 'preset' + (v === apprFt ? ' on' : ''), value: v, onclick: () => setAppr(v) }, String(v)));
-  const apprSlider = h('div', { class: 'arcslider appr', hidden: !showAppr },
-    h('div', { class: 'presets' }, apprPresets),
-    h('div', { class: 'slide' }, h('span', {}, 'Appr'), apprRange, apprValue));
+  let apprMode = localStorage.getItem('gs:apprMode') === 'sg' ? 'sg' : 'ft';
+  const apprSlider = h('div', { class: 'arcslider appr', hidden: !showAppr });
+  function drawApprSlider() {
+    const isSg = apprMode === 'sg';
+    const cur = () => (isSg ? sgCfg.rings.value : apprFt);
+    const fmtVal = v => (isSg ? `${fmtSg(v) || '0'} SG` : `${v} ft`);
+    const value = h('b', {}, fmtVal(cur()));
+    const setVal = v => {
+      if (isSg) { sgCfg.rings.value = clampSg(v); try { localStorage.setItem('gs:sgCfg', JSON.stringify(sgCfg)); } catch { /* ignore */ } }
+      else { apprFt = Math.round(Math.max(10, Math.min(80, +v || 40))); localStorage.setItem('gs:apprFt', apprFt); }
+      value.textContent = fmtVal(cur()); range.value = cur();
+      presets.forEach(b => b.classList.toggle('on', +b.value === cur()));
+      update();
+    };
+    const range = isSg
+      ? h('input', { type: 'range', min: -1, max: 1, step: 0.05, value: cur(), 'aria-label': 'Approach ring SG', oninput: e => setVal(e.target.value) })
+      : h('input', { type: 'range', min: 10, max: 80, step: 1, value: cur(), 'aria-label': 'Approach circle radius in feet', oninput: e => setVal(+e.target.value) });
+    const presets = (isSg ? [-0.5, -0.25, 0, 0.25, 0.5] : [20, 30, 40, 50, 60]).map(v =>
+      h('button', { class: 'preset' + (v === cur() ? ' on' : ''), value: v, onclick: () => setVal(v) }, isSg ? fmtSg(v) || '0' : String(v)));
+    const mode = (m, label) => h('button', { class: apprMode === m ? 'on' : '', onclick: () => { apprMode = m; localStorage.setItem('gs:apprMode', m); drawApprSlider(); update(); } }, label);
+    apprSlider.classList.toggle('sgmode', isSg);
+    apprSlider.replaceChildren(
+      h('div', { class: 'modes' }, mode('ft', 'Distance'), mode('sg', 'SG')),
+      h('div', { class: 'presets' }, presets),
+      h('div', { class: 'slide' }, h('span', {}, 'Appr'), range, value));
+  }
   const apprBtn = toggle('appr', 'Appr', '◎', 'Approach circle around the crosshair', () => showAppr, v => { showAppr = v; localStorage.setItem('gs:appr', v ? '1' : '0'); apprSlider.hidden = !v; });
 
   // SG target: a ring around the pin at the distance from which a ball on the
   // green gains 0 strokes for the selected handicap, for an approach from where
   // the ball is now (the last recorded shot, or the tee). Labelled on the map.
   let showSgt = flag('gs:sgTarget', '0');
-  const sgtBtn = toggle('sgt', 'SG', '⊙', 'Strokes-gained target around the hole', () => showSgt, v => { showSgt = v; localStorage.setItem('gs:sgTarget', v ? '1' : '0'); });
-  // SG ring around the pin (off the tee on a par 4/5 SG shows the drive heat map
-  // instead), set from its slider pill and kept on this device. Two modes:
-  //  SG       — the ring where landing on the green gains this much (-1 to +1, default 0)
-  //  Distance — a ring this many feet from the hole (10 to 80), labelled with its SG
-  const SG_DEFAULT = { zones: { n: 3, min: 0, max: 0.5 }, rings: { mode: 'sg', value: 0, ft: 30 } };
+  const sgtBtn = toggle('sgt', 'SG', '⊙', 'Strokes-gained heat map for the drive', () => showSgt, v => { showSgt = v; localStorage.setItem('gs:sgTarget', v ? '1' : '0'); });
+  // The Appr pill's SG value (kept on this device).
+  const SG_DEFAULT = { zones: { n: 3, min: 0, max: 0.5 }, rings: { value: 0 } };
   let sgCfg = SG_DEFAULT;
   try { const c = JSON.parse(localStorage.getItem('gs:sgCfg') || '{}'); sgCfg = { zones: { ...SG_DEFAULT.zones, ...c.zones }, rings: { ...SG_DEFAULT.rings, ...c.rings } }; } catch { /* defaults */ }
   const clampSg = v => Math.max(-1, Math.min(1, Math.round((+v || 0) * 100) / 100));
@@ -227,31 +241,7 @@ export function renderHole(view, n) {
   }
   drawLegend();
   const ringLegend = h('div', { class: 'zonelegend', hidden: true });
-  const saveRingCfg = () => { try { localStorage.setItem('gs:sgCfg', JSON.stringify(sgCfg)); } catch { /* ignore */ } };
-  const sgSlider = h('div', { class: 'arcslider sgring', hidden: true });
-  function drawSgSlider() {
-    const r = sgCfg.rings, isSg = r.mode !== 'ft';
-    const fmtVal = v => (isSg ? `${fmtSg(v) || '0'} SG` : `${v} ft`);
-    const value = h('b', {}, fmtVal(isSg ? r.value : r.ft));
-    const setVal = v => {
-      if (isSg) r.value = clampSg(v); else r.ft = Math.round(Math.max(10, Math.min(80, +v || 30)));
-      const cur = isSg ? r.value : r.ft;
-      value.textContent = fmtVal(cur); range.value = cur;
-      presets.forEach(b => b.classList.toggle('on', +b.value === cur));
-      saveRingCfg(); update();
-    };
-    const range = isSg
-      ? h('input', { type: 'range', min: -1, max: 1, step: 0.05, value: r.value, 'aria-label': 'SG ring value', oninput: e => setVal(e.target.value) })
-      : h('input', { type: 'range', min: 10, max: 80, step: 1, value: r.ft, 'aria-label': 'Ring distance in feet', oninput: e => setVal(e.target.value) });
-    const presets = (isSg ? [-0.5, -0.25, 0, 0.25, 0.5] : [20, 30, 40, 50, 60]).map(v =>
-      h('button', { class: 'preset' + (v === (isSg ? r.value : r.ft) ? ' on' : ''), value: v, onclick: () => setVal(v) }, isSg ? fmtSg(v) || '0' : String(v)));
-    const mode = m => h('button', { class: r.mode === m || (m === 'sg' && isSg) ? 'on' : '', onclick: () => { r.mode = m; saveRingCfg(); drawSgSlider(); update(); } }, m === 'sg' ? 'SG' : 'Distance');
-    sgSlider.replaceChildren(
-      h('div', { class: 'modes' }, mode('sg'), mode('ft')),
-      h('div', { class: 'presets' }, presets),
-      h('div', { class: 'slide' }, h('span', {}, isSg ? 'SG' : 'Ring'), range, value));
-  }
-  drawSgSlider();
+  drawApprSlider();
   // Feet from the hole at which a ball on the green gains `sg` strokes for an
   // approach from `from` (expected putts there = expected strokes from `from` - 1 - sg).
   // null when that much can't be gained; Infinity when anywhere on the green gains it.
@@ -448,7 +438,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, sgSlider, apprSlider, arcSlider), banner, menu, leave, zoneLegend, ringLegend,
+    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, zoneLegend, ringLegend,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -614,7 +604,8 @@ export function renderHole(view, n) {
     undoBtn.hidden = !shots.length && !holeNow().done;
     addBtn.hidden = st === 'pin' || st === 'done';
     holedBtn.hidden = st !== 'putt';
-    widthBtn.hidden = arcBtn.hidden = apprBtn.hidden = sgtBtn.hidden = onGreen;
+    widthBtn.hidden = arcBtn.hidden = apprBtn.hidden = onGreen;
+    sgtBtn.hidden = onGreen || shots.length > 0; // SG is the drive heat map, from the tee only
     arcSlider.hidden = !showArc || onGreen;
     apprSlider.hidden = !showAppr || onGreen;
     setPinBtn.hidden = st !== 'pin';
@@ -666,7 +657,6 @@ export function renderHole(view, n) {
       overlay({ path: st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin] });
       set('shots', line(trace(shots)));
       setRings([]); showZones(false);
-      sgSlider.hidden = true;
       return;
     }
     if (moving === 'tee') { // the crosshair is the tee: show how far it is to the aim spot
@@ -686,21 +676,13 @@ export function renderHole(view, n) {
     set('shots', line(trace(shots)));
     if (w) lines.width = arcPoints(w.arc, w.l, w.r);
     if (arc) lines.arc = arcPoints(arc, -half, half);
-    if (showAppr) lines.appr = ring(target, apprFt * 0.3048);
+    if (showAppr && apprMode === 'ft') lines.appr = ring(target, apprFt * 0.3048);
     overlay(lines);
-    // From the tee on a par 4 or 5, SG shows the tee-shot zones; otherwise the
-    // 0-SG ring around the pin.
-    const teeZones = showSgt && !shots.length && ch.par >= 4;
-    showZones(teeZones);
-    sgSlider.hidden = !showSgt || teeZones;
+    // SG: the drive heat map, from the tee only.
+    showZones(showSgt && !shots.length);
+    // Appr in SG mode: the ring around the pin for the chosen SG value.
     const rings = [];
-    if (showSgt && !teeZones) {
-      const fromLie = last ? last.lie : 'tee', fromYd = yards(from, pin);
-      if (sgCfg.rings.mode === 'ft') {
-        const ft = sgCfg.rings.ft;
-        rings.push({ v: expectedFrom(fromLie, fromYd) - 1 - expected('green', ft, level), ft, byDistance: true });
-      } else rings.push({ v: sgCfg.rings.value, ft: sgFeet(fromLie, fromYd, sgCfg.rings.value) });
-    }
+    if (showAppr && apprMode === 'sg') rings.push({ v: sgCfg.rings.value, ft: sgFeet(last ? last.lie : 'tee', yards(from, pin), sgCfg.rings.value) });
     setRings(rings);
   }
 
