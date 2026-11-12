@@ -607,6 +607,54 @@ export function renderHole(view, n) {
   // line, arc, width or approach circle, no shot tracer or shot dots. Comp arcs
   // and their dots stay, to compare the clubs.
   let cleanView = false;
+  // Auto: finds the best club and aiming point for the next shot. Every club
+  // (with a yardage) is tried along lines up to 35° either side of the pin, each
+  // scored by the average SG of 20 shots in its dispersion; the best is picked,
+  // the crosshair moves to it and Disp shows its spread. Clubs that would fly
+  // well past the pin are skipped.
+  let autoPick = null; // { club, sg, from } while on
+  const autoKey = h('div', { class: 'zonelegend autokey', hidden: true });
+  function findBest() {
+    const shots = shotsNow(), last = shots[shots.length - 1], from = last ? last.pos : tee;
+    const toPinYd = yards(from, pin);
+    const fromExp = last ? expectedFrom(last.lie, toPinYd) : expected('tee', toPinYd, level);
+    const box = boundsOf([from, pin], 350);
+    const feats = course.features.map(f => ({ ...f, box: boundsOf(f.p[0]) })).filter(f => overlaps(f.box, box, 0));
+    const lieHere = q => lieOn(q, feats.filter(f => q[0] >= f.box[0][0] && q[0] <= f.box[1][0] && q[1] >= f.box[0][1] && q[1] <= f.box[1][1]));
+    const main = bearing(from, pin), k = Math.cos((from[0] * Math.PI) / 180);
+    const results = [];
+    for (const c of bag()) {
+      const yd = compYards(c.name);
+      if (!yd || /putt/i.test(c.name) || yd > toPinYd + 15) continue;
+      const w = clubArcW(c.name);
+      let best = null;
+      for (let off = -35; off <= 35; off += 2.5) {
+        const brg = ((main + off) * Math.PI) / 180, dm = yd / YD_PER_M;
+        const aim = [from[0] + (dm * Math.cos(brg)) / M_PER_DEG, from[1] + (dm * Math.sin(brg)) / (M_PER_DEG * k)];
+        const sg = dispersion(from, aim, w, fromExp, lieHere).sg - Math.abs(off) * 0.0005; // a tiny nudge toward the straighter line on ties
+        if (!best || sg > best.sg) best = { club: c.name, yd, aim, off, sg };
+      }
+      if (best) results.push(best);
+    }
+    return { from, results: results.sort((a, b) => b.sg - a.sg) };
+  }
+  const autoBtn = h('button', { class: 'fab autotarget', 'aria-label': 'Auto target', title: 'Pick the best club and aiming point', onclick: () => {
+    if (autoPick) { autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; pickedClub = null; update(); return; }
+    const { from, results } = findBest();
+    if (!results.length) return;
+    const b = results[0];
+    autoPick = { ...b, from: from.join(',') };
+    autoBtn.classList.add('on');
+    pickedClub = b.club;
+    if (showComp) { showComp = false; saveComp(); }
+    if (!showDisp) { setDispOn(true); onlyOne('disp'); }
+    autoKey.replaceChildren(h('small', {}, 'Auto · best clubs (avg SG)'), ...results.slice(0, 4).map((r, i) => h('span', { class: i ? '' : 'best' },
+      `${clubShort(r.club)} ${r.yd}y · ${Math.abs(r.off) < 1 ? 'at pin' : `${Math.round(Math.abs(r.off))}° ${r.off < 0 ? 'L' : 'R'}`} · `,
+      h('b', { class: r.sg >= 0 ? 'pos' : 'neg' }, `${r.sg >= 0 ? '+' : '−'}${Math.abs(r.sg).toFixed(2)}`))));
+    autoKey.hidden = false;
+    m.easeTo({ center: ll(b.aim), duration: 500 });
+    update();
+  } }, h('span', {}, '✦'), h('small', {}, 'Auto'));
   const viewBtn = toggle('cleanview', 'View', '◉', 'Hide the aiming line and shot tracer', () => cleanView, v => {
     cleanView = v;
     for (const id of ['shots', 'shots-shadow']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', v ? 'none' : 'visible');
@@ -835,7 +883,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1214,6 +1262,8 @@ export function renderHole(view, n) {
     clubBtn.hidden = onGreen || viewing();
     if (!clubBtn.hidden) { const c = currentClub(); clubBtn.firstChild.textContent = c ? clubShort(c) : '–'; clubBtn.classList.toggle('on', !!pickedClub); }
     compBtn.hidden = onGreen || viewing();
+    autoBtn.hidden = onGreen || viewing();
+    if (autoBtn.hidden) autoKey.hidden = true;
     compBtn.classList.toggle('on', showComp);
     compModeBtn.hidden = compBtn.hidden || !showComp;
     compModeBtn.firstChild.textContent = compMode === 'arc' ? '◠' : '⁘'; compModeBtn.lastChild.textContent = compMode === 'arc' ? 'Arc' : 'Disp';
@@ -1288,11 +1338,13 @@ export function renderHole(view, n) {
 
     const arc = showArc ? arcThrough(from, target) : null;
     let arcW = arcYd;
+    if (autoPick && autoPick.from !== from.join(',')) { autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; } // a new shot
+    if (autoPick) arcW = clubArcW(autoPick.club); // Disp shows the picked club's spread
     if (arcAuto) {
       // Sized by club only, so it changes when a club is tapped, not as the
       // crosshair moves: the tapped club (or the driver off a par 4/5 tee), with
       // its arc from My Bag, else 15% of its bag yardage; otherwise the slider width.
-      const club = pickedClub || (!shots.length && ch.par >= 4 ? (bag().find(c => /^Dr/.test(c.name)) || {}).name : null);
+      const club = (autoPick && autoPick.club) || pickedClub || (!shots.length && ch.par >= 4 ? (bag().find(c => /^Dr/.test(c.name)) || {}).name : null);
       if (club && ((store.get('clubArcs') || {})[club] > 0 || bagYards(club))) arcW = clubArcW(club);
       arcValue.textContent = `Auto · ${arcW} yd`; arcRange.value = arcW;
     }
