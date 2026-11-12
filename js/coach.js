@@ -101,7 +101,7 @@ export function renderNewRound(view) {
     store.set('settings', { ...(store.get('settings') || {}), tee: tee.value });
     sessionStorage.removeItem('gs:level');
     location.hash = '#/hole/1';
-  } }, 'CONFIRM');
+  } }, 'START');
 
   view.replaceChildren(page('top', backBtn(),
     h('div', { style: 'font-size:22px;font-weight:800;' }, 'New Round'),
