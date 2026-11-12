@@ -537,6 +537,70 @@ export function renderHole(view, n) {
   const currentClub = () => pickedClub || autoClub();
   // A club's yardage from My Bag (total, else carry), or null.
   function bagYards(name) { const c = bag().find(x => x.name === name || (name === 'Dr' && /^Dr/.test(x.name))); const y = c && +(c.total || c.carry); return y > 0 ? y : null; }
+  // Typical yardages, for Comp when My Bag has none for a club.
+  const TYPICAL_YDS = { Dr: 230, '3W': 210, '5W': 195, '4HY': 185, '4I': 175, '5I': 165, '6I': 155, '7I': 145, '8I': 135, '9I': 125, PW: 115, GW: 100, SW: 85, LW: 70 };
+  const compYards = name => bagYards(name) || TYPICAL_YDS[name] || TYPICAL_YDS[name.replace(/\d$/, '')] || null;
+  // A club's arc width: its own from My Bag, else 15% of its yardage (10 to 80 yd).
+  function clubArcW(name) {
+    const own = (store.get('clubArcs') || {})[name], yd = compYards(name);
+    return own > 0 ? own : yd ? Math.max(10, Math.min(80, Math.round(yd * 0.15))) : arcYd;
+  }
+
+  // Comp: 2-3 clubs on the one target line (ball to crosshair), each drawn as
+  // an arc at its bag yardage and its own arc width, with the average strokes
+  // gained over the spots the arc covers (scored from the lie at each spot).
+  const COMP_COLORS = ['#f472b6', '#4dd0ff', '#a3e635'];
+  let compClubs = [];
+  try { compClubs = JSON.parse(localStorage.getItem('gs:compClubs') || '[]').filter(x => typeof x === 'string').slice(0, 3); } catch { /* none */ }
+  let showComp = flag('gs:comp', '0') && compClubs.length >= 2;
+  const compSheet = h('div', { class: 'clubsheet', hidden: true, onclick: e => { if (e.target === compSheet) compSheet.hidden = true; } });
+  const saveComp = () => { localStorage.setItem('gs:comp', showComp ? '1' : '0'); localStorage.setItem('gs:compClubs', JSON.stringify(compClubs)); };
+  function openCompPicker() {
+    let sel = compClubs.filter(c => compYards(c));
+    const draw = () => compSheet.replaceChildren(h('div', { class: 'clubbox' },
+      h('div', { class: 'clubhead' }, h('strong', {}, 'Compare · pick 2–3 clubs'), h('button', { class: 'x', onclick: () => { compSheet.hidden = true; } }, '✕')),
+      h('div', { class: 'clubgrid' }, bag().map(c => {
+        const i = sel.indexOf(c.name), yd = compYards(c.name);
+        return h('button', { class: i >= 0 ? 'on comp' : '', style: i >= 0 ? `background:${COMP_COLORS[i]}` : '', disabled: !yd,
+          onclick: () => { sel = i >= 0 ? sel.filter(x => x !== c.name) : [...sel, c.name].slice(-3); draw(); } },
+          h('b', {}, clubShort(c.name)), h('small', {}, yd ? `${yd} yds` : 'no yds'));
+      })),
+      h('div', { class: 'compactions' },
+        h('button', { class: 'off', onclick: () => { showComp = false; saveComp(); compSheet.hidden = true; update(); } }, 'Off'),
+        h('button', { class: 'record', disabled: sel.length < 2, onclick: () => { compClubs = sel; showComp = true; saveComp(); compSheet.hidden = true; update(); } }, 'Compare'))));
+    draw();
+    compSheet.hidden = false;
+  }
+  const compBtn = h('button', { class: 'fab comp', 'aria-label': 'Compare clubs', title: 'Compare 2-3 clubs on one line', onclick: openCompPicker }, h('span', {}, '⫶'), h('small', {}, 'Comp'));
+  const compLegend = h('div', { class: 'zonelegend compkey', hidden: true });
+  // Features near a point, with their boxes, for fast lie lookups along the arcs.
+  let compFeatKey = null, compFeats = [];
+  function compArcs(from, toward, fromExp) {
+    const key = from.join(',');
+    if (key !== compFeatKey) {
+      compFeatKey = key;
+      const box = boundsOf([from, pin], 300);
+      compFeats = course.features
+        .filter(f => f.p[0].some(q => q[0] > box[0][0] && q[0] < box[1][0] && q[1] > box[0][1] && q[1] < box[1][1]))
+        .map(f => ({ ...f, box: boundsOf(f.p[0]) }));
+    }
+    const lieHere = q => lieOn(q, compFeats.filter(f => q[0] >= f.box[0][0] && q[0] <= f.box[1][0] && q[1] >= f.box[0][1] && q[1] <= f.box[1][1]));
+    const brg = (bearing(from, toward) * Math.PI) / 180, k = Math.cos((from[0] * Math.PI) / 180);
+    return compClubs.map((club, i) => {
+      const yd = compYards(club);
+      if (!yd) return null;
+      const dm = yd / YD_PER_M;
+      const arc = arcThrough(from, [from[0] + (dm * Math.cos(brg)) / M_PER_DEG, from[1] + (dm * Math.sin(brg)) / (M_PER_DEG * k)]);
+      if (!arc) return null;
+      const half = clubArcW(club) / 2 / YD_PER_M, N = 24;
+      let tot = 0;
+      for (let j = 0; j <= N; j++) {
+        const q = arc(-half + (2 * half * j) / N), lie = lieHere(q);
+        tot += fromExp - expectedFrom(lie, yards(q, pin)) - 1;
+      }
+      return { club, yd, color: COMP_COLORS[i], sg: tot / (N + 1), pts: arcPoints(arc, -half, half) };
+    }).filter(Boolean);
+  }
   // Slide the crosshair out to `yd` from the ball, along the line being aimed
   // (towards the pin if the crosshair is on the ball).
   function snapTo(yd) {
@@ -668,7 +732,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, sgtBtn, apprBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, compBtn, sgtBtn, apprBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -940,6 +1004,9 @@ export function renderHole(view, n) {
     path: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 4 }, { stroke: '#fff', 'stroke-width': 2 }],
     arc: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#fff', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
     appr: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 4.5, 'stroke-linecap': 'round' }, { stroke: '#4dd0ff', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
+    comp0: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#f472b6', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
+    comp1: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#4dd0ff', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
+    comp2: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#a3e635', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
     width: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round', 'stroke-dasharray': '0.1 6' }, { stroke: '#ffe14d', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-dasharray': '0.1 6' }],
   };
   const svgPaths = {};
@@ -1009,6 +1076,9 @@ export function renderHole(view, n) {
     widthBtn.hidden = arcBtn.hidden = apprBtn.hidden = onGreen;
     clubBtn.hidden = onGreen || viewing();
     if (!clubBtn.hidden) { const c = currentClub(); clubBtn.firstChild.textContent = c ? clubShort(c) : '–'; clubBtn.classList.toggle('on', !!pickedClub); }
+    compBtn.hidden = onGreen || viewing();
+    compBtn.classList.toggle('on', showComp);
+    if (compBtn.hidden) compLegend.hidden = true;
     sgtBtn.hidden = onGreen || shots.length > 0; // SG is the drive heat map, from the tee only
     arcSlider.hidden = !showArc || onGreen || !arcAdjOpen;
     arcAdjBtn.hidden = !showArc || onGreen;
@@ -1078,8 +1148,7 @@ export function renderHole(view, n) {
       // crosshair moves: the tapped club (or the driver off a par 4/5 tee), with
       // its arc from My Bag, else 15% of its bag yardage; otherwise the slider width.
       const club = pickedClub || (!shots.length && ch.par >= 4 ? (bag().find(c => /^Dr/.test(c.name)) || {}).name : null);
-      const own = club ? (store.get('clubArcs') || {})[club] : null, yd = club ? bagYards(club) : null;
-      if (own > 0) arcW = own; else if (yd) arcW = Math.max(10, Math.min(80, Math.round(yd * 0.15)));
+      if (club && ((store.get('clubArcs') || {})[club] > 0 || bagYards(club))) arcW = clubArcW(club);
       arcValue.textContent = `Auto · ${arcW} yd`; arcRange.value = arcW;
     }
     const half = arcW / 2 / YD_PER_M;
@@ -1089,6 +1158,12 @@ export function renderHole(view, n) {
     if (w) lines.width = arcPoints(w.arc, w.l, w.r);
     if (arc) lines.arc = arcPoints(arc, -half, half);
     if (showAppr && apprMode === 'ft') lines.appr = ring(target, apprFt * 0.3048);
+    const comps = showComp && !viewing() ? compArcs(from, yards(from, target) > 5 ? target : pin, fromExp) : [];
+    comps.forEach((c, i) => { lines['comp' + i] = c.pts; });
+    compLegend.hidden = !comps.length;
+    compLegend.replaceChildren(h('small', {}, 'Compare · avg SG'), ...comps.map(c => h('span', {},
+      h('i', { style: `background:${c.color}` }), `${clubShort(c.club)} ${c.yd}y · `,
+      h('b', { class: c.sg >= 0 ? 'pos' : 'neg' }, `${c.sg >= 0 ? '+' : '−'}${Math.abs(c.sg).toFixed(2)}`))));
     overlay(viewing() ? {} : lines); // no aiming lines while just viewing
     // SG: the drive heat map, from the tee only.
     showZones(showSgt && !shots.length);
