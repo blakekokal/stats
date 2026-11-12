@@ -319,3 +319,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .compdot .up { bottom: 8px; } .compdot .down { top: 8px; color: var(--c); }
 .holeview.comparing .readout { display: none; }
 .compdot i::after { content: ""; position: absolute; inset: -14px; border-radius: 50%; } /* larger touch area */
+.compdot i { transition: transform .12s; }
+.compdot.active i { transform: scale(1.7); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 45%, transparent), 0 0 12px var(--c); }
+.compdot.active b { font-size: 21px; } .compdot.active .up { bottom: 13px; } .compdot.active .down { top: 13px; }
+.compdot.active { z-index: 1; }

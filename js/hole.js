@@ -597,6 +597,7 @@ export function renderHole(view, n) {
   function dragComp(club, e) {
     e.preventDefault(); e.stopPropagation();
     compDrag = { club, x: e.clientX, y: e.clientY, moved: false };
+    update(); // highlight it straight away
     const move = ev => {
       if (!compDrag) return;
       if (Math.hypot(ev.clientX - compDrag.x, ev.clientY - compDrag.y) > 4) compDrag.moved = true;
@@ -608,7 +609,7 @@ export function renderHole(view, n) {
     };
     const up = () => {
       if (compDrag && !compDrag.moved && compAim[club] != null) { delete compAim[club]; update(); }
-      compDrag = null;
+      compDrag = null; update();
       window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
     };
     window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
@@ -1230,6 +1231,11 @@ export function renderHole(view, n) {
       }
       const pt = m.project(ll(c.mid));
       el._club = c.club;
+      // The dot being held: bigger, with a glow, and its arc drawn bolder.
+      const active = compDrag?.club === c.club;
+      el.classList.toggle('active', active);
+      const [shadow, stroke] = svgPaths['comp' + i];
+      shadow.setAttribute('stroke-width', active ? 9 : 5); stroke.setAttribute('stroke-width', active ? 5 : 2.5);
       el.style.cssText = `left:${pt.x.toFixed(1)}px;top:${pt.y.toFixed(1)}px;--c:${c.color}`;
       el.firstChild.textContent = `${Math.round(c.toPin)} yd`; // left to the pin
       el.lastChild.textContent = `${c.yd} yd`; // from the ball
