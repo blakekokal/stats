@@ -4,12 +4,15 @@
 // follow, along with the strokes gained by a tee shot finishing there for the
 // chosen handicap level. The course outlines can be switched off. Two optional arcs, both centred on the tee and passing through the
 // crosshair: the fairway width, and a dispersion arc of adjustable width.
+// The + button records the crosshair as where the ball finished; after that the
+// distances, line and arcs are measured from the last recorded shot.
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, rememberTee } from './app.js';
 import { store } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
+import { newRound } from './model.js';
 
 const maplibregl = window.maplibregl;
 const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR' };
@@ -110,6 +113,24 @@ export function renderHole(view, n) {
   let showOutlines = flag('gs:outlines', '1');
   let level = LEVELS.includes(localStorage.getItem('gs:level')) ? localStorage.getItem('gs:level') : 'Scratch';
 
+  // Shots go in today's round: hole.shots is a list of where each stroke was
+  // played from, starting at the tee.
+  const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
+  const roundKey = () => {
+    const r = store.list('round:').find(x => x.date === today && x.course === course.id);
+    return r ? 'round:' + r.id : null;
+  };
+  const shotsNow = () => { const k = roundKey(); return (k && store.get(k).holes[n]?.shots) || []; };
+  function saveShots(shots) {
+    let k = roundKey();
+    if (!k) { const r = newRound(course, teeName, today); k = 'round:' + r.id; store.set(k, r); }
+    const r = store.get(k);
+    store.set(k, { ...r, updated: Date.now(), holes: { ...r.holes, [n]: { ...(r.holes[n] || { pin: null, done: false }), shots } } });
+    drawShots();
+    update();
+  }
+  const origin = () => { const s = shotsNow(); return s.length ? s[s.length - 1].pos : tee; };
+
   const mapEl = h('div', { id: 'gmap' });
   const toPinEl = h('div', { class: 'readout to' });
   const fromTeeEl = h('div', { class: 'readout from' });
@@ -133,6 +154,16 @@ export function renderHole(view, n) {
   });
   const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); arcSlider.hidden = !v; });
 
+  const undoBtn = h('button', { class: 'fab undo', 'aria-label': 'Undo last shot', title: 'Undo last shot',
+    onclick: () => { const s = shotsNow().slice(0, -1); saveShots(s.length > 1 ? s : []); } }, '↶');
+  const addBtn = h('button', { class: 'fab add', 'aria-label': 'Record shot here', title: 'Record shot at the crosshair',
+    onclick: () => {
+      const s = shotsNow();
+      const shots = s.length ? [...s] : [{ pos: tee, lie: 'tee' }];
+      shots.push({ pos: target, lie: lieOn(target, course.features) });
+      saveShots(shots);
+    } }, '+');
+
   const expValue = h('strong', {});
   const expPill = h('div', { class: 'exppill' },
     h('div', {}, h('small', {}, 'Expected'), expValue),
@@ -150,7 +181,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    outlineBtn, arcBtn, widthBtn, arcSlider, menu,
+    addBtn, undoBtn, outlineBtn, arcBtn, widthBtn, arcSlider, menu,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${n === 1 ? 18 : n - 1}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, h('small', {}, `Hole ${n} · Par ${ch.par}`), h('strong', {}, `${teeSet.yards[n - 1]} Yards`)),
@@ -215,13 +246,18 @@ export function renderHole(view, n) {
     const c = m.unproject([mapEl.clientWidth / 2, mapEl.clientHeight * CROSSHAIR_Y]);
     target = [c.lat, c.lng];
     const lie = lieOn(target, course.features);
-    const w = showWidth ? fairwayWidth(tee, target, fairways) : null;
-    const fromTee = yards(tee, target), toPin = yards(target, pin);
+    const shots = shotsNow(), last = shots[shots.length - 1];
+    const from = last ? last.pos : tee;
+    const w = showWidth ? fairwayWidth(from, target, fairways) : null;
+    const fromTee = yards(from, target), toPin = yards(target, pin);
+    undoBtn.hidden = !shots.length;
 
-    // Strokes gained by a tee shot that finishes on the crosshair: expected strokes
-    // from the tee, minus expected strokes from here, minus the stroke played.
+    // Strokes gained by a shot from the tee (or the last recorded shot) that
+    // finishes on the crosshair: expected strokes from there, minus expected
+    // strokes from here, minus the stroke played.
     const teeExp = expected('tee', yards(tee, pin), level);
-    const sg = teeExp - expectedFrom(lie, toPin) - 1;
+    const fromExp = last ? expectedFrom(last.lie, yards(from, pin)) : teeExp;
+    const sg = fromExp - expectedFrom(lie, toPin) - 1;
     expValue.textContent = teeExp.toFixed(2);
 
     toPinEl.replaceChildren(h('b', {}, `${Math.round(toPin)} yd`));
@@ -229,10 +265,11 @@ export function renderHole(view, n) {
       h('span', { class: 'sg ' + (sg >= 0 ? 'gain' : 'loss') }, `${sg >= 0 ? '+' : '−'}${Math.abs(sg).toFixed(2)} (${LIE_TAG[lie]})`),
       h('span', { class: 'wide', hidden: !showWidth }, w ? `${Math.round(w.yards)} yd wide` : 'No fairway here'));
 
-    const arc = showArc ? arcThrough(tee, target) : null;
+    const arc = showArc ? arcThrough(from, target) : null;
     const half = arcYd / 2 / YD_PER_M;
     const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
-    set('path', line([tee, target, pin]));
+    set('path', line([from, target, pin]));
+    set('shots', line(shots.map(s => s.pos)));
     set('width', line(w ? arcPoints(w.arc, w.l, w.r) : []));
     set('arc', line(arc ? arcPoints(arc, -half, half) : []));
   }
@@ -245,6 +282,14 @@ export function renderHole(view, n) {
   };
   dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, (p, done) => { tee = p; if (done) rememberTee(teeName, ch, p); update(); });
   dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }), pin, p => { pin = p; update(); });
+
+  // Numbered dots where each recorded shot finished.
+  let shotMarks = [];
+  function drawShots() {
+    shotMarks.forEach(mk => mk.remove());
+    shotMarks = shotsNow().slice(1).map((s, i) => new maplibregl.Marker({ element: h('div', { class: 'shotmark' }, String(i + 1)) }).setLngLat(ll(s.pos)).addTo(m));
+  }
+  drawShots();
 
   m.on('move', update);
   // The browser's toolbars showing or hiding changes the screen height: keep the
@@ -265,6 +310,7 @@ export function renderHole(view, n) {
       m.addLayer({ id: id + '-shadow', type: 'line', source: id, paint: { 'line-color': '#000', 'line-width': shadow, 'line-opacity': 0.35 } });
       m.addLayer({ id, type: 'line', source: id, layout, paint });
     };
+    addLine('shots', 5, { 'line-color': '#ffb020', 'line-width': 2.5 }, { 'line-cap': 'round' });
     addLine('path', 4, { 'line-color': '#fff', 'line-width': 2 });
     addLine('arc', 5, { 'line-color': '#fff', 'line-width': 2.5 }, { 'line-cap': 'round' });
     addLine('width', 5, { 'line-color': '#ffe14d', 'line-width': 3, 'line-dasharray': [0.1, 2] }, { 'line-cap': 'round' });
