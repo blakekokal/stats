@@ -317,7 +317,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .compdot i { pointer-events: auto; cursor: grab; touch-action: none; position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; border-radius: 50%; background: var(--c); border: 2px solid #fff; box-sizing: border-box; box-shadow: 0 1px 4px #000a; }
 .compdot b { position: absolute; left: 0; transform: translateX(-50%); font-size: 17px; font-weight: 800; }
 .compdot .up { bottom: 8px; } .compdot .down { top: 8px; color: var(--c); }
-.holeview.comparing .readout { display: none; }
+.holeview.comparing .readout, .holeview.comparing .crosshair { display: none; }
 .compdot i::after { content: ""; position: absolute; inset: -14px; border-radius: 50%; } /* larger touch area */
 .compdot i { transition: transform .12s; }
 .compdot.active i { transform: scale(1.7); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 45%, transparent), 0 0 12px var(--c); }
