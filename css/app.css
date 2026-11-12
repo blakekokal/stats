@@ -252,3 +252,4 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .scbox span.eagle { border-radius: 50%; background: #f0c830; color: #111; } .scbox span.birdie { border-radius: 50%; border: 2px solid #00b87a; }
 .scbox span.bogey { border: 2px solid #d4706e; } .scbox span.dbl { background: #d4706e; }
 .holeview.haschips .sliders { bottom: calc(146px + env(safe-area-inset-bottom)); }
+.shotrow.redo { margin-top: 4px; justify-content: center; text-align: center; background: #d4706e; color: #fff; font-weight: 700; }
