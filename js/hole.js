@@ -568,13 +568,36 @@ export function renderHole(view, n) {
       })),
       h('div', { class: 'compactions' },
         h('button', { class: 'off', onclick: () => { showComp = false; saveComp(); compSheet.hidden = true; update(); } }, 'Off'),
-        h('button', { class: 'record', disabled: sel.length < 2, onclick: () => { compClubs = sel; showComp = true; saveComp(); compSheet.hidden = true; update(); } }, 'Compare'))));
+        h('button', { class: 'record', disabled: sel.length < 2, onclick: () => { compClubs = sel; showComp = true; compAim = {}; saveComp(); compSheet.hidden = true; update(); } }, 'Compare'))));
     draw();
     compSheet.hidden = false;
   }
   const compBtn = h('button', { class: 'fab comp', 'aria-label': 'Compare clubs', title: 'Compare 2-3 clubs on one line', onclick: openCompPicker }, h('span', {}, '⫶'), h('small', {}, 'Comp'));
   const compLegend = h('div', { class: 'zonelegend compkey', hidden: true });
   const compDots = h('div', { class: 'compdots' });
+  // Dragging a dot swings that club onto its own line (its distance stays the
+  // club's yardage); the others keep following the crosshair. Tapping a moved
+  // dot without dragging puts it back on the main line. Reset for each new shot.
+  let compAim = {}, compAimFrom = null, compDrag = null;
+  function dragComp(club, e) {
+    e.preventDefault(); e.stopPropagation();
+    compDrag = { club, x: e.clientX, y: e.clientY, moved: false };
+    const move = ev => {
+      if (!compDrag) return;
+      if (Math.hypot(ev.clientX - compDrag.x, ev.clientY - compDrag.y) > 4) compDrag.moved = true;
+      if (!compDrag.moved) return;
+      const r = mapEl.getBoundingClientRect(), q = m.unproject([ev.clientX - r.left, ev.clientY - r.top]);
+      const shots = shotsNow(), from = shots.length ? shots[shots.length - 1].pos : tee;
+      compAim[club] = bearing(from, [q.lat, q.lng]);
+      update();
+    };
+    const up = () => {
+      if (compDrag && !compDrag.moved && compAim[club] != null) { delete compAim[club]; update(); }
+      compDrag = null;
+      window.removeEventListener('pointermove', move); window.removeEventListener('pointerup', up); window.removeEventListener('pointercancel', up);
+    };
+    window.addEventListener('pointermove', move); window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  }
   // Features near a point, with their boxes, for fast lie lookups along the arcs.
   let compFeatKey = null, compFeats = [];
   function compArcs(from, toward, fromExp) {
@@ -587,8 +610,11 @@ export function renderHole(view, n) {
         .map(f => ({ ...f, box: boundsOf(f.p[0]) }));
     }
     const lieHere = q => lieOn(q, compFeats.filter(f => q[0] >= f.box[0][0] && q[0] <= f.box[1][0] && q[1] >= f.box[0][1] && q[1] <= f.box[1][1]));
-    const brg = (bearing(from, toward) * Math.PI) / 180, k = Math.cos((from[0] * Math.PI) / 180);
+    const fk = from.join(',');
+    if (fk !== compAimFrom) { compAimFrom = fk; compAim = {}; } // a new shot: every club back on the main line
+    const main = bearing(from, toward), k = Math.cos((from[0] * Math.PI) / 180);
     return compClubs.map((club, i) => {
+      const own = compAim[club] != null, brg = ((own ? compAim[club] : main) * Math.PI) / 180;
       const yd = compYards(club);
       if (!yd) return null;
       const dm = yd / YD_PER_M;
@@ -601,7 +627,7 @@ export function renderHole(view, n) {
         const q = arc(-half + (2 * half * j) / N), lie = lieHere(q);
         tot += sgFinish(fromExp, lie, yards(q, pin));
       }
-      return { club, yd, mid, toPin: yards(mid, pin), color: COMP_COLORS[i], sg: tot / (N + 1), pts: arcPoints(arc, -half, half) };
+      return { club, yd, mid, own, toPin: yards(mid, pin), color: COMP_COLORS[i], sg: tot / (N + 1), pts: arcPoints(arc, -half, half) };
     }).filter(Boolean);
   }
   // Slide the crosshair out to `yd` from the ball, along the line being aimed
@@ -1020,6 +1046,7 @@ export function renderHole(view, n) {
     comp0: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#f472b6', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
     comp1: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#4dd0ff', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
     comp2: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#a3e635', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
+    ...Object.fromEntries(['#f472b6', '#4dd0ff', '#a3e635'].map((c, i) => ['compL' + i, [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 3.5 }, { stroke: c, 'stroke-width': 1.75 }]])),
     width: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round', 'stroke-dasharray': '0.1 6' }, { stroke: '#ffe14d', 'stroke-width': 3, 'stroke-linecap': 'round', 'stroke-dasharray': '0.1 6' }],
   };
   const svgPaths = {};
@@ -1172,18 +1199,25 @@ export function renderHole(view, n) {
     if (arc) lines.arc = arcPoints(arc, -half, half);
     if (showAppr && apprMode === 'ft') lines.appr = ring(target, apprFt * 0.3048);
     const comps = showComp && !viewing() ? compArcs(from, yards(from, target) > 5 ? target : pin, fromExp) : [];
-    comps.forEach((c, i) => { lines['comp' + i] = c.pts; });
+    comps.forEach((c, i) => { lines['comp' + i] = c.pts; if (c.own) lines['compL' + i] = [from, c.mid]; });
     compLegend.hidden = !comps.length;
     holeEl()?.classList.toggle('comparing', comps.length > 0); // the dots replace the crosshair readout
     // A dot at the middle of each arc, read like the crosshair: yards left to the
     // pin just above it, distance from the ball just below (SG is in the key).
-    compDots.replaceChildren(...comps.map(c => {
+    // The dot elements are kept (not rebuilt) so a drag in progress keeps its touch.
+    while (compDots.childNodes.length > comps.length) compDots.lastChild.remove();
+    comps.forEach((c, i) => {
+      let el = compDots.childNodes[i];
+      if (!el) {
+        el = h('div', { class: 'compdot' }, h('b', { class: 'up' }), h('i', { onpointerdown: e => dragComp(el._club, e) }), h('b', { class: 'down' }));
+        compDots.appendChild(el);
+      }
       const pt = m.project(ll(c.mid));
-      return h('div', { class: 'compdot', style: `left:${pt.x.toFixed(1)}px;top:${pt.y.toFixed(1)}px;--c:${c.color}` },
-        h('b', { class: 'up' }, `${Math.round(c.toPin)} yd`), // left to the pin
-        h('i', {}),
-        h('b', { class: 'down' }, `${c.yd} yd`)); // from the ball
-    }));
+      el._club = c.club;
+      el.style.cssText = `left:${pt.x.toFixed(1)}px;top:${pt.y.toFixed(1)}px;--c:${c.color}`;
+      el.firstChild.textContent = `${Math.round(c.toPin)} yd`; // left to the pin
+      el.lastChild.textContent = `${c.yd} yd`; // from the ball
+    });
     compLegend.replaceChildren(h('small', {}, 'Compare · avg SG'), ...comps.map(c => h('span', {},
       h('i', { style: `background:${c.color}` }), `${clubShort(c.club)} ${c.yd}y · `,
       h('b', { class: c.sg >= 0 ? 'pos' : 'neg' }, `${c.sg >= 0 ? '+' : '−'}${Math.abs(c.sg).toFixed(2)}`))));
