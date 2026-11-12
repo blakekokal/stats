@@ -359,6 +359,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.33.0', ['Arc and Appr are never on together — turning one on turns the other off', 'Appr has an Adj button beside it for the circle size, like Arc']],
   ['0.32.5', ['Comp: no white aiming line — each club has its own coloured line from the ball']],
   ['0.32.4', ['Comp hides the crosshair dot and turns the Arc off, so only the Comp arcs show']],
   ['0.32.3', ['Comp: the dot you\'re holding grows and glows, and its arc goes bold']],

@@ -300,6 +300,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .fab.arcadj { left: auto; right: 68px; bottom: calc(150px + env(safe-area-inset-bottom)); width: 40px; height: 40px; display: grid; place-content: center; line-height: 1; font-size: 14px; }
 .fab.arcadj small { font-size: 9px; font-weight: 600; }
 .fab.arcadj.on { background: #fff; color: #111; }
+.fab.appradj { bottom: calc(208px + env(safe-area-inset-bottom)); } .fab.appradj.on { background: #4dd0ff; }
 .arcslider { min-width: 0; }
 .arcslider .presets { min-width: 0; gap: 4px; }
 .arcslider .preset { min-width: 0; flex: 1 1 0; font-size: 12px; }
@@ -323,3 +324,4 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .compdot.active i { transform: scale(1.7); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 45%, transparent), 0 0 12px var(--c); }
 .compdot.active b { font-size: 21px; } .compdot.active .up { bottom: 13px; } .compdot.active .down { top: 13px; }
 .compdot.active { z-index: 1; }
+.sliders.high { bottom: calc(256px + env(safe-area-inset-bottom)); }
