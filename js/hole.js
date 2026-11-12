@@ -580,8 +580,9 @@ export function renderHole(view, n) {
   }
   const compBtn = h('button', { class: 'fab comp', 'aria-label': 'Compare clubs', title: 'Compare 2-3 clubs on one line', onclick: openCompPicker }, h('span', {}, '⫶'), h('small', {}, 'Comp'));
   const compLegend = h('div', { class: 'zonelegend compkey', hidden: true });
-  // View: a clean look at the hole — no ball-to-crosshair-to-pin line, no shot
-  // tracer or shot dots. Comp arcs and their dots stay, to compare the clubs.
+  // View: a clean look at the hole — no crosshair or its yardages, no aiming
+  // line, arc, width or approach circle, no shot tracer or shot dots. Comp arcs
+  // and their dots stay, to compare the clubs.
   let cleanView = false;
   const viewBtn = toggle('cleanview', 'View', '◉', 'Hide the aiming line and shot tracer', () => cleanView, v => {
     cleanView = v;
@@ -1104,7 +1105,8 @@ export function renderHole(view, n) {
     });
   }
   function overlay(lines) {
-    if (cleanView) { const { path, ...rest } = lines; lines = rest; labelLayer.replaceChildren(); } else trailLabels();
+    // View: only the Comp arcs and their lines are left.
+    if (cleanView) { lines = Object.fromEntries(Object.entries(lines).filter(([k]) => k.startsWith('comp'))); labelLayer.replaceChildren(); } else trailLabels();
     for (const [name, els] of Object.entries(svgPaths)) {
       const pts = lines[name] || [];
       const d = pts.length > 1 ? pts.map((q, i) => { const p = m.project(ll(q)); return `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`; }).join('') : '';
@@ -1241,7 +1243,7 @@ export function renderHole(view, n) {
     // Appr in SG mode: the ring around the pin for the chosen SG value.
     const rings = [];
     if (showAppr && apprMode === 'sg') rings.push({ v: sgCfg.rings.value, ft: sgFeet(last ? last.lie : 'tee', yards(from, pin), sgCfg.rings.value) });
-    setRings(rings);
+    setRings(cleanView ? [] : rings);
   }
 
   const dragMarker = (el, pos, onMove) => {
