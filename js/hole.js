@@ -15,6 +15,7 @@ import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.j
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound } from './model.js';
+import { currentRound, setCurrentRound, holeCountOf, roundKeyOf } from './rounds.js';
 
 const maplibregl = window.maplibregl;
 const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR' };
@@ -101,7 +102,10 @@ export function renderHole(view, n) {
   sessionStorage.setItem('hole', n);
   const ch = course.holes[n - 1];
   const settings = store.get('settings') || {};
-  const teeName = settings.tee || 'Blue';
+  const round0 = currentRound();
+  const teeName = round0?.tee || settings.tee || 'Blue';
+  const holeCount = holeCountOf(round0);
+  const prevHole = n === 1 ? holeCount : n - 1, nextHole = n >= holeCount ? 1 : n + 1;
   const teeSet = course.tees.find(t => t.name === teeName) || course.tees[0];
   const fairways = course.features.filter(f => f.t === 'fairway').map(f => ({ p: f.p, box: boundsOf(f.p[0], 200) }));
 
@@ -113,23 +117,24 @@ export function renderHole(view, n) {
   let showArc = flag('gs:arc', '0');
   let arcYd = Math.min(80, Math.max(10, +localStorage.getItem('gs:arcYd') || 40));
   let showOutlines = flag('gs:outlines', '1');
-  // Strokes-gained baseline: the handicap on the user's profile, unless it was
-  // changed on this screen during this visit.
+  // Strokes-gained baseline: the round's "compare to" choice (which defaults to
+  // the profile's handicap), unless it was changed on this screen this visit.
   const pick = l => (LEVELS.includes(l) ? l : null);
-  let level = pick(sessionStorage.getItem('gs:level')) || pick(sync.level) || 'Scratch';
+  let level = pick(sessionStorage.getItem('gs:level')) || pick(round0?.level) || pick(sync.level) || 'Scratch';
 
-  // Shots go in today's round: hole.shots is a list of where each stroke was
-  // played from, starting at the tee.
+  // Shots go in the current round (set up on the New Round page): hole.shots is
+  // a list of where each stroke was played from, starting at the tee. Recording
+  // a shot with no round under way starts one for today.
   const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
-  const roundKey = () => {
-    const r = store.list('round:').find(x => x.date === today && x.course === course.id);
-    return r ? 'round:' + r.id : null;
-  };
+  const roundKey = () => { const r = currentRound(); return r ? roundKeyOf(r.id) : null; };
   const holeNow = () => { const k = roundKey(); return (k && store.get(k).holes[n]) || { pin: null, done: false, shots: [] }; };
   const shotsNow = () => holeNow().shots || [];
   function saveHole(patch) {
     let k = roundKey();
-    if (!k) { const r = newRound(course, teeName, today); k = 'round:' + r.id; store.set(k, r); }
+    if (!k) {
+      const r = { ...newRound(course, teeName, today), courseName: course.name, player: sync.user ? sync.name : '', level, type: 'Casual', holeCount: 18 };
+      k = roundKeyOf(r.id); store.set(k, r); setCurrentRound(r.id);
+    }
     const r = store.get(k);
     store.set(k, { ...r, updated: Date.now(), holes: { ...r.holes, [n]: { pin: null, done: false, shots: [], ...r.holes[n], ...patch } } });
     syncPin();
@@ -214,10 +219,11 @@ export function renderHole(view, n) {
       LEVELS.map(l => h('option', { value: l, selected: l === level }, levelName(l)))));
 
   const menu = h('div', { class: 'sheet', hidden: true },
-    h('label', {}, 'Tees ', h('select', { onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHole(view, n); } },
+    h('label', {}, 'Tees ', h('select', { onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); const r = currentRound(); if (r) store.set(roundKeyOf(r.id), { ...r, tee: e.target.value, updated: Date.now() }); renderHole(view, n); } },
       course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
     h('a', { class: 'btn', href: '#/' }, 'Home'),
     h('a', { class: 'btn', href: '#/course' }, 'Edit course outlines'),
+    h('a', { class: 'btn', href: '#/history' }, 'Round history'),
     h('a', { class: 'btn', href: '#/settings' }, 'Settings'));
 
   view.replaceChildren(h('div', { class: 'holeview' }, mapEl,
@@ -226,9 +232,9 @@ export function renderHole(view, n) {
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, arcBtn, widthBtn, arcSlider, banner, menu,
     h('div', { class: 'holepill' },
-      h('a', { href: `#/hole/${n === 1 ? 18 : n - 1}`, 'aria-label': 'Previous hole' }, '‹'),
+      h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
-      h('a', { href: `#/hole/${n === 18 ? 1 : n + 1}`, 'aria-label': 'Next hole' }, '›'))));
+      h('a', { href: `#/hole/${nextHole}`, 'aria-label': 'Next hole' }, '›'))));
 
   const m = map = new maplibregl.Map({
     container: mapEl,
@@ -314,7 +320,11 @@ export function renderHole(view, n) {
       const strokes = shots.length + shots.filter(x => x.lie === 'water').length, diff = strokes - ch.par;
       const word = { '-3': 'Albatross', '-2': 'Eagle', '-1': 'Birdie', 0: 'Par', 1: 'Bogey', 2: 'Double bogey' }[diff] || `${diff > 0 ? '+' : ''}${diff}`;
       bannerText.replaceChildren(h('strong', {}, `Holed in ${strokes}`), h('span', {}, `${word} on a par ${ch.par}`));
-      banner.replaceChildren(bannerText, h('a', { class: 'btn primary', href: `#/hole/${n === 18 ? 1 : n + 1}` }, 'Next hole ›'));
+      // After the round's last hole, finish to Round History.
+      const r = currentRound(), allDone = r && Array.from({ length: holeCount }, (_, i) => r.holes?.[i + 1]?.done).every(Boolean);
+      banner.replaceChildren(bannerText, allDone
+        ? h('a', { class: 'btn primary', href: '#/history', onclick: () => setCurrentRound(null) }, 'Finish round ›')
+        : h('a', { class: 'btn primary', href: `#/hole/${nextHole}` }, 'Next hole ›'));
     }
 
     // Strokes gained by a shot from the tee (or the last recorded shot) that

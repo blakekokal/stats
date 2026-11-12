@@ -4,7 +4,8 @@ import { renderHole, closeHole, lastHole } from './hole.js';
 import { renderCourseEditor } from './editor.js';
 import { renderSettings } from './settings.js';
 import { renderStats } from './stats.js';
-import { renderAccount, levelName } from './account.js';
+import { renderAccount } from './account.js';
+import { renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin } from './coach.js';
 import { VERSION } from './version.js';
 
 const L = window.L;
@@ -95,43 +96,26 @@ export function rememberTee(teeName, ch, pos) {
   store.set('settings', s);
 }
 
-// ---------- start page ----------
-
-function renderHome() {
-  const teeName = (store.get('settings') || {}).tee || 'Blue';
-  const teeSet = course.tees.find(t => t.name === teeName) || course.tees[0];
-  const teeSel = h('select', { 'aria-label': 'Tees', onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHome(); } },
-    course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)));
-  const resume = lastHole();
-  view.replaceChildren(h('div', { class: 'page home' },
-    h('p', { class: 'muted version' }, `Shot Tracker v${VERSION}`),
-    h('h1', {}, course.name),
-    h('p', { class: 'muted' }, `${course.location} · Par ${course.holes.reduce((a, c) => a + c.par, 0)}`),
-    sync.user ? h('p', { class: 'muted' }, `Logged in as ${sync.name} · strokes gained vs ${levelName(sync.level || 'Scratch')}`)
-      : h('div', { class: 'card row between' }, h('span', {}, 'Log in to save your rounds and see your strokes gained.'), h('a', { class: 'btn primary', href: '#/account' }, 'Log in')),
-    h('div', { class: 'card row' }, h('label', {}, 'Tees ', teeSel),
-      h('a', { class: 'btn primary', href: `#/hole/${resume}` }, resume > 1 ? `Continue at hole ${resume}` : 'Start at hole 1')),
-    h('h2', {}, 'Holes'),
-    h('div', { class: 'holegrid' }, course.holes.map(c =>
-      h('a', { class: 'card', href: `#/hole/${c.n}` }, h('strong', {}, c.n), h('small', { class: 'muted' }, `Par ${c.par} · ${teeSet.yards[c.n - 1]}`)))),
-  ));
-}
-
 // ---------- router ----------
 
 async function route() {
   await loadCourse();
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  const tab = ['hole', 'course', 'settings', 'stats', 'account'].includes(parts[0]) ? parts[0] : 'home';
+  const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device'].includes(parts[0]) ? parts[0] : 'home';
+  // Pages laid out like the coaching app hide this app's top bar.
+  document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account'].includes(tab));
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   document.body.classList.toggle('playing', tab === 'hole');
   if (tab !== 'hole') closeHole();
   if (tab === 'hole') renderHole(view, Math.min(18, Math.max(1, parseInt(parts[1], 10) || lastHole())));
   else if (tab === 'course') renderCourseEditor(view);
-  else if (tab === 'settings') renderSettings(view);
+  else if (tab === 'settings') renderSettingsPage(view);
+  else if (tab === 'device') renderSettings(view);
   else if (tab === 'stats') renderStats(view);
-  else if (tab === 'account') renderAccount(view);
-  else renderHome();
+  else if (tab === 'account') { if (sync.recovering) renderAccount(view); else if (sync.user) location.hash = '#/settings'; else renderLogin(view); }
+  else if (tab === 'new') renderNewRound(view);
+  else if (tab === 'history') renderHistory(view);
+  else renderHome(view);
 }
 
 window.addEventListener('hashchange', route);

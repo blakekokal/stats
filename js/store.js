@@ -100,6 +100,18 @@ export const sync = {
     sync.user = data.user;
     setStatus(sync.status, sync.error);
   },
+  async setName(name) {
+    const c = getClient(); if (!c || !sync.user) throw new Error('Log in first.');
+    const { data, error } = await c.auth.updateUser({ data: { display_name: name } });
+    if (error) throw error;
+    sync.user = data.user;
+    setStatus(sync.status, sync.error);
+  },
+  async changePassword(password) {
+    const c = getClient(); if (!c || !sync.user) throw new Error('Log in first.');
+    const { error } = await c.auth.updateUser({ password });
+    if (error) throw error;
+  },
   async signOut() {
     const c = getClient(); if (c) await c.auth.signOut();
     localStorage.removeItem(OWNER_KEY); clearLocal();
