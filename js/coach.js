@@ -377,6 +377,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.37.4', ['Cowboys: ponds redrawn from the imagery and kept out of bunkers; the mown grass around greens counts as fairway']],
   ['0.37.3', ['Cowboys: bunkers, fairways and greens redrawn from current imagery (after the renovation)']],
   ['0.37.2', ['Bear Creek West: fairways and greens redrawn to match the satellite imagery']],
   ['0.37.1', ['Bear Creek West: groves of trees between holes are now Recovery instead of OB']],
