@@ -22,7 +22,9 @@ server, or host the repo with GitHub Pages.
   **Width** measures the fairway
   along an arc through the crosshair (every point on it is the same distance
   from the tee). **Arc** draws a dispersion arc there, 10 to 80 yards wide in
-  total, set with the slider. The tee and pin dots can be dragged; tee
+  total, set with the slider. **Comp** (left side) compares 2–3 clubs on one
+  target line: each is drawn as an arc at its yardage, sized to its arc width,
+  with the average strokes gained over the spots that arc covers. The tee and pin dots can be dragged; tee
   positions are remembered per tee set.
 - **Course**: fix or redraw any outline. Anything inside no outline is rough.
 - **Stats**: strokes gained per 18 holes by category (off the tee, approach,
