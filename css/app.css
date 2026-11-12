@@ -131,6 +131,8 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .fab[hidden] { display: none; }
 .holed { position: absolute; right: 9px; bottom: calc(88px + env(safe-area-inset-bottom)); height: 44px; padding: 0 16px; border-radius: 999px; border: 0; background: #22c55e; color: #fff; font-size: 16px; font-weight: 700; box-shadow: 0 1px 6px #0008; z-index: 3; }
 .holed[hidden] { display: none; }
+.setpin { position: absolute; right: 9px; bottom: calc(88px + env(safe-area-inset-bottom)); height: 50px; padding: 0 20px; border-radius: 999px; border: 0; background: #ffb020; color: #111; font-size: 17px; font-weight: 700; box-shadow: 0 1px 6px #0008; z-index: 3; }
+.setpin[hidden] { display: none; }
 .greenbar { position: absolute; left: 10px; right: 10px; top: calc(66px + env(safe-area-inset-top)); z-index: 4; display: flex; align-items: center; gap: 10px; background: #111d; backdrop-filter: blur(8px); border-radius: 14px; padding: 10px 12px; color: #fff; }
 .greenbar[hidden] { display: none; }
 .greenbar > div { flex: 1; } .greenbar strong { display: block; font-size: 17px; } .greenbar span { display: block; font-size: 13px; opacity: .85; }

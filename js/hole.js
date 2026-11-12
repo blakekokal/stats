@@ -194,12 +194,13 @@ export function renderHole(view, n) {
       if (wasPlaying && lie === 'green') zoomToGreen();
     } }, '+');
   const holedBtn = h('button', { class: 'holed', onclick: () => saveHole({ done: true }) }, 'Holed');
-  const setPinBtn = h('button', { class: 'btn primary', onclick: () => {
+  const setPinBtn = h('button', { class: 'setpin', hidden: true, onclick: () => {
     pin = target;
     const shots = shotsNow().map(x => (x.lie === 'green' ? { ...x, ft: Math.max(1, Math.round(yards(x.pos, pin) * FT_PER_YD)) } : x));
     saveHole({ pin, shots });
     zoomToGreen();
   } }, 'Set pin');
+  const pillSmall = h('small', {}), pillStrong = h('strong', {});
   const bannerText = h('div', {});
   const banner = h('div', { class: 'greenbar', hidden: true }, bannerText);
 
@@ -220,10 +221,10 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, undoBtn, outlineBtn, arcBtn, widthBtn, arcSlider, banner, menu,
+    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, arcBtn, widthBtn, arcSlider, banner, menu,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${n === 1 ? 18 : n - 1}`, 'aria-label': 'Previous hole' }, '‹'),
-      h('div', {}, h('small', {}, `Hole ${n} · Par ${ch.par}`), h('strong', {}, `${teeSet.yards[n - 1]} Yards`)),
+      h('div', {}, pillSmall, pillStrong),
       h('a', { href: `#/hole/${n === 18 ? 1 : n + 1}`, 'aria-label': 'Next hole' }, '›'))));
 
   const m = map = new maplibregl.Map({
@@ -295,16 +296,18 @@ export function renderHole(view, n) {
     holedBtn.hidden = st !== 'putt';
     widthBtn.hidden = arcBtn.hidden = onGreen;
     arcSlider.hidden = !showArc || onGreen;
-    banner.hidden = st === 'play';
-    if (st === 'pin') {
-      bannerText.replaceChildren(h('strong', {}, 'On the green'), h('span', {}, 'Move the crosshair onto the hole, then set the pin.'));
-      banner.replaceChildren(bannerText, setPinBtn);
-    } else if (st === 'putt') {
-      const putts = shots.filter(x => x.lie === 'green').length - 1;
-      bannerText.replaceChildren(h('strong', {}, `${Math.round(yards(from, pin) * FT_PER_YD)} ft to the hole`),
-        h('span', {}, putts ? `${putts} putt${putts > 1 ? 's' : ''} so far · + to record where the putt stopped` : '+ to record where the putt stopped'));
-      banner.replaceChildren(bannerText);
-    } else if (st === 'done') {
+    setPinBtn.hidden = st !== 'pin';
+    banner.hidden = st !== 'done';
+    // The hole pill: the hole's yardage, or on the green the putt to come.
+    const putts = shots.filter(x => x.lie === 'green').length - 1;
+    if (st === 'putt') {
+      pillSmall.textContent = `Hole ${n} · Putt ${putts + 1}`;
+      pillStrong.textContent = `${Math.round(yards(from, pin) * FT_PER_YD)} ft to hole`;
+    } else {
+      pillSmall.textContent = `Hole ${n} · Par ${ch.par}`;
+      pillStrong.textContent = `${teeSet.yards[n - 1]} Yards`;
+    }
+    if (st === 'done') {
       const strokes = shots.length, diff = strokes - ch.par;
       const word = { '-3': 'Albatross', '-2': 'Eagle', '-1': 'Birdie', 0: 'Par', 1: 'Bogey', 2: 'Double bogey' }[diff] || `${diff > 0 ? '+' : ''}${diff}`;
       bannerText.replaceChildren(h('strong', {}, `Holed in ${strokes}`), h('span', {}, `${word} on a par ${ch.par}`));
@@ -322,8 +325,13 @@ export function renderHole(view, n) {
     if (onGreen) {
       // Feet on the green. Before the pin is placed, the crosshair is the hole.
       const ballToHole = yards(from, st === 'pin' ? target : pin) * FT_PER_YD;
-      toPinEl.replaceChildren(st === 'pin' ? h('b', {}, `${Math.round(ballToHole)} ft`) : h('b', {}, `${Math.round(toPin * FT_PER_YD)} ft`));
-      fromTeeEl.replaceChildren(st === 'pin' ? h('span', { class: 'note' }, 'from your ball') : h('b', {}, `${Math.round(fromTee * FT_PER_YD)} ft`));
+      if (st === 'pin') {
+        toPinEl.replaceChildren(h('span', { class: 'note' }, 'Move the crosshair onto the hole'));
+        fromTeeEl.replaceChildren(h('b', {}, `${Math.round(ballToHole)} ft`), h('span', { class: 'note' }, 'from your ball'));
+      } else if (st === 'putt') {
+        toPinEl.replaceChildren(h('b', {}, `${Math.round(toPin * FT_PER_YD)} ft`));
+        fromTeeEl.replaceChildren(h('b', {}, `${Math.round(fromTee * FT_PER_YD)} ft`));
+      } else { toPinEl.replaceChildren(); fromTeeEl.replaceChildren(); }
       expValue.textContent = teeExp.toFixed(2);
       const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
       set('path', line(st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin]));
