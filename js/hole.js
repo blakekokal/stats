@@ -683,7 +683,8 @@ export function renderHole(view, n) {
     if (!show) return;
     totalChip.replaceChildren(h('small', {}, 'Total'), h('strong', {}, strokes ? `${strokes}` : '–', h('em', {}, strokes ? ` (${toPar(tp)})` : '')));
     const hh = r.holes?.[n];
-    holeChip.replaceChildren(h('small', {}, `Hole ${n}`), h('strong', {}, hh?.done ? String(strokesOf(hh)) : '–'),
+    holeChip.replaceChildren(h('small', {}, `Hole ${n}`),
+      h('strong', {}, hh?.done ? String(strokesOf(hh)) : '–', h('em', {}, hh?.done ? ` (${toPar(strokesOf(hh) - ch.par)})` : '')),
       h('em', {}, thru ? `${toPar(thruToPar)} thru ${thru}` : 'not started'));
   }
   function openScorecard() {
