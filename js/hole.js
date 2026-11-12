@@ -205,7 +205,8 @@ export function renderHole(view, n) {
   let showSgt = flag('gs:sgTarget', '0');
   const sgtBtn = toggle('sgt', 'SG', '⊙', 'Strokes-gained target around the hole', () => showSgt, v => { showSgt = v; localStorage.setItem('gs:sgTarget', v ? '1' : '0'); });
   const sgtLabel = h('div', { class: 'sgtlabel' });
-  let zoneMarks = []; // labels for the tee-shot SG zones, created once the map exists
+  const zoneLegend = h('div', { class: 'zonelegend', hidden: true }, h('small', {}, 'Drive SG'),
+    ...['+0–.17', '+.17–.33', '+.33–.5'].map((t, i) => h('span', {}, h('i', { style: `background:rgb(${[[187, 247, 208], [74, 222, 128], [21, 128, 61]][i].join(',')})` }), t)));
   let sgtMark = null;
   // Feet from the hole at which a ball on the green gains 0 strokes for an
   // approach from `from` (expected putts there = expected strokes from `from` - 1).
@@ -217,33 +218,65 @@ export function renderHole(view, n) {
     for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (expected('green', mid, level) < goal) lo = mid; else hi = mid; }
     return (lo + hi) / 2;
   }
-  // Tee-shot SG zones: bands at the remaining distances from the pin where a
-  // drive in the fairway gains +0, +0.25, +0.5 and +0.75 strokes. Each band is
-  // an arc around the pin, centred on the hole's route at that distance and
-  // about 60 yd across, like the dispersion arc.
-  const ZONES = [[0, 0.25, '#bbf7d0'], [0.25, 0.5, '#4ade80'], [0.5, 0.75, '#15803d']];
-  function remainingFor(sgGoal) { // yards from the pin at which a fairway drive gains sgGoal
-    const teeExp = expected('tee', yards(tee, pin), level), goal = teeExp - 1 - sgGoal;
-    let lo = 0, hi = yards(tee, pin);
-    if (expected('fairway', hi, level) <= goal) return hi;
-    for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (expected('fairway', mid, level) > goal) hi = mid; else lo = mid; }
-    return (lo + hi) / 2;
+  // Tee-shot SG zones: every spot near the hole's route where a drive would
+  // gain 0 to 0.5 strokes for the selected handicap, scored with the actual lie
+  // there (fairway or rough, so the zones follow the fairway's edges), split
+  // into three bands. Bunkers and water are left out. Drawn as an image laid
+  // over the map and only recomputed when the tee, pin or handicap changes.
+  const ZONE_COLORS = [[187, 247, 208], [74, 222, 128], [21, 128, 61]];
+  const ZONE_STEP = 0.5 / 3;
+  let zoneKey = null, zoneImg = null;
+  function sgZoneImage() {
+    const key = [tee, pin, level].join('|');
+    if (key === zoneKey) return zoneImg;
+    zoneKey = key; zoneImg = null;
+    const teeExp = expected('tee', yards(tee, pin), level);
+    // Remaining distances worth looking at: from where a fairway drive gains
+    // 0.5 (closest) out to where it gains 0 (farthest); rough needs to be closer.
+    const remFor = goal => { let lo = 0, hi = yards(tee, pin); for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (teeExp - expected('fairway', mid, level) - 1 > goal) lo = mid; else hi = mid; } return lo; };
+    const near = Math.max(0, remFor(0.5) - 10), far = remFor(0) + 10;
+    const back = [...route()].reverse();
+    const span = [];
+    for (let d = near; d <= far; d += 5) span.push(pointAlong(back, d));
+    if (span.length < 2) return null;
+    const box = boundsOf(span, 50);
+    const routeLine = route();
+    const feats = course.features
+      .filter(f => f.p[0].some(q => q[0] > box[0][0] - 0.001 && q[0] < box[1][0] + 0.001 && q[1] > box[0][1] - 0.001 && q[1] < box[1][1] + 0.001))
+      .map(f => ({ ...f, box: boundsOf(f.p[0]) }));
+    const lieHere = q => lieOn(q, feats.filter(f => q[0] >= f.box[0][0] && q[0] <= f.box[1][0] && q[1] >= f.box[0][1] && q[1] <= f.box[1][1]));
+    const CELL = 2; // metres
+    const [[s0, w0], [n0, e0]] = box;
+    const rows = Math.ceil(((n0 - s0) * M_PER_DEG) / CELL), cols = Math.ceil(((e0 - w0) * M_PER_DEG * Math.cos((s0 * Math.PI) / 180)) / CELL);
+    const canvas = document.createElement('canvas'); canvas.width = cols; canvas.height = rows;
+    const ctx = canvas.getContext('2d'), img = ctx.createImageData(cols, rows);
+    for (let r = 0; r < rows; r++) {
+      const lat = n0 - ((r + 0.5) / rows) * (n0 - s0);
+      for (let c = 0; c < cols; c++) {
+        const q = [lat, w0 + ((c + 0.5) / cols) * (e0 - w0)];
+        if (distToLine(q, routeLine) * YD_PER_M > 45) continue; // stay on this hole
+        const lie = lieHere(q);
+        if (lie === 'bunker' || lie === 'water' || lie === 'recovery') continue;
+        const sg = teeExp - expectedFrom(lie, yards(q, pin)) - 1;
+        if (sg < 0 || sg >= 0.5) continue;
+        const z = ZONE_COLORS[Math.min(2, Math.floor(sg / ZONE_STEP))], i = (r * cols + c) * 4;
+        img.data[i] = z[0]; img.data[i + 1] = z[1]; img.data[i + 2] = z[2]; img.data[i + 3] = 140;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    zoneImg = { url: canvas.toDataURL(), coordinates: [[w0, n0], [e0, n0], [e0, s0], [w0, s0]] };
+    return zoneImg;
   }
-  function sgZones() {
-    const back = [...route()].reverse(); // from the pin back to the tee
-    const k = Math.cos((pin[0] * Math.PI) / 180);
-    const at = (r, th) => [pin[0] + (r * Math.cos(th)) / M_PER_DEG, pin[1] + (r * Math.sin(th)) / (M_PER_DEG * k)];
-    const dirTo = p => Math.atan2((p[1] - pin[1]) * k, p[0] - pin[0]);
-    return ZONES.map(([a, b, color]) => {
-      const rOut = remainingFor(a) / YD_PER_M, rIn = remainingFor(b) / YD_PER_M; // metres; more SG = closer to the pin
-      if (rOut - rIn < 0.5) return null;
-      const mid = (rOut + rIn) / 2, th = dirTo(pointAlong(back, mid * YD_PER_M)), half = 30 / YD_PER_M / mid;
-      const pts = [];
-      for (let i = 0; i <= 24; i++) pts.push(at(rOut, th - half + (2 * half * i) / 24));
-      for (let i = 24; i >= 0; i--) pts.push(at(rIn, th - half + (2 * half * i) / 24));
-      pts.push(pts[0]);
-      return { type: 'Feature', properties: { color, label: `+${a}–${b}`, at: at(mid, th + half) }, geometry: { type: 'Polygon', coordinates: [pts.map(ll)] } };
-    }).filter(Boolean);
+  function showZones(on) {
+    zoneLegend.hidden = !on;
+    if (!m.getLayer('outlines')) return;
+    const z = on ? sgZoneImage() : null;
+    if (z && !m.getSource('sgzones')) {
+      m.addSource('sgzones', { type: 'image', url: z.url, coordinates: z.coordinates });
+      m.addLayer({ id: 'sgzones', type: 'raster', source: 'sgzones', paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' } }, 'outlines');
+    } else if (z && m.getSource('sgzones')._shownKey !== zoneKey) m.getSource('sgzones').updateImage(z);
+    if (m.getSource('sgzones')) m.getSource('sgzones')._shownKey = zoneKey;
+    if (m.getLayer('sgzones')) m.setLayoutProperty('sgzones', 'visibility', z ? 'visible' : 'none');
   }
   function ring(c, rM) {
     const k = Math.cos((c[0] * Math.PI) / 180), pts = [];
@@ -367,7 +400,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave,
+    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, zoneLegend,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -536,7 +569,7 @@ export function renderHole(view, n) {
       const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
       set('path', line(st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin]));
       set('shots', line(trace(shots)));
-      set('width', line([])); set('arc', line([])); set('appr', line([])); set('sgt', line([])); set('sgzones', { type: 'FeatureCollection', features: [] });
+      set('width', line([])); set('arc', line([])); set('appr', line([])); set('sgt', line([])); showZones(false);
       if (sgtMark) sgtMark.getElement().style.display = 'none';
       return;
     }
@@ -561,14 +594,7 @@ export function renderHole(view, n) {
     // From the tee on a par 4 or 5, SG shows the tee-shot zones; otherwise the
     // 0-SG ring around the pin.
     const teeZones = showSgt && !shots.length && ch.par >= 4;
-    const zones = teeZones ? sgZones() : [];
-    set('sgzones', { type: 'FeatureCollection', features: zones });
-    // A small label at the right-hand end of each band.
-    zoneMarks.forEach((mk, i) => {
-      const z = zones[i];
-      mk.getElement().style.display = z ? '' : 'none';
-      if (z) { mk.getElement().textContent = z.properties.label; mk.setLngLat(ll(z.properties.at)); }
-    });
+    showZones(teeZones);
     const sgtFt = showSgt && !teeZones ? zeroSgFeet(last ? last.lie : 'tee', yards(from, pin)) : null;
     set('sgt', line(sgtFt && sgtFt !== Infinity ? ring(pin, sgtFt * 0.3048) : []));
     if (sgtFt) {
@@ -654,10 +680,6 @@ export function renderHole(view, n) {
       m.addLayer({ id: id + '-shadow', type: 'line', source: id, paint: { 'line-color': '#000', 'line-width': shadow, 'line-opacity': 0.35 } });
       m.addLayer({ id, type: 'line', source: id, layout, paint });
     };
-    m.addSource('sgzones', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-    m.addLayer({ id: 'sgzones', type: 'fill', source: 'sgzones', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': 0.45 } });
-    zoneMarks = ZONES.map(() => new maplibregl.Marker({ element: h('div', { class: 'zonelabel', style: 'display:none' }), anchor: 'left' }).setLngLat(ll(pin)).addTo(m));
-    m.addLayer({ id: 'sgzones-edge', type: 'line', source: 'sgzones', paint: { 'line-color': ['get', 'color'], 'line-width': 1.5 } });
     addLine('shots', 5, { 'line-color': '#ffb020', 'line-width': 2.5 }, { 'line-cap': 'round' });
     addLine('path', 4, { 'line-color': '#fff', 'line-width': 2 });
     addLine('arc', 5, { 'line-color': '#fff', 'line-width': 2.5 }, { 'line-cap': 'round' });
