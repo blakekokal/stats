@@ -2,7 +2,7 @@
 // and radar charts). This app's GPS rounds are converted into the coaching
 // app's shot-by-shot round format first, then the ported code renders them.
 
-import { h, course } from './app.js';
+import { h, courseById } from './app.js';
 import { sync, levelFromPref } from './store.js';
 import { expected } from './sg.js';
 import { yards } from './geo.js';
@@ -53,6 +53,7 @@ function endLie(from, to, pin, isTeeShot) {
 }
 
 export function toCoachRound(r) {
+  const course = courseById(r.course);
   const allHoles = [];
   const st = { fwHit: 0, fwOpp: 0, fwLeft: 0, fwRight: 0, girHit: 0, scrMade: 0, scrOpp: 0, bunMade: 0, bunOpp: 0, onePutts: 0, threePutts: 0 };
   let score = 0, par = 0;
@@ -120,7 +121,7 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
   view.replaceChildren(h('div', { class: 'cx top' }, back,
     h('div', { style: 'width:100%;max-width:360px;' },
       h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:6px;' }, only ? '📊 Round Stats' : '📊 Stats Dashboard'),
-      only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || course.name} · ${only.date}${only.player ? ' · ' + only.player : ''}`) : null,
+      only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || courseById(only.course).name} · ${only.date}${only.player ? ' · ' + only.player : ''}`) : null,
       h('div', { style: 'display:flex;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;' }, only ? [fHcp] : [fType, fTime, fHcp]),
       content)));
 

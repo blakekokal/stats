@@ -8,6 +8,7 @@ import { renderAccount } from './account.js';
 import { renderStatsDashboard } from './dashboard.js';
 import { renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin, renderWhatsNew, renderEditRound, renderBag } from './coach.js';
 import { VERSION } from './version.js';
+import { currentRound } from './rounds.js';
 
 const L = window.L;
 const view = document.getElementById('view');
@@ -47,18 +48,35 @@ export function satellite(map) {
 
 // ---------- course ----------
 
-let baseCourse = null;
+// The courses to pick from. `course` is the one in use: the current round's on
+// the hole screen, otherwise the last one picked (New Round, Scouting, History).
+export const COURSES = [
+  { id: 'bridlewood', name: 'Bridlewood Golf Club', file: 'data/bridlewood.json' },
+  { id: 'bearcreek-west', name: 'Bear Creek Golf Club – West', file: 'data/bearcreek-west.json' },
+];
+const DEFAULT_COURSE = COURSES[0].id;
+const base = {}; // id -> the course file as shipped
 export let course = null;
 
-export async function loadCourse() {
-  if (!baseCourse) baseCourse = await (await fetch('data/bridlewood.json')).json();
-  const edited = store.get('course:' + baseCourse.id);
-  // Out of bounds (outside the course boundary) always comes from the course file, edited or not.
-  const feats = edited ? [...edited.features.filter(f => f.t !== 'ob'), ...baseCourse.features.filter(f => f.t === 'ob')] : baseCourse.features;
-  course = { ...baseCourse, features: feats };
+// A course with any outline edits made on this device. Out of bounds (outside
+// the course boundary) always comes from the course file, edited or not.
+export function courseById(id) {
+  const b = base[id] || base[DEFAULT_COURSE];
+  const edited = store.get('course:' + b.id);
+  if (!edited) return b;
+  return { ...b, features: [...edited.features.filter(f => f.t !== 'ob'), ...b.features.filter(f => f.t === 'ob')] };
+}
+const pickedCourse = () => { try { return localStorage.getItem('gs:course'); } catch { return null; } };
+export function setActiveCourse(id) {
+  try { localStorage.setItem('gs:course', id); } catch { /* ignore */ }
+  course = courseById(id);
+}
+export async function loadCourse(onHole = false) {
+  await Promise.all(COURSES.filter(c => !base[c.id]).map(async c => { base[c.id] = await (await fetch(c.file)).json(); }));
+  course = courseById((onHole && currentRound()?.course) || pickedCourse() || DEFAULT_COURSE);
   return course;
 }
-export const originalFeatures = () => baseCourse.features;
+export const originalFeatures = () => base[course.id].features;
 
 function centroid(ring) {
   let la = 0, lo = 0;
@@ -117,8 +135,8 @@ export function rememberTee(teeName, ch, pos) {
 // ---------- router ----------
 
 async function route() {
-  await loadCourse();
   const parts = location.hash.replace(/^#\/?/, '').split('/');
+  await loadCourse(parts[0] === 'hole');
   const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag'].includes(parts[0]) ? parts[0] : 'home';
   // Pages laid out like the coaching app hide this app's top bar.
   document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout'].includes(tab));

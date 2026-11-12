@@ -4,7 +4,7 @@ golf course's boundary (OpenStreetMap leisure=golf_course).
 
 Usage: add_ob.py boundary.osm.json roads_houses.osm.json config.json course.json
 Queries used (Overpass, out geom), bbox around the course:
-  relation["leisure"="golf_course"](bbox);out geom;
+  nwr["leisure"="golf_course"](bbox);out geom;   (a relation or a plain way)
   (way["highway"](bbox);way["building"](bbox););out geom;
 
 OpenStreetMap's course boundary is rough in places (it can run out to the
@@ -21,7 +21,7 @@ from shapely.geometry import LineString, Point, Polygon, box
 from shapely.ops import unary_union, linemerge, polygonize
 
 PAD = 800  # metres of OB box around the course
-ROADS = {"motorway": 12, "trunk": 12, "primary": 11, "secondary": 9, "tertiary": 8,
+ROADS = {"motorway": 12, "motorway_link": 8, "trunk": 12, "primary": 11, "secondary": 9, "tertiary": 8,
          "primary_link": 7, "secondary_link": 7, "tertiary_link": 7,
          "residential": 6, "unclassified": 6, "living_street": 5}  # half-width, metres
 HOUSE_PAD = 12   # metres around a house: its yard, up to the fence
@@ -39,8 +39,9 @@ def main(src, extra, cfg_path, dst):
 
     rel = next(e for e in json.load(open(src))["elements"] if e.get("tags", {}).get("leisure") == "golf_course")
     rings = {}
+    members = rel["members"] if rel["type"] == "relation" else [{"role": "outer", "geometry": rel["geometry"]}]  # a plain way works too
     for role in ("outer", "inner"):
-        lines = [LineString([xy(p) for p in m["geometry"]]) for m in rel["members"] if m.get("role") == role]
+        lines = [LineString([xy(p) for p in m["geometry"]]) for m in members if m.get("role") == role]
         rings[role] = list(polygonize(linemerge(lines))) if lines else []
     inside = unary_union(rings["outer"]).difference(unary_union(rings["inner"])) if rings["inner"] else unary_union(rings["outer"])
     # Cut out houses (with yards) and roads, then keep the pieces with golf on them.
