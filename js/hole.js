@@ -1217,7 +1217,10 @@ export function renderHole(view, n) {
     if (arc) lines.arc = arcPoints(arc, -half, half);
     if (showAppr && apprMode === 'ft') lines.appr = ring(target, apprFt * 0.3048);
     const comps = showComp && !viewing() ? compArcs(from, yards(from, target) > 5 ? target : pin, fromExp) : [];
-    comps.forEach((c, i) => { lines['comp' + i] = c.pts; if (c.own) lines['compL' + i] = [from, c.mid]; });
+    // Comparing: each club has its own coloured line from the ball, and the white
+    // aiming line goes.
+    comps.forEach((c, i) => { lines['comp' + i] = c.pts; lines['compL' + i] = [from, c.mid]; });
+    if (comps.length) delete lines.path;
     compLegend.hidden = !comps.length;
     holeEl()?.classList.toggle('comparing', comps.length > 0); // the dots replace the crosshair readout
     // A dot at the middle of each arc, read like the crosshair: yards left to the
