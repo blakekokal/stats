@@ -152,6 +152,12 @@ sync.onStatus(() => {
   if (user !== lastUser) { lastUser = user; if (!document.body.classList.contains('playing')) route(); }
 });
 
+// Load the stylesheets for this exact version, so a phone never pairs new code
+// with an old cached stylesheet (new buttons would land in the wrong place).
+document.querySelectorAll('link[rel="stylesheet"][href^="css/"]').forEach(l => {
+  const href = l.getAttribute('href').split('?')[0];
+  if (l.getAttribute('href') !== `${href}?v=${VERSION}`) l.setAttribute('href', `${href}?v=${VERSION}`);
+});
 route();
 initSync();
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js');
