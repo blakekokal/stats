@@ -847,6 +847,7 @@ export function renderHole(view, n) {
     teeBtn.hidden = onGreen;
     pinBtn.hidden = st === 'pin' || st === 'done';
     sgViewBtn.hidden = !viewing();
+    holeEl()?.classList.toggle('viewing', viewing()); // hides the crosshair and its readouts
     { const k = `${level}|${currentRound()?.updated}`; if (k !== sgViewKey) { sgViewKey = k; drawSgView(); } }
     if (!viewing()) sgView.hidden = true;
     drawShotList();
@@ -883,7 +884,7 @@ export function renderHole(view, n) {
       } else { toPinEl.replaceChildren(); fromTeeEl.replaceChildren(); }
       expValue.textContent = teeExp.toFixed(2);
       const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
-      overlay({ path: st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin] });
+      overlay(viewing() ? {} : { path: st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin] });
       set('shots', line(trace(shots)));
       setRings([]); showZones(false);
       return;
@@ -906,7 +907,7 @@ export function renderHole(view, n) {
     if (w) lines.width = arcPoints(w.arc, w.l, w.r);
     if (arc) lines.arc = arcPoints(arc, -half, half);
     if (showAppr && apprMode === 'ft') lines.appr = ring(target, apprFt * 0.3048);
-    overlay(lines);
+    overlay(viewing() ? {} : lines); // no aiming lines while just viewing
     // SG: the drive heat map, from the tee only.
     showZones(showSgt && !shots.length);
     // Appr in SG mode: the ring around the pin for the chosen SG value.
