@@ -15,7 +15,7 @@ import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.j
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound } from './model.js';
-import { currentRound, setCurrentRound, holeCountOf, roundKeyOf } from './rounds.js';
+import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound } from './rounds.js';
 
 const maplibregl = window.maplibregl;
 const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR' };
@@ -313,20 +313,32 @@ export function renderHole(view, n) {
   const menu = h('div', { class: 'sheet', hidden: true },
     h('label', {}, 'Tees ', h('select', { onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); const r = currentRound(); if (r) store.set(roundKeyOf(r.id), { ...r, tee: e.target.value, updated: Date.now() }); renderHole(view, n); } },
       course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
-    h('a', { class: 'btn', href: '#/' }, 'Home'),
+    h('button', { class: 'btn', onclick: () => { menu.hidden = true; if (currentRound()) leave.hidden = false; else location.hash = '#/'; } }, 'Home'),
     h('a', { class: 'btn', href: '#/course' }, 'Edit course outlines'),
-    h('a', { class: 'btn', href: '#/history' }, 'Round history'),
     h('a', { class: 'btn', href: '#/settings' }, 'Settings'),
     h('small', { class: 'muted credit' }, 'Imagery © Esri, Maxar · Outlines © OpenStreetMap contributors'));
 
   const compass = h('button', { class: 'compass', 'aria-label': 'Compass: tap to straighten the view', title: 'Tap to straighten the view' });
   compass.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,16 12,16" fill="#ff4d4d"/><polygon points="16,29 20,16 12,16" fill="#fff"/><text x="16" y="11.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">N</text></svg>';
 
+  // Leaving a round from the menu's Home button.
+  const leaveTo = (hash, fn) => () => { const r = currentRound(); if (r) fn(r); setCurrentRound(null); location.hash = hash; };
+  const leave = h('div', { class: 'leave', hidden: true, onclick: e => { if (e.target === leave) leave.hidden = true; } },
+    h('div', { class: 'leavebox' },
+      h('strong', {}, 'Leave this round?'),
+      h('button', { class: 'pause', onclick: leaveTo('#/', () => {}) }, 'Pause and save round'),
+      h('button', { class: 'submit', onclick: leaveTo('#/history', r => submitRound(r.id)) }, 'End and submit round'),
+      h('button', { class: 'delete', onclick: () => {
+        if (!confirm('Delete this round? This cannot be undone.')) return;
+        leaveTo('#/', r => store.remove(roundKeyOf(r.id)))();
+      } }, 'Home and delete round'),
+      h('button', { class: 'cancel', onclick: () => { leave.hidden = true; } }, 'Cancel')));
+
   view.replaceChildren(h('div', { class: 'holeview' }, mapEl,
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu,
+    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -469,7 +481,7 @@ export function renderHole(view, n) {
       // After the round's last hole, finish to Round History.
       const r = currentRound(), allDone = r && Array.from({ length: holeCount }, (_, i) => r.holes?.[i + 1]?.done).every(Boolean);
       banner.replaceChildren(bannerText, allDone
-        ? h('a', { class: 'btn primary', href: '#/history', onclick: () => setCurrentRound(null) }, 'Finish round ›')
+        ? h('a', { class: 'btn primary', href: '#/history', onclick: () => { submitRound(r.id); setCurrentRound(null); } }, 'Finish round ›')
         : h('a', { class: 'btn primary', href: `#/hole/${nextHole}` }, 'Next hole ›'));
     }
 

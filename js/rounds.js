@@ -28,7 +28,14 @@ export function summarize(r, course, level) {
   const a = analyzeRound(r, course, level);
   const count = holeCountOf(r);
   const firstOpen = Array.from({ length: count }, (_, i) => i + 1).find(n => !r.holes?.[n]?.done) || null;
-  return { a, count, done: a.holes, incomplete: a.holes < count, firstOpen, score: a.score, toPar: a.score - a.par };
+  // A round is finished once every hole is holed or it was ended and submitted early.
+  return { a, count, done: a.holes, incomplete: !r.submitted && a.holes < count, firstOpen, score: a.score, toPar: a.score - a.par };
+}
+
+// End a round where it is: it counts as finished with the holes played so far.
+export function submitRound(id) {
+  const r = store.get(roundKeyOf(id));
+  if (r) store.set(roundKeyOf(id), { ...r, submitted: true, updated: Date.now() });
 }
 
 export const historyRounds = () => store.list('round:').filter(r => r && r.date >= HISTORY_FROM);

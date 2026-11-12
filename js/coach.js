@@ -166,7 +166,7 @@ export function renderHistory(view) {
       if (confirm(`Delete the round from ${fmtDate(r.date)}? This removes it from every device.`)) { store.remove(roundKeyOf(r.id)); draw(); }
     } }, 'Del');
     const resume = () => { setCurrentRound(r.id); store.set('settings', { ...(store.get('settings') || {}), tee: r.tee }); sessionStorage.removeItem('gs:level'); location.hash = `#/hole/${s.firstOpen || 1}`; };
-    const holesInfo = s.incomplete ? `${s.done}/${s.count} holes` : `${s.count} holes`;
+    const holesInfo = s.done < s.count ? `${s.done}/${s.count} holes` : `${s.count} holes`;
     return h('div', { class: 'card', style: s.incomplete ? 'border-left:3px solid #d4706e;cursor:pointer;' : '', onclick: s.incomplete ? resume : null },
       h('div', { style: 'display:flex;justify-content:space-between;align-items:center;' },
         h('div', {},
