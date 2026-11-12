@@ -1,5 +1,5 @@
 import { h, course, toast, TILE_URL } from './app.js';
-import { store, sync, SETUP_SQL } from './store.js';
+import { store } from './store.js';
 import { boundsOf } from './geo.js';
 
 function tileList() {
@@ -17,25 +17,7 @@ function tileList() {
 }
 
 export function renderSettings(view) {
-  const cfg = sync.config();
-  const urlIn = h('input', { type: 'url', placeholder: 'https://xxxx.supabase.co', value: cfg.url, 'aria-label': 'Supabase project URL' });
-  const keyIn = h('input', { type: 'text', placeholder: 'anon public key', value: cfg.key, 'aria-label': 'Supabase anon key' });
-  const emailIn = h('input', { type: 'email', placeholder: 'email', autocomplete: 'email', 'aria-label': 'Email' });
-  const passIn = h('input', { type: 'password', placeholder: 'password', autocomplete: 'current-password', 'aria-label': 'Password' });
-  const statusEl = h('p', { class: 'muted' });
   const progress = h('span', { class: 'muted' });
-
-  const showStatus = () => {
-    statusEl.textContent = {
-      off: 'Not set up. Rounds are saved on this device only.',
-      'signed-out': 'Connected to the project. Sign in to start syncing.',
-      syncing: 'Syncing…',
-      ok: `Synced as ${sync.email}.`,
-      error: 'Sync problem: ' + sync.error,
-    }[sync.status];
-  };
-  sync.onStatus(showStatus);
-  const attempt = fn => async () => { try { await fn(); showStatus(); } catch (e) { toast(e.message || String(e)); } };
 
   async function saveImagery(btn) {
     btn.disabled = true;
@@ -61,23 +43,6 @@ export function renderSettings(view) {
   view.replaceChildren(h('div', { class: 'page' },
     h('h1', {}, 'Settings'),
 
-    h('div', { class: 'card' }, h('h3', {}, 'Sync across devices'), statusEl,
-      h('details', { open: sync.status === 'off' },
-        h('summary', {}, 'Project connection'),
-        h('ol', { class: 'steps' },
-          h('li', {}, 'Create a free project at supabase.com.'),
-          h('li', {}, 'In its SQL editor, run this once:', h('pre', {}, SETUP_SQL),
-            h('button', { onclick: () => navigator.clipboard.writeText(SETUP_SQL).then(() => toast('SQL copied.')) }, 'Copy SQL')),
-          h('li', {}, 'Paste the Project URL and the anon public key (Project settings → API) here:')),
-        h('div', { class: 'stack' }, urlIn, keyIn,
-          h('button', { onclick: attempt(() => sync.setConfig(urlIn.value, keyIn.value)) }, 'Save connection'))),
-      h('div', { class: 'stack' }, emailIn, passIn,
-        h('div', { class: 'row' },
-          h('button', { class: 'primary', onclick: attempt(() => sync.signIn(emailIn.value, passIn.value)) }, 'Sign in'),
-          h('button', { onclick: attempt(() => sync.signUp(emailIn.value, passIn.value)) }, 'Create account'),
-          h('button', { onclick: attempt(() => sync.signOut()) }, 'Sign out'),
-          h('button', { onclick: () => sync.now() }, 'Sync now')))),
-
     h('div', { class: 'card' }, h('h3', {}, 'Offline imagery'),
       h('p', { class: 'muted' }, 'Save the satellite images for all 18 holes on this device so the map works with no signal on the course. Needs the installed (https) version of the app.'),
       h('button', { onclick: e => saveImagery(e.target) }, 'Save imagery for offline'), progress),
@@ -97,7 +62,6 @@ export function renderSettings(view) {
           h('button', { class: 'danger', onclick: () => { if (confirm(`Delete the round from ${r.date}? This removes it from every synced device.`)) { store.remove('round:' + r.id); renderSettings(view); } } }, 'Delete'))),
       store.list('round:').length ? null : h('p', { class: 'muted' }, 'No rounds yet.')),
 
-    h('p', { class: 'muted small' }, course.attribution + '. Imagery © Esri and its data providers. Strokes-gained baseline: PGA Tour averages (Broadie).'),
+    h('p', { class: 'muted small' }, course.attribution + '. Imagery © Esri and its data providers. Strokes-gained baselines by handicap level.'),
   ));
-  showStatus();
 }

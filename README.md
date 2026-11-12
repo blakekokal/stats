@@ -25,22 +25,27 @@ server, or host the repo with GitHub Pages.
   total, set with the slider. The tee and pin dots can be dragged; tee
   positions are remembered per tee set.
 - **Course**: fix or redraw any outline. Anything inside no outline is rough.
-- **Settings**: sync, offline imagery, backup.
+- **Stats**: strokes gained per 18 holes by category (off the tee, approach,
+  around the green, putting), plus fairways, greens in regulation and putts,
+  compared to any handicap level (defaults to the one on your profile).
+- **Account**: log in with the same account as the coaching app. Your
+  strokes-gained handicap is saved on that shared profile.
+- **Settings**: offline imagery, backup, rounds.
 
-Shot logging and strokes-gained stats are switched off for now; their code
-(`js/model.js`, `js/sg.js`, `js/stats.js`) is kept for when they return.
+## Recording a hole
 
-## Sync across devices
+Tap **+** to record where each shot finished. When a shot reaches the green,
+move the crosshair onto the hole and tap **Set pin**; putts are then recorded in
+feet. Tap **Holed** to finish. A shot that finishes in water costs a penalty
+stroke.
 
-Rounds are stored on the device and, optionally, synced through a free
-[Supabase](https://supabase.com) project:
+## Accounts and sync
 
-1. Create a project and run the SQL shown under Settings → Sync in its SQL editor.
-2. Put the project URL and anon key in `config.js` (or enter them per device in Settings).
-3. Create an account in Settings on one device and sign in on the others.
-
-Each document (a round, the outline edits, settings) syncs whole; the most
-recently changed copy wins.
+Accounts are the ones in the coaching app's Supabase project (`config.js`).
+This app keeps its rounds in its own table there, `shot_tracker_docs`, which is
+created once by running the SQL in `SETUP_SQL` (`js/store.js`) in the Supabase
+SQL editor. Rounds are saved on the device and synced whenever you are logged
+in; each document syncs whole and the most recently changed copy wins.
 
 ## Expected strokes
 

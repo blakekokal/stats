@@ -3,9 +3,15 @@
 // round = { id, date, course, tee, updated, holes: { [n]: hole } }
 // hole  = { pin: [lat,lng] | null, done: bool, shots: [shot] }
 // shot  = one stroke, described by where it was played from:
-//   { pos: [lat,lng] | null, lie, ft: number | null, pen: 0.., water: [lat,lng] | undefined }
+//   { pos: [lat,lng] | null, lie, ft: number | null, pen: 0.. }
 //   - ft: distance to the hole in feet, used instead of the map distance on the green
-//   - pen: penalty strokes this stroke incurred (water, out of bounds)
+//   - pen: extra penalty strokes this stroke incurred (out of bounds)
+//   - lie 'water': the previous shot found water. That costs a penalty stroke,
+//     charged to the shot that went in; the next stroke is played as from the rough.
+//
+// Strokes gained for a shot = expected strokes before it - expected strokes
+// after it - 1 (- any penalty). Expected strokes come from the tables in
+// expected-data.js for the chosen handicap level.
 
 import { yards } from './geo.js';
 import { expected } from './sg.js';
@@ -35,24 +41,28 @@ export function category(shot, index, par, dist) {
 
 // Per-shot analysis for one hole. Strokes gained are only known once the next
 // position is known, so the last shot of an unfinished hole has sg = null.
-export function analyzeHole(hole, courseHole) {
+const isWater = s => s.lie === 'water';
+const expLie = lie => (lie === 'tee' ? 'tee' : lie === 'water' ? 'rough' : lie);
+
+export function analyzeHole(hole, courseHole, level = 'Pro') {
   const pin = pinOf(hole, courseHole);
   const shots = (hole && hole.shots) || [];
   const rows = shots.map((s, i) => {
     const dist = distOf(s, pin);
-    return { i, shot: s, dist, exp: expected(s.lie, dist), cat: category(s, i, courseHole.par, dist), sg: null, len: null };
+    return { i, shot: s, dist, exp: expected(expLie(s.lie), dist, level), cat: category(s, i, courseHole.par, dist), sg: null, len: null };
   });
   rows.forEach((r, i) => {
     const next = rows[i + 1];
-    const after = next ? next.exp : (hole.done ? 0 : null);
+    const water = next && isWater(next.shot) ? 1 : 0;
+    const after = next ? next.exp + water : (hole.done ? 0 : null);
     if (after != null) r.sg = r.exp - after - 1 - (r.shot.pen || 0);
     if (next && r.shot.pos && next.shot.pos && !r.shot.pen) r.len = yards(r.shot.pos, next.shot.pos);
   });
-  const pens = shots.reduce((a, s) => a + (s.pen || 0), 0);
+  const pens = shots.reduce((a, s) => a + (s.pen || 0) + (isWater(s) ? 1 : 0), 0);
   return { rows, score: hole && hole.done ? shots.length + pens : null, strokes: shots.length + pens, pens };
 }
 
-export function analyzeRound(round, course) {
+export function analyzeRound(round, course, level = 'Pro') {
   const out = {
     sg: { ott: 0, app: 0, arg: 0, putt: 0, total: 0 }, shots: [],
     score: 0, par: 0, holes: 0, putts: 0, pens: 0,
@@ -61,7 +71,7 @@ export function analyzeRound(round, course) {
   for (const ch of course.holes) {
     const hole = round.holes[ch.n];
     if (!hole || !hole.done) continue;
-    const a = analyzeHole(hole, ch);
+    const a = analyzeHole(hole, ch, level);
     out.holes++; out.score += a.score; out.par += ch.par; out.pens += a.pens;
     for (const r of a.rows) {
       out.sg[r.cat] += r.sg; out.sg.total += r.sg;
@@ -72,13 +82,14 @@ export function analyzeRound(round, course) {
       out.firN++;
       const second = hole.shots[1];
       if (second && !hole.shots[0].pen && (second.lie === 'fairway' || second.lie === 'green')) out.fir++;
+      else if (!second && hole.done) out.fir++; // holed from the tee
     }
     // Green in regulation: on the green (or holed) with at least two strokes left for par.
     out.girN++;
     let used = 0, hit = false;
     for (const s of hole.shots) {
       if (s.lie === 'green') { hit = used <= ch.par - 2; break; }
-      used += 1 + (s.pen || 0);
+      used += 1 + (s.pen || 0) + (isWater(s) ? 1 : 0);
     }
     if (!hole.shots.some(s => s.lie === 'green')) hit = used <= ch.par - 2;
     if (hit) out.gir++;

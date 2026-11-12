@@ -3,6 +3,8 @@ import { store, sync, init as initSync } from './store.js';
 import { renderHole, closeHole, lastHole } from './hole.js';
 import { renderCourseEditor } from './editor.js';
 import { renderSettings } from './settings.js';
+import { renderStats } from './stats.js';
+import { renderAccount, levelName } from './account.js';
 import { VERSION } from './version.js';
 
 const L = window.L;
@@ -105,6 +107,8 @@ function renderHome() {
     h('p', { class: 'muted version' }, `Shot Tracker v${VERSION}`),
     h('h1', {}, course.name),
     h('p', { class: 'muted' }, `${course.location} · Par ${course.holes.reduce((a, c) => a + c.par, 0)}`),
+    sync.user ? h('p', { class: 'muted' }, `Logged in as ${sync.name} · strokes gained vs ${levelName(sync.level || 'Scratch')}`)
+      : h('div', { class: 'card row between' }, h('span', {}, 'Log in to save your rounds and see your strokes gained.'), h('a', { class: 'btn primary', href: '#/account' }, 'Log in')),
     h('div', { class: 'card row' }, h('label', {}, 'Tees ', teeSel),
       h('a', { class: 'btn primary', href: `#/hole/${resume}` }, resume > 1 ? `Continue at hole ${resume}` : 'Start at hole 1')),
     h('h2', {}, 'Holes'),
@@ -118,13 +122,15 @@ function renderHome() {
 async function route() {
   await loadCourse();
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  const tab = ['hole', 'course', 'settings'].includes(parts[0]) ? parts[0] : 'home';
+  const tab = ['hole', 'course', 'settings', 'stats', 'account'].includes(parts[0]) ? parts[0] : 'home';
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   document.body.classList.toggle('playing', tab === 'hole');
   if (tab !== 'hole') closeHole();
   if (tab === 'hole') renderHole(view, Math.min(18, Math.max(1, parseInt(parts[1], 10) || lastHole())));
   else if (tab === 'course') renderCourseEditor(view);
   else if (tab === 'settings') renderSettings(view);
+  else if (tab === 'stats') renderStats(view);
+  else if (tab === 'account') renderAccount(view);
   else renderHome();
 }
 
@@ -132,10 +138,15 @@ window.addEventListener('hashchange', route);
 // Re-render when another device's changes arrive, but not while looking at a hole
 // (that would reset the crosshair).
 store.onChange(() => { if (document.body.classList.contains('playing')) return; route(); });
+let lastUser;
 sync.onStatus(() => {
   const dot = document.getElementById('sync-dot');
   dot.className = sync.status;
-  dot.title = { off: 'Sync not set up', 'signed-out': 'Sync: signed out', syncing: 'Syncing…', ok: 'Synced', error: 'Sync error: ' + sync.error }[sync.status];
+  dot.title = { off: 'Accounts unavailable', 'signed-out': 'Not logged in', syncing: 'Syncing…', ok: 'Synced', error: 'Sync error: ' + sync.error }[sync.status];
+  document.getElementById('account-name').textContent = sync.user ? sync.name : 'Log in';
+  // Logging in or out changes what most pages show.
+  const user = sync.user?.id || null;
+  if (user !== lastUser) { lastUser = user; if (!document.body.classList.contains('playing')) route(); }
 });
 
 route();
