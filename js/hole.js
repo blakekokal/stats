@@ -226,9 +226,8 @@ export function renderHole(view, n) {
     return [min, min < 0 && max > 0 ? 0 : (min + max) / 2, max];
   };
   const zoneLegend = h('div', { class: 'zonelegend', hidden: true });
-  const HAZARD_KEY = [255, 0, 40];
   function drawLegend() {
-    const rows = [['Hazard', HAZARD_KEY], ['+.75 or more', [20, 83, 45]], ['+.5 to +.75', [22, 163, 74]], ['+.25 to +.5', [74, 222, 128]], ['0 to +.25', [187, 247, 208]],
+    const rows = [['+.75 or more', [20, 83, 45]], ['+.5 to +.75', [22, 163, 74]], ['+.25 to +.5', [74, 222, 128]], ['0 to +.25', [187, 247, 208]],
       ['−.25 to 0', [252, 165, 165]], ['−.5 to −.25', [248, 113, 113]], ['−.75 to −.5', [220, 38, 38]], ['−.75 or less', [153, 27, 27]]];
     zoneLegend.replaceChildren(h('small', {}, 'Drive SG'), ...rows.map(([t, c]) => h('span', {}, h('i', { style: `background:rgb(${c.join(',')})` }), t)));
   }
@@ -274,12 +273,12 @@ export function renderHole(view, n) {
   let zoneKey = null, zoneImg = null;
   // Drive SG heat map: every spot within ~45 yd of the hole's route, from 60 yd
   // off the tee to past the green, coloured by the strokes a drive landing there
-  // gains for the selected handicap (from its actual lie, fairway or rough), in
-  // 0.25 bands: reds below 0, greens above. Bunkers and water are bright red.
+  // gains for the selected handicap, from its actual lie (fairway, rough, bunker
+  // or water — water counting the penalty stroke and a drop), in 0.25 bands:
+  // reds below 0, greens above. Water is always shown in the reds.
   const HEAT_BANDS = [ // [lowest SG in the band, colour], highest first
     [0.75, [20, 83, 45]], [0.5, [22, 163, 74]], [0.25, [74, 222, 128]], [0, [187, 247, 208]],
     [-0.25, [252, 165, 165]], [-0.5, [248, 113, 113]], [-0.75, [220, 38, 38]], [-Infinity, [153, 27, 27]]];
-  const HAZARD = [255, 0, 40];
   const heatColor = sg => HEAT_BANDS.find(([lo]) => sg >= lo)[1];
   function sgZoneImage() {
     const key = [tee, pin, level].join('|');
@@ -309,9 +308,9 @@ export function renderHole(view, n) {
         if (distToLine(q, routeLine) * YD_PER_M > 45) continue; // stay on this hole
         if (yards(q, tee) < 60) continue; // not a drive
         const lie = lieHere(q);
-        const hazard = lie === 'bunker' || lie === 'water';
-        const z = hazard ? HAZARD : heatColor(teeExp - expectedFrom(lie, yards(q, pin)) - 1), i = (r * cols + c) * 4;
-        img.data[i] = z[0]; img.data[i + 1] = z[1]; img.data[i + 2] = z[2]; img.data[i + 3] = hazard ? 210 : 130;
+        const sg = teeExp - expectedFrom(lie, yards(q, pin)) - 1;
+        const z = heatColor(lie === 'water' ? Math.min(sg, -0.01) : sg), i = (r * cols + c) * 4;
+        img.data[i] = z[0]; img.data[i + 1] = z[1]; img.data[i + 2] = z[2]; img.data[i + 3] = lie === 'water' ? 190 : 130;
       }
     }
     ctx.putImageData(img, 0, 0);
