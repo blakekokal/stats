@@ -98,9 +98,11 @@ function holeFeatures(ch) {
 }
 
 // Leave a past round that was opened from Round History.
-function leaveView() { sessionStorage.removeItem('gs:viewOnly'); sessionStorage.removeItem('gs:editingPast'); setCurrentRound(null); }
+function leaveView() { localStorage.removeItem('gs:viewOnly'); localStorage.removeItem('gs:editingPast'); setCurrentRound(null); }
 
 export function renderHole(view, n) {
+  // A finished (submitted) round always reopens in view mode, unless it's being edited.
+  { const r0 = currentRound(); if (r0?.submitted && localStorage.getItem('gs:editingPast') !== '1') localStorage.setItem('gs:viewOnly', '1'); }
   // A view to keep when the hole is re-rendered for Edit / Save / Cancel.
   let keepCam = null;
   try { const c = sessionStorage.getItem('gs:cam'); if (c) keepCam = JSON.parse(c); } catch { /* none */ }
@@ -390,7 +392,7 @@ export function renderHole(view, n) {
 
   // Viewing a past round from Round History: holes open on the normal tee view
   // with the shots drawn and no recording controls, until Edit is tapped.
-  const viewing = () => sessionStorage.getItem('gs:viewOnly') === '1';
+  const viewing = () => localStorage.getItem('gs:viewOnly') === '1';
   // Re-render this hole keeping the current view (zoom, position, rotation).
   const rerenderHere = () => {
     const c = m.getCenter();
@@ -399,17 +401,17 @@ export function renderHole(view, n) {
   };
   const editBtn = h('button', { class: 'fab viewedit', hidden: !viewing(), onclick: () => {
     const r = currentRound();
-    if (r) sessionStorage.setItem('gs:editSnap', JSON.stringify(r.holes || {})); // for Cancel
-    sessionStorage.removeItem('gs:viewOnly'); sessionStorage.setItem('gs:editingPast', '1'); rerenderHere();
+    if (r) localStorage.setItem('gs:editSnap', JSON.stringify(r.holes || {})); // for Cancel
+    localStorage.removeItem('gs:viewOnly'); localStorage.setItem('gs:editingPast', '1'); rerenderHere();
   } }, '✎ Edit');
   // Editing a past round: Save (beside Undo) goes back to view mode. Changes are
   // already stored as they're made; Save just finishes editing.
-  const editingPast = () => sessionStorage.getItem('gs:editingPast') === '1' && !viewing();
-  const finishEdit = () => { sessionStorage.removeItem('gs:editingPast'); sessionStorage.removeItem('gs:editSnap'); sessionStorage.setItem('gs:viewOnly', '1'); rerenderHere(); };
+  const editingPast = () => localStorage.getItem('gs:editingPast') === '1' && !viewing();
+  const finishEdit = () => { localStorage.removeItem('gs:editingPast'); localStorage.removeItem('gs:editSnap'); localStorage.setItem('gs:viewOnly', '1'); rerenderHere(); };
   const saveBtn = h('button', { class: 'fab savehole', hidden: !editingPast(), onclick: finishEdit }, '✓ Save');
   // Cancel puts every hole back the way it was when Edit was tapped.
   const cancelBtn = h('button', { class: 'fab cancelhole', hidden: !editingPast(), onclick: () => {
-    const r = currentRound(), snap = sessionStorage.getItem('gs:editSnap');
+    const r = currentRound(), snap = localStorage.getItem('gs:editSnap');
     if (r && snap) { try { store.set(roundKeyOf(r.id), { ...r, holes: JSON.parse(snap), updated: Date.now() }); } catch { /* keep as is */ } }
     finishEdit();
   } }, 'Cancel');
@@ -539,7 +541,7 @@ export function renderHole(view, n) {
   compass.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,16 12,16" fill="#ff4d4d"/><polygon points="16,29 20,16 12,16" fill="#fff"/><text x="16" y="11.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">N</text></svg>';
 
   // Leaving a round from the menu's Home button.
-  const leaveTo = (hash, fn) => () => { const r = currentRound(); if (r) fn(r); setCurrentRound(null); sessionStorage.removeItem('gs:viewOnly'); sessionStorage.removeItem('gs:editingPast'); location.hash = hash; };
+  const leaveTo = (hash, fn) => () => { const r = currentRound(); if (r) fn(r); setCurrentRound(null); localStorage.removeItem('gs:viewOnly'); localStorage.removeItem('gs:editingPast'); location.hash = hash; };
   const leave = h('div', { class: 'leave', hidden: true, onclick: e => { if (e.target === leave) leave.hidden = true; } },
     h('div', { class: 'leavebox' },
       h('strong', {}, 'Leave this round?'),
@@ -550,10 +552,10 @@ export function renderHole(view, n) {
         leaveTo('#/', r => store.remove(roundKeyOf(r.id)))();
       } }, 'Home and delete round'),
       // Editing a past round: put every hole back as it was when Edit was tapped.
-      sessionStorage.getItem('gs:editingPast') === '1' && sessionStorage.getItem('gs:editSnap')
+      localStorage.getItem('gs:editingPast') === '1' && localStorage.getItem('gs:editSnap')
         ? h('button', { class: 'nosave', onclick: leaveTo('#/', r => {
-          try { store.set(roundKeyOf(r.id), { ...r, holes: JSON.parse(sessionStorage.getItem('gs:editSnap')), updated: Date.now() }); } catch { /* keep as is */ }
-          sessionStorage.removeItem('gs:editSnap');
+          try { store.set(roundKeyOf(r.id), { ...r, holes: JSON.parse(localStorage.getItem('gs:editSnap')), updated: Date.now() }); } catch { /* keep as is */ }
+          localStorage.removeItem('gs:editSnap');
         }) }, 'Leave without saving')
         : null,
       h('button', { class: 'cancel', onclick: () => { leave.hidden = true; } }, 'Cancel')));
@@ -672,6 +674,16 @@ export function renderHole(view, n) {
   // Club for a shot: anything played from the green is a putter; other clubs
   // come once the bag is set up.
   const clubOf = s => (s.lie === 'green' ? h('b', {}, 'Putter') : h('b', { class: 'muted' }, '— (coming soon)'));
+  // One line for a shot: club (when known), how far it went, and what was left
+  // after it — e.g. "Putter · 15 ft to 2 ft", "152 yd to 14 ft", "88 yd to holed".
+  function shotLine(hl, i) {
+    const shots = hl.shots || [], s = shots[i], next = shots[i + 1];
+    if (!s || (!next && !hl.done)) return null;
+    const hp = hl.pin || pin, isPutt = s.lie === 'green', travel = yards(s.pos, next ? next.pos : hp);
+    const went = isPutt ? `${Math.round(travel * FT_PER_YD)} ft` : `${Math.round(travel)} yd`;
+    const left = !next ? 'holed' : next.lie === 'green' ? `${next.ft ?? Math.round(yards(next.pos, hp) * FT_PER_YD)} ft` : `${Math.round(yards(next.pos, hp))} yd`;
+    return `${isPutt ? 'Putter · ' : ''}${went} to ${left}`;
+  }
   let sgViewKey = null;
   const fmtSgV = v => (v == null ? '–' : (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2));
   const sgCls = v => (v == null ? '' : v >= 0 ? 'pos' : 'neg');
@@ -701,11 +713,10 @@ export function renderHole(view, n) {
       if (isPutt) puttNo++;
       const key = 'shot' + i, label = isPutt ? `Putt ${puttNo}` : `Shot ${i + 1} · ${CAT_LABEL[x.cat]}`;
       return [toggleRow(key, label, x.sg), sgOpen.has(key) ? h('div', { class: 'shotinfo' },
-        h('div', {}, h('span', {}, 'Traveled'), h('b', {}, dist)),
+        h('div', { class: 'line' }, h('b', {}, shotLine(hl, i) || dist)),
         h('div', {}, h('span', {}, 'Lie'), h('b', {}, `${LIE_NAME[s.lie] || s.lie} → ${end}`)),
         h('div', {}, h('span', {}, 'From the hole'), h('b', {}, isPutt ? `${s.ft ?? Math.round(x.dist)} ft` : `${Math.round(x.dist)} yd`)),
-        h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: sgCls(x.sg) }, fmtSgV(x.sg))),
-        h('div', {}, h('span', {}, 'Club'), clubOf(s))) : null];
+        h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: sgCls(x.sg) }, fmtSgV(x.sg)))) : null];
     }).flat().filter(Boolean);
     sgView.replaceChildren(...[
       h('div', { class: 'sghead' }, h('strong', {}, 'Strokes Gained'), h('small', {}, `vs ${level === 'Pro' ? 'Tour Pro' : level === 'Scratch' ? 'Scratch' : level + ' HCP'}`),
@@ -815,8 +826,38 @@ export function renderHole(view, n) {
       return el;
     });
   }
+  const labelLayer = document.createElementNS(SVGNS, 'g');
+  svg.appendChild(labelLayer);
   m.getCanvasContainer().insertBefore(svg, m.getCanvas().nextSibling);
+  // How far each recorded shot went, at the middle of its line, when the line is
+  // long enough on screen to fit the label (zoom in on the green to see putts).
+  function trailLabels() {
+    const hl = holeNow(), shots = hl.shots || [], hp = hl.pin || pin, out = [];
+    for (let i = 0; i < shots.length; i++) {
+      const a = shots[i], b = shots[i + 1];
+      if (!b && !hl.done) break;
+      const A = m.project(ll(a.pos)), B = m.project(ll(b ? b.pos : hp));
+      if (Math.hypot(B.x - A.x, B.y - A.y) < 70) continue;
+      const travel = yards(a.pos, b ? b.pos : hp);
+      out.push({ x: (A.x + B.x) / 2, y: (A.y + B.y) / 2, text: a.lie === 'green' ? `${Math.round(travel * FT_PER_YD)} ft` : `${Math.round(travel)} yd` });
+    }
+    while (labelLayer.childNodes.length > out.length) labelLayer.lastChild.remove();
+    out.forEach((l, i) => {
+      let g = labelLayer.childNodes[i];
+      if (!g) {
+        g = document.createElementNS(SVGNS, 'g');
+        const bg = document.createElementNS(SVGNS, 'rect'), t = document.createElementNS(SVGNS, 'text');
+        bg.setAttribute('rx', 8); bg.setAttribute('fill', '#111c'); bg.setAttribute('height', 18);
+        t.setAttribute('fill', '#ffb020'); t.setAttribute('font-size', 12); t.setAttribute('font-weight', 700); t.setAttribute('font-family', 'system-ui, sans-serif'); t.setAttribute('text-anchor', 'middle');
+        g.append(bg, t); labelLayer.appendChild(g);
+      }
+      const [bg, t] = g.childNodes, w = l.text.length * 7 + 10;
+      t.textContent = l.text; t.setAttribute('x', l.x.toFixed(1)); t.setAttribute('y', (l.y + 4).toFixed(1));
+      bg.setAttribute('x', (l.x - w / 2).toFixed(1)); bg.setAttribute('y', (l.y - 9).toFixed(1)); bg.setAttribute('width', w);
+    });
+  }
   function overlay(lines) {
+    trailLabels();
     for (const [name, els] of Object.entries(svgPaths)) {
       const pts = lines[name] || [];
       const d = pts.length > 1 ? pts.map((q, i) => { const p = m.project(ll(q)); return `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`; }).join('') : '';
@@ -986,10 +1027,9 @@ export function renderHole(view, n) {
     let puttNo = 0; for (let k = 0; k <= i; k++) if (shots[k].lie === 'green') puttNo++;
     const el = h('div', { class: 'shotpop' },
       h('strong', {}, isPutt ? `Putt ${puttNo}` : `Shot ${i + 1}`, h('small', {}, row.cat ? ` · ${CAT_LABEL[row.cat]}` : '')),
-      h('div', {}, h('span', {}, 'Traveled'), h('b', {}, isPutt ? `${Math.round(travel * 3)} ft` : `${Math.round(travel)} yd`)),
+      h('div', { class: 'line' }, h('b', {}, shotLine(hl, i) || (isPutt ? `${Math.round(travel * 3)} ft` : `${Math.round(travel)} yd`))),
       h('div', {}, h('span', {}, 'Lie'), h('b', {}, `${name(s.lie)} → ${end ? name(end.lie) : 'Holed'}`)),
-      h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: row.sg == null ? '' : row.sg >= 0 ? 'pos' : 'neg' }, sgTxt)),
-      h('div', {}, h('span', {}, 'Club'), clubOf(s)));
+      h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: row.sg == null ? '' : row.sg >= 0 ? 'pos' : 'neg' }, sgTxt)));
     shotPopup?.remove();
     shotPopup = new maplibregl.Popup({ offset: 14, closeButton: true, className: 'shotpopup', maxWidth: '240px' }).setLngLat(ll(at)).setDOMContent(el).addTo(m);
   }
