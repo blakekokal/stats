@@ -330,6 +330,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.26.2', ['Strokes Gained button in the bottom-right when viewing a round', 'Shots from the green show Putter as the club']],
   ['0.26.1', ['Tap a numbered shot dot on the map to see that shot', 'Fixed the SG button showing over the menu on some phones']],
   ['0.26.0', ['Viewing a round: Strokes Gained panel with round and hole totals by category, and per-shot details']],
   ['0.25.5', ['Viewing a round no longer lets the tee or pin be dragged until you tap Edit']],
