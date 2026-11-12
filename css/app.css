@@ -310,9 +310,11 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .clubgrid button:disabled { opacity: .35; }
 .compactions { display: flex; gap: 8px; } .compactions button { flex: 1; min-height: 46px; border: 0; border-radius: 12px; font-size: 16px; font-weight: 800; }
 .compactions .off { background: #3d3d3d; color: #fff; flex: 0 0 34%; } .compactions .record:disabled { opacity: .4; }
-.readout .comprows { display: grid; gap: 2px; justify-items: start; }
-.readout .comprows div { display: flex; align-items: baseline; gap: 5px; }
-.readout .comprows i { width: 10px; height: 10px; border-radius: 50%; display: inline-block; align-self: center; box-shadow: 0 0 3px #000; }
-.readout .comprows span { font-size: 15px; font-weight: 800; min-width: 26px; }
-.readout .comprows b { display: inline; font-size: 22px; font-variant-numeric: tabular-nums; }
-.readout .comprows small { font-size: 12px; font-weight: 700; opacity: .85; margin-right: 6px; }
+.compdots { position: absolute; inset: 0; pointer-events: none; z-index: 2; overflow: hidden; }
+.compdot { position: absolute; width: 0; height: 0; color: #fff; white-space: nowrap; line-height: 1.1; text-shadow: 0 0 3px #000, 0 0 6px #000, 0 1px 2px #000; }
+.compdot i { position: absolute; left: -6px; top: -6px; width: 12px; height: 12px; border-radius: 50%; background: var(--c); border: 2px solid #fff; box-sizing: border-box; box-shadow: 0 1px 4px #000a; }
+.compdot .lab { position: absolute; left: var(--gap); top: 0; transform: translateY(-50%); }
+.compdot b { display: block; font-size: 18px; font-weight: 800; }
+.compdot .down { display: flex; gap: 5px; align-items: baseline; font-size: 13px; font-weight: 700; }
+.compdot em { font-style: normal; color: var(--c); } .compdot .gain { color: #4ade80; } .compdot .loss { color: #ff6b6b; }
+.holeview.comparing .readout { display: none; }

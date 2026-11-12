@@ -574,6 +574,7 @@ export function renderHole(view, n) {
   }
   const compBtn = h('button', { class: 'fab comp', 'aria-label': 'Compare clubs', title: 'Compare 2-3 clubs on one line', onclick: openCompPicker }, h('span', {}, '⫶'), h('small', {}, 'Comp'));
   const compLegend = h('div', { class: 'zonelegend compkey', hidden: true });
+  const compDots = h('div', { class: 'compdots' });
   // Features near a point, with their boxes, for fast lie lookups along the arcs.
   let compFeatKey = null, compFeats = [];
   function compArcs(from, toward, fromExp) {
@@ -600,7 +601,7 @@ export function renderHole(view, n) {
         const q = arc(-half + (2 * half * j) / N), lie = lieHere(q);
         tot += sgFinish(fromExp, lie, yards(q, pin));
       }
-      return { club, yd, toPin: yards(mid, pin), color: COMP_COLORS[i], sg: tot / (N + 1), pts: arcPoints(arc, -half, half) };
+      return { club, yd, mid, toPin: yards(mid, pin), color: COMP_COLORS[i], sg: tot / (N + 1), pts: arcPoints(arc, -half, half) };
     }).filter(Boolean);
   }
   // Slide the crosshair out to `yd` from the ball, along the line being aimed
@@ -741,7 +742,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, compBtn, sgtBtn, apprBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, compBtn, sgtBtn, apprBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1140,7 +1141,7 @@ export function renderHole(view, n) {
       const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
       overlay(viewing() ? {} : { path: st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin] });
       set('shots', line(trace(shots)));
-      setRings([]); showZones(false);
+      setRings([]); showZones(false); compDots.replaceChildren(); compLegend.hidden = true;
       return;
     }
     if (moving === 'tee') { // the crosshair is the tee: show how far it is to the aim spot
@@ -1173,12 +1174,19 @@ export function renderHole(view, n) {
     const comps = showComp && !viewing() ? compArcs(from, yards(from, target) > 5 ? target : pin, fromExp) : [];
     comps.forEach((c, i) => { lines['comp' + i] = c.pts; });
     compLegend.hidden = !comps.length;
-    if (comps.length && moving !== 'tee') { // above the crosshair: how far each club goes, and what's left in
-      toPinEl.replaceChildren(h('div', { class: 'comprows' }, comps.map(c => h('div', {},
-        h('i', { style: `background:${c.color}` }), h('span', {}, clubShort(c.club)),
-        h('b', {}, `${c.yd}`), h('small', {}, 'out'), h('b', {}, `${Math.round(c.toPin)}`), h('small', {}, 'in')))));
-      fromTeeEl.replaceChildren();
-    }
+    holeEl()?.classList.toggle('comparing', comps.length > 0); // the dots replace the crosshair readout
+    // A dot at the middle of each arc, read like the crosshair: yards left to the pin
+    // above it, the club's distance and its average SG below.
+    compDots.replaceChildren(...comps.map(c => {
+      const pt = m.project(ll(c.mid)), ends = [c.pts[0], c.pts[c.pts.length - 1]].map(q => m.project(ll(q)).x);
+      const gap = Math.max(...ends) - pt.x + 8; // the label sits just past the arc's right end
+      return h('div', { class: 'compdot', style: `left:${pt.x.toFixed(1)}px;top:${pt.y.toFixed(1)}px;--c:${c.color};--gap:${gap.toFixed(1)}px` },
+        h('i', {}),
+        h('div', { class: 'lab' },
+          h('b', {}, `${Math.round(c.toPin)} yd`),
+          h('div', { class: 'down' }, h('em', {}, `${clubShort(c.club)} ${c.yd}`),
+            h('span', { class: c.sg >= 0 ? 'gain' : 'loss' }, `${c.sg >= 0 ? '+' : '−'}${Math.abs(c.sg).toFixed(2)}`))));
+    }));
     compLegend.replaceChildren(h('small', {}, 'Compare · avg SG'), ...comps.map(c => h('span', {},
       h('i', { style: `background:${c.color}` }), `${clubShort(c.club)} ${c.yd}y · `,
       h('b', { class: c.sg >= 0 ? 'pos' : 'neg' }, `${c.sg >= 0 ? '+' : '−'}${Math.abs(c.sg).toFixed(2)}`))));
