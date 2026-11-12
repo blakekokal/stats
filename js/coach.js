@@ -50,6 +50,7 @@ export function renderHome(view) {
           h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' }, '❓'),
           h('div', { style: 'display:flex;gap:4px;' }, search,
             h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, '⚙️')))),
+      go('🛰️', 'GPS Scouting', 'Plan shots on any hole · nothing is saved', '#1a4a8a', '#/scout'),
       go('⛳', 'Enter New Round', 'Track every shot', '#007a52', '#/new'),
       go('📋', 'Round History', 'All past rounds', '#00402c', '#/history'),
       divider(),
@@ -330,6 +331,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.28.0', ['GPS Scouting: plan shots on any hole, nothing is saved', 'Club button (auto: driver off par 4/5 tees, then My Bag yardages)', '+ asks for the club and swing (full, ¾, ½, punch, recovery)']],
   ['0.27.4', ['Shots titled "Shot 1 from tee", detail "Hit 257 yds to left rough"']],
   ['0.27.3', ['Shot details on two lines: "Hit 275 yds from tee to fwy" / "261 yds to hole"']],
   ['0.27.2', ['Shot details read like "Putter hit 15 ft to 2 ft from hole"']],
