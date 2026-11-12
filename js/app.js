@@ -6,7 +6,6 @@ import { renderSettings } from './settings.js';
 import { renderStats } from './stats.js';
 import { renderAccount } from './account.js';
 import { renderStatsDashboard } from './dashboard.js';
-import { startScouting } from './rounds.js';
 import { renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin, renderWhatsNew, renderEditRound, renderBag } from './coach.js';
 import { VERSION } from './version.js';
 
@@ -122,7 +121,7 @@ async function route() {
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag'].includes(parts[0]) ? parts[0] : 'home';
   // Pages laid out like the coaching app hide this app's top bar.
-  document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag'].includes(tab));
+  document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout'].includes(tab));
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   document.body.classList.toggle('playing', tab === 'hole');
   if (tab !== 'hole') closeHole();
@@ -138,7 +137,7 @@ async function route() {
   else if (tab === 'dashboard') renderStatsDashboard(view, renderLogin, parts[1]);
   else if (tab === 'round') renderEditRound(view, parts[1]);
   else if (tab === 'bag') renderBag(view);
-  else if (tab === 'scout') { startScouting(); location.hash = '#/hole/1'; }
+  else if (tab === 'scout') renderNewRound(view, { scout: true });
   else renderHome(view);
 }
 

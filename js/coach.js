@@ -7,7 +7,7 @@ import { store, sync } from './store.js';
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
 import { VERSION } from './version.js';
-import { setCurrentRound, summarize, historyRounds, roundKeyOf } from './rounds.js';
+import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting } from './rounds.js';
 import { downloadRoundCsv } from './dashboard.js';
 
 const PREF_LABEL = { Pro: 'Tour Pro', Scratch: 'Scratch (0)' };
@@ -66,7 +66,8 @@ export function renderHome(view) {
 
 // ---------- new round ----------
 
-export function renderNewRound(view) {
+// GPS Scouting uses the same page with just the course and tee box: nothing is saved.
+export function renderNewRound(view, { scout = false } = {}) {
   const name = h('input', { placeholder: 'Player Name', value: sync.user ? sync.name : '' });
   const level = h('select', { class: 'bigsel', style: 'flex:1;', 'aria-label': 'Compare to' }, LEVELS.map(l => levelOpt(l, profileLevel())));
   const date = h('input', { type: 'date', value: today(), style: 'flex:1;' });
@@ -95,6 +96,12 @@ export function renderNewRound(view) {
   const err = h('div', { class: 'msg err' });
   const confirm = h('button', { class: 'holes9', onclick: () => {
     if (!tee.value) { err.textContent = 'Select a tee box.'; return; }
+    if (scout) {
+      store.set('settings', { ...(store.get('settings') || {}), tee: tee.value });
+      startScouting(tee.value); sessionStorage.removeItem('gs:level');
+      location.hash = '#/hole/1';
+      return;
+    }
     if (custom.value && !(+custom.value >= 3 && +custom.value <= 18)) { err.textContent = 'Custom holes must be 3 to 18.'; return; }
     const r = { ...newRound(course, tee.value, date.value || today()), courseName: course.name, player: name.value.trim() || (sync.user ? sync.name : ''),
       level: level.value, type: type.value, place: type.value === 'Tournament' && place.value ? +place.value : null, holeCount: holes };
@@ -105,11 +112,19 @@ export function renderNewRound(view) {
     location.hash = '#/hole/1';
   } }, 'START');
 
+  const courseBox = h('input', { value: course.name, readonly: true, 'aria-label': 'Course', title: 'Bridlewood is the only course for now' });
+  if (scout) {
+    view.replaceChildren(page('top', backBtn(),
+      h('div', { style: 'font-size:22px;font-weight:800;' }, 'GPS Scouting'),
+      h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:-4px;' }, 'Plan shots on any hole · nothing is saved'),
+      courseBox, tee, teeInfo, confirm, err));
+    return;
+  }
   view.replaceChildren(page('top', backBtn(),
     h('div', { style: 'font-size:22px;font-weight:800;' }, 'New Round'),
     name,
     h('div', { class: 'row' }, level, date),
-    h('input', { value: course.name, readonly: true, 'aria-label': 'Course', title: 'Bridlewood is the only course for now' }),
+    courseBox,
     tee, teeInfo, type, placeWrap,
     h('div', { class: 'row' }, b9, b18),
     custom,
@@ -359,6 +374,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.33.1', ['GPS Scouting opens a short setup page: pick the tee box and press Start']],
   ['0.33.0', ['Arc and Appr are never on together — turning one on turns the other off', 'Appr has an Adj button beside it for the circle size, like Arc']],
   ['0.32.5', ['Comp: no white aiming line — each club has its own coloured line from the ball']],
   ['0.32.4', ['Comp hides the crosshair dot and turns the Arc off, so only the Comp arcs show']],
