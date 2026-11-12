@@ -32,5 +32,22 @@
 <script src="vendor/maplibre/maplibre-gl.js"></script>
 <script src="vendor/supabase/supabase.js"></script>
 <script type="module" src="js/app.js"></script>
+<script>
+// If the app has not started after a few seconds (usually a stale cached file
+// after an update), offer a reload that clears the cached copies first.
+setTimeout(function () {
+  if (document.getElementById('view').children.length) return;
+  var v = document.getElementById('view');
+  v.innerHTML = '<div style="padding:40px 20px;text-align:center;color:#fff;font:16px system-ui,sans-serif">'
+    + '<p style="margin:0 0 16px">The app did not load properly, probably because of an old saved copy.</p>'
+    + '<button id="fixreload" style="font:700 16px system-ui;padding:12px 22px;border:0;border-radius:12px;background:#007a52;color:#fff">Reload app</button></div>';
+  document.getElementById('fixreload').onclick = function () {
+    var jobs = [];
+    if (window.caches) jobs.push(caches.keys().then(function (ks) { return Promise.all(ks.filter(function (k) { return k.indexOf('shell-') === 0; }).map(function (k) { return caches.delete(k); })); }));
+    if (navigator.serviceWorker) jobs.push(navigator.serviceWorker.getRegistrations().then(function (rs) { return Promise.all(rs.map(function (r) { return r.unregister(); })); }));
+    Promise.all(jobs).catch(function () {}).then(function () { location.replace(location.pathname + '?r=' + Date.now() + location.hash); });
+  };
+}, 6000);
+</script>
 </body>
 </html>
