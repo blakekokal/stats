@@ -28,11 +28,10 @@ server, or host the repo with GitHub Pages.
   dot to give it its own line (tap it to put it back); lines reset after each shot. The tee and pin dots can be dragged; tee
   positions are remembered per tee set.
 - **Course**: fix or redraw any outline. Anything inside no outline is rough.
-- **Out of bounds**: public roads and houses (with their yards) near the course
-  are OB, outlined in white. A shot finishing there is stroke and distance: a
-  penalty stroke and the next shot from the same spot (−2 strokes gained), and
-  the SG heat map and Comp arcs score it that way. Built from OpenStreetMap with
-  `tools/add_ob.py`.
+- **Out of bounds**: everything outside the course boundary (from OpenStreetMap,
+  built with `tools/add_ob.py`) is OB, drawn as one white line. A shot finishing
+  there is stroke and distance: a penalty stroke and the next shot from the same
+  spot (−2 strokes gained), and the SG heat map and Comp arcs score it that way.
 - **Stats**: strokes gained per 18 holes by category (off the tee, approach,
   around the green, putting), plus fairways, greens in regulation and putts,
   compared to any handicap level (defaults to the one on your profile).

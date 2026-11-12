@@ -47,7 +47,7 @@ export function renderCourseEditor(view) {
     });
     group.addLayer(layer);
   }
-  for (const f of course.features) add(L.polygon(f.p), f.t);
+  for (const f of course.features) if (f.t !== 'ob') add(L.polygon(f.p), f.t); // OB is the course boundary, not edited here
 
   map.pm.addControls({ position: 'topleft', drawMarker: false, drawCircleMarker: false, drawPolyline: false, drawRectangle: false,
     drawCircle: false, drawText: false, cutPolygon: false, rotateMode: false, dragMode: false, drawPolygon: true, editMode: true, removalMode: true });

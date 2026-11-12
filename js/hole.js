@@ -101,10 +101,16 @@ function ownGreen(ch) {
   return greens.find(g => inPolygon(ch.pin, g.p))
     || greens.reduce((best, g) => (!best || yards(centre(g.p[0]), ch.pin) < yards(centre(best.p[0]), ch.pin) ? g : best), null);
 }
+// Two boxes [[s, w], [n, e]] overlap (with `pad` degrees of slack).
+const overlaps = (a, b, pad) => a[0][0] <= b[1][0] + pad && a[1][0] >= b[0][0] - pad && a[0][1] <= b[1][1] + pad && a[1][1] >= b[0][1] - pad;
+// The OB area is a big box with the course cut out of it: only the cut-out —
+// the course boundary — is drawn, as a single line.
+const obLines = f => (f.p.length > 1 ? f.p.slice(1) : f.p);
 function holeFeatures(ch) {
   const green = ownGreen(ch);
   return course.features.filter(f => {
-    if (f.t === 'bunker' || f.t === 'water' || f.t === 'ob') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
+    if (f.t === 'ob') return obLines(f).some(r => r.some(p => distToLine(p, ch.line) <= 150));
+    if (f.t === 'bunker' || f.t === 'water') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
     if (f.t === 'green') return f === green; // not a neighbour's or a practice green
     const c = centre(f.p[0]);
     const own = distToLine(c, ch.line);
@@ -329,8 +335,8 @@ export function renderHole(view, n) {
     const box = boundsOf(span, 70);
     const routeLine = route();
     const feats = course.features
-      .filter(f => f.p[0].some(q => q[0] > box[0][0] - 0.001 && q[0] < box[1][0] + 0.001 && q[1] > box[0][1] - 0.001 && q[1] < box[1][1] + 0.001))
-      .map(f => ({ ...f, box: boundsOf(f.p[0]) }));
+      .map(f => ({ ...f, box: boundsOf(f.p[0]) }))
+      .filter(f => overlaps(f.box, box, 0.001));
     const lieHere = q => lieOn(q, feats.filter(f => q[0] >= f.box[0][0] && q[0] <= f.box[1][0] && q[1] >= f.box[0][1] && q[1] <= f.box[1][1]));
     const CELL = 2; // metres
     const [[s0, w0], [n0, e0]] = box;
@@ -614,8 +620,8 @@ export function renderHole(view, n) {
       compFeatKey = key;
       const box = boundsOf([from, pin], 300);
       compFeats = course.features
-        .filter(f => f.p[0].some(q => q[0] > box[0][0] && q[0] < box[1][0] && q[1] > box[0][1] && q[1] < box[1][1]))
-        .map(f => ({ ...f, box: boundsOf(f.p[0]) }));
+        .map(f => ({ ...f, box: boundsOf(f.p[0]) }))
+        .filter(f => overlaps(f.box, box, 0));
     }
     const lieHere = q => lieOn(q, compFeats.filter(f => q[0] >= f.box[0][0] && q[0] <= f.box[1][0] && q[1] >= f.box[0][1] && q[1] <= f.box[1][1]));
     const fk = from.join(',');
@@ -1336,7 +1342,7 @@ export function renderHole(view, n) {
     if (map !== m) return;
     m.resize(); place();
     m.addSource('outlines', { type: 'geojson', data: { type: 'FeatureCollection', features: holeFeatures(ch).map(f => ({
-      type: 'Feature', properties: { color: LIE_COLOR[f.t] }, geometry: { type: 'Polygon', coordinates: f.p.map(r => r.map(ll)) } })) } });
+      type: 'Feature', properties: { color: LIE_COLOR[f.t] }, geometry: { type: 'MultiLineString', coordinates: (f.t === 'ob' ? obLines(f) : f.p).map(r => r.map(ll)) } })) } });
     m.addLayer({ id: 'outlines', type: 'line', source: 'outlines', layout: { visibility: showOutlines ? 'visible' : 'none' }, paint: { 'line-color': ['get', 'color'], 'line-width': 1.25, 'line-opacity': 0.7 } });
     const addLine = (id, shadow, paint, layout = {}) => {
       m.addSource(id, { type: 'geojson', data: line([]) });

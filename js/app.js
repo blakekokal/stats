@@ -54,8 +54,8 @@ export let course = null;
 export async function loadCourse() {
   if (!baseCourse) baseCourse = await (await fetch('data/bridlewood.json')).json();
   const edited = store.get('course:' + baseCourse.id);
-  // Out-of-bounds areas come from the course file; an edited course from before they existed gets them added.
-  const feats = edited ? (edited.features.some(f => f.t === 'ob') ? edited.features : [...edited.features, ...baseCourse.features.filter(f => f.t === 'ob')]) : baseCourse.features;
+  // Out of bounds (outside the course boundary) always comes from the course file, edited or not.
+  const feats = edited ? [...edited.features.filter(f => f.t !== 'ob'), ...baseCourse.features.filter(f => f.t === 'ob')] : baseCourse.features;
   course = { ...baseCourse, features: feats };
   return course;
 }
