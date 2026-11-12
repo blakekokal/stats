@@ -330,6 +330,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.24.3', ['Viewing a past round: the menu has just Back to Round History and Home']],
   ['0.24.2', ['Smaller score bar at the top, beside Expected, with a round › button']],
   ['0.24.1', ['Round History: View/Edit opens each hole on the tee view with your shots; tap Edit to change them']],
   ['0.24.0', ['Round History: Edit, Stats and scorecard download work on past rounds', 'Removed the template, upload and photo buttons']],

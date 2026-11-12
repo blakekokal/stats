@@ -427,17 +427,21 @@ export function renderHole(view, n) {
     h('select', { 'aria-label': 'Handicap level', onchange: e => { level = e.target.value; sessionStorage.setItem('gs:level', level); update(); } },
       LEVELS.map(l => h('option', { value: l, selected: l === level }, levelName(l)))));
 
-  const menu = h('div', { class: 'sheet', hidden: true },
-    h('label', {}, 'Tees ', h('select', { onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); const r = currentRound(); if (r) store.set(roundKeyOf(r.id), { ...r, tee: e.target.value, updated: Date.now() }); renderHole(view, n); } },
-      course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
-    h('button', { class: 'btn', onclick: () => {
-      menu.hidden = true;
-      if (viewing()) { leaveView(); location.hash = '#/history'; } else if (currentRound()) leave.hidden = false; else location.hash = '#/';
-    } }, viewing() ? 'Back to Round History' : 'Home'),
-    currentRound() ? h('a', { class: 'btn', href: `#/round/${currentRound().id}/edit` }, 'Round info') : null,
-    h('a', { class: 'btn', href: '#/course' }, 'Edit course outlines'),
-    h('a', { class: 'btn', href: '#/settings' }, 'Settings'),
-    h('small', { class: 'muted credit' }, 'Imagery © Esri, Maxar · Outlines © OpenStreetMap contributors'));
+  const credit = h('small', { class: 'muted credit' }, 'Imagery © Esri, Maxar · Outlines © OpenStreetMap contributors');
+  // Viewing a past round: just Back to Round History and Home.
+  const menu = viewing()
+    ? h('div', { class: 'sheet', hidden: true },
+      h('button', { class: 'btn', onclick: () => { leaveView(); location.hash = '#/history'; } }, 'Back to Round History'),
+      h('button', { class: 'btn', onclick: () => { leaveView(); location.hash = '#/'; } }, 'Home'),
+      credit)
+    : h('div', { class: 'sheet', hidden: true },
+      h('label', {}, 'Tees ', h('select', { onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); const r = currentRound(); if (r) store.set(roundKeyOf(r.id), { ...r, tee: e.target.value, updated: Date.now() }); renderHole(view, n); } },
+        course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
+      h('button', { class: 'btn', onclick: () => { menu.hidden = true; if (currentRound()) leave.hidden = false; else location.hash = '#/'; } }, 'Home'),
+      currentRound() ? h('a', { class: 'btn', href: `#/round/${currentRound().id}/edit` }, 'Round info') : null,
+      h('a', { class: 'btn', href: '#/course' }, 'Edit course outlines'),
+      h('a', { class: 'btn', href: '#/settings' }, 'Settings'),
+      credit);
 
   const compass = h('button', { class: 'compass', 'aria-label': 'Compass: tap to straighten the view', title: 'Tap to straighten the view' });
   compass.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,16 12,16" fill="#ff4d4d"/><polygon points="16,29 20,16 12,16" fill="#fff"/><text x="16" y="11.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">N</text></svg>';
