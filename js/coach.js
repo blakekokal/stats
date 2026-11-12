@@ -330,6 +330,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.25.3', ['Editing a hole: Redo hole under the shot list starts it again from the tee']],
   ['0.25.2', ['Score tiles sit above the hole selector; "thru" counts up hole by hole']],
   ['0.25.1', ['Total score and hole score at the top beside Expected; tap either for the scorecard']],
   ['0.25.0', ['Editing a past round: shot list to move shots, Cancel beside Save, view stays put', 'Score card sits above the hole pill: (+1) 6 · +3 total']],

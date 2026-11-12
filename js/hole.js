@@ -438,6 +438,13 @@ export function renderHole(view, n) {
     if (!rows.length) rows.push(h('div', { class: 'shotrow last' }, 'No shots yet'));
     if (movingShot != null) rows.push(h('div', { class: 'shotmove' },
       h('button', { class: 'go', onclick: setShotMove }, `Set shot ${movingShot}`), h('button', { onclick: endShotMove }, 'Cancel')));
+    // Redo hole: clear it and play it again from the tee.
+    rows.push(h('button', { class: 'shotrow redo', onclick: () => {
+      if (!confirm(`Redo hole ${n}? Its shots are cleared and you start again from the tee.`)) return;
+      movingShot = null; shotCam = null;
+      saveHole({ shots: [], pin: null, done: false });
+      pin = ch.pin; syncPin(); place();
+    } }, '↺ Redo hole'));
     shotList.replaceChildren(...rows);
   }
   let shotCam = null;
