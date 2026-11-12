@@ -24,7 +24,8 @@ server, or host the repo with GitHub Pages.
   from the tee). **Arc** draws a dispersion arc there, 10 to 80 yards wide in
   total, set with the slider. **Comp** (left side) compares 2–3 clubs on one
   target line: each is drawn as an arc at its yardage, sized to its arc width,
-  with the average strokes gained over the spots that arc covers. The tee and pin dots can be dragged; tee
+  with the average strokes gained over the spots that arc covers. Drag a club's
+  dot to give it its own line (tap it to put it back); lines reset after each shot. The tee and pin dots can be dragged; tee
   positions are remembered per tee set.
 - **Course**: fix or redraw any outline. Anything inside no outline is rough.
 - **Out of bounds**: public roads and houses (with their yards) near the course
