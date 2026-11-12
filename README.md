@@ -85,4 +85,5 @@ data providers, loaded from Esri World Imagery at run time.
    `tools/fetch_tiles.py`, replace the bunkers with the sand it shows using
    `tools/detect_sand.py`, fit the fairways and greens to the turf with
    `tools/trace_turf.py`, then run `add_ob.py` again.
-5. Add it to `COURSES` in `js/app.js`.
+5. `python3 tools/clean_course.py data/<id>.json` merges overlapping outlines.
+6. Add it to `COURSES` in `js/app.js`.
