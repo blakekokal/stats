@@ -116,6 +116,13 @@ export const sync = {
     sync.user = data.user;
     setStatus(sync.status, sync.error);
   },
+  // My Bag, from the profile shared with the coaching app: [{ name, carry, total }]
+  get bag() { try { return JSON.parse(localStorage.getItem('gs:bag') || '[]'); } catch { return []; } },
+  async loadBag() {
+    const c = getClient(); if (!c || !sync.user) return;
+    const { data, error } = await c.from('profiles').select('bag_clubs').eq('id', sync.user.id).single();
+    if (!error && data && Array.isArray(data.bag_clubs)) { try { localStorage.setItem('gs:bag', JSON.stringify(data.bag_clubs)); } catch { /* ignore */ } }
+  },
   async setName(name) {
     const c = getClient(); if (!c || !sync.user) throw new Error('Log in first.');
     const { data, error } = await c.auth.updateUser({ data: { display_name: name } });
@@ -168,6 +175,7 @@ export async function init() {
     const owner = localStorage.getItem(OWNER_KEY);
     if (owner && owner !== sync.user.id) clearLocal();
     localStorage.setItem(OWNER_KEY, sync.user.id);
+    sync.loadBag().catch(() => {});
     await runSync();
   } catch (e) { setStatus('error', e.message || String(e)); }
 }

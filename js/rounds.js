@@ -10,7 +10,15 @@ import { analyzeRound } from './model.js';
 
 const CURRENT_KEY = 'gs:currentRound';
 export const roundKeyOf = id => 'round:' + id;
+// GPS Scouting: a throwaway round held only in memory — nothing is ever saved.
+let scoutRound = null;
+export const isScouting = () => { try { return sessionStorage.getItem('gs:scouting') === '1'; } catch { return false; } };
+const newScout = () => ({ id: 'scout', scouting: true, holeCount: 18, holes: {}, updated: Date.now() });
+export function startScouting() { try { sessionStorage.setItem('gs:scouting', '1'); } catch { /* ignore */ } scoutRound = newScout(); }
+export function endScouting() { try { sessionStorage.removeItem('gs:scouting'); } catch { /* ignore */ } scoutRound = null; }
+
 export function currentRound() {
+  if (isScouting()) return scoutRound || (scoutRound = newScout());
   let id = null;
   try { id = localStorage.getItem(CURRENT_KEY); } catch { /* ignore */ }
   return id ? store.get(roundKeyOf(id)) : null;

@@ -15,7 +15,7 @@ import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.j
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js';
-import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound } from './rounds.js';
+import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting } from './rounds.js';
 
 const maplibregl = window.maplibregl;
 const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR' };
@@ -25,6 +25,21 @@ const M_PER_DEG = 111320;
 const CROSSHAIR_Y = 1 / 3; // fraction of the screen height, from the top
 
 let map = null;
+
+// Club names as the coaching app's My Bag stores them ('Dr', '3W', '4HY', '7I', 'PW', '52', ...).
+export function clubName(n) {
+  if (!n) return '';
+  if (n === 'Dr') return 'Driver';
+  if (n === 'Dr2') return 'Driver 2';
+  let m;
+  if ((m = /^(\d)W$/.exec(n))) return `${m[1]} Wood`;
+  if ((m = /^(\d)HY$/.exec(n))) return `${m[1]} Hybrid`;
+  if ((m = /^(\d)I$/.exec(n))) return `${m[1]} Iron`;
+  if (/^\d\d$/.test(n)) return `${n}°`;
+  return n;
+}
+const clubShort = n => (n === 'Putter' ? 'Putt' : /^(\d)I$/.test(n) ? n[0] + 'i' : /^(\d)HY$/.test(n) ? n[0] + 'H' : /^\d\d$/.test(n) ? n + '°' : n);
+const SWING_NAME = { '3/4': '¾', '1/2': '½', punch: 'punch', recovery: 'recovery' };
 
 export function closeHole() { if (map) { map.remove(); map = null; } }
 export const lastHole = () => +sessionStorage.getItem('hole') || 1;
@@ -136,9 +151,19 @@ export function renderHole(view, n) {
   // a shot with no round under way starts one for today.
   const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
   const roundKey = () => { const r = currentRound(); return r ? roundKeyOf(r.id) : null; };
-  const holeNow = () => { const k = roundKey(); return (k && store.get(k).holes[n]) || { pin: null, done: false, shots: [] }; };
+  const scouting = isScouting(); // GPS Scouting: a round held in memory only, never saved
+  const holeNow = () => {
+    if (scouting) return currentRound().holes[n] || { pin: null, done: false, shots: [] };
+    const k = roundKey(); return (k && store.get(k).holes[n]) || { pin: null, done: false, shots: [] };
+  };
   const shotsNow = () => holeNow().shots || [];
   function saveHole(patch) {
+    if (scouting) {
+      const r = currentRound();
+      r.holes = { ...r.holes, [n]: { pin: null, done: false, shots: [], ...r.holes[n], ...patch } }; r.updated = Date.now();
+      syncPin(); drawShots(); update();
+      return;
+    }
     let k = roundKey();
     if (!k) {
       const r = { ...newRound(course, teeName, today), courseName: course.name, player: sync.user ? sync.name : '', level, type: 'Casual', holeCount: 18 };
@@ -376,7 +401,7 @@ export function renderHole(view, n) {
     }
   }
   const setTeeBtn = h('button', { class: 'setnext tee', hidden: true, onclick: () => {
-    rememberTee(teeName, ch, tee);
+    if (!scouting) rememberTee(teeName, ch, tee);
     const shots = shotsNow();
     if (shots.length && shots[0].lie === 'tee') saveShots([{ ...shots[0], pos: tee }, ...shots.slice(1)]);
     endMove(true);
@@ -483,18 +508,67 @@ export function renderHole(view, n) {
       saveHole({ shots: rest.length > 1 ? rest : [], pin: rest.some(x => x.lie === 'green') ? hl.pin : null });
       if (stage() === 'play') place();
     } }, '↶');
+  // Clubs: My Bag (shared with the coaching app) or a standard set. The club for
+  // the next shot is chosen automatically — driver off the tee on par 4s and 5s,
+  // otherwise the bag club whose yardage is closest to the ball-to-crosshair
+  // distance — unless one was picked with the Club button.
+  const DEFAULT_BAG = ['Dr', '3W', '5W', '4HY', '5I', '6I', '7I', '8I', '9I', 'PW', 'GW', 'SW', 'LW'].map(name => ({ name }));
+  const bag = () => { const b = (sync.bag || []).filter(c => c && c.name); return b.length ? b : DEFAULT_BAG; };
+  const SWINGS = [['full', 'Full'], ['3/4', '¾'], ['1/2', '½'], ['punch', 'Punch'], ['recovery', 'Recovery']];
+  let pickedClub = null;
+  function autoClub() {
+    const shots = shotsNow(), from = shots.length ? shots[shots.length - 1].pos : tee;
+    if (!shots.length && ch.par >= 4) return (bag().find(c => /^Dr/.test(c.name)) || bag()[0]).name;
+    const d = yards(from, target);
+    let best = null;
+    for (const c of bag()) { const y = +(c.total || c.carry); if (y > 0 && (!best || Math.abs(y - d) < Math.abs(best.y - d))) best = { name: c.name, y }; }
+    return best ? best.name : null;
+  }
+  const currentClub = () => pickedClub || autoClub();
+  const clubPicker = h('div', { class: 'clubsheet', hidden: true, onclick: e => { if (e.target === clubPicker) clubPicker.hidden = true; } });
+  function openClubPicker() {
+    const cur = currentClub();
+    clubPicker.replaceChildren(h('div', { class: 'clubbox' },
+      h('div', { class: 'clubhead' }, h('strong', {}, 'Club'), h('button', { class: 'x', onclick: () => { clubPicker.hidden = true; } }, '✕')),
+      h('div', { class: 'clubgrid' },
+        h('button', { class: pickedClub ? '' : 'on', onclick: () => { pickedClub = null; clubPicker.hidden = true; update(); } }, h('b', {}, 'Auto'), h('small', {}, autoClub() ? clubName(autoClub()) : '–')),
+        bag().map(c => h('button', { class: pickedClub === c.name ? 'on' : '', onclick: () => { pickedClub = c.name; clubPicker.hidden = true; update(); } },
+          h('b', {}, clubShort(c.name)), h('small', {}, c.total || c.carry ? `${c.total || c.carry} yds` : ''))))));
+    clubPicker.hidden = false;
+    void cur;
+  }
+  const clubBtn = h('button', { class: 'fab club', 'aria-label': 'Club', title: 'Club for the next shot', onclick: openClubPicker }, h('span', {}, ''), h('small', {}, 'Club'));
+
+  // Recording a shot: + asks which club and swing was used (putts use the putter).
+  function recordShot(club, swing) {
+    const s = shotsNow();
+    const shots = s.length ? [...s] : [{ pos: tee, lie: 'tee' }];
+    shots[shots.length - 1] = { ...shots[shots.length - 1], ...(club ? { club } : {}), ...(swing && swing !== 'full' ? { swing } : {}) };
+    const lie = stage() === 'putt' ? 'green' : lieOn(target, course.features);
+    const shot = { pos: target, lie };
+    if (lie === 'green' && holeNow().pin) shot.ft = Math.max(1, Math.round(yards(target, pin) * FT_PER_YD));
+    shots.push(shot);
+    const wasPlaying = stage() === 'play';
+    pickedClub = null;
+    saveShots(shots);
+    if (wasPlaying && lie === 'green') zoomToGreen();
+  }
+  const shotConfirm = h('div', { class: 'clubsheet', hidden: true, onclick: e => { if (e.target === shotConfirm) shotConfirm.hidden = true; } });
+  function openShotConfirm() {
+    const shots = shotsNow(), from = shots.length ? shots[shots.length - 1].pos : tee;
+    let club = currentClub(), swing = 'full';
+    const draw = () => shotConfirm.replaceChildren(h('div', { class: 'clubbox' },
+      h('div', { class: 'clubhead' }, h('strong', {}, `Shot ${Math.max(1, shots.length)} · ${Math.round(yards(from, target))} yds`), h('button', { class: 'x', onclick: () => { shotConfirm.hidden = true; } }, '✕')),
+      h('small', { class: 'muted' }, club ? `Club: ${clubName(club)}` : 'Which club did you hit?'),
+      h('div', { class: 'clubgrid' }, bag().map(c => h('button', { class: club === c.name ? 'on' : '', onclick: () => { club = c.name; draw(); } },
+        h('b', {}, clubShort(c.name)), h('small', {}, c.total || c.carry ? `${c.total || c.carry}` : '')))),
+      h('div', { class: 'swings' }, SWINGS.map(([k, label]) => h('button', { class: swing === k ? 'on' : '', onclick: () => { swing = k; draw(); } }, label))),
+      h('button', { class: 'record', onclick: () => { shotConfirm.hidden = true; recordShot(club, swing); } }, 'Record shot')));
+    draw();
+    shotConfirm.hidden = false;
+  }
   const addBtn = h('button', { class: 'fab add', 'aria-label': 'Record shot here', title: 'Record shot at the crosshair',
-    onclick: () => {
-      const s = shotsNow();
-      const shots = s.length ? [...s] : [{ pos: tee, lie: 'tee' }];
-      const lie = stage() === 'putt' ? 'green' : lieOn(target, course.features);
-      const shot = { pos: target, lie };
-      if (lie === 'green' && holeNow().pin) shot.ft = Math.max(1, Math.round(yards(target, pin) * FT_PER_YD));
-      shots.push(shot);
-      const wasPlaying = stage() === 'play';
-      saveShots(shots);
-      if (wasPlaying && lie === 'green') zoomToGreen();
-    } }, '+');
+    onclick: () => { if (stage() === 'putt') recordShot('Putter'); else openShotConfirm(); } }, '+');
   const holedBtn = h('button', { class: 'holed', onclick: () => saveHole({ done: true }) }, 'Holed');
   const setPinBtn = h('button', { class: 'setpin', hidden: true, onclick: () => {
     pin = target;
@@ -514,7 +588,14 @@ export function renderHole(view, n) {
 
   const credit = h('small', { class: 'muted credit' }, 'Imagery © Esri, Maxar · Outlines © OpenStreetMap contributors');
   // Viewing a past round: just Back to Round History and Home.
-  const menu = viewing()
+  const menu = scouting
+    ? h('div', { class: 'sheet', hidden: true },
+      h('label', {}, 'Tees ', h('select', { onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHole(view, n); } },
+        course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
+      h('button', { class: 'btn', onclick: () => { endScouting(); location.hash = '#/'; } }, 'Home'),
+      h('small', { class: 'muted' }, 'GPS Scouting · nothing is saved'),
+      credit)
+    : viewing()
     ? h('div', { class: 'sheet', hidden: true },
       h('button', { class: 'btn', onclick: () => { leaveView(); location.hash = '#/history'; } }, 'Back to Round History'),
       h('button', { class: 'btn', onclick: () => { leaveView(); location.hash = '#/'; } }, 'Home'),
@@ -561,10 +642,10 @@ export function renderHole(view, n) {
       h('button', { class: 'cancel', onclick: () => { leave.hidden = true; } }, 'Cancel')));
 
   view.replaceChildren(h('div', { class: 'holeview' }, mapEl,
-    h('div', { class: 'vertag' }, `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
+    h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, sgtBtn, apprBtn, arcBtn, widthBtn, clubPicker, shotConfirm, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -699,7 +780,7 @@ export function renderHole(view, n) {
     if (!s || (!next && !hl.done)) return null;
     const hp = hl.pin || pin, isPutt = s.lie === 'green', travel = yards(s.pos, next ? next.pos : hp);
     const went = isPutt ? `${Math.round(travel * FT_PER_YD)} ft` : `${Math.round(travel)} yds`;
-    const club = isPutt ? 'Putter' : 'Hit'; // other clubs replace "Hit" once they're set up
+    const club = s.club ? clubName(s.club) + (s.swing ? ` (${SWING_NAME[s.swing] || s.swing})` : '') : isPutt ? 'Putter' : 'Hit';
     const first = isPutt ? `${club} ${went}` : `${club} ${went} to ${next ? lieName(next, s.pos, hp) : 'the hole'}`;
     const second = !next ? 'In the hole' : `${next.lie === 'green' ? `${next.ft ?? Math.round(yards(next.pos, hp) * FT_PER_YD)} ft` : `${Math.round(yards(next.pos, hp))} yds`} to hole`;
     return [first, second];
@@ -903,6 +984,8 @@ export function renderHole(view, n) {
     addBtn.hidden = st === 'pin' || st === 'done';
     holedBtn.hidden = st !== 'putt';
     widthBtn.hidden = arcBtn.hidden = apprBtn.hidden = onGreen;
+    clubBtn.hidden = onGreen || viewing();
+    if (!clubBtn.hidden) { const c = currentClub(); clubBtn.firstChild.textContent = c ? clubShort(c) : '–'; clubBtn.classList.toggle('on', !!pickedClub); }
     sgtBtn.hidden = onGreen || shots.length > 0; // SG is the drive heat map, from the tee only
     arcSlider.hidden = !showArc || onGreen;
     apprSlider.hidden = !showAppr || onGreen;
@@ -987,7 +1070,7 @@ export function renderHole(view, n) {
     mk.on('dragend', () => { const p = mk.getLngLat(); onMove([p.lat, p.lng], true); });
     return mk;
   };
-  const teeMark = dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, (p, done) => { tee = p; if (done) rememberTee(teeName, ch, p); update(); });
+  const teeMark = dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, (p, done) => { tee = p; if (done && !scouting) rememberTee(teeName, ch, p); update(); });
   const pinMark = dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }), pin, (p, done) => {
     pin = p;
     if (done && holeNow().pin) saveHole({ pin, shots: shotsNow().map(x => (x.lie === 'green' ? { ...x, ft: Math.max(1, Math.round(yards(x.pos, pin) * FT_PER_YD)) } : x)) });
