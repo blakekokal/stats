@@ -53,6 +53,7 @@ export function satellite(map) {
 export const COURSES = [
   { id: 'bridlewood', name: 'Bridlewood Golf Club', file: 'data/bridlewood.json' },
   { id: 'bearcreek-west', name: 'Bear Creek Golf Club – West', file: 'data/bearcreek-west.json' },
+  { id: 'cowboys', name: 'Cowboys Golf Club', file: 'data/cowboys.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 const base = {}; // id -> the course file as shipped

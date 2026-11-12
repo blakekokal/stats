@@ -66,8 +66,10 @@ def main(src, cfg_path, dst):
         t = el.get("tags", {})
         kind = KIND.get(t.get("golf")) or ("water" if t.get("natural") == "water" else None)
         if t.get("golf") == "hole" and el["type"] == "way":
-            if cfg.get("courseName") and t.get("golf:course:name") != cfg["courseName"]:
-                continue  # another course sharing the same grounds
+            if "courseName" in cfg and (t.get("golf:course:name") or "") != cfg["courseName"]:
+                continue  # another course sharing the same grounds ("" = holes with no course name)
+            if "courseName" in cfg and not cfg["courseName"] and t.get("name"):
+                continue
             line = [pt(p) for p in el["geometry"]]
             holes.setdefault(t.get("ref", "?"), []).append(
                 {"par": int(t["par"]) if t.get("par", "").isdigit() else None, "line": line})

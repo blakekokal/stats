@@ -377,6 +377,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.37.0', ['New course: Cowboys Golf Club (Grapevine)']],
   ['0.36.0', ['New course: Bear Creek Golf Club – West (DFW). Pick it on New Round or GPS Scouting']],
   ['0.35.0', ['Disp shows just 20 dots (no oval)', 'Comp: a button beside it switches the compared clubs between arcs and dispersion dots']],
   ['0.34.0', ['Disp button: a dispersion oval with 15 shots in it (right ones a bit shorter, left a bit longer), showing their average SG', 'Arc, Disp and Appr are never on together']],
