@@ -328,3 +328,4 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .compdot.active b { font-size: 21px; } .compdot.active .up { bottom: 13px; } .compdot.active .down { top: 13px; }
 .compdot.active { z-index: 1; }
 .sliders.high { bottom: calc(314px + env(safe-area-inset-bottom)); }
+.fab.arcadj.compmode { bottom: calc(324px + env(safe-area-inset-bottom)); background: #f472b6; color: #111; }
