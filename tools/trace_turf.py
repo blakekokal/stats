@@ -1,6 +1,6 @@
 """Redraw a course's fairways and greens to fit the satellite imagery.
 
-Usage: trace_turf.py course.json mosaic.png.meta mosaic.png out.json
+Usage: trace_turf.py course.json mosaic.png.meta mosaic.png out.json [fairway_reach_m=12] [green_reach_m=6]
 (mosaic from tools/fetch_tiles.py: 19 <s> <w> <n> <e> mosaic.png)
 
 Each mapped fairway and green is a seed: its turf colour is learnt from inside
@@ -112,7 +112,9 @@ feats, new, stats = c['features'], [], {'green': [0, 0], 'fairway': [0, 0]}
 greens_px = np.zeros((Hh, Ww), bool)
 done = {}
 greens_cut = None
-for kind, limit, open_m, close_m in (('green', 6, 1.5, 3), ('fairway', 12, 0.8, 8)):
+FW_REACH = float(sys.argv[5]) if len(sys.argv) > 5 else 12  # how far an edge may move, metres
+GR_REACH = float(sys.argv[6]) if len(sys.argv) > 6 else 6
+for kind, limit, open_m, close_m in (('green', GR_REACH, 1.5, 3), ('fairway', FW_REACH, 0.8, 8)):
     if kind == 'fairway': greens_cut = cv2.dilate(greens_px.astype(np.uint8), disk(px(0.6))) > 0
     for i, f in enumerate(feats):
         if f['t'] != kind: continue
@@ -134,5 +136,19 @@ out = []
 for i, f in enumerate(feats):
     out.extend(done.get(i, [f]))
 c['features'] = out
+# A hole's default pin goes in the middle of its green if the green moved off it.
+def inpoly(p, ring):
+    y, x = p; ins = False
+    for (y1, x1), (y2, x2) in zip(ring, ring[1:]):
+        if (y1 > y) != (y2 > y) and x < (x2 - x1) * (y - y1) / (y2 - y1) + x1: ins = not ins
+    return ins
+greens = [f['p'][0] for f in out if f['t'] == 'green']
+cen = lambda r: [sum(q[0] for q in r) / len(r), sum(q[1] for q in r) / len(r)]
+moved = 0
+for h in c['holes']:
+    if greens and not any(inpoly(h['pin'], g) for g in greens):
+        g = min(greens, key=lambda g: (cen(g)[0] - h['pin'][0]) ** 2 + (cen(g)[1] - h['pin'][1]) ** 2)
+        h['pin'] = [round(v, 6) for v in cen(g)]; moved += 1
+print('pins moved onto their greens:', moved)
 json.dump(c, open(out_path, 'w'), separators=(',', ':'))
 print('traced / kept as was:', stats)

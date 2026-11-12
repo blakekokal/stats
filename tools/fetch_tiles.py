@@ -1,4 +1,9 @@
-import math, os, sys, concurrent.futures as cf, urllib.request
+"""Download Esri World Imagery tiles for a box and join them into one image.
+
+Usage: fetch_tiles.py <zoom> <south> <west> <north> <east> out.png
+Also writes out.png.meta (zoom and the top-left tile) for trace_turf.py.
+"""
+import io, math, os, sys, time, concurrent.futures as cf, urllib.request
 from PIL import Image
 z = int(sys.argv[1]); s, w, n, e = map(float, sys.argv[2:6]); out = sys.argv[6]
 def tile(lat, lon):
@@ -10,9 +15,15 @@ X = range(int(x0), int(x1) + 1); Y = range(int(y0), int(y1) + 1)
 d = os.path.join(os.path.dirname(out), 'tiles'); os.makedirs(d, exist_ok=True)
 def get(xy):
     x, y = xy; p = f'{d}/{z}_{x}_{y}.jpg'
-    if not os.path.exists(p):
-        req = urllib.request.Request(f'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', headers={'User-Agent': 'tile-trace'})
-        open(p, 'wb').write(urllib.request.urlopen(req, timeout=30).read())
+    for attempt in range(5):  # the tile server sometimes answers 502
+        if os.path.exists(p): break
+        try:
+            req = urllib.request.Request(f'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', headers={'User-Agent': 'tile-trace'})
+            data = urllib.request.urlopen(req, timeout=30).read()
+            Image.open(io.BytesIO(data)).verify()  # a cut-off download is retried
+            open(p, 'wb').write(data)
+        except Exception:
+            time.sleep(1 + 2 * attempt)
     return p
 with cf.ThreadPoolExecutor(16) as ex: list(ex.map(get, [(x, y) for x in X for y in Y]))
 img = Image.new('RGB', (len(X) * 256, len(Y) * 256))
