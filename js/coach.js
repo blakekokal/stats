@@ -359,6 +359,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.29.1', ['Back to the previous button layout']],
   ['0.28.4', ['Arc → Auto changes only when you tap a club']],
   ['0.28.3', ['Arc button just turns the arc on; a small Adj button beside it opens the slider']],
   ['0.28.2', ['Arc → Auto sizes the arc to the shot (or the club\'s arc from My Bag)', 'My Bag page with arc widths per club']],
