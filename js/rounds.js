@@ -7,8 +7,6 @@
 import { store } from './store.js';
 import { analyzeRound } from './model.js';
 
-// Round History starts fresh from this date; older rounds are kept but hidden.
-export const HISTORY_FROM = '2026-11-12';
 
 const CURRENT_KEY = 'gs:currentRound';
 export const roundKeyOf = id => 'round:' + id;
@@ -38,4 +36,7 @@ export function submitRound(id) {
   if (r) store.set(roundKeyOf(id), { ...r, submitted: true, updated: Date.now() });
 }
 
-export const historyRounds = () => store.list('round:').filter(r => r && r.date >= HISTORY_FROM);
+// Round History starts fresh with the New Round screen: rounds from before it
+// (they have no course name) are kept but hidden. Not filtered by date, since a
+// phone's clock can't be relied on.
+export const historyRounds = () => store.list('round:').filter(r => r && r.courseName);

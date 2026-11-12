@@ -36,7 +36,8 @@ export function renderHome(view) {
   search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 
   const brand = h('div', { style: 'text-align:center;margin-bottom:6px;' });
-  brand.innerHTML = `<div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:1px;line-height:1.0;color:#ffffff;">Blake Kokal<br><span style="display:inline-flex;align-items:baseline;justify-content:center;"><span style="font-size:10px;visibility:hidden;font-weight:600;">What's new</span><span style="font-size:13px;visibility:hidden;font-weight:700;margin-right:5px;">v${VERSION}</span>Golf<span style="font-size:13px;color:#2e2e2e;font-weight:700;margin-left:6px;">v${VERSION}</span><span style="font-size:10px;color:#44b8f0;font-weight:600;margin-left:5px;opacity:.35;">&#x2190; What's new</span></span></div>`;
+  brand.innerHTML = `<div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:1px;line-height:1.0;color:#ffffff;">Blake Kokal<br><span style="display:inline-flex;align-items:baseline;justify-content:center;"><span style="font-size:10px;visibility:hidden;font-weight:600;">What's new</span><span style="font-size:13px;visibility:hidden;font-weight:700;margin-right:5px;">v${VERSION}</span>Golf<span class="wn" style="font-size:13px;color:#2e2e2e;font-weight:700;margin-left:6px;cursor:pointer;">v${VERSION}</span><span class="wn" style="font-size:10px;color:#44b8f0;font-weight:600;margin-left:5px;cursor:pointer;">&#x2190; What's new</span></span></div>`;
+  brand.querySelectorAll('.wn').forEach(el => el.addEventListener('click', () => { location.hash = '#/whatsnew'; }));
   brand.append(h('div', { style: 'font-size:11px;color:#2e2e2e;margin-top:3px;' }, sync.user ? '👤 ' + sync.name : ''));
 
   view.replaceChildren(page('center',
@@ -291,3 +292,31 @@ export function renderLogin(view) {
     h('div', { style: 'font-size:24px;font-weight:800;' }, 'Account'), msg, email, pass, extra, loginBtn, signupBtn, forgot));
 }
 
+
+// ---------- what's new ----------
+
+const CHANGES = [
+  ['0.22.3', ["What's new works again", 'Rounds always show in Round History, whatever date the phone is set to']],
+  ['0.22.2', ['Tapping Tee or Pin zooms in on the tee box or green; Set or cancel returns to your view']],
+  ['0.22.1', ['SG key is a slim bar in the top-left so it no longer covers the yardages']],
+  ['0.22.0', ['SG button shows the drive heat map from the tee (par 3s too)', 'Appr pill has a Distance | SG toggle: SG rings the pin where landing gains that much']],
+  ['0.20.3', ['Arc, width, Appr circle and the aim line stay locked to the crosshair while panning']],
+  ['0.20.0', ['Drive heat map in 0.25 SG bands, by real lie: fairway, rough, bunker and water']],
+  ['0.18.0', ['Strokes-gained zones for the drive']],
+  ['0.17.0', ['Menu Home asks: pause and save, end and submit, or delete the round']],
+  ['0.16.0', ['Move tee / Move pin buttons; orange Undo at the top right']],
+  ['0.15.0', ['SG button: ring around the pin where landing on the green gains 0 strokes']],
+  ['0.14.0', ['Appr circle with 20–60 ft presets']],
+  ['0.13.0', ['Par 3s open on the whole hole, par 4s and 5s on your drive', 'Avg Total Drive in Settings', 'Bigger putting view; holed stroke number shown at the hole']],
+  ['0.12.0', ['New home, New Round, Round History and Settings screens', 'GPS rounds at Bridlewood']],
+];
+
+export function renderWhatsNew(view) {
+  view.replaceChildren(page('top', backBtn(),
+    h('div', { style: 'width:100%;max-width:340px;text-align:left;' },
+      h('div', { style: 'font-size:22px;font-weight:800;text-align:center;margin-bottom:10px;' }, "What's new"),
+      CHANGES.map(([v, items], i) => h('div', { class: 'card' },
+        h('div', { style: 'display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;' },
+          h('strong', { style: 'font-size:15px;' }, `v${v}`), i === 0 ? h('span', { style: 'font-size:11px;color:#00b87a;font-weight:700;' }, 'LATEST') : null),
+        h('ul', { style: 'margin:0;padding-left:18px;font-size:13px;color:#cfcfcf;line-height:1.4;' }, items.map(t => h('li', {}, t))))))));
+}
