@@ -849,7 +849,8 @@ export function renderHole(view, n) {
   }
 
   const dragMarker = (el, pos, onMove) => {
-    const mk = new maplibregl.Marker({ element: el, draggable: true }).setLngLat(ll(pos)).addTo(m);
+    // Locked while viewing a past round; draggable again after Edit.
+    const mk = new maplibregl.Marker({ element: el, draggable: !viewing() }).setLngLat(ll(pos)).addTo(m);
     mk.on('drag', () => { const p = mk.getLngLat(); onMove([p.lat, p.lng], false); });
     mk.on('dragend', () => { const p = mk.getLngLat(); onMove([p.lat, p.lng], true); });
     return mk;
