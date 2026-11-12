@@ -330,6 +330,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.27.1', ['Strokes Gained button sits next to Expected at the top']],
   ['0.27.0', ['Shot distances shown along the shot lines (zoom in for putts)', 'Shot details read like "Putter · 15 ft to 2 ft"', 'Viewing / editing a round survives a refresh; finished rounds reopen in view mode']],
   ['0.26.5', ['Strokes Gained panel: close (✕) button, sections start collapsed']],
   ['0.26.4', ['Viewing a round: no crosshair, readouts or aiming line']],
