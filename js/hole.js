@@ -228,7 +228,10 @@ export function renderHole(view, n) {
   // Arc turns the arc on or off; while it's on, a small Adj button beside it
   // opens the width slider.
   let arcAdjOpen = false;
-  const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); if (!v) arcAdjOpen = false; });
+  // Arc and Appr are never on together: turning one on turns the other off.
+  const setArcOn = v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); if (!v) arcAdjOpen = false; arcBtn?.classList.toggle('on', v); arcBtn?.setAttribute('aria-pressed', String(v)); };
+  const setApprOn = v => { showAppr = v; localStorage.setItem('gs:appr', v ? '1' : '0'); if (!v) apprAdjOpen = false; apprBtn?.classList.toggle('on', v); apprBtn?.setAttribute('aria-pressed', String(v)); };
+  const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { setArcOn(v); if (v && showAppr) setApprOn(false); });
   const arcAdjBtn = h('button', { class: 'fab arcadj', 'aria-label': 'Adjust arc width', title: 'Adjust arc width', hidden: true,
     onclick: () => { arcAdjOpen = !arcAdjOpen; update(); } }, h('span', {}, '⇔'), h('small', {}, 'Adj'));
 
@@ -239,7 +242,7 @@ export function renderHole(view, n) {
   let showAppr = flag('gs:appr', '0');
   let apprFt = Math.min(80, Math.max(10, +localStorage.getItem('gs:apprFt') || 40));
   let apprMode = localStorage.getItem('gs:apprMode') === 'sg' ? 'sg' : 'ft';
-  const apprSlider = h('div', { class: 'arcslider appr', hidden: !showAppr });
+  const apprSlider = h('div', { class: 'arcslider appr', hidden: true });
   function drawApprSlider() {
     const isSg = apprMode === 'sg';
     const cur = () => (isSg ? sgCfg.rings.value : apprFt);
@@ -264,7 +267,13 @@ export function renderHole(view, n) {
       h('div', { class: 'presets' }, presets),
       h('div', { class: 'slide' }, h('span', {}, 'Appr'), range, value));
   }
-  const apprBtn = toggle('appr', 'Appr', '◎', 'Approach circle around the crosshair', () => showAppr, v => { showAppr = v; localStorage.setItem('gs:appr', v ? '1' : '0'); apprSlider.hidden = !v; });
+  const apprBtn = toggle('appr', 'Appr', '◎', 'Approach circle around the crosshair', () => showAppr, v => { setApprOn(v); if (v && showArc) setArcOn(false); });
+  // Like Arc: Appr turns the circle on or off; a small Adj button beside it opens its slider.
+  let apprAdjOpen = false;
+  const apprAdjBtn = h('button', { class: 'fab arcadj appradj', 'aria-label': 'Adjust approach circle', title: 'Adjust approach circle', hidden: true,
+    onclick: () => { apprAdjOpen = !apprAdjOpen; update(); } }, h('span', {}, '⇔'), h('small', {}, 'Adj'));
+  if (showArc && showAppr) setApprOn(false);
+  const slidersEl = h('div', { class: 'sliders' }, apprSlider, arcSlider);
 
   // SG target: a ring around the pin at the distance from which a ball on the
   // green gains 0 strokes for the selected handicap, for an approach from where
@@ -575,7 +584,7 @@ export function renderHole(view, n) {
       h('div', { class: 'compactions' },
         h('button', { class: 'off', onclick: () => { showComp = false; saveComp(); compSheet.hidden = true; update(); } }, 'Off'),
         h('button', { class: 'record', disabled: sel.length < 2, onclick: () => { compClubs = sel; showComp = true; compAim = {}; saveComp();
-          if (showArc) { showArc = false; arcAdjOpen = false; localStorage.setItem('gs:arc', '0'); arcBtn.classList.remove('on'); arcBtn.setAttribute('aria-pressed', 'false'); } /* only the Comp arcs */ compSheet.hidden = true; update(); } }, 'Compare'))));
+          if (showArc) setArcOn(false); /* only the Comp arcs */ compSheet.hidden = true; update(); } }, 'Compare'))));
     draw();
     compSheet.hidden = false;
   }
@@ -785,7 +794,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, compBtn, viewBtn, sgtBtn, apprBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, compBtn, viewBtn, sgtBtn, apprBtn, apprAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1141,7 +1150,10 @@ export function renderHole(view, n) {
     arcSlider.hidden = !showArc || onGreen || !arcAdjOpen;
     arcAdjBtn.hidden = !showArc || onGreen;
     arcAdjBtn.classList.toggle('on', arcAdjOpen);
-    apprSlider.hidden = !showAppr || onGreen;
+    apprSlider.hidden = !showAppr || onGreen || !apprAdjOpen;
+    apprAdjBtn.hidden = !showAppr || onGreen;
+    apprAdjBtn.classList.toggle('on', apprAdjOpen);
+    slidersEl.classList.toggle('high', !apprSlider.hidden); // clear of the Appr Adj button
     setPinBtn.hidden = st !== 'pin';
     banner.hidden = true; // replaced by the score chips at the top
     teeBtn.hidden = onGreen;
