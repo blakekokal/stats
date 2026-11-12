@@ -107,6 +107,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 /* hole viewer */
 .holeview { position: relative; height: 100%; overflow: hidden; background: #0b0e0c; }
 #gmap { position: absolute; inset: 0; }
+.liveoverlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
 .holepill { position: absolute; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; gap: 6px; background: #111c; backdrop-filter: blur(8px); border-radius: 999px; padding: 6px 8px; color: #fff; text-align: center; white-space: nowrap; }
 .holepill a { font-size: 30px; line-height: 1; text-decoration: none; padding: 4px 16px 8px; }
 .holepill small { display: block; font-size: 13px; opacity: .85; } .holepill strong { font-size: 17px; }
