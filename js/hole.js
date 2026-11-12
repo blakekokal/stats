@@ -631,8 +631,7 @@ export function renderHole(view, n) {
     apprSlider.hidden = !showAppr || onGreen;
     setPinBtn.hidden = st !== 'pin';
     banner.hidden = st !== 'done';
-    undoBtn.classList.toggle('low', !banner.hidden); // keep clear of the score banner
-    editBtn.classList.toggle('low', !banner.hidden);
+    holeEl()?.classList.toggle('holedbar', !banner.hidden); // the version tag makes room for it
     teeBtn.hidden = onGreen;
     pinBtn.hidden = st === 'pin' || st === 'done';
     if (viewing()) addBtn.hidden = holedBtn.hidden = setPinBtn.hidden = undoBtn.hidden = teeBtn.hidden = pinBtn.hidden = true;
@@ -654,10 +653,10 @@ export function renderHole(view, n) {
       const r = currentRound(), allDone = r && Array.from({ length: holeCount }, (_, i) => r.holes?.[i + 1]?.done).every(Boolean);
       const last = n >= holeCount;
       banner.replaceChildren(bannerText, viewing()
-        ? (last ? h('a', { class: 'btn primary', href: '#/history', onclick: leaveView }, 'Done ›') : h('a', { class: 'btn primary', href: `#/hole/${nextHole}` }, 'Next hole ›'))
+        ? (last ? h('a', { class: 'btn primary', href: '#/history', onclick: leaveView, title: 'Done', 'aria-label': 'Done' }, '✓') : h('a', { class: 'btn primary', href: `#/hole/${nextHole}`, title: 'Next hole', 'aria-label': 'Next hole' }, '›'))
         : allDone
-          ? h('a', { class: 'btn primary', href: '#/history', onclick: () => { submitRound(r.id); setCurrentRound(null); } }, 'Finish round ›')
-          : h('a', { class: 'btn primary', href: `#/hole/${nextHole}` }, 'Next hole ›'));
+          ? h('a', { class: 'btn primary', href: '#/history', onclick: () => { submitRound(r.id); setCurrentRound(null); }, title: 'Finish round', 'aria-label': 'Finish round' }, '✓')
+          : h('a', { class: 'btn primary', href: `#/hole/${nextHole}`, title: 'Next hole', 'aria-label': 'Next hole' }, '›'));
     }
 
     // Strokes gained by a shot from the tee (or the last recorded shot) that
