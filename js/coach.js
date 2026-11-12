@@ -330,6 +330,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.26.4', ['Viewing a round: no crosshair, readouts or aiming line']],
   ['0.26.3', ['Editing a past round: Home offers Leave without saving']],
   ['0.26.2', ['Strokes Gained button in the bottom-right when viewing a round', 'Shots from the green show Putter as the club']],
   ['0.26.1', ['Tap a numbered shot dot on the map to see that shot', 'Fixed the SG button showing over the menu on some phones']],
