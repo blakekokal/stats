@@ -281,3 +281,4 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .shotpop b.pos { color: #4ade80; } .shotpop b.neg { color: #ff6b6b; } .shotpop b.muted { color: #7a7a7a; font-weight: 600; }
 .holeview.viewing .crosshair, .holeview.viewing .readout { display: none; }
 .shotinfo .line, .shotpop .line { justify-content: flex-start; } .shotinfo .line b, .shotpop .line b { font-size: 13px; }
+.shotinfo .line.sub span, .shotpop .line.sub span { color: #cfcfcf; font-size: 13px; } .shotpop .line.sub { margin-bottom: 3px; }
