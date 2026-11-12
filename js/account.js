@@ -9,6 +9,7 @@ export const levelName = l => (l === 'Pro' ? 'Tour Pro' : l === 'Scratch' ? 'Scr
 
 export function renderAccount(view) {
   const rerender = () => renderAccount(view);
+  if (sync.recovering) return newPassword(view);
   if (sync.user) return signedIn(view, rerender);
 
   let signup = false;
@@ -65,4 +66,22 @@ function signedIn(view, rerender) {
         h('button', { onclick: () => sync.now() }, 'Sync now'),
         h('button', { class: 'danger', onclick: async () => { await sync.signOut(); rerender(); } }, 'Log out')))));
   showStatus();
+}
+
+// After following the link in a password-reset email.
+function newPassword(view) {
+  const pass = h('input', { type: 'password', placeholder: 'New password', autocomplete: 'new-password', 'aria-label': 'New password' });
+  const confirm = h('input', { type: 'password', placeholder: 'Confirm new password', autocomplete: 'new-password', 'aria-label': 'Confirm new password' });
+  const msg = h('p', { class: 'muted' });
+  const say = (text, bad) => { msg.textContent = text; msg.className = bad ? 'bad' : 'muted'; };
+  view.replaceChildren(h('div', { class: 'page narrow' },
+    h('h1', {}, 'Set a new password'),
+    h('p', { class: 'muted' }, 'This changes your password for the coaching app too.'),
+    h('div', { class: 'card stack' }, pass, confirm,
+      h('button', { class: 'primary', onclick: async () => {
+        if (pass.value.length < 6) return say('Password must be at least 6 characters.', true);
+        if (pass.value !== confirm.value) return say('Passwords do not match.', true);
+        say('Saving…');
+        try { await sync.setPassword(pass.value); toast('Password updated.'); location.hash = '#/'; } catch (e) { say(e.message || String(e), true); }
+      } }, 'Save password'), msg)));
 }

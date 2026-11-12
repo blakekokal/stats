@@ -76,8 +76,19 @@ export const sync = {
   },
   async resetPassword(email) {
     const c = getClient(); if (!c) throw new Error('Accounts are unavailable right now.');
-    const { error } = await c.auth.resetPasswordForEmail(email);
+    // The link in the email brings the user back to this page (this address
+    // must be in the Supabase project's Redirect URLs list).
+    const { error } = await c.auth.resetPasswordForEmail(email, { redirectTo: location.origin + location.pathname });
     if (error) throw error;
+  },
+  // True after arriving from a password-reset email, until a new password is set.
+  recovering: false,
+  async setPassword(password) {
+    const c = getClient(); if (!c) throw new Error('Accounts are unavailable right now.');
+    const { error } = await c.auth.updateUser({ password });
+    if (error) throw error;
+    sync.recovering = false;
+    await init();
   },
   // Saved the same way as the coaching app: on the profile row and the user's metadata.
   async setLevel(level) {
@@ -104,7 +115,15 @@ function setStatus(status, error = '') { sync.status = status; sync.error = erro
 let client = null;
 function getClient() {
   if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !window.supabase) return null;
-  if (!client) client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  if (!client) {
+    client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    client.auth.onAuthStateChange(event => {
+      if (event !== 'PASSWORD_RECOVERY') return;
+      sync.recovering = true;
+      location.hash = '#/account';
+      setStatus(sync.status, sync.error);
+    });
+  }
   return client;
 }
 
