@@ -288,6 +288,8 @@ export function renderHole(view, n) {
   }
 
   const line = pts => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: pts.map(ll) } });
+  // The recorded shots, joined up; once holed, the last putt runs into the hole.
+  const trace = shots => [...shots.map(x => x.pos), ...(holeNow().done && shots.length ? [pin] : [])];
 
   function update() {
     // Read what is under the crosshair from its actual screen position, so the
@@ -348,7 +350,7 @@ export function renderHole(view, n) {
       expValue.textContent = teeExp.toFixed(2);
       const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
       set('path', line(st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin]));
-      set('shots', line(shots.map(x => x.pos)));
+      set('shots', line(trace(shots)));
       set('width', line([])); set('arc', line([]));
       return;
     }
@@ -361,7 +363,7 @@ export function renderHole(view, n) {
     const half = arcYd / 2 / YD_PER_M;
     const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
     set('path', line([from, target, pin]));
-    set('shots', line(shots.map(s => s.pos)));
+    set('shots', line(trace(shots)));
     set('width', line(w ? arcPoints(w.arc, w.l, w.r) : []));
     set('arc', line(arc ? arcPoints(arc, -half, half) : []));
   }
