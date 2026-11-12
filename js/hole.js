@@ -231,7 +231,7 @@ export function renderHole(view, n) {
   // Arc and Appr are never on together: turning one on turns the other off.
   const setArcOn = v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); if (!v) arcAdjOpen = false; arcBtn?.classList.toggle('on', v); arcBtn?.setAttribute('aria-pressed', String(v)); };
   const setApprOn = v => { showAppr = v; localStorage.setItem('gs:appr', v ? '1' : '0'); if (!v) apprAdjOpen = false; apprBtn?.classList.toggle('on', v); apprBtn?.setAttribute('aria-pressed', String(v)); };
-  // Disp: a dispersion oval at the crosshair (as wide as the arc) with 15 evenly
+  // Disp: a dispersion oval at the crosshair (as wide as the arc) with 20 evenly
   // spread shots in it, scored for SG. Arc, Disp and Appr are never on together.
   let showDisp = flag('gs:disp', '0');
   const setDispOn = v => { showDisp = v; localStorage.setItem('gs:disp', v ? '1' : '0'); if (!v) arcAdjOpen = false; dispBtn?.classList.toggle('on', v); dispBtn?.setAttribute('aria-pressed', String(v)); };
@@ -592,10 +592,14 @@ export function renderHole(view, n) {
       h('div', { class: 'compactions' },
         h('button', { class: 'off', onclick: () => { showComp = false; saveComp(); compSheet.hidden = true; update(); } }, 'Off'),
         h('button', { class: 'record', disabled: sel.length < 2, onclick: () => { compClubs = sel; showComp = true; compAim = {}; saveComp();
-          if (showArc) setArcOn(false); /* only the Comp arcs */ compSheet.hidden = true; update(); } }, 'Compare'))));
+          if (showArc) setArcOn(false); if (showDisp) setDispOn(false); /* only the Comp arcs */ compSheet.hidden = true; update(); } }, 'Compare'))));
     draw();
     compSheet.hidden = false;
   }
+  // Next to Comp while it's on: show the clubs as arcs or as dispersion dots.
+  let compMode = localStorage.getItem('gs:compMode') === 'disp' ? 'disp' : 'arc';
+  const compModeBtn = h('button', { class: 'fab arcadj compmode', 'aria-label': 'Arcs or dispersion', title: 'Show the compared clubs as arcs or dispersion dots', hidden: true,
+    onclick: () => { compMode = compMode === 'arc' ? 'disp' : 'arc'; localStorage.setItem('gs:compMode', compMode); update(); } }, h('span', {}, ''), h('small', {}, ''));
   const compBtn = h('button', { class: 'fab comp', 'aria-label': 'Compare clubs', title: 'Compare 2-3 clubs on one line', onclick: openCompPicker }, h('span', {}, '⫶'), h('small', {}, 'Comp'));
   const compLegend = h('div', { class: 'zonelegend compkey', hidden: true });
   // View: a clean look at the hole — no crosshair or its yardages, no aiming
@@ -655,6 +659,10 @@ export function renderHole(view, n) {
       const mid = [from[0] + (dm * Math.cos(brg)) / M_PER_DEG, from[1] + (dm * Math.sin(brg)) / (M_PER_DEG * k)];
       const arc = arcThrough(from, mid);
       if (!arc) return null;
+      if (compMode === 'disp') { // 20 shots in the club's dispersion, scored from where each lands
+        const d = dispersion(from, mid, clubArcW(club), fromExp, lieHere);
+        return { club, yd, mid, own, toPin: yards(mid, pin), color: COMP_COLORS[i], sg: d.sg, pts: [], dots: d.dots };
+      }
       const half = clubArcW(club) / 2 / YD_PER_M, N = 24;
       let tot = 0;
       for (let j = 0; j <= N; j++) {
@@ -802,7 +810,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, compBtn, viewBtn, sgtBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, compBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1076,7 +1084,6 @@ export function renderHole(view, n) {
   const STYLES = {
     path: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 4 }, { stroke: '#fff', 'stroke-width': 2 }],
     arc: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#fff', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
-    disp: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 4.5 }, { stroke: '#fff', 'stroke-width': 2, 'stroke-dasharray': '5 4' }],
     appr: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 4.5, 'stroke-linecap': 'round' }, { stroke: '#4dd0ff', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
     comp0: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#f472b6', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
     comp1: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#4dd0ff', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
@@ -1126,25 +1133,23 @@ export function renderHole(view, n) {
       bg.setAttribute('x', (l.x - w / 2).toFixed(1)); bg.setAttribute('y', (l.y - 9).toFixed(1)); bg.setAttribute('width', w);
     });
   }
-  // A dispersion oval centred on `target`, `widthYd` across the line of play and
-  // 60% of that deep, sheared so shots to the right finish a little shorter and
-  // shots to the left a little longer. 15 shots spread evenly over it (a sunflower
-  // pattern), each scored for SG from its own lie.
-  function dispersion(from, target, widthYd, fromExp) {
+  // 20 shots spread evenly (a sunflower pattern) over a dispersion oval centred on
+  // `target`: `widthYd` across the line of play and 60% of that deep, sheared so
+  // shots to the right finish a little shorter and shots to the left a little
+  // longer. Each is scored for SG from its own lie. Only the dots are drawn.
+  function dispersion(from, target, widthYd, fromExp, lieHere = q => lieOn(q, course.features)) {
     const th = (bearing(from, target) * Math.PI) / 180, k = Math.cos((target[0] * Math.PI) / 180);
     const a = widthYd / 2 / YD_PER_M, b = a * 0.6, SHEAR = 0.15;
     // x metres right of the line, y metres along it -> [lat, lng]
     const at = (x, y) => { y -= SHEAR * x; return [target[0] + (y * Math.cos(th) - x * Math.sin(th)) / M_PER_DEG, target[1] + (y * Math.sin(th) + x * Math.cos(th)) / (M_PER_DEG * k)]; };
-    const oval = [];
-    for (let i = 0; i <= 64; i++) { const t = (i / 64) * 2 * Math.PI; oval.push(at(a * Math.cos(t), b * Math.sin(t))); }
-    const N = 15, GOLD = Math.PI * (3 - Math.sqrt(5)), dots = [];
+    const N = 20, GOLD = Math.PI * (3 - Math.sqrt(5)), dots = [];
     let tot = 0;
     for (let i = 0; i < N; i++) {
       const r = Math.sqrt((i + 0.5) / N) * 0.92, t = i * GOLD, q = at(a * r * Math.cos(t), b * r * Math.sin(t));
-      const sg = sgFinish(fromExp, lieOn(q, course.features), yards(q, pin));
+      const sg = sgFinish(fromExp, lieHere(q), yards(q, pin));
       tot += sg; dots.push({ q, sg });
     }
-    return { oval, dots, sg: tot / N };
+    return { dots, sg: tot / N };
   }
   function drawDispDots(dots) {
     while (dispLayer.childNodes.length > dots.length) dispLayer.lastChild.remove();
@@ -1152,7 +1157,7 @@ export function renderHole(view, n) {
       let c = dispLayer.childNodes[i];
       if (!c) { c = document.createElementNS(SVGNS, 'circle'); c.setAttribute('r', 3.5); c.setAttribute('stroke', '#111'); c.setAttribute('stroke-width', 1.25); dispLayer.appendChild(c); }
       const p = m.project(ll(d.q));
-      c.setAttribute('cx', p.x.toFixed(1)); c.setAttribute('cy', p.y.toFixed(1)); c.setAttribute('fill', `rgb(${heatColor(d.sg).join(',')})`);
+      c.setAttribute('cx', p.x.toFixed(1)); c.setAttribute('cy', p.y.toFixed(1)); c.setAttribute('fill', d.color || `rgb(${heatColor(d.sg).join(',')})`); // a compared club's dots in its colour
     });
   }
   function overlay(lines) {
@@ -1185,6 +1190,8 @@ export function renderHole(view, n) {
     if (!clubBtn.hidden) { const c = currentClub(); clubBtn.firstChild.textContent = c ? clubShort(c) : '–'; clubBtn.classList.toggle('on', !!pickedClub); }
     compBtn.hidden = onGreen || viewing();
     compBtn.classList.toggle('on', showComp);
+    compModeBtn.hidden = compBtn.hidden || !showComp;
+    compModeBtn.firstChild.textContent = compMode === 'arc' ? '◠' : '⁘'; compModeBtn.lastChild.textContent = compMode === 'arc' ? 'Arc' : 'Disp';
     if (compBtn.hidden) compLegend.hidden = true;
     sgtBtn.hidden = onGreen || shots.length > 0; // SG is the drive heat map, from the tee only
     arcSlider.hidden = !(showArc || showDisp) || onGreen || !arcAdjOpen;
@@ -1271,16 +1278,15 @@ export function renderHole(view, n) {
     if (w) lines.width = arcPoints(w.arc, w.l, w.r);
     if (arc) lines.arc = arcPoints(arc, -half, half);
     if (showAppr && apprMode === 'ft') lines.appr = ring(target, apprFt * 0.3048);
-    // Disp: the oval and its 15 shots, each scored from where it lands.
+    // Disp: 20 shots in the dispersion oval, each scored from where it lands.
     const disp = showDisp && !viewing() && yards(from, target) > 5 ? dispersion(from, target, arcW, fromExp) : null;
-    if (disp) lines.disp = disp.oval;
     if (disp && moving !== 'tee') fromTeeEl.append(h('span', { class: 'sg disp ' + (disp.sg >= 0 ? 'gain' : 'loss') }, `Disp ${disp.sg >= 0 ? '+' : '−'}${Math.abs(disp.sg).toFixed(2)} avg`));
-    drawDispDots(disp && !cleanView ? disp.dots : []);
     const comps = showComp && !viewing() ? compArcs(from, yards(from, target) > 5 ? target : pin, fromExp) : [];
     // Comparing: each club has its own coloured line from the ball, and the white
     // aiming line goes.
     comps.forEach((c, i) => { lines['comp' + i] = c.pts; lines['compL' + i] = [from, c.mid]; });
     if (comps.length) delete lines.path;
+    drawDispDots([...(disp && !cleanView && !comps.length ? disp.dots : []), ...comps.flatMap(c => (c.dots || []).map(d => ({ ...d, color: c.color })))]);
     compLegend.hidden = !comps.length;
     holeEl()?.classList.toggle('comparing', comps.length > 0); // the dots replace the crosshair readout
     // A dot at the middle of each arc, read like the crosshair: yards left to the
