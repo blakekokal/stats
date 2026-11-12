@@ -27,9 +27,9 @@ export function inPolygon(p, poly) {
 
 // When outlines overlap (a bunker inside a fairway, a green inside a fairway),
 // the more specific surface wins.
-const PRIORITY = ['ob', 'green', 'bunker', 'water', 'tee', 'fairway']; // out of bounds beats everything
+const PRIORITY = ['ob', 'green', 'bunker', 'water', 'tee', 'fairway', 'recovery']; // out of bounds beats everything
 
-// Returns the lie at a point: ob | green | bunker | water | tee | fairway | rough.
+// Returns the lie at a point: ob | green | bunker | water | tee | fairway | recovery | rough.
 export function lieAt(p, features) {
   let best = PRIORITY.length;
   for (const f of features) {

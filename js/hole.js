@@ -18,7 +18,7 @@ import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js
 import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting } from './rounds.js';
 
 const maplibregl = window.maplibregl;
-const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR', ob: 'OB' };
+const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR', ob: 'OB', recovery: 'REC' };
 const levelName = l => (l === 'Pro' || l === 'Scratch' ? l : `${l} hcp`);
 const ll = p => [p[1], p[0]]; // [lat, lng] -> MapLibre's [lng, lat]
 const M_PER_DEG = 111320;
@@ -110,7 +110,7 @@ function holeFeatures(ch) {
   const green = ownGreen(ch);
   return course.features.filter(f => {
     if (f.t === 'ob') return obLines(f).some(r => r.some(p => distToLine(p, ch.line) <= 150));
-    if (f.t === 'bunker' || f.t === 'water') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
+    if (f.t === 'bunker' || f.t === 'water' || f.t === 'recovery') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
     if (f.t === 'green') return f === green; // not a neighbour's or a practice green
     const c = centre(f.p[0]);
     const own = distToLine(c, ch.line);
