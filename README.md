@@ -81,4 +81,7 @@ data providers, loaded from Esri World Imagery at run time.
    one course where several share the grounds).
 3. `python3 tools/build_course.py <osm> <config> data/<id>.json`, then
    `python3 tools/add_ob.py <osm> <roads_houses> <config> data/<id>.json`.
-4. Add it to `COURSES` in `js/app.js`.
+4. Optional, when the imagery shows the turf clearly: fit the fairways and
+   greens to it with `tools/fetch_tiles.py` and `tools/trace_turf.py`, then
+   run `add_ob.py` again.
+5. Add it to `COURSES` in `js/app.js`.
