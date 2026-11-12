@@ -124,13 +124,15 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .exppill small { display: block; font-size: 11px; opacity: .85; line-height: 1.1; } .exppill strong { font-size: 22px; line-height: 1.1; font-variant-numeric: tabular-nums; }
 .exppill select { min-height: 36px; padding: 4px 8px; border-radius: 10px; background: #2a2f2c; border-color: #444; }
 .holeview .maplibregl-ctrl-top-left { top: calc(30px + env(safe-area-inset-top)); }
-.fab.width, .fab.arc, .fab.outline { left: auto; right: 14px; display: grid; place-content: center; line-height: 1; font-size: 18px; }
-.fab.add { bottom: calc(80px + env(safe-area-inset-bottom)); width: 58px; height: 58px; font-size: 34px; font-weight: 600; background: #ffb020; color: #111; }
-.fab.undo { bottom: calc(146px + env(safe-area-inset-bottom)); font-size: 22px; }
+.fab.width, .fab.arc, .fab.outline { display: grid; place-content: center; line-height: 1; font-size: 18px; }
+.fab.width, .fab.arc { left: auto; right: 14px; }
+.fab.add { left: auto; right: 9px; bottom: calc(18px + env(safe-area-inset-bottom)); width: 58px; height: 58px; font-size: 34px; font-weight: 600; background: #ffb020; color: #111; }
+.fab.undo { bottom: calc(138px + env(safe-area-inset-bottom)); font-size: 22px; }
 .fab[hidden] { display: none; }
 .shotmark { width: 20px; height: 20px; border-radius: 50%; background: #ffb020; color: #111; border: 2px solid #111; font: 700 11px/16px system-ui, sans-serif; text-align: center; box-shadow: 0 1px 4px #000a; }
-.fab.arc { bottom: calc(80px + env(safe-area-inset-bottom)); }
-.fab.outline { bottom: calc(138px + env(safe-area-inset-bottom)); }
+.fab.width { bottom: calc(88px + env(safe-area-inset-bottom)); }
+.fab.arc { bottom: calc(146px + env(safe-area-inset-bottom)); }
+.fab.outline { bottom: calc(80px + env(safe-area-inset-bottom)); }
 .fab small { font-size: 9px; font-weight: 600; }
 .fab.on { background: #ffe14d; color: #111; }
 .fab.arc.on { background: #fff; }
