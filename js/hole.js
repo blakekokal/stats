@@ -224,6 +224,33 @@ export function renderHole(view, n) {
 
   // Undo steps back one stage at a time: un-hole, then un-place the pin (if the
   // ball is still on its first spot on the green), then remove the last shot.
+  // Move tee / Move pin: tap, move the crosshair to the new spot, then Set.
+  let moving = null; // 'tee' | 'pin' | null
+  const moveText = h('span', {});
+  const endMove = () => { moving = null; moveBar.hidden = true; teeBtn.classList.remove('on'); pinBtn.classList.remove('on'); };
+  const startMove = kind => {
+    if (moving === kind) return endMove();
+    moving = kind; moveBar.hidden = false;
+    moveText.textContent = kind === 'tee' ? 'Move the crosshair to the new tee spot' : 'Move the crosshair onto the hole';
+    teeBtn.classList.toggle('on', kind === 'tee'); pinBtn.classList.toggle('on', kind === 'pin');
+  };
+  const moveBar = h('div', { class: 'movebar', hidden: true }, moveText,
+    h('button', { class: 'go', onclick: () => {
+      if (moving === 'tee') {
+        tee = target; teeMark.setLngLat(ll(tee)); rememberTee(teeName, ch, tee);
+        const shots = shotsNow();
+        if (shots.length && shots[0].lie === 'tee') saveShots([{ ...shots[0], pos: tee }, ...shots.slice(1)]);
+      } else if (moving === 'pin') {
+        pin = target;
+        if (roundKey()) saveHole({ pin, shots: shotsNow().map(x => (x.lie === 'green' ? { ...x, ft: Math.max(1, Math.round(yards(x.pos, pin) * FT_PER_YD)) } : x)) });
+        else syncPin();
+      }
+      endMove(); update();
+    } }, 'Set'),
+    h('button', { onclick: endMove }, 'Cancel'));
+  const teeBtn = h('button', { class: 'fab movetee', 'aria-label': 'Move tee', title: 'Move the tee', onclick: () => startMove('tee') }, h('span', {}, '▲'), h('small', {}, 'Tee'));
+  const pinBtn = h('button', { class: 'fab movepin', 'aria-label': 'Move pin', title: 'Move the pin', onclick: () => startMove('pin') }, h('span', {}, '⚑'), h('small', {}, 'Pin'));
+
   const undoBtn = h('button', { class: 'fab undo', 'aria-label': 'Undo', title: 'Undo',
     onclick: () => {
       const hl = holeNow(), shots = hl.shots || [];
@@ -279,7 +306,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu,
+    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, moveBar, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -401,6 +428,10 @@ export function renderHole(view, n) {
     apprSlider.hidden = !showAppr || onGreen;
     setPinBtn.hidden = st !== 'pin';
     banner.hidden = st !== 'done';
+    undoBtn.classList.toggle('low', !banner.hidden); // keep clear of the score banner
+    teeBtn.hidden = onGreen;
+    pinBtn.hidden = st === 'pin' || st === 'done';
+    if ((moving === 'tee' && teeBtn.hidden) || (moving === 'pin' && pinBtn.hidden)) endMove();
     // The hole pill: the hole's yardage, or on the green the putt to come.
     const putts = shots.filter(x => x.lie === 'green').length - 1;
     if (st === 'putt') {
@@ -478,7 +509,7 @@ export function renderHole(view, n) {
     mk.on('dragend', () => { const p = mk.getLngLat(); onMove([p.lat, p.lng], true); });
     return mk;
   };
-  dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, (p, done) => { tee = p; if (done) rememberTee(teeName, ch, p); update(); });
+  const teeMark = dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, (p, done) => { tee = p; if (done) rememberTee(teeName, ch, p); update(); });
   const pinMark = dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }), pin, (p, done) => {
     pin = p;
     if (done && holeNow().pin) saveHole({ pin, shots: shotsNow().map(x => (x.lie === 'green' ? { ...x, ft: Math.max(1, Math.round(yards(x.pos, pin) * FT_PER_YD)) } : x)) });

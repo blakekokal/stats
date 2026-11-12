@@ -132,10 +132,17 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .compass { position: absolute; top: calc(34px + env(safe-area-inset-top)); left: 10px; z-index: 3; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); display: grid; place-items: center; box-shadow: 0 1px 4px #0008; }
 .compass svg { width: 26px; height: 26px; transition: transform .1s linear; }
 .sheet .credit { font-size: 11px; max-width: 220px; }
-.fab.width, .fab.arc, .fab.appr, .fab.sgt, .fab.outline { display: grid; place-content: center; line-height: 1; font-size: 18px; }
+.fab.width, .fab.arc, .fab.appr, .fab.sgt, .fab.outline, .fab.movetee, .fab.movepin { display: grid; place-content: center; line-height: 1; font-size: 18px; }
 .fab.width, .fab.arc { left: auto; right: 14px; }
 .fab.add { left: auto; right: 9px; bottom: calc(18px + env(safe-area-inset-bottom)); width: 58px; height: 58px; font-size: 34px; font-weight: 600; background: #ffb020; color: #111; }
-.fab.undo { bottom: calc(138px + env(safe-area-inset-bottom)); font-size: 22px; }
+.fab.undo { top: calc(66px + env(safe-area-inset-top)); bottom: auto; left: auto; right: 10px; width: 44px; height: 44px; font-size: 22px; font-weight: 700; background: #ffb020; color: #111; box-shadow: 0 1px 6px #0008; z-index: 4; }
+.fab.undo.low { top: calc(136px + env(safe-area-inset-top)); }
+.fab.movetee { bottom: calc(138px + env(safe-area-inset-bottom)); }
+.fab.movepin { bottom: calc(196px + env(safe-area-inset-bottom)); }
+.movebar { position: absolute; top: calc(66px + env(safe-area-inset-top)); left: 54px; right: 62px; z-index: 5; display: flex; align-items: center; gap: 6px; background: #111e; backdrop-filter: blur(8px); border-radius: 14px; padding: 8px 8px 8px 12px; color: #fff; font-size: 13px; font-weight: 600; line-height: 1.2; }
+.movebar span { flex: 1; }
+.movebar button { min-height: 34px; padding: 0 12px; border-radius: 999px; border: 0; background: #ffffff22; color: #fff; font-weight: 700; }
+.movebar button.go { background: #ffb020; color: #111; }
 .fab[hidden] { display: none; }
 .holed { position: absolute; right: 9px; bottom: calc(88px + env(safe-area-inset-bottom)); height: 44px; padding: 0 16px; border-radius: 999px; border: 0; background: #22c55e; color: #fff; font-size: 16px; font-weight: 700; box-shadow: 0 1px 6px #0008; z-index: 3; }
 .holed[hidden] { display: none; }
