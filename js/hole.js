@@ -206,8 +206,7 @@ export function renderHole(view, n) {
   const sgtBtn = toggle('sgt', 'SG', '⊙', 'Strokes-gained target around the hole', () => showSgt, v => { showSgt = v; localStorage.setItem('gs:sgTarget', v ? '1' : '0'); });
   // What SG draws, set from the ⚙ beside it and kept on this device:
   //  (off the tee on a par 4/5, SG shows the drive heat map instead)
-  //  rings — around the pin: 1 ring at one SG value, or 2/3 rings across a
-  //          range (3 rings: the middle one is 0 when the range crosses 0)
+  //  ring — around the pin: one ring at an SG value from -1 to +1 (default 0)
   const SG_DEFAULT = { zones: { n: 3, min: 0, max: 0.5 }, rings: { n: 1, value: 0, min: -0.5, max: 0.5 } };
   let sgCfg = SG_DEFAULT;
   try { const c = JSON.parse(localStorage.getItem('gs:sgCfg') || '{}'); sgCfg = { zones: { ...SG_DEFAULT.zones, ...c.zones }, rings: { ...SG_DEFAULT.rings, ...c.rings } }; } catch { /* defaults */ }
@@ -219,12 +218,7 @@ export function renderHole(view, n) {
     const end = v < 0 ? [220, 38, 38] : [21, 128, 61];
     return pale.map((p0, i) => Math.round(p0 + (end[i] - p0) * t));
   }
-  const ringValues = () => {
-    const { n, value, min, max } = sgCfg.rings;
-    if (n === 1) return [value];
-    if (n === 2) return [min, max];
-    return [min, min < 0 && max > 0 ? 0 : (min + max) / 2, max];
-  };
+  const ringValues = () => [sgCfg.rings.value];
   const zoneLegend = h('div', { class: 'zonelegend', hidden: true });
   function drawLegend() {
     const rows = [['+.75 or more', [20, 83, 45]], ['+.5 to +.75', [22, 163, 74]], ['+.25 to +.5', [74, 222, 128]], ['0 to +.25', [187, 247, 208]],
@@ -242,16 +236,23 @@ export function renderHole(view, n) {
     zoneKey = null; drawLegend(); drawSgPanel(); update();
   }
   function drawSgPanel() {
-    const counts = (part) => h('div', { class: 'seg' }, [1, 2, 3].map(n => h('button', { class: sgCfg[part].n === n ? 'on' : '', onclick: () => { sgCfg[part].n = n; saveSgCfg(); } }, String(n))));
-    const num = (part, key) => h('input', { type: 'number', inputmode: 'decimal', step: 0.05, min: -1, max: 1, value: sgCfg[part][key], 'aria-label': `${part} ${key}`,
-      onchange: e => { sgCfg[part][key] = e.target.value; saveSgCfg(); } });
-    const r = sgCfg.rings;
-    sgPanel.replaceChildren(...[
-      h('strong', {}, 'Approach rings'), h('small', {}, 'Around the pin'), counts('rings'),
-      r.n === 1 ? h('div', { class: 'range' }, 'SG', num('rings', 'value'))
-        : h('div', { class: 'range' }, 'SG', num('rings', 'min'), 'to', num('rings', 'max')),
-      r.n === 3 ? h('small', {}, 'Middle ring is 0 when the range crosses 0.') : null,
-      h('button', { class: 'done', onclick: () => { sgPanel.hidden = true; } }, 'Done')].filter(Boolean));
+    // Slider and number box stay in step; the ring moves as the slider moves.
+    const setValue = (v, from) => {
+      sgCfg.rings.value = clampSg(v);
+      if (from !== 'slider') slider.value = sgCfg.rings.value;
+      if (from !== 'box') box.value = sgCfg.rings.value;
+      shown.textContent = `${fmtSg(sgCfg.rings.value) || '0'} SG`;
+      try { localStorage.setItem('gs:sgCfg', JSON.stringify(sgCfg)); } catch { /* ignore */ }
+      update();
+    };
+    const slider = h('input', { type: 'range', min: -1, max: 1, step: 0.05, value: sgCfg.rings.value, 'aria-label': 'Approach ring SG', oninput: e => setValue(e.target.value, 'slider') });
+    const box = h('input', { type: 'number', inputmode: 'decimal', step: 0.05, min: -1, max: 1, value: sgCfg.rings.value, 'aria-label': 'Approach ring SG value', onchange: e => setValue(e.target.value, 'box') });
+    const shown = h('b', {}, `${fmtSg(sgCfg.rings.value) || '0'} SG`);
+    sgPanel.replaceChildren(
+      h('strong', {}, 'Approach ring'), h('small', {}, 'Around the pin: landing on the green inside it gains at least this much'),
+      h('div', { class: 'range' }, slider, shown),
+      h('div', { class: 'range' }, 'SG', box, h('button', { class: 'reset', onclick: () => setValue(0) }, 'Reset to 0')),
+      h('button', { class: 'done', onclick: () => { sgPanel.hidden = true; } }, 'Done'));
   }
   drawSgPanel();
   // Feet from the hole at which a ball on the green gains `sg` strokes for an
