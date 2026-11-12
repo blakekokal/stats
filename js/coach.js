@@ -330,6 +330,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.27.4', ['Shots titled "Shot 1 from tee", detail "Hit 257 yds to left rough"']],
   ['0.27.3', ['Shot details on two lines: "Hit 275 yds from tee to fwy" / "261 yds to hole"']],
   ['0.27.2', ['Shot details read like "Putter hit 15 ft to 2 ft from hole"']],
   ['0.27.1', ['Strokes Gained button sits next to Expected at the top']],

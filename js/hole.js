@@ -674,17 +674,33 @@ export function renderHole(view, n) {
   // Club for a shot: anything played from the green is a putter; other clubs
   // come once the bag is set up.
   const clubOf = s => (s.lie === 'green' ? h('b', {}, 'Putter') : h('b', { class: 'muted' }, '— (coming soon)'));
-  // Two lines for a shot: what was hit and where it went, then what was left —
-  //   "Hit 275 yds from tee to fwy" / "261 yds to hole"
-  //   "Hit putter 12 ft" / "2 ft to hole" (or "In the hole")
-  // The club goes after "Hit" once clubs are set up (putts are always the putter).
+  // Shot wording. Title: "Shot 1 from tee", "Shot 2 from left rough", "Putt 1 from 14 ft".
+  // Detail: club (or "Hit") with how far and where it finished, then what was left —
+  //   "Hit 257 yds to left rough" / "148 yds to hole";  "Putter 12 ft" / "2 ft to hole".
   const SHORT_LIE = { tee: 'tee', fairway: 'fwy', rough: 'rough', bunker: 'bunker', green: 'green', water: 'water', recovery: 'trees' };
+  // Rough is called left or right of the line from where the shot was hit to the pin.
+  function lieName(p, from, hp) {
+    const base = SHORT_LIE[p.lie] || p.lie;
+    if (p.lie !== 'rough' || !from) return base;
+    const k = Math.cos((from[0] * Math.PI) / 180);
+    const bx = (hp[1] - from[1]) * k, by = hp[0] - from[0], px = (p.pos[1] - from[1]) * k, py = p.pos[0] - from[0];
+    return `${bx * py - by * px > 0 ? 'left' : 'right'} rough`;
+  }
+  function shotTitle(hl, i) {
+    const shots = hl.shots || [], s = shots[i], hp = hl.pin || pin;
+    if (s.lie === 'green') {
+      let no = 0; for (let k = 0; k <= i; k++) if (shots[k].lie === 'green') no++;
+      return `Putt ${no} from ${s.ft ?? Math.round(yards(s.pos, hp) * FT_PER_YD)} ft`;
+    }
+    return `Shot ${i + 1} from ${i === 0 ? 'tee' : lieName(s, shots[i - 1].pos, hp)}`;
+  }
   function shotLines(hl, i) {
     const shots = hl.shots || [], s = shots[i], next = shots[i + 1];
     if (!s || (!next && !hl.done)) return null;
     const hp = hl.pin || pin, isPutt = s.lie === 'green', travel = yards(s.pos, next ? next.pos : hp);
     const went = isPutt ? `${Math.round(travel * FT_PER_YD)} ft` : `${Math.round(travel)} yds`;
-    const first = isPutt ? `Hit putter ${went}` : `Hit ${went} from ${SHORT_LIE[s.lie] || s.lie} to ${next ? SHORT_LIE[next.lie] || next.lie : 'the hole'}`;
+    const club = isPutt ? 'Putter' : 'Hit'; // other clubs replace "Hit" once they're set up
+    const first = isPutt ? `${club} ${went}` : `${club} ${went} to ${next ? lieName(next, s.pos, hp) : 'the hole'}`;
     const second = !next ? 'In the hole' : `${next.lie === 'green' ? `${next.ft ?? Math.round(yards(next.pos, hp) * FT_PER_YD)} ft` : `${Math.round(yards(next.pos, hp))} yds`} to hole`;
     return [first, second];
   }
@@ -719,7 +735,7 @@ export function renderHole(view, n) {
       const travel = next ? yards(s.pos, next.pos) : hl.done ? yards(s.pos, hl.pin || ch.pin) : null;
       const dist = travel == null ? '—' : isPutt ? `${Math.round(travel * 3)} ft` : `${Math.round(travel)} yd`;
       if (isPutt) puttNo++;
-      const key = 'shot' + i, label = isPutt ? `Putt ${puttNo}` : `Shot ${i + 1} · ${CAT_LABEL[x.cat]}`;
+      const key = 'shot' + i, label = shotTitle(hl, i);
       return [toggleRow(key, label, x.sg), sgOpen.has(key) ? h('div', { class: 'shotinfo' },
         ...shotLineEls(hl, i, dist),
         h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: sgCls(x.sg) }, fmtSgV(x.sg)))) : null];
@@ -1032,7 +1048,7 @@ export function renderHole(view, n) {
     const sgTxt = row.sg == null ? '–' : (row.sg >= 0 ? '+' : '−') + Math.abs(row.sg).toFixed(2);
     let puttNo = 0; for (let k = 0; k <= i; k++) if (shots[k].lie === 'green') puttNo++;
     const el = h('div', { class: 'shotpop' },
-      h('strong', {}, isPutt ? `Putt ${puttNo}` : `Shot ${i + 1}`, h('small', {}, row.cat ? ` · ${CAT_LABEL[row.cat]}` : '')),
+      h('strong', {}, shotTitle(hl, i)),
       ...shotLineEls(hl, i, isPutt ? `${Math.round(travel * 3)} ft` : `${Math.round(travel)} yd`),
       h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: row.sg == null ? '' : row.sg >= 0 ? 'pos' : 'neg' }, sgTxt)));
     shotPopup?.remove();
