@@ -56,7 +56,7 @@ export function renderHome(view) {
       divider(),
       go('📊', 'Stats Dashboard', 'Analytics & trends', '#3d96ee', '#/dashboard'),
       soon('🔍', 'Performance Analysis', 'Uncover your biggest misses & areas to improve', '#2d7abc'),
-      soon('🎒', 'My Bag', 'Club distances & yardages', '#1a4a8a'),
+      go('🎒', 'My Bag', 'Club distances & arc widths', '#1a4a8a', '#/bag'),
       divider(),
       soon('🏌️', 'Practice and Learning', 'Combines · Drills · Practice · Learn', '#d49a10',
         h('span', { style: 'background:#d4706e;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 7px;flex-shrink:0;white-space:nowrap;animation:cxpulse 1.5s infinite;' }, 'NEW!')),
@@ -234,6 +234,34 @@ export function renderEditRound(view, id) {
     msg));
 }
 
+// ---------- my bag ----------
+// Clubs and yardages come from the profile shared with the coaching app (edit
+// them there). This app adds an arc width per club, used by Arc → Auto.
+
+const BAG_ORDER = ['Dr', 'Dr2', '2W', '3W', '4W', '5W', '6W', '7W', '2HY', '3HY', '4HY', '5HY', '6HY', '7HY', '2I', '3I', '4I', '5I', '6I', '7I', '8I', '9I', '48', 'PW', 'GW', 'AW', 'SW', '50', '52', '54', '56', '58', '60', '62', 'LW'];
+export function renderBag(view) {
+  if (needLogin(view)) return;
+  const clubs = (sync.bag || []).filter(c => c && c.name).sort((a, b) => BAG_ORDER.indexOf(a.name) - BAG_ORDER.indexOf(b.name));
+  const arcs = { ...(store.get('clubArcs') || {}) };
+  const msg = h('div', { class: 'msg' });
+  const row = c => {
+    const inp = h('input', { type: 'number', inputmode: 'numeric', min: 5, max: 100, placeholder: 'auto', value: arcs[c.name] || '', style: 'width:72px;height:34px;font-size:14px;border-radius:8px;',
+      onchange: () => { const v = Math.round(+inp.value); if (v > 0) arcs[c.name] = Math.min(100, v); else delete arcs[c.name]; store.set('clubArcs', { ...arcs }); msg.textContent = '✓ Saved'; msg.className = 'msg ok'; setTimeout(() => { msg.textContent = ''; }, 1500); } });
+    return h('div', { class: 'card', style: 'display:flex;align-items:center;gap:10px;margin:4px 0;' },
+      h('div', { style: 'flex:1;' }, h('div', { style: 'font-weight:800;font-size:15px;' }, clubLabel(c.name)),
+        h('div', { style: 'font-size:12px;color:#9a9a9a;' }, [c.carry ? `Carry ${c.carry}` : null, c.total ? `Total ${c.total}` : null].filter(Boolean).join(' · ') || 'No yardage yet')),
+      h('div', { style: 'text-align:right;font-size:11px;color:#9a9a9a;' }, 'Arc (yds)', inp));
+  };
+  const refresh = h('button', { class: 'linkbtn', style: 'font-size:12px;', onclick: async () => { msg.textContent = 'Loading…'; msg.className = 'msg'; await sync.loadBag().catch(() => {}); renderBag(view); } }, 'Reload from the coaching app');
+  view.replaceChildren(page('top', backBtn(),
+    h('div', { style: 'width:100%;max-width:360px;' },
+      h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:4px;' }, '🎒 My Bag'),
+      h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:8px;' }, 'Clubs and yardages come from your bag in the coaching app. Set an arc width per club for Arc → Auto; leave blank to use 15% of the shot distance.'),
+      clubs.length ? clubs.map(row) : h('div', { style: 'color:#9a9a9a;text-align:center;padding:16px;font-size:13px;' }, 'No clubs in your bag yet. Add them in the coaching app\'s My Bag.'),
+      msg, refresh)));
+}
+const clubLabel = n => (n === 'Dr' ? 'Driver' : /^(\d)W$/.test(n) ? `${n[0]} Wood` : /^(\d)HY$/.test(n) ? `${n[0]} Hybrid` : /^(\d)I$/.test(n) ? `${n[0]} Iron` : /^\d\d$/.test(n) ? `${n}°` : n);
+
 // ---------- settings ----------
 
 export function renderSettingsPage(view) {
@@ -331,6 +359,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.28.2', ['Arc → Auto sizes the arc to the shot (or the club\'s arc from My Bag)', 'My Bag page with arc widths per club']],
   ['0.28.1', ['Holes open at your My Bag driver distance', 'Picking a club moves the crosshair to its yardage']],
   ['0.28.0', ['GPS Scouting: plan shots on any hole, nothing is saved', 'Club button (auto: driver off par 4/5 tees, then My Bag yardages)', '+ asks for the club and swing (full, ¾, ½, punch, recovery)']],
   ['0.27.4', ['Shots titled "Shot 1 from tee", detail "Hit 257 yds to left rough"']],

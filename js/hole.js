@@ -198,14 +198,19 @@ export function renderHole(view, n) {
       h('span', {}, icon), h('small', {}, text));
     return btn;
   };
-  const arcValue = h('b', {}, `${arcYd} yd`);
+  // Arc width: a preset / slider value, or Auto — the club's arc from My Bag if
+  // set, otherwise 15% of the ball-to-crosshair distance (10 to 80 yd).
+  let arcAuto = localStorage.getItem('gs:arcAuto') === '1';
+  const arcValue = h('b', {}, arcAuto ? 'Auto' : `${arcYd} yd`);
   const setArc = v => {
-    arcYd = v; arcValue.textContent = `${v} yd`; arcRange.value = v; localStorage.setItem('gs:arcYd', v);
-    presets.forEach(b => b.classList.toggle('on', +b.value === v));
+    arcAuto = v === 'auto'; localStorage.setItem('gs:arcAuto', arcAuto ? '1' : '0');
+    if (!arcAuto) { arcYd = v; arcRange.value = v; arcValue.textContent = `${v} yd`; localStorage.setItem('gs:arcYd', v); }
+    presets.forEach(b => b.classList.toggle('on', arcAuto ? b.value === 'auto' : +b.value === arcYd && b.value !== 'auto'));
     update();
   };
   const arcRange = h('input', { type: 'range', min: 10, max: 80, step: 1, value: arcYd, 'aria-label': 'Arc width in yards', oninput: e => setArc(+e.target.value) });
-  const presets = [20, 30, 40, 50, 60].map(v => h('button', { class: 'preset' + (v === arcYd ? ' on' : ''), value: v, onclick: () => setArc(v) }, String(v)));
+  const presets = [h('button', { class: 'preset' + (arcAuto ? ' on' : ''), value: 'auto', onclick: () => setArc('auto') }, 'Auto'),
+    ...[20, 30, 40, 50, 60].map(v => h('button', { class: 'preset' + (!arcAuto && v === arcYd ? ' on' : ''), value: v, onclick: () => setArc(v) }, String(v)))];
   const arcSlider = h('div', { class: 'arcslider', hidden: !showArc },
     h('div', { class: 'presets' }, presets),
     h('div', { class: 'slide' }, h('span', {}, 'Arc'), arcRange, arcValue));
@@ -1060,7 +1065,13 @@ export function renderHole(view, n) {
     }
 
     const arc = showArc ? arcThrough(from, target) : null;
-    const half = arcYd / 2 / YD_PER_M;
+    let arcW = arcYd;
+    if (arcAuto) {
+      const own = (store.get('clubArcs') || {})[currentClub()];
+      arcW = own > 0 ? own : Math.max(10, Math.min(80, Math.round(fromTee * 0.15)));
+      arcValue.textContent = `Auto · ${arcW} yd`; arcRange.value = arcW;
+    }
+    const half = arcW / 2 / YD_PER_M;
     const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
     const lines = { path: [from, target, pin] };
     set('shots', line(trace(shots)));
