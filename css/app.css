@@ -132,7 +132,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .compass { position: absolute; top: calc(34px + env(safe-area-inset-top)); left: 10px; z-index: 3; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); display: grid; place-items: center; box-shadow: 0 1px 4px #0008; }
 .compass svg { width: 26px; height: 26px; transition: transform .1s linear; }
 .sheet .credit { font-size: 11px; max-width: 220px; }
-.fab.width, .fab.arc, .fab.appr, .fab.outline { display: grid; place-content: center; line-height: 1; font-size: 18px; }
+.fab.width, .fab.arc, .fab.appr, .fab.sgt, .fab.outline { display: grid; place-content: center; line-height: 1; font-size: 18px; }
 .fab.width, .fab.arc { left: auto; right: 14px; }
 .fab.add { left: auto; right: 9px; bottom: calc(18px + env(safe-area-inset-bottom)); width: 58px; height: 58px; font-size: 34px; font-weight: 600; background: #ffb020; color: #111; }
 .fab.undo { bottom: calc(138px + env(safe-area-inset-bottom)); font-size: 22px; }
@@ -151,6 +151,9 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .fab.arc { bottom: calc(146px + env(safe-area-inset-bottom)); }
 .fab.appr { left: auto; right: 14px; bottom: calc(204px + env(safe-area-inset-bottom)); }
 .fab.appr.on { background: #4dd0ff; color: #111; }
+.fab.sgt { left: auto; right: 14px; bottom: calc(262px + env(safe-area-inset-bottom)); }
+.fab.sgt.on { background: #c084fc; color: #111; }
+.sgtlabel { background: #111d; color: #e9d5ff; font: 700 12px/1 system-ui, sans-serif; padding: 4px 7px; border-radius: 999px; white-space: nowrap; pointer-events: none; border: 1px solid #c084fc; }
 .fab.outline { bottom: calc(80px + env(safe-area-inset-bottom)); }
 .fab small { font-size: 9px; font-weight: 600; }
 .fab.on { background: #ffe14d; color: #111; }
@@ -162,7 +165,6 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .arcslider .preset.on { background: #fff; color: #111; }
 .arcslider.appr .preset.on { background: #4dd0ff; }
 .arcslider.appr input { accent-color: #4dd0ff; }
-.arcslider .preset.sg { flex: 1.2; }
 .arcslider .slide { display: flex; align-items: center; gap: 8px; }
 .arcslider[hidden] { display: none; }
 .arcslider input { flex: 1; min-height: 28px; padding: 0; border: 0; background: none; accent-color: #fff; }
