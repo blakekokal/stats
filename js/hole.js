@@ -14,7 +14,7 @@ import { store, sync } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
-import { newRound } from './model.js';
+import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js';
 import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound } from './rounds.js';
 
 const maplibregl = window.maplibregl;
@@ -526,6 +526,10 @@ export function renderHole(view, n) {
       h('a', { class: 'btn', href: '#/settings' }, 'Settings'),
       credit);
 
+  // Strokes Gained panel while viewing a past round (filled in by drawSgView).
+  const sgView = h('div', { class: 'sgview', hidden: true });
+  const sgViewBtn = h('button', { class: 'fab sgviewbtn', hidden: true, 'aria-label': 'Strokes gained', title: 'Strokes gained',
+    onclick: () => { sgView.hidden = !sgView.hidden; sgViewBtn.classList.toggle('on', !sgView.hidden); drawSgView(); } }, h('span', {}, 'Σ'), h('small', {}, 'SG'));
   // Score chips and scorecard (filled in by drawScoreChips / openScorecard below).
   const totalChip = h('button', { class: 'scorechip total', onclick: () => openScorecard() });
   const holeChip = h('button', { class: 'scorechip hole', onclick: () => openScorecard() });
@@ -551,7 +555,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, chips, expPill, scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgViewBtn, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -653,6 +657,56 @@ export function renderHole(view, n) {
   const line = pts => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: pts.map(ll) } });
   // The recorded shots, joined up; once holed, the last putt runs into the hole.
   const trace = shots => [...shots.map(x => x.pos), ...(holeNow().done && shots.length ? [pin] : [])];
+
+  // Strokes Gained panel (viewing a past round): round total and this hole, each
+  // opening to Off the tee / Approach / Around green / Putting, then this hole's
+  // shots, each opening to its distance, lies, SG and club.
+  const sgOpen = new Set(['round']);
+  let sgViewKey = null;
+  const fmtSgV = v => (v == null ? '–' : (v >= 0 ? '+' : '−') + Math.abs(v).toFixed(2));
+  const sgCls = v => (v == null ? '' : v >= 0 ? 'pos' : 'neg');
+  const LIE_NAME = { tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', green: 'Green', water: 'Water', recovery: 'Recovery' };
+  function drawSgView() {
+    if (sgView.hidden) return;
+    const r = currentRound();
+    if (!r) { sgView.replaceChildren(h('small', {}, 'No round')); return; }
+    const toggleRow = (key, label, value, extra) => h('button', { class: 'sgrow' + (sgOpen.has(key) ? ' open' : ''), onclick: () => { sgOpen.has(key) ? sgOpen.delete(key) : sgOpen.add(key); drawSgView(); } },
+      h('span', { class: 'caret' }, sgOpen.has(key) ? '▾' : '▸'), h('span', { class: 'lab' }, label), extra ? h('small', {}, extra) : null, h('b', { class: sgCls(value) }, fmtSgV(value)));
+    const cats = (sg, counts) => h('div', { class: 'sgcats' }, CATS.map(c => h('div', {}, h('span', {}, CAT_LABEL[c]), counts ? h('small', {}, `${counts[c] || 0} shot${counts[c] === 1 ? '' : 's'}`) : null, h('b', { class: sgCls(sg[c]) }, fmtSgV(sg[c])))));
+    // Whole round
+    const ra = analyzeRound(r, course, level);
+    const rCounts = {}; ra.shots.forEach(x => { if (x.sg != null) rCounts[x.cat] = (rCounts[x.cat] || 0) + 1; });
+    // This hole
+    const hl = r.holes?.[n], ha = hl ? analyzeHole(hl, ch, level) : { rows: [] };
+    const hSg = { ott: 0, app: 0, arg: 0, putt: 0, total: 0 }, hCounts = {};
+    let hasHole = false;
+    ha.rows.forEach(x => { if (x.sg != null) { hSg[x.cat] += x.sg; hSg.total += x.sg; hCounts[x.cat] = (hCounts[x.cat] || 0) + 1; hasHole = true; } });
+    const shots = (hl && hl.shots) || [];
+    let puttNo = 0;
+    const shotRows = ha.rows.map((x, i) => {
+      const s = x.shot, next = shots[i + 1], isPutt = s.lie === 'green';
+      const end = next ? (LIE_NAME[next.lie] || next.lie) : hl.done ? 'Holed' : '—';
+      const travel = next ? yards(s.pos, next.pos) : hl.done ? yards(s.pos, hl.pin || ch.pin) : null;
+      const dist = travel == null ? '—' : isPutt ? `${Math.round(travel * 3)} ft` : `${Math.round(travel)} yd`;
+      if (isPutt) puttNo++;
+      const key = 'shot' + i, label = isPutt ? `Putt ${puttNo}` : `Shot ${i + 1} · ${CAT_LABEL[x.cat]}`;
+      return [toggleRow(key, label, x.sg), sgOpen.has(key) ? h('div', { class: 'shotinfo' },
+        h('div', {}, h('span', {}, 'Traveled'), h('b', {}, dist)),
+        h('div', {}, h('span', {}, 'Lie'), h('b', {}, `${LIE_NAME[s.lie] || s.lie} → ${end}`)),
+        h('div', {}, h('span', {}, 'From the hole'), h('b', {}, isPutt ? `${s.ft ?? Math.round(x.dist)} ft` : `${Math.round(x.dist)} yd`)),
+        h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: sgCls(x.sg) }, fmtSgV(x.sg))),
+        h('div', {}, h('span', {}, 'Club'), h('b', { class: 'muted' }, '— (coming soon)'))) : null];
+    }).flat().filter(Boolean);
+    sgView.replaceChildren(...[
+      h('div', { class: 'sghead' }, h('strong', {}, 'Strokes Gained'), h('small', {}, `vs ${level === 'Pro' ? 'Tour Pro' : level === 'Scratch' ? 'Scratch' : level + ' HCP'}`)),
+      toggleRow('round', 'Round total', ra.holes ? ra.sg.total : null, `${ra.holes} holes`),
+      sgOpen.has('round') ? cats(ra.sg, rCounts) : null,
+      toggleRow('hole', `Hole ${n}`, hasHole ? hSg.total : null, hl?.done ? `${hl.shots.length + hl.shots.filter(x => x.lie === 'water').length} strokes` : 'not finished'),
+      sgOpen.has('hole') ? cats(hSg, hCounts) : null,
+      h('div', { class: 'sgsub' }, `Shots on hole ${n}`),
+      ...(shotRows.length ? shotRows : [h('small', { class: 'muted' }, 'No shots recorded on this hole.')]),
+    ].filter(Boolean));
+  }
 
   // Score chips at the top (total, and this hole with the round to par) and a
   // scorecard overlay when either is tapped. Only while a round is under way.
@@ -782,6 +836,9 @@ export function renderHole(view, n) {
     banner.hidden = true; // replaced by the score chips at the top
     teeBtn.hidden = onGreen;
     pinBtn.hidden = st === 'pin' || st === 'done';
+    sgViewBtn.hidden = !viewing();
+    { const k = `${level}|${currentRound()?.updated}`; if (k !== sgViewKey) { sgViewKey = k; drawSgView(); } }
+    if (!viewing()) sgView.hidden = true;
     drawShotList();
     if (viewing()) addBtn.hidden = holedBtn.hidden = setPinBtn.hidden = undoBtn.hidden = teeBtn.hidden = pinBtn.hidden = true;
     if ((moving === 'tee' && teeBtn.hidden) || (moving === 'pin' && pinBtn.hidden)) endMove(false);

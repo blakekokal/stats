@@ -330,6 +330,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.26.0', ['Viewing a round: Strokes Gained panel with round and hole totals by category, and per-shot details']],
   ['0.25.5', ['Viewing a round no longer lets the tee or pin be dragged until you tap Edit']],
   ['0.25.4', ['Hole tile shows the hole against par, e.g. 5 (+1)']],
   ['0.25.3', ['Editing a hole: Redo hole under the shot list starts it again from the tee']],
