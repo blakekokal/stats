@@ -204,15 +204,67 @@ export function renderHole(view, n) {
   // the ball is now (the last recorded shot, or the tee). Labelled on the map.
   let showSgt = flag('gs:sgTarget', '0');
   const sgtBtn = toggle('sgt', 'SG', '⊙', 'Strokes-gained target around the hole', () => showSgt, v => { showSgt = v; localStorage.setItem('gs:sgTarget', v ? '1' : '0'); });
-  const sgtLabel = h('div', { class: 'sgtlabel' });
-  const zoneLegend = h('div', { class: 'zonelegend', hidden: true }, h('small', {}, 'Drive SG'),
-    ...['+0–.17', '+.17–.33', '+.33–.5'].map((t, i) => h('span', {}, h('i', { style: `background:rgb(${[[187, 247, 208], [74, 222, 128], [21, 128, 61]][i].join(',')})` }), t)));
-  let sgtMark = null;
-  // Feet from the hole at which a ball on the green gains 0 strokes for an
-  // approach from `from` (expected putts there = expected strokes from `from` - 1).
-  function zeroSgFeet(fromLie, fromYd) {
-    const goal = expectedFrom(fromLie, fromYd) - 1;
-    if (goal <= expected('green', 1, level)) return 1;
+  // What SG draws, set from the ⚙ beside it and kept on this device:
+  //  zones — tee shot on a par 4/5: n bands splitting an SG range (-1 to +1)
+  //  rings — around the pin: 1 ring at one SG value, or 2/3 rings across a
+  //          range (3 rings: the middle one is 0 when the range crosses 0)
+  const SG_DEFAULT = { zones: { n: 3, min: 0, max: 0.5 }, rings: { n: 1, value: 0, min: -0.5, max: 0.5 } };
+  let sgCfg = SG_DEFAULT;
+  try { const c = JSON.parse(localStorage.getItem('gs:sgCfg') || '{}'); sgCfg = { zones: { ...SG_DEFAULT.zones, ...c.zones }, rings: { ...SG_DEFAULT.rings, ...c.rings } }; } catch { /* defaults */ }
+  const clampSg = v => Math.max(-1, Math.min(1, Math.round((+v || 0) * 100) / 100));
+  const fmtSg = v => (v > 0 ? '+' : v < 0 ? '−' : '') + String(Math.abs(Math.round(v * 100) / 100)).replace(/^0\./, '.');
+  // Colour for an SG value: red below 0, pale at 0, deeper green above.
+  function sgColor(v) {
+    const t = Math.sqrt(Math.min(1, Math.abs(v))), pale = [254, 243, 160];
+    const end = v < 0 ? [220, 38, 38] : [21, 128, 61];
+    return pale.map((p0, i) => Math.round(p0 + (end[i] - p0) * t));
+  }
+  const ringValues = () => {
+    const { n, value, min, max } = sgCfg.rings;
+    if (n === 1) return [value];
+    if (n === 2) return [min, max];
+    return [min, min < 0 && max > 0 ? 0 : (min + max) / 2, max];
+  };
+  const zoneBands = () => {
+    const { n, min, max } = sgCfg.zones, step = (max - min) / n;
+    return Array.from({ length: n }, (_, i) => [min + i * step, min + (i + 1) * step]);
+  };
+  const zoneLegend = h('div', { class: 'zonelegend', hidden: true });
+  function drawLegend() {
+    zoneLegend.replaceChildren(h('small', {}, 'Drive SG'),
+      ...zoneBands().map(([a, b]) => h('span', {}, h('i', { style: `background:rgb(${sgColor((a + b) / 2).join(',')})` }), `${fmtSg(a)} to ${fmtSg(b)}`)));
+  }
+  drawLegend();
+  const ringLegend = h('div', { class: 'zonelegend', hidden: true });
+  const sgGear = h('button', { class: 'sggear', 'aria-label': 'SG settings', title: 'SG settings', hidden: true, onclick: () => { sgPanel.hidden = !sgPanel.hidden; } }, '⚙');
+  const sgPanel = h('div', { class: 'sgpanel', hidden: true });
+  function saveSgCfg() {
+    for (const k of ['zones', 'rings']) { const c = sgCfg[k]; c.min = clampSg(c.min); c.max = clampSg(c.max); if (c.min > c.max) [c.min, c.max] = [c.max, c.min]; }
+    sgCfg.rings.value = clampSg(sgCfg.rings.value);
+    try { localStorage.setItem('gs:sgCfg', JSON.stringify(sgCfg)); } catch { /* ignore */ }
+    zoneKey = null; drawLegend(); drawSgPanel(); update();
+  }
+  function drawSgPanel() {
+    const counts = (part) => h('div', { class: 'seg' }, [1, 2, 3].map(n => h('button', { class: sgCfg[part].n === n ? 'on' : '', onclick: () => { sgCfg[part].n = n; saveSgCfg(); } }, String(n))));
+    const num = (part, key) => h('input', { type: 'number', inputmode: 'decimal', step: 0.05, min: -1, max: 1, value: sgCfg[part][key], 'aria-label': `${part} ${key}`,
+      onchange: e => { sgCfg[part][key] = e.target.value; saveSgCfg(); } });
+    const r = sgCfg.rings;
+    sgPanel.replaceChildren(...[
+      h('strong', {}, 'Drive zones'), h('small', {}, 'Tee shot on par 4s and 5s'), counts('zones'),
+      h('div', { class: 'range' }, 'SG', num('zones', 'min'), 'to', num('zones', 'max')),
+      h('strong', {}, 'Approach rings'), h('small', {}, 'Around the pin'), counts('rings'),
+      r.n === 1 ? h('div', { class: 'range' }, 'SG', num('rings', 'value'))
+        : h('div', { class: 'range' }, 'SG', num('rings', 'min'), 'to', num('rings', 'max')),
+      r.n === 3 ? h('small', {}, 'Middle ring is 0 when the range crosses 0.') : null,
+      h('button', { class: 'done', onclick: () => { sgPanel.hidden = true; } }, 'Done')].filter(Boolean));
+  }
+  drawSgPanel();
+  // Feet from the hole at which a ball on the green gains `sg` strokes for an
+  // approach from `from` (expected putts there = expected strokes from `from` - 1 - sg).
+  // null when that much can't be gained; Infinity when anywhere on the green gains it.
+  function sgFeet(fromLie, fromYd, sg) {
+    const goal = expectedFrom(fromLie, fromYd) - 1 - sg;
+    if (goal <= expected('green', 1, level)) return null;
     let lo = 1, hi = 200;
     if (expected('green', hi, level) < goal) return Infinity; // anywhere on the green gains
     for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (expected('green', mid, level) < goal) lo = mid; else hi = mid; }
@@ -223,18 +275,20 @@ export function renderHole(view, n) {
   // there (fairway or rough, so the zones follow the fairway's edges), split
   // into three bands. Bunkers and water are left out. Drawn as an image laid
   // over the map and only recomputed when the tee, pin or handicap changes.
-  const ZONE_COLORS = [[187, 247, 208], [74, 222, 128], [21, 128, 61]];
-  const ZONE_STEP = 0.5 / 3;
   let zoneKey = null, zoneImg = null;
   function sgZoneImage() {
-    const key = [tee, pin, level].join('|');
+    const key = [tee, pin, level, JSON.stringify(sgCfg.zones)].join('|');
     if (key === zoneKey) return zoneImg;
     zoneKey = key; zoneImg = null;
     const teeExp = expected('tee', yards(tee, pin), level);
     // Remaining distances worth looking at: from where a fairway drive gains
     // 0.5 (closest) out to where it gains 0 (farthest); rough needs to be closer.
-    const remFor = goal => { let lo = 0, hi = yards(tee, pin); for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (teeExp - expected('fairway', mid, level) - 1 > goal) lo = mid; else hi = mid; } return lo; };
-    const near = Math.max(0, remFor(0.5) - 10), far = remFor(0) + 10;
+    const { min, max } = sgCfg.zones, bands = zoneBands(), step = (max - min) / bands.length;
+    const colors = bands.map(([a, b]) => sgColor((a + b) / 2));
+    // Remaining distance at which a drive from `lie` gains `goal` (gains shrink with distance).
+    const total = yards(tee, pin);
+    const remFor = (lie, goal) => { let lo = 0, hi = total; for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (teeExp - expectedFrom(lie, mid) - 1 > goal) lo = mid; else hi = mid; } return lo; };
+    const near = Math.max(0, remFor('rough', max) - 10), far = Math.min(total, remFor('fairway', min) + 10);
     const back = [...route()].reverse();
     const span = [];
     for (let d = near; d <= far; d += 5) span.push(pointAlong(back, d));
@@ -258,8 +312,8 @@ export function renderHole(view, n) {
         const lie = lieHere(q);
         if (lie === 'bunker' || lie === 'water' || lie === 'recovery') continue;
         const sg = teeExp - expectedFrom(lie, yards(q, pin)) - 1;
-        if (sg < 0 || sg >= 0.5) continue;
-        const z = ZONE_COLORS[Math.min(2, Math.floor(sg / ZONE_STEP))], i = (r * cols + c) * 4;
+        if (sg < min || sg > max || step <= 0) continue;
+        const z = colors[Math.min(bands.length - 1, Math.floor((sg - min) / step))], i = (r * cols + c) * 4;
         img.data[i] = z[0]; img.data[i + 1] = z[1]; img.data[i + 2] = z[2]; img.data[i + 3] = 140;
       }
     }
@@ -400,7 +454,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, zoneLegend,
+    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, zoneLegend, ringLegend, sgGear, sgPanel,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -503,6 +557,20 @@ export function renderHole(view, n) {
   // The recorded shots, joined up; once holed, the last putt runs into the hole.
   const trace = shots => [...shots.map(x => x.pos), ...(holeNow().done && shots.length ? [pin] : [])];
 
+  // Rings around the pin for SG values, listed in a key beside the SG button.
+  function setRings(rings) {
+    const feats = [];
+    for (const { v, ft } of rings) {
+      if (ft && ft !== Infinity) feats.push({ type: 'Feature', properties: { color: `rgb(${sgColor(v).join(',')})` }, geometry: { type: 'LineString', coordinates: ring(pin, ft * 0.3048).map(ll) } });
+    }
+    ringLegend.hidden = !rings.length;
+    ringLegend.replaceChildren(h('small', {}, 'Approach SG'), ...rings.map(({ v, ft }) => h('span', {},
+      h('i', { style: `background:rgb(${sgColor(v).join(',')})` }),
+      `${fmtSg(v) || '0'} · ${ft == null ? 'not possible' : ft === Infinity ? 'any green' : Math.round(ft) + ' ft'}`)));
+    const src = m.getSource('sgt');
+    if (src) src.setData({ type: 'FeatureCollection', features: feats });
+  }
+
   function update() {
     // Read what is under the crosshair from its actual screen position, so the
     // line always meets the dot even if the screen size changed since the last layout.
@@ -569,8 +637,8 @@ export function renderHole(view, n) {
       const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
       set('path', line(st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin]));
       set('shots', line(trace(shots)));
-      set('width', line([])); set('arc', line([])); set('appr', line([])); set('sgt', line([])); showZones(false);
-      if (sgtMark) sgtMark.getElement().style.display = 'none';
+      set('width', line([])); set('arc', line([])); set('appr', line([])); setRings([]); showZones(false);
+      sgGear.hidden = sgPanel.hidden = true;
       return;
     }
     if (moving === 'tee') { // the crosshair is the tee: show how far it is to the aim spot
@@ -595,16 +663,16 @@ export function renderHole(view, n) {
     // 0-SG ring around the pin.
     const teeZones = showSgt && !shots.length && ch.par >= 4;
     showZones(teeZones);
-    const sgtFt = showSgt && !teeZones ? zeroSgFeet(last ? last.lie : 'tee', yards(from, pin)) : null;
-    set('sgt', line(sgtFt && sgtFt !== Infinity ? ring(pin, sgtFt * 0.3048) : []));
-    if (sgtFt) {
-      // The label sits just above the ring as seen on screen.
-      const up = (m.getBearing() * Math.PI) / 180, rM = (sgtFt === Infinity ? 0 : sgtFt * 0.3048) + 2, k = Math.cos((pin[0] * Math.PI) / 180);
-      const at = [pin[0] + (rM * Math.cos(up)) / M_PER_DEG, pin[1] + (rM * Math.sin(up)) / (M_PER_DEG * k)];
-      sgtLabel.textContent = sgtFt === Infinity ? '0 SG · any green' : `0 SG · ${Math.round(sgtFt)} ft`;
-      if (!sgtMark) sgtMark = new maplibregl.Marker({ element: sgtLabel, anchor: 'bottom' }).setLngLat(ll(at)).addTo(m);
-      sgtMark.setLngLat(ll(at)); sgtLabel.style.display = '';
-    } else if (sgtMark) sgtLabel.style.display = 'none';
+    sgGear.hidden = !showSgt;
+    if (!showSgt) sgPanel.hidden = true;
+    const rings = [];
+    if (showSgt && !teeZones) {
+      for (const v of ringValues()) {
+        const ft = sgFeet(last ? last.lie : 'tee', yards(from, pin), v);
+        rings.push({ v, ft });
+      }
+    }
+    setRings(rings);
   }
 
   const dragMarker = (el, pos, onMove) => {
@@ -684,7 +752,9 @@ export function renderHole(view, n) {
     addLine('path', 4, { 'line-color': '#fff', 'line-width': 2 });
     addLine('arc', 5, { 'line-color': '#fff', 'line-width': 2.5 }, { 'line-cap': 'round' });
     addLine('appr', 4.5, { 'line-color': '#4dd0ff', 'line-width': 2.5 }, { 'line-cap': 'round' });
-    addLine('sgt', 4.5, { 'line-color': '#c084fc', 'line-width': 2.5, 'line-dasharray': [2, 1.2] });
+    m.addSource('sgt', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    m.addLayer({ id: 'sgt-shadow', type: 'line', source: 'sgt', paint: { 'line-color': '#000', 'line-width': 4.5, 'line-opacity': 0.35 } });
+    m.addLayer({ id: 'sgt', type: 'line', source: 'sgt', paint: { 'line-color': ['get', 'color'], 'line-width': 2.5, 'line-dasharray': [2, 1.2] } });
     addLine('width', 5, { 'line-color': '#ffe14d', 'line-width': 3, 'line-dasharray': [0.1, 2] }, { 'line-cap': 'round' });
     if (stage() !== 'play') zoomToGreen();
     update();

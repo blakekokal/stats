@@ -198,7 +198,17 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .leavebox .submit { background: #007a52; }
 .leavebox .delete { background: #e06060; }
 .leavebox .cancel { background: transparent; color: #9a9a9a; min-height: 36px; }
-.zonelegend { position: absolute; right: 70px; bottom: calc(262px + env(safe-area-inset-bottom)); z-index: 3; display: grid; gap: 3px; background: #111d; backdrop-filter: blur(8px); border-radius: 10px; padding: 6px 9px; color: #fff; font: 600 11px/1.1 system-ui, sans-serif; pointer-events: none; }
+.zonelegend { position: absolute; right: 112px; bottom: calc(262px + env(safe-area-inset-bottom)); z-index: 3; display: grid; gap: 3px; background: #111d; backdrop-filter: blur(8px); border-radius: 10px; padding: 6px 9px; color: #fff; font: 600 11px/1.1 system-ui, sans-serif; pointer-events: none; }
 .zonelegend small { font-size: 10px; opacity: .8; }
 .zonelegend span { display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
 .zonelegend i { width: 12px; height: 10px; border-radius: 3px; display: inline-block; }
+.sggear { position: absolute; right: 70px; bottom: calc(268px + env(safe-area-inset-bottom)); z-index: 4; width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; border: 0; background: #111c; color: #fff; font-size: 18px; box-shadow: 0 1px 4px #0008; }
+.sgpanel { position: absolute; right: 70px; bottom: calc(312px + env(safe-area-inset-bottom)); z-index: 6; width: min(250px, calc(100vw - 90px)); display: grid; gap: 6px; background: #1b1f1d; border: 1px solid #333; border-radius: 14px; padding: 12px; color: #fff; box-shadow: 0 6px 24px #000a; }
+.sgpanel strong { font-size: 14px; margin-top: 4px; }
+.sgpanel small { font-size: 11px; color: #9a9a9a; margin-top: -4px; }
+.sgpanel .seg { display: flex; gap: 5px; }
+.sgpanel .seg button { flex: 1; min-height: 32px; padding: 0; border-radius: 999px; border: 0; background: #ffffff1c; color: #fff; font-weight: 700; }
+.sgpanel .seg button.on { background: #c084fc; color: #111; }
+.sgpanel .range { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
+.sgpanel .range input { width: 70px; min-height: 32px; padding: 4px 6px; text-align: center; }
+.sgpanel .done { min-height: 36px; margin-top: 4px; border: 0; border-radius: 10px; background: #c084fc; color: #111; font-weight: 700; }
