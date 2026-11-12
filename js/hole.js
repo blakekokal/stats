@@ -668,7 +668,7 @@ export function renderHole(view, n) {
   // Strokes Gained panel (viewing a past round): round total and this hole, each
   // opening to Off the tee / Approach / Around green / Putting, then this hole's
   // shots, each opening to its distance, lies, SG and club.
-  const sgOpen = new Set(['round']);
+  const sgOpen = new Set(); // everything starts collapsed
   // Club for a shot: anything played from the green is a putter; other clubs
   // come once the bag is set up.
   const clubOf = s => (s.lie === 'green' ? h('b', {}, 'Putter') : h('b', { class: 'muted' }, '— (coming soon)'));
@@ -708,7 +708,8 @@ export function renderHole(view, n) {
         h('div', {}, h('span', {}, 'Club'), clubOf(s))) : null];
     }).flat().filter(Boolean);
     sgView.replaceChildren(...[
-      h('div', { class: 'sghead' }, h('strong', {}, 'Strokes Gained'), h('small', {}, `vs ${level === 'Pro' ? 'Tour Pro' : level === 'Scratch' ? 'Scratch' : level + ' HCP'}`)),
+      h('div', { class: 'sghead' }, h('strong', {}, 'Strokes Gained'), h('small', {}, `vs ${level === 'Pro' ? 'Tour Pro' : level === 'Scratch' ? 'Scratch' : level + ' HCP'}`),
+        h('button', { class: 'sgclose', 'aria-label': 'Close', onclick: () => { sgView.hidden = true; sgViewBtn.classList.remove('on'); } }, '✕')),
       toggleRow('round', 'Round total', ra.holes ? ra.sg.total : null, `${ra.holes} hole${ra.holes === 1 ? '' : 's'}`),
       sgOpen.has('round') ? cats(ra.sg, rCounts) : null,
       toggleRow('hole', `Hole ${n}`, hasHole ? hSg.total : null, hl?.done ? `${hl.shots.length + hl.shots.filter(x => x.lie === 'water').length} strokes` : 'not finished'),

@@ -259,7 +259,8 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .fab.sgviewbtn[hidden] { display: none; }
 .sgview { position: absolute; right: 10px; bottom: calc(150px + env(safe-area-inset-bottom)); z-index: 6; width: min(290px, calc(100vw - 86px)); max-height: 62vh; overflow-y: auto; display: grid; gap: 4px; background: #1b1f1d; border: 1px solid #333; border-radius: 14px; padding: 10px; color: #fff; box-shadow: 0 6px 24px #000a; font-size: 13px; }
 .sgview[hidden] { display: none; }
-.sghead { display: flex; align-items: baseline; gap: 8px; margin-bottom: 2px; } .sghead strong { font-size: 15px; } .sghead small { color: #9a9a9a; }
+.sghead { display: flex; align-items: center; gap: 8px; margin-bottom: 2px; } .sghead small { flex: 1; }
+.sgclose { width: 30px; height: 30px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: #ffffff1c; color: #fff; font-size: 14px; } .sghead strong { font-size: 15px; } .sghead small { color: #9a9a9a; }
 .sgrow { display: flex; align-items: center; gap: 6px; min-height: 34px; padding: 4px 8px; border: 0; border-radius: 9px; background: #ffffff10; color: #fff; text-align: left; font-weight: 600; }
 .sgrow .caret { width: 12px; color: #9a9a9a; } .sgrow .lab { flex: 1; } .sgrow small { color: #9a9a9a; font-size: 11px; margin-right: 6px; }
 .sgrow b, .sgcats b, .shotinfo b { font-variant-numeric: tabular-nums; }
