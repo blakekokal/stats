@@ -97,6 +97,9 @@ function holeFeatures(ch) {
   });
 }
 
+// Leave a past round that was opened from Round History.
+function leaveView() { sessionStorage.removeItem('gs:viewOnly'); setCurrentRound(null); }
+
 export function renderHole(view, n) {
   closeHole();
   sessionStorage.setItem('hole', n);
@@ -381,6 +384,10 @@ export function renderHole(view, n) {
   const teeBtn = h('button', { class: 'fab movetee', 'aria-label': 'Move tee', title: 'Move the tee', onclick: () => startMove('tee') }, h('span', {}, '▲'), h('small', {}, 'Tee'));
   const pinBtn = h('button', { class: 'fab movepin', 'aria-label': 'Move pin', title: 'Move the pin', onclick: () => startMove('pin') }, h('span', {}, '⚑'), h('small', {}, 'Pin'));
 
+  // Viewing a past round from Round History: holes open on the normal tee view
+  // with the shots drawn and no recording controls, until Edit is tapped.
+  const viewing = () => sessionStorage.getItem('gs:viewOnly') === '1';
+  const editBtn = h('button', { class: 'fab viewedit', hidden: !viewing(), onclick: () => { sessionStorage.removeItem('gs:viewOnly'); renderHole(view, n); } }, '✎ Edit');
   const undoBtn = h('button', { class: 'fab undo', 'aria-label': 'Undo', title: 'Undo',
     onclick: () => {
       const hl = holeNow(), shots = hl.shots || [];
@@ -423,7 +430,11 @@ export function renderHole(view, n) {
   const menu = h('div', { class: 'sheet', hidden: true },
     h('label', {}, 'Tees ', h('select', { onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); const r = currentRound(); if (r) store.set(roundKeyOf(r.id), { ...r, tee: e.target.value, updated: Date.now() }); renderHole(view, n); } },
       course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
-    h('button', { class: 'btn', onclick: () => { menu.hidden = true; if (currentRound()) leave.hidden = false; else location.hash = '#/'; } }, 'Home'),
+    h('button', { class: 'btn', onclick: () => {
+      menu.hidden = true;
+      if (viewing()) { leaveView(); location.hash = '#/history'; } else if (currentRound()) leave.hidden = false; else location.hash = '#/';
+    } }, viewing() ? 'Back to Round History' : 'Home'),
+    currentRound() ? h('a', { class: 'btn', href: `#/round/${currentRound().id}/edit` }, 'Round info') : null,
     h('a', { class: 'btn', href: '#/course' }, 'Edit course outlines'),
     h('a', { class: 'btn', href: '#/settings' }, 'Settings'),
     h('small', { class: 'muted credit' }, 'Imagery © Esri, Maxar · Outlines © OpenStreetMap contributors'));
@@ -432,7 +443,7 @@ export function renderHole(view, n) {
   compass.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,16 12,16" fill="#ff4d4d"/><polygon points="16,29 20,16 12,16" fill="#fff"/><text x="16" y="11.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">N</text></svg>';
 
   // Leaving a round from the menu's Home button.
-  const leaveTo = (hash, fn) => () => { const r = currentRound(); if (r) fn(r); setCurrentRound(null); location.hash = hash; };
+  const leaveTo = (hash, fn) => () => { const r = currentRound(); if (r) fn(r); setCurrentRound(null); sessionStorage.removeItem('gs:viewOnly'); location.hash = hash; };
   const leave = h('div', { class: 'leave', hidden: true, onclick: e => { if (e.target === leave) leave.hidden = true; } },
     h('div', { class: 'leavebox' },
       h('strong', {}, 'Leave this round?'),
@@ -448,7 +459,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, sgtBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -621,8 +632,10 @@ export function renderHole(view, n) {
     setPinBtn.hidden = st !== 'pin';
     banner.hidden = st !== 'done';
     undoBtn.classList.toggle('low', !banner.hidden); // keep clear of the score banner
+    editBtn.classList.toggle('low', !banner.hidden);
     teeBtn.hidden = onGreen;
     pinBtn.hidden = st === 'pin' || st === 'done';
+    if (viewing()) addBtn.hidden = holedBtn.hidden = setPinBtn.hidden = undoBtn.hidden = teeBtn.hidden = pinBtn.hidden = true;
     if ((moving === 'tee' && teeBtn.hidden) || (moving === 'pin' && pinBtn.hidden)) endMove(false);
     // The hole pill: the hole's yardage, or on the green the putt to come.
     const putts = shots.filter(x => x.lie === 'green').length - 1;
@@ -639,9 +652,12 @@ export function renderHole(view, n) {
       bannerText.replaceChildren(h('strong', {}, `Holed in ${strokes}`), h('span', {}, `${word} on a par ${ch.par}`));
       // After the round's last hole, finish to Round History.
       const r = currentRound(), allDone = r && Array.from({ length: holeCount }, (_, i) => r.holes?.[i + 1]?.done).every(Boolean);
-      banner.replaceChildren(bannerText, allDone
-        ? h('a', { class: 'btn primary', href: '#/history', onclick: () => { submitRound(r.id); setCurrentRound(null); } }, 'Finish round ›')
-        : h('a', { class: 'btn primary', href: `#/hole/${nextHole}` }, 'Next hole ›'));
+      const last = n >= holeCount;
+      banner.replaceChildren(bannerText, viewing()
+        ? (last ? h('a', { class: 'btn primary', href: '#/history', onclick: leaveView }, 'Done ›') : h('a', { class: 'btn primary', href: `#/hole/${nextHole}` }, 'Next hole ›'))
+        : allDone
+          ? h('a', { class: 'btn primary', href: '#/history', onclick: () => { submitRound(r.id); setCurrentRound(null); } }, 'Finish round ›')
+          : h('a', { class: 'btn primary', href: `#/hole/${nextHole}` }, 'Next hole ›'));
     }
 
     // Strokes gained by a shot from the tee (or the last recorded shot) that
@@ -783,7 +799,7 @@ export function renderHole(view, n) {
     m.addSource('sgt', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     m.addLayer({ id: 'sgt-shadow', type: 'line', source: 'sgt', paint: { 'line-color': '#000', 'line-width': 4.5, 'line-opacity': 0.35 } });
     m.addLayer({ id: 'sgt', type: 'line', source: 'sgt', paint: { 'line-color': ['get', 'color'], 'line-width': 2.5, 'line-dasharray': [2, 1.2] } });
-    if (stage() !== 'play') zoomToGreen();
+    if (stage() !== 'play' && !viewing()) zoomToGreen();
     update();
   });
   update();
