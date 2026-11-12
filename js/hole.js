@@ -336,7 +336,7 @@ export function renderHole(view, n) {
   let moving = null; // 'tee' | 'pin' | null
   let aim = null, aimMark = null, teeBefore = null;
   const holeEl = () => mapEl.parentElement;
-  const backToAim = () => m.easeTo({ center: ll(aim), duration: 400 });
+  let savedCam = null; // the view before Tee / Pin was tapped, restored afterwards
   function endMove(keep) {
     const was = moving;
     if (was === 'tee' && !keep) { tee = teeBefore; teeMark.setLngLat(ll(tee)); }
@@ -344,7 +344,9 @@ export function renderHole(view, n) {
     teeBtn.classList.remove('on'); pinBtn.classList.remove('on');
     setTeeBtn.hidden = setPinHereBtn.hidden = true;
     holeEl()?.classList.remove('movingtee');
-    if (was === 'tee') { backToAim(); aimMark?.remove(); aimMark = null; }
+    if (was === 'tee') { aimMark?.remove(); aimMark = null; }
+    if (savedCam) m.easeTo({ center: was === 'tee' ? ll(aim) : savedCam.center, zoom: savedCam.zoom, duration: 450 });
+    savedCam = null;
     update();
   }
   function startMove(kind) {
@@ -353,11 +355,15 @@ export function renderHole(view, n) {
     moving = kind;
     (kind === 'tee' ? teeBtn : pinBtn).classList.add('on');
     (kind === 'tee' ? setTeeBtn : setPinHereBtn).hidden = false;
+    savedCam = { center: m.getCenter(), zoom: m.getZoom() };
     if (kind === 'tee') {
       aim = target; teeBefore = tee;
       aimMark = new maplibregl.Marker({ element: h('div', { class: 'aimmark', title: 'Aim spot' }) }).setLngLat(ll(aim)).addTo(m);
       holeEl()?.classList.add('movingtee');
-      m.easeTo({ center: ll(tee), duration: 400 });
+      zoomAround(tee, teeArea(tee)); // zoom in on the tee box, like the putting view
+    } else {
+      const g = ownGreen(ch);
+      zoomAround(pin, g ? g.p[0] : ring(pin, 15)); // zoom in on the green
     }
   }
   const setTeeBtn = h('button', { class: 'setnext tee', hidden: true, onclick: () => {
@@ -716,7 +722,12 @@ export function renderHole(view, n) {
   function zoomToGreen() {
     const g = ownGreen(ch), ball = shotsNow().at(-1)?.pos;
     const focus = holeNow().pin || !g ? pin : centre(g.p[0]);
-    const pts = [...(g ? g.p[0] : [pin]), ...(ball ? [ball] : [])];
+    zoomAround(focus, [...(g ? g.p[0] : [pin]), ...(ball ? [ball] : [])]);
+  }
+  // Ease the map so `focus` sits on the crosshair and all of `pts` fit on
+  // screen around it: above the crosshair (below the top buttons), below it
+  // (above the hole pill) and to either side.
+  function zoomAround(focus, pts) {
     const hgt = mapEl.clientHeight, wid = mapEl.clientWidth;
     const brg = (m.getBearing() * Math.PI) / 180, k = Math.cos((focus[0] * Math.PI) / 180);
     let up = 0, down = 0, side = 0;
@@ -725,11 +736,16 @@ export function renderHole(view, n) {
       const a = e * Math.sin(brg) + nn * Math.cos(brg), c = e * Math.cos(brg) - nn * Math.sin(brg);
       up = Math.max(up, a); down = Math.max(down, -a); side = Math.max(side, Math.abs(c));
     }
-    // Room on screen: above the crosshair (below the top buttons), below it
-    // (above the hole pill) and to either side.
     const mPerPx = 1.08 * Math.max(up / (hgt * CROSSHAIR_Y - 60), down / (hgt * (1 - CROSSHAIR_Y) - 90), side / (wid / 2 - 10), 0.02);
     const zoom = Math.min(21, Math.log2((78271.517 * k) / mPerPx));
-    m.easeTo({ center: ll(focus), zoom, duration: 600 });
+    m.easeTo({ center: ll(focus), zoom, duration: 500 });
+  }
+  // The tee box the tee sits on (or the nearest one), plus some room around it.
+  function teeArea(at) {
+    const boxes = course.features.filter(f => f.t === 'tee');
+    const box = boxes.find(f => inPolygon(at, f.p)) || boxes.reduce((b, f) => (!b || yards(centre(f.p[0]), at) < yards(centre(b.p[0]), at) ? f : b), null);
+    const pts = box && yards(centre(box.p[0]), at) < 40 ? [...box.p[0]] : [];
+    return [...pts, ...ring(at, 18)]; // at least ~36 m across
   }
   syncPin();
 
