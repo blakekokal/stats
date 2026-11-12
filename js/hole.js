@@ -231,7 +231,15 @@ export function renderHole(view, n) {
   // Arc and Appr are never on together: turning one on turns the other off.
   const setArcOn = v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); if (!v) arcAdjOpen = false; arcBtn?.classList.toggle('on', v); arcBtn?.setAttribute('aria-pressed', String(v)); };
   const setApprOn = v => { showAppr = v; localStorage.setItem('gs:appr', v ? '1' : '0'); if (!v) apprAdjOpen = false; apprBtn?.classList.toggle('on', v); apprBtn?.setAttribute('aria-pressed', String(v)); };
-  const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { setArcOn(v); if (v && showAppr) setApprOn(false); });
+  // Disp: a dispersion oval at the crosshair (as wide as the arc) with 15 evenly
+  // spread shots in it, scored for SG. Arc, Disp and Appr are never on together.
+  let showDisp = flag('gs:disp', '0');
+  const setDispOn = v => { showDisp = v; localStorage.setItem('gs:disp', v ? '1' : '0'); if (!v) arcAdjOpen = false; dispBtn?.classList.toggle('on', v); dispBtn?.setAttribute('aria-pressed', String(v)); };
+  const onlyOne = keep => { if (keep !== 'arc' && showArc) setArcOn(false); if (keep !== 'disp' && showDisp) setDispOn(false); if (keep !== 'appr' && showAppr) setApprOn(false); };
+  const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { setArcOn(v); if (v) onlyOne('arc'); });
+  const dispBtn = toggle('disp', 'Disp', '⬭', 'Dispersion oval with 15 shots, scored for SG', () => showDisp, v => { setDispOn(v); if (v) onlyOne('disp'); });
+  const dispAdjBtn = h('button', { class: 'fab arcadj dispadj', 'aria-label': 'Adjust dispersion width', title: 'Adjust dispersion width', hidden: true,
+    onclick: () => { arcAdjOpen = !arcAdjOpen; update(); } }, h('span', {}, '⇔'), h('small', {}, 'Adj'));
   const arcAdjBtn = h('button', { class: 'fab arcadj', 'aria-label': 'Adjust arc width', title: 'Adjust arc width', hidden: true,
     onclick: () => { arcAdjOpen = !arcAdjOpen; update(); } }, h('span', {}, '⇔'), h('small', {}, 'Adj'));
 
@@ -267,12 +275,12 @@ export function renderHole(view, n) {
       h('div', { class: 'presets' }, presets),
       h('div', { class: 'slide' }, h('span', {}, 'Appr'), range, value));
   }
-  const apprBtn = toggle('appr', 'Appr', '◎', 'Approach circle around the crosshair', () => showAppr, v => { setApprOn(v); if (v && showArc) setArcOn(false); });
+  const apprBtn = toggle('appr', 'Appr', '◎', 'Approach circle around the crosshair', () => showAppr, v => { setApprOn(v); if (v) onlyOne('appr'); });
   // Like Arc: Appr turns the circle on or off; a small Adj button beside it opens its slider.
   let apprAdjOpen = false;
   const apprAdjBtn = h('button', { class: 'fab arcadj appradj', 'aria-label': 'Adjust approach circle', title: 'Adjust approach circle', hidden: true,
     onclick: () => { apprAdjOpen = !apprAdjOpen; update(); } }, h('span', {}, '⇔'), h('small', {}, 'Adj'));
-  if (showArc && showAppr) setApprOn(false);
+  if (showArc) { if (showDisp) setDispOn(false); if (showAppr) setApprOn(false); } else if (showDisp && showAppr) setApprOn(false);
   const slidersEl = h('div', { class: 'sliders' }, apprSlider, arcSlider);
 
   // SG target: a ring around the pin at the distance from which a ball on the
@@ -794,7 +802,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, compBtn, viewBtn, sgtBtn, apprBtn, apprAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, compBtn, viewBtn, sgtBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1068,6 +1076,7 @@ export function renderHole(view, n) {
   const STYLES = {
     path: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 4 }, { stroke: '#fff', 'stroke-width': 2 }],
     arc: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#fff', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
+    disp: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 4.5 }, { stroke: '#fff', 'stroke-width': 2, 'stroke-dasharray': '5 4' }],
     appr: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 4.5, 'stroke-linecap': 'round' }, { stroke: '#4dd0ff', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
     comp0: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#f472b6', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
     comp1: [{ stroke: '#000', 'stroke-opacity': 0.35, 'stroke-width': 5, 'stroke-linecap': 'round' }, { stroke: '#4dd0ff', 'stroke-width': 2.5, 'stroke-linecap': 'round' }],
@@ -1085,6 +1094,8 @@ export function renderHole(view, n) {
       return el;
     });
   }
+  const dispLayer = document.createElementNS(SVGNS, 'g');
+  svg.appendChild(dispLayer);
   const labelLayer = document.createElementNS(SVGNS, 'g');
   svg.appendChild(labelLayer);
   m.getCanvasContainer().insertBefore(svg, m.getCanvas().nextSibling);
@@ -1113,6 +1124,35 @@ export function renderHole(view, n) {
       const [bg, t] = g.childNodes, w = l.text.length * 7 + 10;
       t.textContent = l.text; t.setAttribute('x', l.x.toFixed(1)); t.setAttribute('y', (l.y + 4).toFixed(1));
       bg.setAttribute('x', (l.x - w / 2).toFixed(1)); bg.setAttribute('y', (l.y - 9).toFixed(1)); bg.setAttribute('width', w);
+    });
+  }
+  // A dispersion oval centred on `target`, `widthYd` across the line of play and
+  // 60% of that deep, sheared so shots to the right finish a little shorter and
+  // shots to the left a little longer. 15 shots spread evenly over it (a sunflower
+  // pattern), each scored for SG from its own lie.
+  function dispersion(from, target, widthYd, fromExp) {
+    const th = (bearing(from, target) * Math.PI) / 180, k = Math.cos((target[0] * Math.PI) / 180);
+    const a = widthYd / 2 / YD_PER_M, b = a * 0.6, SHEAR = 0.15;
+    // x metres right of the line, y metres along it -> [lat, lng]
+    const at = (x, y) => { y -= SHEAR * x; return [target[0] + (y * Math.cos(th) - x * Math.sin(th)) / M_PER_DEG, target[1] + (y * Math.sin(th) + x * Math.cos(th)) / (M_PER_DEG * k)]; };
+    const oval = [];
+    for (let i = 0; i <= 64; i++) { const t = (i / 64) * 2 * Math.PI; oval.push(at(a * Math.cos(t), b * Math.sin(t))); }
+    const N = 15, GOLD = Math.PI * (3 - Math.sqrt(5)), dots = [];
+    let tot = 0;
+    for (let i = 0; i < N; i++) {
+      const r = Math.sqrt((i + 0.5) / N) * 0.92, t = i * GOLD, q = at(a * r * Math.cos(t), b * r * Math.sin(t));
+      const sg = sgFinish(fromExp, lieOn(q, course.features), yards(q, pin));
+      tot += sg; dots.push({ q, sg });
+    }
+    return { oval, dots, sg: tot / N };
+  }
+  function drawDispDots(dots) {
+    while (dispLayer.childNodes.length > dots.length) dispLayer.lastChild.remove();
+    dots.forEach((d, i) => {
+      let c = dispLayer.childNodes[i];
+      if (!c) { c = document.createElementNS(SVGNS, 'circle'); c.setAttribute('r', 3.5); c.setAttribute('stroke', '#111'); c.setAttribute('stroke-width', 1.25); dispLayer.appendChild(c); }
+      const p = m.project(ll(d.q));
+      c.setAttribute('cx', p.x.toFixed(1)); c.setAttribute('cy', p.y.toFixed(1)); c.setAttribute('fill', `rgb(${heatColor(d.sg).join(',')})`);
     });
   }
   function overlay(lines) {
@@ -1147,7 +1187,10 @@ export function renderHole(view, n) {
     compBtn.classList.toggle('on', showComp);
     if (compBtn.hidden) compLegend.hidden = true;
     sgtBtn.hidden = onGreen || shots.length > 0; // SG is the drive heat map, from the tee only
-    arcSlider.hidden = !showArc || onGreen || !arcAdjOpen;
+    arcSlider.hidden = !(showArc || showDisp) || onGreen || !arcAdjOpen;
+    dispBtn.hidden = onGreen;
+    dispAdjBtn.hidden = !showDisp || onGreen;
+    dispAdjBtn.classList.toggle('on', arcAdjOpen);
     arcAdjBtn.hidden = !showArc || onGreen;
     arcAdjBtn.classList.toggle('on', arcAdjOpen);
     apprSlider.hidden = !showAppr || onGreen || !apprAdjOpen;
@@ -1198,7 +1241,7 @@ export function renderHole(view, n) {
       const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
       overlay(viewing() ? {} : { path: st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin] });
       set('shots', line(trace(shots)));
-      setRings([]); showZones(false); compDots.replaceChildren(); compLegend.hidden = true;
+      setRings([]); showZones(false); compDots.replaceChildren(); compLegend.hidden = true; drawDispDots([]);
       return;
     }
     if (moving === 'tee') { // the crosshair is the tee: show how far it is to the aim spot
@@ -1228,6 +1271,11 @@ export function renderHole(view, n) {
     if (w) lines.width = arcPoints(w.arc, w.l, w.r);
     if (arc) lines.arc = arcPoints(arc, -half, half);
     if (showAppr && apprMode === 'ft') lines.appr = ring(target, apprFt * 0.3048);
+    // Disp: the oval and its 15 shots, each scored from where it lands.
+    const disp = showDisp && !viewing() && yards(from, target) > 5 ? dispersion(from, target, arcW, fromExp) : null;
+    if (disp) lines.disp = disp.oval;
+    if (disp && moving !== 'tee') fromTeeEl.append(h('span', { class: 'sg disp ' + (disp.sg >= 0 ? 'gain' : 'loss') }, `Disp ${disp.sg >= 0 ? '+' : '−'}${Math.abs(disp.sg).toFixed(2)} avg`));
+    drawDispDots(disp && !cleanView ? disp.dots : []);
     const comps = showComp && !viewing() ? compArcs(from, yards(from, target) > 5 ? target : pin, fromExp) : [];
     // Comparing: each club has its own coloured line from the ball, and the white
     // aiming line goes.
