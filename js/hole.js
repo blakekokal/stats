@@ -182,6 +182,45 @@ export function renderHole(view, n) {
   });
   const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); arcSlider.hidden = !v; });
 
+  // Approach circle: a ring around the pin, its radius in feet. Either a set
+  // size (presets and slider, like the arc) or "SG": the distance on the green
+  // from which landing there gains 0 strokes for the selected handicap, for an
+  // approach from where the ball is now.
+  let showAppr = flag('gs:appr', '0');
+  let apprFt = Math.min(80, Math.max(10, +localStorage.getItem('gs:apprFt') || 40));
+  let apprSg = localStorage.getItem('gs:apprMode') === 'sg';
+  const apprValue = h('b', {});
+  // In SG mode the highlighted SG button says what the number means.
+  const showApprValue = ft => { apprValue.textContent = apprSg ? (ft === Infinity ? 'any green' : ft ? `${Math.round(ft)} ft` : '') : `${apprFt} ft`; };
+  const setAppr = (v, sg = false) => {
+    apprSg = sg; localStorage.setItem('gs:apprMode', sg ? 'sg' : 'ft');
+    if (!sg) { apprFt = v; apprRange.value = v; localStorage.setItem('gs:apprFt', v); }
+    apprPresets.forEach(b => b.classList.toggle('on', b.value === 'sg' ? sg : !sg && +b.value === apprFt));
+    update();
+  };
+  const apprRange = h('input', { type: 'range', min: 10, max: 80, step: 1, value: apprFt, 'aria-label': 'Approach circle radius in feet', oninput: e => setAppr(+e.target.value) });
+  const apprPresets = [h('button', { class: 'preset sg' + (apprSg ? ' on' : ''), value: 'sg', title: 'Gains 0 strokes for the selected handicap', onclick: () => setAppr(apprFt, true) }, 'SG'),
+    ...[20, 30, 40, 50, 60].map(v => h('button', { class: 'preset' + (!apprSg && v === apprFt ? ' on' : ''), value: v, onclick: () => setAppr(v) }, String(v)))];
+  const apprSlider = h('div', { class: 'arcslider appr', hidden: !showAppr },
+    h('div', { class: 'presets' }, apprPresets),
+    h('div', { class: 'slide' }, h('span', {}, 'Appr'), apprRange, apprValue));
+  const apprBtn = toggle('appr', 'Appr', '◎', 'Approach circle around the pin', () => showAppr, v => { showAppr = v; localStorage.setItem('gs:appr', v ? '1' : '0'); apprSlider.hidden = !v; });
+  // Feet from the hole at which a ball on the green gains 0 strokes for an
+  // approach from `from` (expected putts there = expected strokes from `from` - 1).
+  function zeroSgFeet(fromLie, fromYd) {
+    const goal = expectedFrom(fromLie, fromYd) - 1;
+    if (goal <= expected('green', 1, level)) return 1;
+    let lo = 1, hi = 200;
+    if (expected('green', hi, level) < goal) return Infinity; // anywhere on the green gains
+    for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (expected('green', mid, level) < goal) lo = mid; else hi = mid; }
+    return (lo + hi) / 2;
+  }
+  function ring(c, rM) {
+    const k = Math.cos((c[0] * Math.PI) / 180), pts = [];
+    for (let i = 0; i <= 72; i++) { const t = (i / 72) * 2 * Math.PI; pts.push([c[0] + (rM * Math.cos(t)) / M_PER_DEG, c[1] + (rM * Math.sin(t)) / (M_PER_DEG * k)]); }
+    return pts;
+  }
+
   // Undo steps back one stage at a time: un-hole, then un-place the pin (if the
   // ball is still on its first spot on the green), then remove the last shot.
   const undoBtn = h('button', { class: 'fab undo', 'aria-label': 'Undo', title: 'Undo',
@@ -239,7 +278,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' }, `v${VERSION}`), compass, expPill,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, arcBtn, widthBtn, arcSlider, banner, menu,
+    addBtn, holedBtn, setPinBtn, undoBtn, outlineBtn, apprBtn, arcBtn, widthBtn, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu,
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -356,8 +395,9 @@ export function renderHole(view, n) {
     undoBtn.hidden = !shots.length && !holeNow().done;
     addBtn.hidden = st === 'pin' || st === 'done';
     holedBtn.hidden = st !== 'putt';
-    widthBtn.hidden = arcBtn.hidden = onGreen;
+    widthBtn.hidden = arcBtn.hidden = apprBtn.hidden = onGreen;
     arcSlider.hidden = !showArc || onGreen;
+    apprSlider.hidden = !showAppr || onGreen;
     setPinBtn.hidden = st !== 'pin';
     banner.hidden = st !== 'done';
     // The hole pill: the hole's yardage, or on the green the putt to come.
@@ -402,7 +442,7 @@ export function renderHole(view, n) {
       const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
       set('path', line(st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin]));
       set('shots', line(trace(shots)));
-      set('width', line([])); set('arc', line([]));
+      set('width', line([])); set('arc', line([])); set('appr', line([]));
       return;
     }
     toPinEl.replaceChildren(h('b', {}, `${Math.round(toPin)} yd`));
@@ -417,6 +457,10 @@ export function renderHole(view, n) {
     set('shots', line(trace(shots)));
     set('width', line(w ? arcPoints(w.arc, w.l, w.r) : []));
     set('arc', line(arc ? arcPoints(arc, -half, half) : []));
+    let apprR = null;
+    if (showAppr) apprR = apprSg ? zeroSgFeet(last ? last.lie : 'tee', yards(from, pin)) : apprFt;
+    if (showAppr) showApprValue(apprSg ? apprR : null);
+    set('appr', line(apprR && apprR !== Infinity ? ring(pin, apprR * 0.3048) : []));
   }
 
   const dragMarker = (el, pos, onMove) => {
@@ -495,6 +539,7 @@ export function renderHole(view, n) {
     addLine('shots', 5, { 'line-color': '#ffb020', 'line-width': 2.5 }, { 'line-cap': 'round' });
     addLine('path', 4, { 'line-color': '#fff', 'line-width': 2 });
     addLine('arc', 5, { 'line-color': '#fff', 'line-width': 2.5 }, { 'line-cap': 'round' });
+    addLine('appr', 4.5, { 'line-color': '#4dd0ff', 'line-width': 2.5 }, { 'line-cap': 'round' });
     addLine('width', 5, { 'line-color': '#ffe14d', 'line-width': 3, 'line-dasharray': [0.1, 2] }, { 'line-cap': 'round' });
     if (stage() !== 'play') zoomToGreen();
     update();

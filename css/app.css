@@ -132,7 +132,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .compass { position: absolute; top: calc(34px + env(safe-area-inset-top)); left: 10px; z-index: 3; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); display: grid; place-items: center; box-shadow: 0 1px 4px #0008; }
 .compass svg { width: 26px; height: 26px; transition: transform .1s linear; }
 .sheet .credit { font-size: 11px; max-width: 220px; }
-.fab.width, .fab.arc, .fab.outline { display: grid; place-content: center; line-height: 1; font-size: 18px; }
+.fab.width, .fab.arc, .fab.appr, .fab.outline { display: grid; place-content: center; line-height: 1; font-size: 18px; }
 .fab.width, .fab.arc { left: auto; right: 14px; }
 .fab.add { left: auto; right: 9px; bottom: calc(18px + env(safe-area-inset-bottom)); width: 58px; height: 58px; font-size: 34px; font-weight: 600; background: #ffb020; color: #111; }
 .fab.undo { bottom: calc(138px + env(safe-area-inset-bottom)); font-size: 22px; }
@@ -149,18 +149,24 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .shotmark { width: 20px; height: 20px; border-radius: 50%; background: #ffb020; color: #111; border: 2px solid #111; font: 700 11px/16px system-ui, sans-serif; text-align: center; box-shadow: 0 1px 4px #000a; }
 .fab.width { bottom: calc(88px + env(safe-area-inset-bottom)); }
 .fab.arc { bottom: calc(146px + env(safe-area-inset-bottom)); }
+.fab.appr { left: auto; right: 14px; bottom: calc(204px + env(safe-area-inset-bottom)); }
+.fab.appr.on { background: #4dd0ff; color: #111; }
 .fab.outline { bottom: calc(80px + env(safe-area-inset-bottom)); }
 .fab small { font-size: 9px; font-weight: 600; }
 .fab.on { background: #ffe14d; color: #111; }
 .fab.arc.on { background: #fff; }
-.arcslider { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(92px + env(safe-area-inset-bottom)); width: min(62vw, 340px); display: grid; gap: 4px; background: #111c; backdrop-filter: blur(8px); border-radius: 18px; padding: 7px 12px 4px; color: #fff; font-size: 13px; z-index: 4; }
+.sliders { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(92px + env(safe-area-inset-bottom)); width: min(62vw, 340px); display: grid; gap: 6px; z-index: 4; }
+.arcslider { display: grid; gap: 4px; background: #111c; backdrop-filter: blur(8px); border-radius: 18px; padding: 7px 12px 4px; color: #fff; font-size: 13px; z-index: 4; }
 .arcslider .presets { display: flex; gap: 5px; }
 .arcslider .preset { flex: 1; min-height: 28px; padding: 0; border-radius: 999px; border: 0; background: #ffffff22; color: #fff; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
 .arcslider .preset.on { background: #fff; color: #111; }
+.arcslider.appr .preset.on { background: #4dd0ff; }
+.arcslider.appr input { accent-color: #4dd0ff; }
+.arcslider .preset.sg { flex: 1.2; }
 .arcslider .slide { display: flex; align-items: center; gap: 8px; }
 .arcslider[hidden] { display: none; }
 .arcslider input { flex: 1; min-height: 28px; padding: 0; border: 0; background: none; accent-color: #fff; }
-.arcslider b { min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; }
+.arcslider b { min-width: 44px; text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pinmark { width: 12px; height: 12px; border-radius: 50%; background: #111; border: 2.5px solid #fff; box-shadow: 0 1px 4px #000a; cursor: grab; }
 .pinmark::after { content: ""; position: absolute; inset: -14px; } /* larger touch area */
 
