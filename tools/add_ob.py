@@ -1,68 +1,75 @@
 #!/usr/bin/env python3
-"""Add out-of-bounds areas (public roads and houses) to the app's course file.
+"""Add the out-of-bounds area to the app's course file: everything outside the
+golf course's boundary (OpenStreetMap leisure=golf_course).
 
-Usage: add_ob.py roads_buildings.osm.json config.json course.json
-Query used (Overpass, out geom), bbox around the course:
+Usage: add_ob.py boundary.osm.json roads_houses.osm.json config.json course.json
+Queries used (Overpass, out geom), bbox around the course:
+  relation["leisure"="golf_course"](bbox);out geom;
   (way["highway"](bbox);way["building"](bbox););out geom;
 
-Roads are widened into strips, houses into their lot around them; the result is
-merged, kept to within REACH metres of a hole, and anything mapped as part of
-the course (fairway, green, tee, bunker) is cut back out. Existing "ob"
+OpenStreetMap's course boundary is rough in places (it can run out to the
+streets around a neighbourhood), so houses with their yards and public roads
+are cut out of it: the line then follows the backyard fences and road edges.
+
+The result is one "ob" feature: a box PAD metres around the course with the
+course cut out of it, so any point outside the boundary is OB. The app draws
+only the boundary itself (the inner rings), as a single line. Existing "ob"
 features in course.json are replaced. Needs shapely.
 """
 import json, math, sys
-from shapely.geometry import LineString, Polygon
-from shapely.ops import unary_union
+from shapely.geometry import LineString, Point, Polygon, box
+from shapely.ops import unary_union, linemerge, polygonize
 
+PAD = 800  # metres of OB box around the course
 ROADS = {"motorway": 12, "trunk": 12, "primary": 11, "secondary": 9, "tertiary": 8,
          "primary_link": 7, "secondary_link": 7, "tertiary_link": 7,
          "residential": 6, "unclassified": 6, "living_street": 5}  # half-width, metres
-HOUSE_PAD = 10   # metres around a house (its yard), counted as out of bounds
-REACH = 150      # metres from a hole's line
+HOUSE_PAD = 12   # metres around a house: its yard, up to the fence
 SKIP_NAMES = ("club house", "clubhouse")
 
 
-def main(src, cfg_path, dst):
+def main(src, extra, cfg_path, dst):
     cfg = json.load(open(cfg_path))
     course = json.load(open(dst))
-    lat0 = course["holes"][0]["tee"][0]
-    k = math.cos(math.radians(lat0))
+    k = math.cos(math.radians(course["holes"][0]["tee"][0]))
     sh = cfg.get("shift", {})
-    dn, de = sh.get("north", 0), sh.get("east", 0)
     M = 111320
-    xy = lambda lat, lon: ((lon * M * k) + de, (lat * M) + dn)          # OSM -> shifted metres
-    xy_app = lambda p: (p[1] * M * k, p[0] * M)                       # course file -> metres
+    xy = lambda p: (p["lon"] * M * k + sh.get("east", 0), p["lat"] * M + sh.get("north", 0))
     back = lambda x, y: [round(y / M, 6), round(x / (M * k), 6)]
 
-    shapes = []
-    for el in json.load(open(src))["elements"]:
+    rel = next(e for e in json.load(open(src))["elements"] if e.get("tags", {}).get("leisure") == "golf_course")
+    rings = {}
+    for role in ("outer", "inner"):
+        lines = [LineString([xy(p) for p in m["geometry"]]) for m in rel["members"] if m.get("role") == role]
+        rings[role] = list(polygonize(linemerge(lines))) if lines else []
+    inside = unary_union(rings["outer"]).difference(unary_union(rings["inner"])) if rings["inner"] else unary_union(rings["outer"])
+    # Cut out houses (with yards) and roads, then keep the pieces with golf on them.
+    cut = []
+    for el in json.load(open(extra))["elements"]:
         t, g = el.get("tags", {}), el.get("geometry")
-        if el["type"] != "way" or not g:
+        if not g:
             continue
-        pts = [xy(p["lat"], p["lon"]) for p in g]
+        pts = [xy(p) for p in g]
         if t.get("highway") in ROADS and len(pts) >= 2:
-            shapes.append(LineString(pts).buffer(ROADS[t["highway"]], cap_style=2))
-        elif "building" in t and len(pts) >= 4 and not any(s in t.get("name", "").lower() for s in SKIP_NAMES):
-            shapes.append(Polygon(pts).buffer(HOUSE_PAD, join_style=2))
-    ob = unary_union(shapes)
-    near = unary_union([LineString([xy_app(p) for p in h["line"]]).buffer(REACH) for h in course["holes"]])
-    play = unary_union([Polygon([xy_app(p) for p in f["p"][0]]).buffer(0) for f in course["features"]
-                        if f["t"] in ("fairway", "green", "tee", "bunker")])
-    ob = ob.intersection(near).difference(play).simplify(0.6)
+            cut.append(LineString(pts).buffer(ROADS[t["highway"]], cap_style=2))
+        elif "building" in t and len(pts) >= 4 and not any(n in t.get("name", "").lower() for n in SKIP_NAMES):
+            cut.append(Polygon(pts).buffer(HOUSE_PAD, join_style=2))
+    xy_app = lambda q: (q[1] * M * k, q[0] * M)
+    golf = [Polygon([xy_app(q) for q in f["p"][0]]).buffer(0) for f in course["features"] if f["t"] in ("fairway", "green", "tee")]
+    left = inside.difference(unary_union(cut).buffer(3).buffer(-3)).buffer(-2).buffer(2)  # tidy slivers
+    left = unary_union([g for g in (left.geoms if hasattr(left, "geoms") else [left]) if any(g.intersects(x) for x in golf)])
+    inside = unary_union([left, *golf])  # never cut into a fairway, green or tee
+    ob = box(*inside.bounds).buffer(PAD, join_style=2).difference(inside).simplify(0.3)
 
     feats = [f for f in course["features"] if f["t"] != "ob"]
-    polys = list(ob.geoms) if hasattr(ob, "geoms") else [ob]
-    n = 0
-    for poly in polys:
-        if poly.geom_type != "Polygon" or poly.area < 30:
-            continue
-        rings = [poly.exterior] + list(poly.interiors)
-        feats.append({"t": "ob", "p": [[back(x, y) for x, y in r.coords] for r in rings]})
-        n += 1
+    for poly in (ob.geoms if hasattr(ob, "geoms") else [ob]):
+        feats.append({"t": "ob", "p": [[back(x, y) for x, y in r.coords] for r in [poly.exterior, *poly.interiors]]})
     course["features"] = feats
     json.dump(course, open(dst, "w"), separators=(",", ":"))
-    print(f"{n} out-of-bounds areas")
+    # Anything of the course that falls outside the boundary (worth checking).
+    out = sorted({h["n"] for h in course["holes"] for p in (h["tee"], h["pin"]) if not inside.contains(Point(p[1] * M * k, p[0] * M))})
+    print(f"{sum(f['t'] == 'ob' for f in feats)} OB feature(s); tees/pins outside the boundary: {out or 'none'}")
 
 
 if __name__ == "__main__":
-    main(*sys.argv[1:4])
+    main(*sys.argv[1:5])
