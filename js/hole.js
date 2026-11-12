@@ -1175,17 +1175,14 @@ export function renderHole(view, n) {
     comps.forEach((c, i) => { lines['comp' + i] = c.pts; });
     compLegend.hidden = !comps.length;
     holeEl()?.classList.toggle('comparing', comps.length > 0); // the dots replace the crosshair readout
-    // A dot at the middle of each arc, read like the crosshair: yards left to the pin
-    // above it, the club's distance and its average SG below.
+    // A dot at the middle of each arc, read like the crosshair: yards left to the
+    // pin just above it, distance from the ball just below (SG is in the key).
     compDots.replaceChildren(...comps.map(c => {
-      const pt = m.project(ll(c.mid)), ends = [c.pts[0], c.pts[c.pts.length - 1]].map(q => m.project(ll(q)).x);
-      const gap = Math.max(...ends) - pt.x + 8; // the label sits just past the arc's right end
-      return h('div', { class: 'compdot', style: `left:${pt.x.toFixed(1)}px;top:${pt.y.toFixed(1)}px;--c:${c.color};--gap:${gap.toFixed(1)}px` },
+      const pt = m.project(ll(c.mid));
+      return h('div', { class: 'compdot', style: `left:${pt.x.toFixed(1)}px;top:${pt.y.toFixed(1)}px;--c:${c.color}` },
+        h('b', { class: 'up' }, `${Math.round(c.toPin)} yd`), // left to the pin
         h('i', {}),
-        h('div', { class: 'lab' },
-          h('b', {}, `${Math.round(c.toPin)} yd`),
-          h('div', { class: 'down' }, h('em', {}, `${clubShort(c.club)} ${c.yd}`),
-            h('span', { class: c.sg >= 0 ? 'gain' : 'loss' }, `${c.sg >= 0 ? '+' : '−'}${Math.abs(c.sg).toFixed(2)}`))));
+        h('b', { class: 'down' }, `${c.yd} yd`)); // from the ball
     }));
     compLegend.replaceChildren(h('small', {}, 'Compare · avg SG'), ...comps.map(c => h('span', {},
       h('i', { style: `background:${c.color}` }), `${clubShort(c.club)} ${c.yd}y · `,
