@@ -219,7 +219,12 @@ export function renderHole(view, n) {
     showOutlines = v; localStorage.setItem('gs:outlines', v ? '1' : '0');
     if (m.getLayer('outlines')) m.setLayoutProperty('outlines', 'visibility', v ? 'visible' : 'none');
   });
-  const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); arcSlider.hidden = !v; });
+  // Arc turns the arc on or off; while it's on, a small Adj button beside it
+  // opens the width slider.
+  let arcAdjOpen = false;
+  const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { showArc = v; localStorage.setItem('gs:arc', v ? '1' : '0'); if (!v) arcAdjOpen = false; });
+  const arcAdjBtn = h('button', { class: 'fab arcadj', 'aria-label': 'Adjust arc width', title: 'Adjust arc width', hidden: true,
+    onclick: () => { arcAdjOpen = !arcAdjOpen; update(); } }, h('span', {}, '⇔'), h('small', {}, 'Adj'));
 
   // Approach circle, with a Distance | SG toggle at the top of its pill:
   //  Distance — a ring of a set size in feet around the crosshair (where you're aiming)
@@ -663,7 +668,7 @@ export function renderHole(view, n) {
     h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, sgtBtn, apprBtn, arcBtn, widthBtn, clubPicker, shotConfirm, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
+    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, clubBtn, sgtBtn, apprBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, h('div', { class: 'sliders' }, apprSlider, arcSlider), banner, menu, leave, h('div', { class: 'keys' }, zoneLegend, ringLegend),
     h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1005,7 +1010,9 @@ export function renderHole(view, n) {
     clubBtn.hidden = onGreen || viewing();
     if (!clubBtn.hidden) { const c = currentClub(); clubBtn.firstChild.textContent = c ? clubShort(c) : '–'; clubBtn.classList.toggle('on', !!pickedClub); }
     sgtBtn.hidden = onGreen || shots.length > 0; // SG is the drive heat map, from the tee only
-    arcSlider.hidden = !showArc || onGreen;
+    arcSlider.hidden = !showArc || onGreen || !arcAdjOpen;
+    arcAdjBtn.hidden = !showArc || onGreen;
+    arcAdjBtn.classList.toggle('on', arcAdjOpen);
     apprSlider.hidden = !showAppr || onGreen;
     setPinBtn.hidden = st !== 'pin';
     banner.hidden = true; // replaced by the score chips at the top
