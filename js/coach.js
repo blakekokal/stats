@@ -98,7 +98,7 @@ export function renderNewRound(view) {
     const r = { ...newRound(course, tee.value, date.value || today()), courseName: course.name, player: name.value.trim() || (sync.user ? sync.name : ''),
       level: level.value, type: type.value, place: type.value === 'Tournament' && place.value ? +place.value : null, holeCount: holes };
     store.set(roundKeyOf(r.id), r);
-    setCurrentRound(r.id); sessionStorage.removeItem('gs:viewOnly');
+    setCurrentRound(r.id); sessionStorage.removeItem('gs:viewOnly'); sessionStorage.removeItem('gs:editingPast');
     store.set('settings', { ...(store.get('settings') || {}), tee: tee.value });
     sessionStorage.removeItem('gs:level');
     location.hash = '#/hole/1';
@@ -166,7 +166,7 @@ export function renderHistory(view) {
       e.stopPropagation();
       if (confirm(`Delete the round from ${fmtDate(r.date)}? This removes it from every device.`)) { store.remove(roundKeyOf(r.id)); draw(); }
     } }, 'Del');
-    const resume = () => { sessionStorage.removeItem('gs:viewOnly'); setCurrentRound(r.id); store.set('settings', { ...(store.get('settings') || {}), tee: r.tee }); sessionStorage.removeItem('gs:level'); location.hash = `#/hole/${s.firstOpen || 1}`; };
+    const resume = () => { sessionStorage.removeItem('gs:viewOnly'); sessionStorage.removeItem('gs:editingPast'); setCurrentRound(r.id); store.set('settings', { ...(store.get('settings') || {}), tee: r.tee }); sessionStorage.removeItem('gs:level'); location.hash = `#/hole/${s.firstOpen || 1}`; };
     const holesInfo = s.done < s.count ? `${s.done}/${s.count} holes` : `${s.count} holes`;
     return h('div', { class: 'card', style: s.incomplete ? 'border-left:3px solid #d4706e;cursor:pointer;' : '', onclick: s.incomplete ? resume : null },
       h('div', { style: 'display:flex;justify-content:space-between;align-items:center;' },
@@ -182,7 +182,7 @@ export function renderHistory(view) {
         ? [h('button', { style: 'flex:2;max-width:none;height:34px;font-size:13px;font-weight:700;background:#d4706e;border-radius:6px;', onclick: e => { e.stopPropagation(); resume(); } }, '▶ Resume Round'), del(60, 34)]
         : [h('button', { style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#007a52;border-radius:6px;font-weight:700;', onclick: e => {
             e.stopPropagation();
-            setCurrentRound(r.id); sessionStorage.setItem('gs:viewOnly', '1'); sessionStorage.removeItem('gs:level');
+            setCurrentRound(r.id); sessionStorage.setItem('gs:viewOnly', '1'); sessionStorage.removeItem('gs:editingPast'); sessionStorage.removeItem('gs:level');
             store.set('settings', { ...(store.get('settings') || {}), tee: r.tee });
             location.hash = '#/hole/1';
           } }, 'View/Edit'),
@@ -330,6 +330,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.24.4', ['Editing a past round: Save beside Undo goes back to view mode']],
   ['0.24.3', ['Viewing a past round: the menu has just Back to Round History and Home']],
   ['0.24.2', ['Smaller score bar at the top, beside Expected, with a round › button']],
   ['0.24.1', ['Round History: View/Edit opens each hole on the tee view with your shots; tap Edit to change them']],

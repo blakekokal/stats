@@ -221,3 +221,5 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .holeview.holedbar .vertag { display: none; }
 .holeview.holedbar .compass { top: calc(58px + env(safe-area-inset-top)); }
 .holeview.holedbar .keys { top: calc(100px + env(safe-area-inset-top)); }
+.fab.savehole { top: calc(68px + env(safe-area-inset-top)); bottom: auto; left: auto; right: 62px; width: auto; height: 40px; padding: 0 14px; border-radius: 999px; font-size: 15px; font-weight: 700; background: #22c55e; color: #fff; box-shadow: 0 1px 6px #0008; z-index: 4; }
+.fab.savehole[hidden] { display: none; }
