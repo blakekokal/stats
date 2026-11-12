@@ -250,26 +250,56 @@ export function renderHole(view, n) {
   m.addControl(new maplibregl.AttributionControl({ compact: true }), 'top-left');
   window.holeMap = m; // handy for debugging from the console
 
-  // Opening view, the same for every hole: the tee just above the hole pill, the
-  // pin just below the readouts at the top, and the hole centred left to right,
-  // zoomed out further only if a dogleg would not fit the width. Bottom padding
-  // makes the map's centre, and so its rotation and zoom pivot, the crosshair.
+  // Opening view. Par 3s show the whole hole with the crosshair on the pin.
+  // Par 4s and 5s zoom in on the drive: the crosshair sits the player's average
+  // drive from the tee along the hole's route (or, with no average drive set,
+  // where a drive down the middle gains 0 strokes), with the tee just above the
+  // hole pill. Bottom padding makes the map's centre, and so its rotation and
+  // zoom pivot, the crosshair.
+  const route = () => [tee, ...ch.line.slice(1, -1), pin];
+  function pointAlong(pts, yd) {
+    for (let i = 0; i < pts.length - 1; i++) {
+      const seg = yards(pts[i], pts[i + 1]);
+      if (yd <= seg || i === pts.length - 2) {
+        const f = seg ? Math.min(1, yd / seg) : 0;
+        return [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * f, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * f];
+      }
+      yd -= seg;
+    }
+    return pts[pts.length - 1];
+  }
+  // How far down the route a drive in the fairway gains exactly 0 strokes.
+  function evenDrive() {
+    const pts = route(), len = pts.slice(1).reduce((a, p, i) => a + yards(pts[i], p), 0);
+    const teeExp = expected('tee', yards(tee, pin), level);
+    const sgAt = x => { const p = pointAlong(pts, x); return teeExp - expected('fairway', yards(p, pin), level) - 1; };
+    let lo = 30, hi = Math.max(lo, len - 20);
+    if (sgAt(hi) < 0) return hi;
+    if (sgAt(lo) > 0) return lo;
+    for (let i = 0; i < 30; i++) { const mid = (lo + hi) / 2; if (sgAt(mid) < 0) lo = mid; else hi = mid; }
+    return (lo + hi) / 2;
+  }
   const place = () => {
     const hgt = mapEl.clientHeight, wid = mapEl.clientWidth;
-    const TOP = 125, BOTTOM = 150, SIDE = 30; // pixels kept clear of the hole
+    const BOTTOM = 150, SIDE = 30; // pixels kept clear below the tee and at the sides
     const brg = (bearing(tee, pin) * Math.PI) / 180, k = Math.cos((tee[0] * Math.PI) / 180);
     const local = p => { // metres along the tee-to-pin axis, and to the right of it
       const e = (p[1] - tee[1]) * M_PER_DEG * k, n = (p[0] - tee[0]) * M_PER_DEG;
       return [e * Math.sin(brg) + n * Math.cos(brg), e * Math.cos(brg) - n * Math.sin(brg)];
     };
-    const length = local(pin)[0];
-    const offLine = Math.max(...ch.line.slice(1, -1).map(p => Math.abs(local(p)[1])), 0) + 30; // widest point of the route, plus half a fairway
-    const mPerPx = Math.max(length / (hgt - TOP - BOTTOM), (2 * offLine) / (wid - 2 * SIDE), 0.05);
-    const teeY = (TOP + hgt - BOTTOM) / 2 + length / mPerPx / 2; // screen position of the tee
-    const along = (teeY - hgt * CROSSHAIR_Y) * mPerPx; // how far up the axis the crosshair sits
-    const start = [tee[0] + (along * Math.cos(brg)) / M_PER_DEG, tee[1] + (along * Math.sin(brg)) / (M_PER_DEG * k)];
-    const zoom = Math.log2((78271.517 * Math.cos((start[0] * Math.PI) / 180)) / mPerPx);
-    m.jumpTo({ center: ll(start), zoom, bearing: bearing(tee, pin), padding: { top: 0, left: 0, right: 0, bottom: hgt * (1 - 2 * CROSSHAIR_Y) } });
+    const below = hgt * (1 - CROSSHAIR_Y) - BOTTOM; // pixels from the crosshair down to the tee
+    let focus, mPerPx;
+    if (ch.par === 3) {
+      focus = pin;
+      const offLine = Math.max(...route().map(p => Math.abs(local(p)[1]))) + 25;
+      mPerPx = Math.max(local(pin)[0] / below, offLine / (wid / 2 - SIDE), 0.05);
+    } else {
+      focus = pointAlong(route(), sync.avgDrive || evenDrive());
+      const [a, c] = local(focus);
+      mPerPx = Math.max(a / below, (Math.abs(c) + 25) / (wid / 2 - SIDE), 0.05);
+    }
+    const zoom = Math.min(20, Math.log2((78271.517 * Math.cos((focus[0] * Math.PI) / 180)) / mPerPx));
+    m.jumpTo({ center: ll(focus), zoom, bearing: bearing(tee, pin), padding: { top: 0, left: 0, right: 0, bottom: hgt * (1 - 2 * CROSSHAIR_Y) } });
   };
   place();
 
@@ -388,15 +418,26 @@ export function renderHole(view, n) {
 
   // Zoom onto the green: the green and the ball both in view, the crosshair on the
   // pin once it is placed (or the green's centre before then).
+  // Zoom onto the green so it fills the screen around the crosshair: the
+  // crosshair on the pin once it is placed (on the green's centre before then),
+  // with the whole green and the ball in view.
   function zoomToGreen() {
     const g = ownGreen(ch), ball = shotsNow().at(-1)?.pos;
+    const focus = holeNow().pin || !g ? pin : centre(g.p[0]);
     const pts = [...(g ? g.p[0] : [pin]), ...(ball ? [ball] : [])];
-    const lats = pts.map(p => p[0]), lngs = pts.map(p => p[1]);
-    const k = Math.cos((lats[0] * Math.PI) / 180);
-    const extent = Math.max((Math.max(...lats) - Math.min(...lats)) * M_PER_DEG, (Math.max(...lngs) - Math.min(...lngs)) * M_PER_DEG * k, 20);
-    const mPerPx = (extent * 1.3) / Math.min(mapEl.clientWidth, mapEl.clientHeight * 0.6);
+    const hgt = mapEl.clientHeight, wid = mapEl.clientWidth;
+    const brg = (m.getBearing() * Math.PI) / 180, k = Math.cos((focus[0] * Math.PI) / 180);
+    let up = 0, down = 0, side = 0;
+    for (const p of pts) {
+      const e = (p[1] - focus[1]) * M_PER_DEG * k, nn = (p[0] - focus[0]) * M_PER_DEG;
+      const a = e * Math.sin(brg) + nn * Math.cos(brg), c = e * Math.cos(brg) - nn * Math.sin(brg);
+      up = Math.max(up, a); down = Math.max(down, -a); side = Math.max(side, Math.abs(c));
+    }
+    // Room on screen: above the crosshair (below the top buttons), below it
+    // (above the hole pill) and to either side.
+    const mPerPx = 1.08 * Math.max(up / (hgt * CROSSHAIR_Y - 60), down / (hgt * (1 - CROSSHAIR_Y) - 90), side / (wid / 2 - 10), 0.02);
     const zoom = Math.min(21, Math.log2((78271.517 * k) / mPerPx));
-    m.easeTo({ center: ll(holeNow().pin || !g ? pin : centre(g.p[0])), zoom, duration: 600 });
+    m.easeTo({ center: ll(focus), zoom, duration: 600 });
   }
   syncPin();
 
@@ -404,7 +445,12 @@ export function renderHole(view, n) {
   let shotMarks = [];
   function drawShots() {
     shotMarks.forEach(mk => mk.remove());
-    shotMarks = shotsNow().slice(1).map((s, i) => new maplibregl.Marker({ element: h('div', { class: 'shotmark' }, String(i + 1)) }).setLngLat(ll(s.pos)).addTo(m));
+    const shots = shotsNow();
+    shotMarks = shots.slice(1).map((s, i) => new maplibregl.Marker({ element: h('div', { class: 'shotmark' }, String(i + 1)) }).setLngLat(ll(s.pos)).addTo(m));
+    // Once holed, the number of the stroke that went in sits just above the hole.
+    if (holeNow().done && shots.length) {
+      shotMarks.push(new maplibregl.Marker({ element: h('div', { class: 'shotmark holedmark', title: 'Holed' }, String(shots.length)), anchor: 'bottom', offset: [0, -9] }).setLngLat(ll(pin)).addTo(m));
+    }
   }
   drawShots();
 

@@ -206,7 +206,14 @@ export function renderSettingsPage(view) {
   const msgEl = () => h('div', { class: 'msg' });
   const say = (el, text, ok) => { el.textContent = text; el.className = 'msg ' + (ok ? 'ok' : 'err'); };
   const nameIn = h('input', { placeholder: 'Display Name', value: u.user_metadata?.display_name || '' });
-  const nameMsg = msgEl(), hcpMsg = msgEl(), pwMsg = msgEl();
+  const nameMsg = msgEl(), hcpMsg = msgEl(), pwMsg = msgEl(), driveMsg = msgEl();
+  const drive = h('input', { type: 'number', inputmode: 'numeric', min: 0, max: 450, placeholder: 'Yards (e.g. 250)', value: sync.avgDrive || '', style: 'max-width:180px;height:36px;font-size:14px;border-radius:8px;',
+    onchange: async () => {
+      const v = drive.value.trim() === '' ? null : Math.round(+drive.value);
+      if (v != null && !(v >= 50 && v <= 450)) return say(driveMsg, 'Enter 50 to 450 yards, or leave blank');
+      try { await sync.setAvgDrive(v); say(driveMsg, v ? '✓ Saved' : '✓ Cleared', true); setTimeout(() => { driveMsg.textContent = ''; }, 2000); }
+      catch (e) { say(driveMsg, 'Error saving'); }
+    } });
   const joined = u.created_at ? new Date(u.created_at) : null;
   const hcp = h('select', { class: 'minisel', style: 'padding:6px 12px;font-size:13px;width:100%;max-width:180px;border-radius:8px;', onchange: async () => {
     try { await sync.setLevel(hcp.value); sessionStorage.removeItem('gs:level'); say(hcpMsg, '✓ Saved', true); setTimeout(() => { hcpMsg.textContent = ''; }, 2000); }
@@ -231,6 +238,9 @@ export function renderSettingsPage(view) {
       h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Account Role'),
         h('div', { style: 'display:flex;gap:6px;width:100%;max-width:280px;' }, off('Student'), off('Coach'))),
       h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Strokes Gained Comparison'), hcp, hcpMsg),
+      h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Avg Total Drive'), drive,
+        h('div', { style: 'font-size:11px;color:#606060;max-width:280px;' }, 'Par 4s and 5s open with the crosshair this far from the tee. Leave blank to use the spot where a drive down the fairway gains 0 strokes.'),
+        driveMsg),
       h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Launch Monitor'),
         h('div', { style: 'display:flex;gap:6px;width:100%;max-width:280px;' }, off('I have one'), off("I don't have one"))),
       h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Change Password'), pw1, pw2,
