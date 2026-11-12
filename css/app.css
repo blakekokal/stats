@@ -212,4 +212,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .sgpanel .seg button.on { background: #c084fc; color: #111; }
 .sgpanel .range { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
 .sgpanel .range input { width: 70px; min-height: 32px; padding: 4px 6px; text-align: center; }
+.sgpanel .range input[type=range] { flex: 1; width: auto; padding: 0; border: 0; background: none; accent-color: #c084fc; }
+.sgpanel .range b { min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
+.sgpanel .reset { min-height: 32px; padding: 0 10px; border: 0; border-radius: 999px; background: #ffffff1c; color: #fff; font-weight: 600; font-size: 12px; }
 .sgpanel .done { min-height: 36px; margin-top: 4px; border: 0; border-radius: 10px; background: #c084fc; color: #111; font-weight: 700; }
