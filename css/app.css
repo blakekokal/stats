@@ -152,10 +152,10 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .holed[hidden] { display: none; }
 .setpin { position: absolute; right: 9px; bottom: calc(88px + env(safe-area-inset-bottom)); height: 50px; padding: 0 20px; border-radius: 999px; border: 0; background: #ffb020; color: #111; font-size: 17px; font-weight: 700; box-shadow: 0 1px 6px #0008; z-index: 3; }
 .setpin[hidden] { display: none; }
-.greenbar { position: absolute; left: 10px; right: 10px; top: calc(66px + env(safe-area-inset-top)); z-index: 4; display: flex; align-items: center; gap: 10px; background: #111d; backdrop-filter: blur(8px); border-radius: 14px; padding: 10px 12px; color: #fff; }
+.greenbar { position: absolute; top: calc(8px + env(safe-area-inset-top)); left: 10px; right: 188px; z-index: 4; display: flex; align-items: center; gap: 6px; background: #111c; backdrop-filter: blur(8px); border-radius: 14px; padding: 5px 6px 5px 10px; color: #fff; }
 .greenbar[hidden] { display: none; }
-.greenbar > div { flex: 1; } .greenbar strong { display: block; font-size: 17px; } .greenbar span { display: block; font-size: 13px; opacity: .85; }
-.greenbar .btn { white-space: nowrap; }
+.greenbar > div { flex: 1; min-width: 0; } .greenbar strong { display: block; font-size: 14px; line-height: 1.15; white-space: nowrap; } .greenbar span { display: block; font-size: 11px; opacity: .85; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.greenbar .btn { flex: none; width: 32px; height: 32px; min-height: 0; padding: 0; border-radius: 50%; font-size: 20px; font-weight: 700; line-height: 1; }
 .readout .note { display: block; font-size: 15px; font-weight: 600; }
 .shotmark { width: 20px; height: 20px; border-radius: 50%; background: #ffb020; color: #111; border: 2px solid #111; font: 700 11px/16px system-ui, sans-serif; text-align: center; box-shadow: 0 1px 4px #000a; }
 .fab.width { bottom: calc(88px + env(safe-area-inset-bottom)); }
@@ -218,3 +218,6 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .fab.viewedit { top: calc(66px + env(safe-area-inset-top)); bottom: auto; left: auto; right: 10px; width: auto; height: 40px; padding: 0 16px; border-radius: 999px; font-size: 15px; font-weight: 700; background: #ffb020; color: #111; box-shadow: 0 1px 6px #0008; z-index: 4; }
 .fab.viewedit[hidden] { display: none; }
 .fab.viewedit.low { top: calc(136px + env(safe-area-inset-top)); }
+.holeview.holedbar .vertag { display: none; }
+.holeview.holedbar .compass { top: calc(58px + env(safe-area-inset-top)); }
+.holeview.holedbar .keys { top: calc(100px + env(safe-area-inset-top)); }
