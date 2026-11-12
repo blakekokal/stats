@@ -51,7 +51,7 @@ function endLie(from, to, pin, isTeeShot) {
   return r.lateral < 0 ? 'LEFT ROUGH' : 'RIGHT ROUGH';
 }
 
-function toCoachRound(r) {
+export function toCoachRound(r) {
   const allHoles = [];
   const st = { fwHit: 0, fwOpp: 0, fwLeft: 0, fwRight: 0, girHit: 0, scrMade: 0, scrOpp: 0, bunMade: 0, bunOpp: 0, onePutts: 0, threePutts: 0 };
   let score = 0, par = 0;
@@ -101,27 +101,30 @@ function toCoachRound(r) {
 
 // ---------- page ----------
 
-export function renderStatsDashboard(view, renderLogin) {
+// With `roundId`, shows the stats for that one round (from Round History).
+export function renderStatsDashboard(view, renderLogin, roundId) {
   if (!sync.user) return renderLogin(view);
+  const only = roundId ? historyRounds().find(r => r.id === roundId) : null;
   const prefOf = l => (l === 'Pro' ? 'pro' : l === 'Scratch' ? '0' : l);
   const sel = (opts, def, onchange) => h('select', { class: 'minisel', style: 'flex:1;min-width:0;', onchange }, opts.map(([v, l]) => h('option', { value: v, selected: v === def }, l)));
   const fType = sel([['all', 'All Rounds'], ['Casual', 'Casual'], ['Tournament', 'Tournament']], 'all', () => draw());
   const fTime = sel([['all', 'All Time'], ['1', 'Last Month'], ['3', 'Last 3 Mo'], ['6', 'Last 6 Mo'], ['12', 'Last Year']], 'all', () => draw());
-  const fHcp = sel(Object.entries(hcpLabels).map(([v, l]) => [v, 'vs ' + l]), sync.level ? prefOf(sync.level) : 'pro', async () => {
+  const fHcp = sel(['pro', '0', '5', '10', '15', '20', '25', '30'].map(v => [v, 'vs ' + hcpLabels[v]]), sync.level ? prefOf(sync.level) : 'pro', async () => {
     draw();
     try { await sync.setLevel(levelFromPref(fHcp.value)); } catch { /* keep the local choice */ }
   });
   const content = h('div', { id: 'dashContent', style: 'text-align:left;' });
-  const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: () => { location.hash = '#/'; } });
+  const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: () => { location.hash = only ? '#/history' : '#/'; } });
   back.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
   view.replaceChildren(h('div', { class: 'cx top' }, back,
     h('div', { style: 'width:100%;max-width:360px;' },
-      h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:6px;' }, '📊 Stats Dashboard'),
-      h('div', { style: 'display:flex;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;' }, fType, fTime, fHcp),
+      h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:6px;' }, only ? '📊 Round Stats' : '📊 Stats Dashboard'),
+      only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || course.name} · ${only.date}${only.player ? ' · ' + only.player : ''}`) : null,
+      h('div', { style: 'display:flex;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;' }, only ? [fHcp] : [fType, fTime, fHcp]),
       content)));
 
   function draw() {
-    const all = historyRounds().map(toCoachRound).filter(r => r.holes > 0)
+    const all = (only ? [only] : historyRounds()).map(toCoachRound).filter(r => r.holes > 0)
       .sort((a, b) => (a.round_date < b.round_date ? 1 : a.round_date > b.round_date ? -1 : 0));
     if (!all.length) { content.innerHTML = '<div style="text-align:center;color:#606060;padding:20px;">No rounds saved yet. Finish at least one hole to see stats.</div>'; return; }
     const data = all.filter(r => {
@@ -133,6 +136,24 @@ export function renderStatsDashboard(view, renderLogin) {
     renderDashboard(data, fHcp.value);
   }
   draw();
+}
+
+// Scorecard for one round as a CSV file (opens in Excel / Numbers / Sheets).
+export function downloadRoundCsv(r) {
+  const c = toCoachRound(r);
+  const desc = s => (s.lie === 'PENALTY' ? 'penalty' : `${s.distanceBefore}${s.isPutt ? 'ft' : 'yd'}→${s.lie === 'HOLED' ? 'holed' : s.lie.toLowerCase()}`);
+  const rows = [['Hole', 'Par', 'Yards', 'Score', 'To par', 'Putts', 'Fairway', 'GIR', 'Shots']];
+  for (const hl of c.round_data.allHoles) {
+    const toGreen = hl.shots.findIndex(s => s.isPutt);
+    const gir = (toGreen < 0 ? hl.score : toGreen) <= hl.par - 2;
+    const fw = hl.par >= 4 ? (['FAIRWAY', 'GREEN', 'HOLED'].includes(hl.shots[0].lie) ? 'Hit' : 'Missed') : '';
+    rows.push([hl.hole, hl.par, hl.yards, hl.score, hl.score - hl.par, hl.putts, fw, gir ? 'Yes' : 'No', hl.shots.map(desc).join(' | ')]);
+  }
+  rows.push(['Total', c.par, '', c.score, c.to_par, c.round_data.allHoles.reduce((a, x) => a + x.putts, 0), '', '', '']);
+  const head = [['Course', c.course_name], ['Date', c.round_date], ['Player', r.player || ''], ['Tees', r.tee || ''], ['Type', c.round_type], []];
+  const csv = [...head, ...rows].map(row => row.map(v => { const t = String(v ?? ''); return /[",\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t; }).join(',')).join('\n');
+  const a = h('a', { href: URL.createObjectURL(new Blob([csv], { type: 'text/csv' })), download: `round-${c.round_date}.csv` });
+  document.body.append(a); a.click(); a.remove();
 }
 
 // ---------- ported from the coaching app (js/stats/dashboard.js, radar.js, handicap-index.js) ----------
