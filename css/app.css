@@ -188,3 +188,13 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .holegrid .card { margin: 0; padding: 10px; display: grid; text-decoration: none; text-align: center; }
 .holegrid strong { font-size: 20px; }
 .maplibregl-ctrl-attrib { font-size: 10px; }
+
+/* Leave-round dialog */
+.leave { position: absolute; inset: 0; z-index: 20; background: #000a; display: grid; place-items: center; padding: 20px; }
+.leavebox { width: min(320px, 100%); background: #1e1e1e; border-radius: 16px; padding: 18px 16px 12px; display: grid; gap: 10px; color: #fff; text-align: center; box-shadow: 0 8px 30px #000a; }
+.leavebox strong { font-size: 18px; margin-bottom: 4px; }
+.leavebox button { min-height: 46px; border: 0; border-radius: 12px; font-size: 15px; font-weight: 700; color: #fff; }
+.leavebox .pause { background: #2d7abc; }
+.leavebox .submit { background: #007a52; }
+.leavebox .delete { background: #e06060; }
+.leavebox .cancel { background: transparent; color: #9a9a9a; min-height: 36px; }
