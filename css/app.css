@@ -203,16 +203,8 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .zonelegend small { font-size: 10px; opacity: .8; }
 .zonelegend span { display: flex; align-items: center; gap: 5px; font-variant-numeric: tabular-nums; }
 .zonelegend i { width: 12px; height: 10px; border-radius: 3px; display: inline-block; }
-.sggear { position: absolute; right: 70px; bottom: calc(268px + env(safe-area-inset-bottom)); z-index: 4; width: 36px; height: 36px; min-height: 0; padding: 0; border-radius: 50%; border: 0; background: #111c; color: #fff; font-size: 18px; box-shadow: 0 1px 4px #0008; }
-.sgpanel { position: absolute; right: 70px; bottom: calc(312px + env(safe-area-inset-bottom)); z-index: 6; width: min(250px, calc(100vw - 90px)); display: grid; gap: 6px; background: #1b1f1d; border: 1px solid #333; border-radius: 14px; padding: 12px; color: #fff; box-shadow: 0 6px 24px #000a; }
-.sgpanel strong { font-size: 14px; margin-top: 4px; }
-.sgpanel small { font-size: 11px; color: #9a9a9a; margin-top: -4px; }
-.sgpanel .seg { display: flex; gap: 5px; }
-.sgpanel .seg button { flex: 1; min-height: 32px; padding: 0; border-radius: 999px; border: 0; background: #ffffff1c; color: #fff; font-weight: 700; }
-.sgpanel .seg button.on { background: #c084fc; color: #111; }
-.sgpanel .range { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; }
-.sgpanel .range input { width: 70px; min-height: 32px; padding: 4px 6px; text-align: center; }
-.sgpanel .range input[type=range] { flex: 1; width: auto; padding: 0; border: 0; background: none; accent-color: #c084fc; }
-.sgpanel .range b { min-width: 52px; text-align: right; font-variant-numeric: tabular-nums; }
-.sgpanel .reset { min-height: 32px; padding: 0 10px; border: 0; border-radius: 999px; background: #ffffff1c; color: #fff; font-weight: 600; font-size: 12px; }
-.sgpanel .done { min-height: 36px; margin-top: 4px; border: 0; border-radius: 10px; background: #c084fc; color: #111; font-weight: 700; }
+.arcslider.sgring .modes { justify-self: center; display: flex; justify-content: center; gap: 4px; margin: -2px auto 2px; background: #ffffff14; border-radius: 999px; padding: 2px; }
+.arcslider.sgring .modes button { min-height: 26px; padding: 0 14px; border: 0; border-radius: 999px; background: transparent; color: #fff; font-size: 12px; font-weight: 700; }
+.arcslider.sgring .modes button.on { background: #c084fc; color: #111; }
+.arcslider.sgring .preset.on { background: #c084fc; color: #111; }
+.arcslider.sgring input { accent-color: #c084fc; }
