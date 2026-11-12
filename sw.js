@@ -1,10 +1,14 @@
 // Offline support: the app shell is fetched network-first (so updates arrive),
 // satellite tiles cache-first (they rarely change and are the bulk of the data).
-const SHELL = 'shell-v1';
+// Shell files are always revalidated with the server: a mix of old and new
+// files (one stale module) stops the whole app from starting.
+const SHELL = 'shell-v2';
 const TILES = 'tiles-v1';
 
 self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', e => e.waitUntil(self.clients.claim()));
+self.addEventListener('activate', e => e.waitUntil(
+  caches.keys().then(keys => Promise.all(keys.filter(k => k.startsWith('shell-') && k !== SHELL).map(k => caches.delete(k))))
+    .then(() => self.clients.claim())));
 
 self.addEventListener('fetch', e => {
   const req = e.request;
@@ -21,7 +25,7 @@ self.addEventListener('fetch', e => {
   } else if (url.origin === self.location.origin) {
     e.respondWith(caches.open(SHELL).then(async cache => {
       try {
-        const res = await fetch(req);
+        const res = await fetch(req.url, { cache: 'no-cache', credentials: 'same-origin' });
         if (res.ok) cache.put(req, res.clone());
         return res;
       } catch (err) {
