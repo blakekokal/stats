@@ -1057,9 +1057,13 @@ export function renderHole(view, n) {
   function shotLines(hl, i) {
     const shots = hl.shots || [], s = shots[i], next = shots[i + 1];
     if (!s || (!next && !hl.done)) return null;
-    const hp = hl.pin || pin, isPutt = s.lie === 'green', travel = yards(s.pos, next ? next.pos : hp);
+    const hp = hl.pin || pin, isPutt = s.lie === 'green', travel = yards(s.pos, s.obAt || (next ? next.pos : hp));
     const went = isPutt ? `${Math.round(travel * FT_PER_YD)} ft` : `${Math.round(travel)} yds`;
     const club = s.club ? clubName(s.club) + (s.swing ? ` (${SWING_NAME[s.swing] || s.swing})` : '') : isPutt ? 'Putter' : 'Hit';
+    if (s.obAt && next) { // into water or OB, then a drop or a re-hit
+      const into = s.penKind === 'water' ? 'into the water' : 'out of bounds', pen = `+${s.pen} penalty`;
+      return [`${club} ${went} ${into}`, next.drop ? `Dropped in ${lieName(next, s.obAt, hp)} (${pen}) · ${Math.round(yards(next.pos, hp))} yds to hole` : `Re-hit from the same spot (${pen})`];
+    }
     const first = isPutt ? `${club} ${went}` : `${club} ${went} to ${next ? lieName(next, s.pos, hp) : 'the hole'}`;
     const second = !next ? 'In the hole' : `${next.lie === 'green' ? `${next.ft ?? Math.round(yards(next.pos, hp) * FT_PER_YD)} ft` : `${Math.round(yards(next.pos, hp))} yds`} to hole`;
     return [first, second];
@@ -1517,7 +1521,13 @@ export function renderHole(view, n) {
     shotPopup?.remove(); shotPopup = null;
     const shots = shotsNow();
     // The dot numbered k marks where shot k finished (shot index k-1).
-    shotMarks = shots.slice(1).map((s, i) => { const at = shots[i].obAt || s.pos; return new maplibregl.Marker({ element: tappable(h('div', { class: 'shotmark' }, String(strokeNo(shots, i))), i, at) }).setLngLat(ll(at)).addTo(m); }); // a penalty shot's dot is where it went in
+    shotMarks = shots.slice(1).map((s, i) => {
+      // After a drop the number sits on the drop and a small dot marks where the ball
+      // went in; after a re-hit (same spot) the number sits where it went in.
+      const went = shots[i].obAt, at = went && !s.drop ? went : s.pos;
+      return new maplibregl.Marker({ element: tappable(h('div', { class: 'shotmark' }, String(strokeNo(shots, i))), i, at) }).setLngLat(ll(at)).addTo(m);
+    });
+    shots.forEach((x, i) => { if (x.obAt && shots[i + 1]?.drop) shotMarks.push(new maplibregl.Marker({ element: tappable(h('div', { class: 'penmark', title: x.penKind === 'water' ? 'Into the water' : 'Out of bounds' }), i, x.obAt) }).setLngLat(ll(x.obAt)).addTo(m)); });
     // Once holed, the number of the stroke that went in sits just above the hole.
     if (holeNow().done && shots.length) {
       shotMarks.push(new maplibregl.Marker({ element: tappable(h('div', { class: 'shotmark holedmark', title: 'Holed' }, String(strokeNo(shots, shots.length - 1))), shots.length - 1, pin), anchor: 'bottom', offset: [0, -9] }).setLngLat(ll(pin)).addTo(m));

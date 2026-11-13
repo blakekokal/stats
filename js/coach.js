@@ -377,6 +377,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.39.6', ['After a drop the shot number sits on the drop, with a small red dot where the ball went in', 'Shot details read like "9 Iron 126 yds into the water" / "Dropped in fwy (+1 penalty)"']],
   ['0.39.5', ['Penalty jumps (from the water or OB to the drop or re-tee) are drawn as a dotted line']],
   ['0.39.4', ['Shot numbers count penalty strokes: a re-tee after OB is Shot 3']],
   ['0.39.3', ['Auto stays further from trouble: 15 yd from OB, 10 from water, 5 from bunkers']],
