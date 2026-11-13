@@ -31,7 +31,7 @@ server, or host the repo with GitHub Pages.
 - **Course**: fix or redraw any outline. Anything inside no outline is rough.
 - **Edit boundaries** (GPS Scouting, ☰ menu): edits the boundaries around the
   hole on screen. Tap one to select it, drag the ✥ in its middle to move the
-  whole shape, drag its white points (drag a small dot
+  whole shape, the ⤡ at its corner (or Size − / +) to resize it, drag its white points (drag a small dot
   between two to add a point; tap a point to delete it), change its type or
   delete it. **Draw new boundary** picks a type (fairway, rough, bunker, water,
   recovery, tee box, green, OB) and adds corners where you tap. A rough

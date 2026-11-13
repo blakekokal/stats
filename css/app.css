@@ -351,7 +351,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 
 /* boundary editor on the hole map (GPS Scouting) */
 .holeview.bedit > :not(#gmap):not(.beditbar):not(.beditpanel) { display: none !important; }
-.holeview.bedit .maplibregl-marker:not(.bvtx):not(.bmid):not(.bmove), .holeview.bedit .maplibregl-popup, .holeview.bedit .liveoverlay { display: none !important; }
+.holeview.bedit .maplibregl-marker:not(.bvtx):not(.bmid):not(.bmove):not(.bscale), .holeview.bedit .maplibregl-popup, .holeview.bedit .liveoverlay { display: none !important; }
 .beditbar { position: absolute; top: calc(8px + env(safe-area-inset-top)); left: 8px; right: 8px; z-index: 6; display: flex; align-items: center; gap: 6px; background: #111d; backdrop-filter: blur(8px); border-radius: 14px; padding: 6px; color: #fff; }
 .beditbar strong { flex: 1; text-align: center; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .beditbar button, .beditpanel button { min-height: 38px; padding: 0 12px; border: 0; border-radius: 10px; background: #2a2f2c; color: #fff; font: 600 14px system-ui, sans-serif; }
@@ -372,4 +372,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .bvtx.draft.first { width: 22px; height: 22px; background: #22c55e; }
 .bmid { width: 11px; height: 11px; border-radius: 50%; background: #fff8; border: 1.5px solid #111a; cursor: grab; touch-action: none; }
 .bmove { width: 34px; height: 34px; border-radius: 50%; background: #ffb020; color: #111; border: 2px solid #111; box-shadow: 0 1px 4px #000a; display: grid; place-items: center; font-size: 20px; line-height: 1; cursor: move; touch-action: none; z-index: 2; }
-.holeview.bmoving .bvtx, .holeview.bmoving .bmid { display: none; }
+.holeview.bmoving .bvtx, .holeview.bmoving .bmid, .holeview.bmoving .bmove { display: none; }
+.bscale { width: 30px; height: 30px; border-radius: 8px; background: #4dd0ff; color: #111; border: 2px solid #111; box-shadow: 0 1px 4px #000a; display: grid; place-items: center; font-size: 18px; font-weight: 700; line-height: 1; cursor: nwse-resize; touch-action: none; z-index: 2; }
+.beditpanel .bsize { display: inline-flex; align-items: center; gap: 4px; margin-right: auto; font-size: 13px; font-weight: 600; }
+.beditpanel .bsize button { width: 38px; padding: 0; font-size: 20px; }

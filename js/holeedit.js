@@ -1,7 +1,8 @@
 // Boundary editor for one hole, on the hole map (GPS Scouting).
 //
 // Shows the boundaries around the hole being looked at. Tap one to select it:
-// drag the ✥ in its middle to move the whole shape, drag its white corner dots to move them, drag a small dot between two corners
+// drag the ✥ in its middle to move the whole shape, the ⤡ at its corner (or
+// Size − / +) to resize it, drag its white corner dots to move them, drag a small dot between two corners
 // to add a corner, tap a corner then "Delete point" to remove it, change its type
 // with the type buttons, or delete the whole boundary. "Draw" adds a new
 // boundary: pick its type, tap the map to place its corners, then Finish (or tap
@@ -125,7 +126,7 @@ export function openBoundaryEditor({ m, root, ch, onClose }) {
   // line it up with the imagery. Not offered for the course-wide OB area (the
   // course boundary), which only makes sense point by point.
   function addMoveHandle(rings, seen) {
-    if (rings.length > 1 && sel.t === 'ob') return;
+    if (!canReshape(sel)) return;
     const pts = rings[0].filter(seen);
     if (!pts.length) return;
     const at = [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
@@ -140,7 +141,33 @@ export function openBoundaryEditor({ m, root, ch, onClose }) {
     });
     mk.on('dragend', () => { dragEnd = Date.now(); root.classList.remove('bmoving'); selVtx = null; refresh(); });
     mk.getElement().addEventListener('click', e => e.stopPropagation());
+    addScaleHandle(at, pts);
   }
+
+  // Scaling: the ⤡ dot at the shape's corner (as seen on screen) makes it bigger
+  // or smaller about its middle, keeping its shape; − and + in the panel do it
+  // in small steps.
+  const scaled = (p0, c, k) => p0.map(r => r.map(p => round6([c[0] + (p[0] - c[0]) * k, c[1] + (p[1] - c[1]) * k])));
+  const middle = f => { const r = open(f.p[0]); return [r.reduce((a, p) => a + p[0], 0) / r.length, r.reduce((a, p) => a + p[1], 0) / r.length]; };
+  function addScaleHandle(at, pts) {
+    const c = m.project(ll(at));
+    const px = pts.map(p => m.project(ll(p)));
+    const corner = [Math.max(...px.map(q => q.x)) + 14, Math.max(...px.map(q => q.y)) + 14];
+    const mk = new maplibregl.Marker({ element: h('div', { class: 'bscale', title: 'Drag to resize the shape' }, '\u2921'), draggable: true }).setLngLat(m.unproject(corner)).addTo(m);
+    handles.push(mk);
+    let start = 0, orig = null;
+    const dist = () => { const q = m.project(mk.getLngLat()); return Math.hypot(q.x - c.x, q.y - c.y); };
+    mk.on('dragstart', () => { push(); start = dist() || 1; orig = sel.p; root.classList.add('bmoving'); });
+    mk.on('drag', () => {
+      const k = Math.min(5, Math.max(0.2, dist() / start));
+      replace(sel, { ...sel, p: scaled(orig, at, k) });
+      dirty = true; drawLayers();
+    });
+    mk.on('dragend', () => { dragEnd = Date.now(); root.classList.remove('bmoving'); selVtx = null; refresh(); });
+    mk.getElement().addEventListener('click', e => e.stopPropagation());
+  }
+  function nudgeScale(k) { push(); replace(sel, { ...sel, p: scaled(sel.p, middle(sel), k) }); dirty = true; refresh(); }
+  const canReshape = f => !(f.p.length > 1 && f.t === 'ob');
 
   // Replace ring `ri` of the selected feature (fn gets and returns an open ring).
   function setRing(ri, fn, live = false) {
@@ -188,10 +215,13 @@ export function openBoundaryEditor({ m, root, ch, onClose }) {
           h('button', { class: 'bgo', disabled: n < 3, onclick: finishDraw }, 'Finish')));
     } else if (sel) {
       const ringLen = selVtx ? open(sel.p[selVtx[0]]).length : 0;
-      if (!hint.textContent) hint.textContent = selVtx ? 'Corner selected: drag it, or delete it.' : 'Drag \u2725 to move the whole shape, or the white dots to move corners; drag a small dot between them to add one (zoom in if there are none). Tap a type to change it.';
+      if (!hint.textContent) hint.textContent = selVtx ? 'Corner selected: drag it, or delete it.' : 'Drag \u2725 to move the whole shape, \u2921 to resize it, or the white dots to move corners; drag a small dot between them to add one (zoom in if there are none). Tap a type to change it.';
       panel.replaceChildren(hint,
         typeChips(sel.t, t => { if (t === sel.t) return; push(); replace(sel, { ...sel, t }); dirty = true; refresh(); }),
         h('div', { class: 'brow' },
+          canReshape(sel) ? h('span', { class: 'bsize' }, 'Size',
+            h('button', { 'aria-label': 'Smaller', onclick: () => nudgeScale(0.97) }, '\u2212'),
+            h('button', { 'aria-label': 'Bigger', onclick: () => nudgeScale(1.03) }, '+')) : null,
           h('button', { class: 'bdel', onclick: () => { push(); work = work.filter(f => f !== sel); scoped.delete(sel); sel = null; selVtx = null; dirty = true; refresh(); } }, 'Delete boundary'),
           selVtx ? h('button', { disabled: ringLen <= 3, onclick: () => {
             const [ri, vi] = selVtx; push(); setRing(ri, r => r.filter((_, k) => k !== vi)); selVtx = null; refresh();
@@ -227,7 +257,7 @@ export function openBoundaryEditor({ m, root, ch, onClose }) {
 
   // ---------- map taps ----------
   function onClick(e) {
-    if (e.originalEvent?.target?.closest?.('.bvtx, .bmid, .bmove') || justDragged()) return;
+    if (e.originalEvent?.target?.closest?.('.bvtx, .bmid, .bmove, .bscale') || justDragged()) return;
     if (mode === 'draw') { draft.push([e.lngLat.lat, e.lngLat.lng]); refresh(); return; }
     // The smallest boundary under the tap (a bunker in a fairway, not the fairway).
     const hits = m.queryRenderedFeatures(e.point, { layers: ['bedit-fill'] }).map(x => work[x.properties.k]).filter(Boolean);
