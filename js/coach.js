@@ -392,7 +392,8 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
-  ['0.44.10', ['Squaw Creek: hole 12\'s tee boxes are inside the course boundary now, not little cut-outs in the OB', 'Edit boundaries: tap a corner of a cut-out in the course OB, then Delete cutout to remove it']],
+  ['0.44.11', ['Squaw Creek: the little OB cut-outs by hole 12\'s tee are gone; that ground is out of bounds']],
+  ['0.44.10', ['Edit boundaries: tap a corner of a cut-out in the course OB, then Delete cutout to remove it']],
   ['0.44.9', ['Edit boundaries: ✂ Cut on the course OB line picks the stretch between two corners you tap, to drag as one unit (Other side switches to the rest of the line)']],
   ['0.44.8', ['Edit boundaries: ✂ Cut splits a shape in two between two corners you tap, so each piece can be moved on its own']],
   ['0.44.7', ['The opening crosshair and Auto aim only at the hole you are on: another hole\'s fairway counts as rough for aiming', 'Fairways, tee boxes and greens drawn or edited in Edit boundaries stay tied to that hole']],
