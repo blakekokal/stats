@@ -101,8 +101,8 @@ export function fairwayWidth(tee, target, fairways, reachYd = 80) {
 const centre = ring => [ring.reduce((a, p) => a + p[0], 0) / ring.length, ring.reduce((a, p) => a + p[1], 0) / ring.length];
 // The hole's own green: the one the pin is on, or failing that the nearest.
 function ownGreen(ch, features = course.features) {
-  const greens = features.filter(f => f.t === 'green');
-  return greens.find(g => inPolygon(ch.pin, g.p))
+  const greens = features.filter(f => f.t === 'green' && (f.h == null || f.h === ch.n));
+  return greens.find(g => g.h === ch.n) || greens.find(g => inPolygon(ch.pin, g.p))
     || greens.reduce((best, g) => (!best || yards(centre(g.p[0]), ch.pin) < yards(centre(best.p[0]), ch.pin) ? g : best), null);
 }
 // Two boxes [[s, w], [n, e]] overlap (with `pad` degrees of slack).
@@ -115,6 +115,7 @@ function holeFeatures(ch, features = course.features) {
   return features.filter(f => {
     if (f.t === 'ob') return obLines(f).some(r => r.some(p => distToLine(p, ch.line) <= 150));
     if (f.t === 'bunker' || f.t === 'water' || f.t === 'recovery') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
+    if (f.h != null) return f.h === ch.n; // tied to a hole in the boundary editor
     if (f.t === 'green') return f === green; // not a neighbour's or a practice green
     const c = centre(f.p[0]);
     const own = distToLine(c, ch.line);
@@ -142,6 +143,11 @@ export function renderHole(view, n) {
   const prevHole = n === 1 ? holeCount : n - 1, nextHole = n >= holeCount ? 1 : n + 1;
   const teeSet = course.tees.find(t => t.name === teeName) || course.tees[0];
   const fairways = course.features.filter(f => f.t === 'fairway').map(f => ({ p: f.p, box: boundsOf(f.p[0], 200) }));
+  // Aiming (the opening crosshair and Auto) only uses this hole's own fairways
+  // and tee boxes: another hole's, however close, counts as rough here.
+  const ownFeats = new Set(holeFeatures(ch));
+  const aimFeatures = course.features.filter(f => !(f.t === 'fairway' || f.t === 'tee') || ownFeats.has(f));
+  const ownFairways = course.features.filter(f => f.t === 'fairway' && ownFeats.has(f)).map(f => ({ p: f.p, box: boundsOf(f.p[0], 200) }));
 
   let tee = teePosition(teeName, ch);
   let pin = ch.pin; // replaced by the round's pin for this hole once it is placed
@@ -638,7 +644,7 @@ export function renderHole(view, n) {
     const toPinYd = yards(from, pin);
     const fromExp = last ? expectedFrom(last.lie, toPinYd) : expected('tee', toPinYd, level);
     const box = boundsOf([from, pin], 350);
-    const feats = course.features.map(f => ({ ...f, box: boundsOf(f.p[0]) })).filter(f => overlaps(f.box, box, 0));
+    const feats = aimFeatures.map(f => ({ ...f, box: boundsOf(f.p[0]) })).filter(f => overlaps(f.box, box, 0));
     const lieHere = q => lieOn(q, feats.filter(f => q[0] >= f.box[0][0] && q[0] <= f.box[1][0] && q[1] >= f.box[0][1] && q[1] <= f.box[1][1]));
     const main = bearing(from, pin), k = Math.cos((from[0] * Math.PI) / 180);
     // Hazards (water, OB, bunkers) and how close a dot is to one, in metres.
@@ -992,7 +998,7 @@ export function renderHole(view, n) {
     let focus = pin;
     if (ch.par !== 3) {
       const onRoute = pointAlong(route(), bagYards('Dr') || sync.avgDrive || evenDrive());
-      const w = fairwayWidth(tee, onRoute, fairways, 40);
+      const w = fairwayWidth(tee, onRoute, ownFairways, 40);
       focus = w ? w.arc((w.l + w.r) / 2) : onRoute;
     }
     // Looking straight down the line from the tee to that point, as if standing on the tee.
