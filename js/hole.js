@@ -16,7 +16,7 @@ import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js';
 import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting } from './rounds.js';
-import { openBoundaryEditor } from './holeedit.js';
+import { openBoundaryEditor, resumeEditAt, editFeatures } from './holeedit.js';
 
 const maplibregl = window.maplibregl;
 const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR', ob: 'OB', recovery: 'REC' };
@@ -100,8 +100,8 @@ export function fairwayWidth(tee, target, fairways, reachYd = 80) {
 // bunker or water within 70 m of the hole's line, since those can be shared.
 const centre = ring => [ring.reduce((a, p) => a + p[0], 0) / ring.length, ring.reduce((a, p) => a + p[1], 0) / ring.length];
 // The hole's own green: the one the pin is on, or failing that the nearest.
-function ownGreen(ch) {
-  const greens = course.features.filter(f => f.t === 'green');
+function ownGreen(ch, features = course.features) {
+  const greens = features.filter(f => f.t === 'green');
   return greens.find(g => inPolygon(ch.pin, g.p))
     || greens.reduce((best, g) => (!best || yards(centre(g.p[0]), ch.pin) < yards(centre(best.p[0]), ch.pin) ? g : best), null);
 }
@@ -110,9 +110,9 @@ const overlaps = (a, b, pad) => a[0][0] <= b[1][0] + pad && a[1][0] >= b[0][0] -
 // The OB area is a big box with the course cut out of it: only the cut-out —
 // the course boundary — is drawn, as a single line.
 const obLines = f => (f.p.length > 1 ? f.p.slice(1) : f.p);
-function holeFeatures(ch) {
-  const green = ownGreen(ch);
-  return course.features.filter(f => {
+function holeFeatures(ch, features = course.features) {
+  const green = ownGreen(ch, features);
+  return features.filter(f => {
     if (f.t === 'ob') return obLines(f).some(r => r.some(p => distToLine(p, ch.line) <= 150));
     if (f.t === 'bunker' || f.t === 'water' || f.t === 'recovery') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
     if (f.t === 'green') return f === green; // not a neighbour's or a practice green
@@ -1568,7 +1568,8 @@ export function renderHole(view, n) {
   // recovery, tee box, green, OB) on the map. Saving reloads the hole with them.
   function editBoundaries() {
     if (!m.isStyleLoaded()) { m.once('idle', editBoundaries); return; }
-    openBoundaryEditor({ m, root: holeEl(), ch, own: holeFeatures(ch), onClose: saved => { if (saved) rerenderHere(); } });
+    openBoundaryEditor({ m, root: holeEl(), ch, own: holeFeatures(ch, editFeatures()), prev: prevHole, next: nextHole,
+      go: k => { location.hash = `#/hole/${k}`; }, onClose: saved => { if (saved) rerenderHere(); } });
   }
 
   m.on('load', () => {
@@ -1591,6 +1592,7 @@ export function renderHole(view, n) {
     if (keepCam) m.jumpTo(keepCam);
     else if (stage() !== 'play' && !viewing()) zoomToGreen();
     update();
+    if (scouting && resumeEditAt(n)) editBoundaries(); // moved here with ‹ › while editing boundaries
   });
   update();
 }
