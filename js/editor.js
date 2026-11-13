@@ -1,8 +1,7 @@
 // Course outline editor: fix or redraw the fairway / green / bunker / water / tee
 // polygons that decide the lie of every shot.
 
-import { h, course, toast, satellite, LIE_COLOR, loadCourse } from './app.js';
-import { store } from './store.js';
+import { h, course, toast, satellite, LIE_COLOR, saveCourseEdits, resetCourseEdits } from './app.js';
 import { boundsOf } from './geo.js';
 
 const L = window.L;
@@ -47,7 +46,7 @@ export function renderCourseEditor(view) {
     });
     group.addLayer(layer);
   }
-  for (const f of course.features) if (f.t !== 'ob') add(L.polygon(f.p), f.t); // OB is the course boundary, not edited here
+  for (const f of course.features) if (f.t !== 'ob') { const ly = L.polygon(f.p); ly.hole = f.h; add(ly, f.t); } // OB is the course boundary, not edited here
 
   map.pm.addControls({ position: 'topleft', drawMarker: false, drawCircleMarker: false, drawPolyline: false, drawRectangle: false,
     drawCircle: false, drawText: false, cutPolygon: false, rotateMode: false, dragMode: false, drawPolygon: true, editMode: true, removalMode: true });
@@ -55,26 +54,23 @@ export function renderCourseEditor(view) {
   map.on('pm:create', e => { group.removeLayer(e.layer); map.removeLayer(e.layer); add(L.polygon(e.layer.getLatLngs()), typeSel.value); touch(); });
   map.on('pm:remove', e => { group.removeLayer(e.layer); touch(); });
 
-  function save() {
+  async function save() {
     const features = [];
     group.eachLayer(layer => {
       let rings = layer.getLatLngs();
       if (rings.length && !Array.isArray(rings[0])) rings = [rings];
       const p = rings.map(r => r.map(ll => [+ll.lat.toFixed(6), +ll.lng.toFixed(6)])).filter(r => r.length >= 3);
-      if (p.length) features.push({ t: layer.featureType, p });
+      if (p.length) features.push({ t: layer.featureType, p, ...(layer.hole != null ? { h: layer.hole } : {}) });
     });
     // OB isn't edited here: keep it as it is (including any edits from the hole editor).
     features.push(...course.features.filter(f => f.t === 'ob'));
-    store.set('course:' + course.id, { features, ob: true });
-    loadCourse();
     dirty = false; saveBtn.disabled = true;
-    toast('Outlines saved. Lies on past rounds are unchanged; new shots use the new outlines.');
+    toast(await saveCourseEdits(features));
   }
 
   function reset() {
-    if (!confirm('Discard all your outline edits and go back to the original map?')) return;
-    store.remove('course:' + course.id);
-    loadCourse().then(() => renderCourseEditor(view));
+    if (!confirm('Discard all outline edits and go back to the original map, for everyone?')) return;
+    resetCourseEdits().then(msg => { toast(msg); renderCourseEditor(view); });
   }
 
   window.onbeforeunload = () => (dirty ? 'Unsaved outline edits' : undefined);

@@ -998,8 +998,8 @@ export function renderHole(view, n) {
     if (ch.par !== 3) {
       // The middle of this hole's fairway at driving distance, as near the drive
       // as possible: if there's no fairway there, 5 yd shorter, then longer, and
-      // so on up to 60 yd either way. A spot in a bunker, water or OB on the
-      // fairway doesn't count.
+      // so on up to 60 yd either way, then shorter still (a lay-up). A spot in a
+      // bunker, water or OB on the fairway doesn't count.
       const pts = route(), len = pts.slice(1).reduce((a, q, i) => a + yards(pts[i], q), 0);
       const drive = Math.min(bagYards('Dr') || sync.avgDrive || evenDrive(), len - 30);
       const spotAt = d => {
@@ -1017,6 +1017,9 @@ export function renderHole(view, n) {
           if (d >= 100 && d <= len - 20 && (spot = spotAt(d))) break;
         }
       }
+      // Still none (a short hole whose fairway stops well short of a drive):
+      // lay up to the fairway, as far down it as there is one.
+      for (let d = drive - 65; !spot && d >= 100; d -= 5) spot = spotAt(d);
       focus = spot || pointAlong(pts, drive);
     }
     // Looking straight down the line from the tee to that point, as if standing on the tee.

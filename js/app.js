@@ -1,6 +1,6 @@
 import { yards } from './geo.js';
 import { ADMIN_EMAIL_SHA256 } from '../config.js';
-import { store, sync, init as initSync } from './store.js';
+import { store, sync, init as initSync, fetchPublishedCourses, publishCourse, unpublishCourse } from './store.js';
 import { renderHole, closeHole, lastHole } from './hole.js';
 import { renderCourseEditor } from './editor.js';
 import { renderSettings } from './settings.js';
@@ -75,10 +75,29 @@ function dropOldCutouts(features, drops) {
   return features.map(f => (f.t === 'ob' && f.p.length > 1 && f.p.slice(1).some(r => drops.some(d => sameRing(r, d)))
     ? { ...f, p: [f.p[0], ...f.p.slice(1).filter(r => !drops.some(d => sameRing(r, d)))] } : f));
 }
+// Published outlines (an admin's edits, live for everyone), cached on the
+// device so they're there offline too: { [courseId]: { features, ob, updated } }.
+let published = {};
+try { published = JSON.parse(localStorage.getItem('gs:published') || '{}'); } catch { published = {}; }
+const cachePublished = () => { try { localStorage.setItem('gs:published', JSON.stringify(published)); } catch { /* full: still in memory */ } };
+let publishedLoad = null;
+function refreshPublished() {
+  return (publishedLoad = fetchPublishedCourses().then(p => {
+    if (!p) return false;
+    const changed = JSON.stringify(p) !== JSON.stringify(published);
+    published = p; cachePublished();
+    return changed;
+  }).catch(() => false));
+}
+
+// The outlines in use: the published ones, or for an admin, this device's own
+// edits when they're newer (saved but not yet published, say).
 export function courseById(id) {
   const b = base[id] || base[DEFAULT_COURSE];
-  const edited = store.get('course:' + b.id);
-  if (!edited || !isAdmin) return b; // only an admin's outline edits are used
+  const pub = published[b.id];
+  const mine = isAdmin ? store.get('course:' + b.id) : null;
+  const edited = mine && (!pub || (mine.savedAt || 0) > pub.updated) ? mine : pub;
+  if (!edited) return b;
   if (edited.ob) return { ...b, features: dropOldCutouts(edited.features, b.dropObRings) };
   return { ...b, features: [...edited.features.filter(f => f.t !== 'ob'), ...b.features.filter(f => f.t === 'ob')] };
 }
@@ -88,11 +107,44 @@ export function setActiveCourse(id) {
   course = courseById(id);
 }
 export async function loadCourse(onHole = false) {
+  // The first time, wait (briefly) for the published outlines; after that use
+  // what's cached and check again in the background, redrawing if they changed.
+  if (!publishedLoad) {
+    const first = refreshPublished();
+    first.then(changed => { if (changed && course) { loadCourse(onHole).then(() => { if (!document.body.classList.contains('playing')) route(); }); } });
+    await Promise.race([first, new Promise(r => setTimeout(r, 2500))]);
+  }
   await Promise.all(COURSES.filter(c => !base[c.id]).map(async c => { base[c.id] = await (await fetch(c.file)).json(); }));
   course = courseById((onHole && currentRound()?.course) || pickedCourse() || DEFAULT_COURSE);
   return course;
 }
 export const originalFeatures = () => base[course.id].features;
+
+// An admin saving outline edits: kept on this device and published for
+// everyone. Returns what happened, to show the admin.
+export async function saveCourseEdits(features) {
+  const savedAt = Date.now(), doc = { features, ob: true };
+  store.set('course:' + course.id, { ...doc, savedAt });
+  let msg;
+  try {
+    await publishCourse(course.id, doc, savedAt);
+    published = { ...published, [course.id]: { ...doc, updated: savedAt } }; cachePublished();
+    msg = 'Saved and published: everyone now sees these outlines.';
+  } catch (e) {
+    msg = `Saved on this device only: publishing for everyone failed (${e.message}).`;
+  }
+  await loadCourse(true);
+  return msg;
+}
+// Back to the course file, for everyone.
+export async function resetCourseEdits() {
+  store.remove('course:' + course.id);
+  let msg = 'Outlines reset to the original map for everyone.';
+  try { await unpublishCourse(course.id); const { [course.id]: _, ...rest } = published; published = rest; cachePublished(); }
+  catch (e) { msg = `Reset on this device only: unpublishing failed (${e.message}).`; }
+  await loadCourse(true);
+  return msg;
+}
 
 // How far a spot plays to the green: to the hole's first turn, then along its line.
 export const along = (ch, p) => { let d = yards(p, ch.line[1]); for (let i = 1; i < ch.line.length - 1; i++) d += yards(ch.line[i], ch.line[i + 1]); return d; };

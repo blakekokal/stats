@@ -13,8 +13,7 @@
 // Edits are stored like the Course page's: the whole feature list, out of bounds
 // included, under 'course:<id>' (with ob: true so the OB edits are used too).
 
-import { h, course, toast, LIE_COLOR, loadCourse, along, boxCentre, teeBoxFor } from './app.js';
-import { store } from './store.js';
+import { h, course, toast, LIE_COLOR, along, boxCentre, teeBoxFor, saveCourseEdits } from './app.js';
 import { inPolygon } from './geo.js';
 
 const maplibregl = window.maplibregl;
@@ -462,10 +461,10 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     if (!dirty) { teardown(); onClose(false); return; }
     tagScoped();
     const features = work.filter(f => f.p.length && f.p[0].length >= 4);
-    store.set('course:' + course.id, { features, ob: true });
-    await loadCourse(true);
+    saveBtn.disabled = true; saveBtn.textContent = 'Saving\u2026';
+    const msg = await saveCourseEdits(features);
     teardown();
-    toast('Boundaries saved on every hole you changed. New shots use them; past rounds keep their lies.');
+    toast(msg + ' Past rounds keep their lies.');
     onClose(true);
   }
   window.onbeforeunload = () => (dirty ? 'Unsaved boundary edits' : undefined);
