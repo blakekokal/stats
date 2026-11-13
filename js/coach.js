@@ -28,10 +28,10 @@ const needLogin = view => { if (sync.user) return false; renderLogin(view); retu
 // ---------- home ----------
 
 export function renderHome(view) {
-  const soon = (ic, title, sub, bg, badge) => h('button', { class: 'homebtn', disabled: true, title: 'Coming soon', style: `background:${bg}` },
-    h('span', { class: 'ic' }, ic), h('div', { style: 'flex:1' }, h('div', { class: 't' }, title), h('div', { class: 's' }, sub)), badge || null);
-  const go = (ic, title, sub, bg, href) => h('button', { class: 'homebtn', style: `background:${bg}`, onclick: () => { location.hash = href; } },
-    h('span', { class: 'ic' }, ic), h('div', {}, h('div', { class: 't' }, title), h('div', { class: 's' }, sub)));
+  const soon = (ic, title, bg, badge) => h('button', { class: 'homebtn', disabled: true, title: 'Coming soon', style: `background:${bg}` },
+    h('span', { class: 'ic' }, ic), h('div', { style: 'flex:1' }, h('div', { class: 't' }, title)), badge || null);
+  const go = (ic, title, bg, href) => h('button', { class: 'homebtn', style: `background:${bg}`, onclick: () => { location.hash = href; } },
+    h('span', { class: 'ic' }, ic), h('div', {}, h('div', { class: 't' }, title)));
   const divider = () => h('div', { style: 'height:1px;background:#282828;margin:3px 0;' });
   const search = h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' });
   search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
@@ -50,17 +50,17 @@ export function renderHome(view) {
           h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' }, '❓'),
           h('div', { style: 'display:flex;gap:4px;' }, search,
             h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, '⚙️')))),
-      go('🛰️', 'GPS Scouting', 'Plan shots on any hole · nothing is saved', '#1a4a8a', '#/scout'),
-      go('⛳', 'Enter New Round', 'Track every shot', '#007a52', '#/new'),
-      go('📋', 'Round History', 'All past rounds', '#00402c', '#/history'),
+      go('🛰️', 'GPS Overview', '#1a4a8a', '#/scout'),
+      go('⛳', 'New Round', '#007a52', '#/new'),
+      go('📋', 'Round History', '#00402c', '#/history'),
       divider(),
-      go('📊', 'Stats Dashboard', 'Analytics & trends', '#3d96ee', '#/dashboard'),
-      soon('🔍', 'Performance Analysis', 'Uncover your biggest misses & areas to improve', '#2d7abc'),
-      go('🎒', 'My Bag', 'Club distances & arc widths', '#1a4a8a', '#/bag'),
+      go('📊', 'Stats Dashboard', '#3d96ee', '#/dashboard'),
+      soon('🔍', 'Performance Analysis', '#2d7abc'),
+      go('🎒', 'My Bag', '#1a4a8a', '#/bag'),
       divider(),
-      soon('🏌️', 'Practice and Learning', 'Combines · Drills · Practice · Learn', '#d49a10',
+      soon('🏌️', 'Practice and Learning', '#d49a10',
         h('span', { style: 'background:#d4706e;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 7px;flex-shrink:0;white-space:nowrap;animation:cxpulse 1.5s infinite;' }, 'NEW!')),
-      soon('🎓', 'Coaching', 'Connect with your coach', '#00402c')),
+      soon('🎓', 'Coaching', '#00402c')),
     sync.user ? null : h('button', { class: 'linkbtn', style: 'margin-top:18px;', onclick: () => { location.hash = '#/account'; } }, 'Log In / Sign Up')));
 }
 
@@ -133,7 +133,7 @@ export function renderNewRound(view, { scout = false } = {}) {
   const courseBox = h('div', { style: 'width:100%;max-width:320px;display:grid;gap:6px;' }, h('div', { class: 'row', style: 'gap:6px;' }, courseSel, searchBtn), search, results);
   if (scout) {
     view.replaceChildren(page('top', backBtn(),
-      h('div', { style: 'font-size:22px;font-weight:800;' }, 'GPS Scouting'),
+      h('div', { style: 'font-size:22px;font-weight:800;' }, 'GPS Overview'),
       h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:-4px;' }, 'Plan shots on any hole · nothing is saved'),
       courseBox, tee, teeInfo, confirm, err));
     return;
@@ -174,7 +174,7 @@ export function renderHistory(view) {
 
   function draw() {
     const all = historyRounds().map(r => ({ r, s: summarize(r, courseById(r.course), level) }));
-    if (!all.length) { msg.textContent = 'No rounds yet. Tap Enter New Round on the home screen to start one.'; list.replaceChildren(); filtMsg.textContent = ''; return; }
+    if (!all.length) { msg.textContent = 'No rounds yet. Tap New Round on the home screen to start one.'; list.replaceChildren(); filtMsg.textContent = ''; return; }
     const q = search.value.toLowerCase().trim();
     let cutoff = null;
     if (fTime.value !== 'all') { cutoff = new Date(); cutoff.setMonth(cutoff.getMonth() - +fTime.value); }
@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.50.0', ['Home screen: the main buttons show just their names, no descriptions', 'Enter New Round is now New Round and GPS Scouting is now GPS Overview']],
   ['0.49.0', ['Stats Dashboard: the star charts are gone. Strokes gained is shown as simple bars, red to the left of 0 and green to the right, for Total, Off The Tee, Approach, Around Green and Putting']],
   ['0.48.1', ['Live view is simpler for people watching: no View, SG, Appr, Disp, Arc or Width buttons and no Expected strokes', 'Once a hole is holed out the crosshair and aiming lines go, leaving the hole and its shots', 'Bigger score tiles, as wide as the hole bar below them']],
   ['0.48.0', ['Live view: tap Live on a hole to get a link others can watch your round with (view only). They can tap shots for distance and club, open the scorecard and refresh', 'Live is on until you turn it off or end the round; the link keeps showing the round afterwards']],
