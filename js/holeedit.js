@@ -12,7 +12,7 @@
 // Edits are stored like the Course page's: the whole feature list, out of bounds
 // included, under 'course:<id>' (with ob: true so the OB edits are used too).
 
-import { h, course, toast, LIE_COLOR, loadCourse } from './app.js';
+import { h, course, toast, LIE_COLOR, loadCourse, along } from './app.js';
 import { store } from './store.js';
 
 const maplibregl = window.maplibregl;
@@ -78,6 +78,31 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     m.getSource('bedit').setData(fc(feats));
     const d = draft && draft.length ? [{ type: 'Feature', properties: { color: color(drawType) }, geometry: { type: 'LineString', coordinates: (draft.length > 2 ? close(draft) : draft).map(ll) } }] : [];
     m.getSource('bedit-draft').setData(fc(d));
+    drawTeeLabels();
+  }
+
+  // Each tee box is labelled with its yardage to the green and the tee sets
+  // that play from it: for each set, the box whose yardage is closest to the
+  // scorecard's (as the hole map picks the tee).
+  let teeLabels = [];
+  const TEE_INK = { black: '#111', blue: '#2563eb', white: '#fff', red: '#dc2626', gold: '#eab308', yellow: '#eab308', green: '#16a34a', silver: '#c0c0c0', orange: '#f97316', purple: '#9333ea' };
+  function drawTeeLabels() {
+    teeLabels.forEach(mk => mk.remove()); teeLabels = [];
+    const boxes = work.filter(f => f.t === 'tee' && inScope(f)).map(f => {
+      const r = open(f.p[0]), c = [r.reduce((a, p) => a + p[0], 0) / r.length, r.reduce((a, p) => a + p[1], 0) / r.length];
+      return { f, c, yd: Math.round(along(ch, c)), sets: [] };
+    });
+    if (!boxes.length) return;
+    for (const t of course.tees) {
+      const want = t.yards[ch.n - 1];
+      if (want) boxes.reduce((b, x) => (Math.abs(x.yd - want) < Math.abs(b.yd - want) ? x : b)).sets.push(t);
+    }
+    for (const b of boxes) {
+      const el = h('div', { class: 'btee' + (b.f === sel ? ' sel' : '') },
+        b.sets.map(t => h('span', { class: 'bteeset' }, h('i', { style: `background:${TEE_INK[t.name.toLowerCase()] || '#888'}` }), `${t.name} ${t.yards[ch.n - 1]}`)),
+        h('small', {}, b.sets.length ? `box ${b.yd} yd` : `Tee box \u00b7 ${b.yd} yd \u00b7 no tee set`));
+      teeLabels.push(new maplibregl.Marker({ element: el, anchor: 'bottom', offset: [0, -14] }).setLngLat(ll(b.c)).addTo(m));
+    }
   }
 
   // ---------- handles (corner dots) ----------
@@ -285,6 +310,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   // ---------- save / leave ----------
   function teardown() {
     clearHandles();
+    teeLabels.forEach(mk => mk.remove()); teeLabels = [];
     m.off('click', onClick); m.off('moveend', onMoveEnd);
     ['bedit-draft', 'bedit-line', 'bedit-fill'].forEach(id => m.getLayer(id) && m.removeLayer(id));
     ['bedit', 'bedit-draft'].forEach(id => m.getSource(id) && m.removeSource(id));
