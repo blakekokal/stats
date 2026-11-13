@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Replace a course's bunkers with the sand visible in the satellite imagery.
 
-Usage: detect_sand.py course.json mosaic.png out.json [osm.json]
+Usage: detect_sand.py course.json mosaic.png out.json [osm.json|-] [v_min s_max lift]
 (the OSM export, if given, supplies cart paths: sand right on one is dropped)
 (mosaic from tools/fetch_tiles.py, with its .meta file beside it)
 
@@ -17,7 +17,9 @@ from shapely.ops import unary_union
 REACH = 80  # metres from a hole's line
 
 course_path, mos, out = sys.argv[1:4]
-osm_path = sys.argv[4] if len(sys.argv) > 4 else None
+osm_path = sys.argv[4] if len(sys.argv) > 4 and sys.argv[4] != '-' else None
+# Thresholds (bright, washed-out imagery needs gentler ones): min brightness, max saturation, min lift over the surroundings.
+V_MIN, S_MAX, LIFT = (float(x) for x in (sys.argv[5:8] if len(sys.argv) > 7 else (195, 55, 35)))
 c = json.load(open(course_path))
 img = cv2.imread(mos); Hh, Ww = img.shape[:2]
 z, X0, Y0 = map(int, open(mos + '.meta').read().split()); N = 256 * 2 ** z
@@ -33,7 +35,7 @@ def to_ll(x, y):
 hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 S, V = hsv[..., 1].astype(np.int16), hsv[..., 2].astype(np.int16)
 gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY).astype(np.float32)
-m = ((V > 195) & (S < 55) & (gray - cv2.blur(gray, (41, 41)) > 35)).astype(np.uint8)
+m = ((V > V_MIN) & (S < S_MAX) & (gray - cv2.blur(gray, (41, 41)) > LIFT)).astype(np.uint8)
 m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
 dist = cv2.distanceTransform(m, cv2.DIST_L2, 5)
 
@@ -58,7 +60,7 @@ for cnt in cs:
     if thick < 2.2 or length / thick > 8: continue  # cart paths: thin and long
     if cv2.contourArea(cnt) / max(1, rw * rh) < 0.2: continue  # path bends and junctions
     blob = np.zeros((h, w), np.uint8); cv2.drawContours(blob, [cnt - [x, y]], -1, 1, -1); blob = blob > 0
-    if V[y:y + h, x:x + w][blob].mean() < 220 or S[y:y + h, x:x + w][blob].mean() > 30: continue  # concrete is greyer than sand
+    if V[y:y + h, x:x + w][blob].mean() < max(V_MIN + 15, 215) or S[y:y + h, x:x + w][blob].mean() > min(S_MAX - 5, 50): continue  # concrete is greyer than sand
     poly = Polygon(cnt.reshape(-1, 2)).buffer(0.6 / mpp).simplify(0.3 / mpp)  # soft sand edge
     cen = poly.representative_point()
     if not holes.contains(cen) or ob.contains(cen): continue
