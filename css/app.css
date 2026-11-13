@@ -342,3 +342,9 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .clubbox .ydmode { justify-self: center; display: flex; gap: 4px; background: #ffffff14; border-radius: 999px; padding: 2px; }
 .clubbox .ydmode button { min-height: 28px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: #fff; font-size: 13px; font-weight: 700; }
 .ydmode button.on { background: #fff !important; color: #111 !important; }
+.coursesearch, .cx .coursesearch { flex: 0 0 48px; width: 48px; max-width: 48px; min-height: 0; padding: 0; border: 1px solid #3d3d3d; border-radius: 10px; background: #222; font-size: 18px; }
+.courseresults { display: grid; gap: 4px; }
+.courseresults[hidden] { display: none; }
+.courseresults button, .cx .courseresults button { max-width: none; width: 100%; height: auto; min-height: 40px; padding: 8px 12px; border: 1px solid #333; border-radius: 10px; background: #1e1e1e; color: #fff; text-align: left; font-size: 14px; font-weight: 600; }
+.courseresults button.on, .cx .courseresults button.on { border-color: #007a52; }
+.courseresults .none { color: #606060; font-size: 13px; text-align: center; padding: 6px; }
