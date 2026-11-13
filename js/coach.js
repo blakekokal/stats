@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.48.0', ['Live view: tap Live on a hole to get a link others can watch your round with (view only). They can tap shots for distance and club, open the scorecard and refresh', 'Live is on until you turn it off or end the round; the link keeps showing the round afterwards']],
   ['0.47.3', ['Bear Creek West and East: each course only uses its own tee boxes, fairways and greens (West #1 was teeing off from East #1)']],
   ['0.47.2', ['The old page layout no longer flashes up for a moment when the app opens']],
   ['0.47.1', ['Tap Expected (top right of a hole) for the scorecard filled in with what your chosen handicap is expected to shoot on each hole and over the round']],

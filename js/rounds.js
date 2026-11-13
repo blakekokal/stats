@@ -14,10 +14,25 @@ export const roundKeyOf = id => 'round:' + id;
 let scoutRound = null;
 export const isScouting = () => { try { return sessionStorage.getItem('gs:scouting') === '1'; } catch { return false; } };
 const newScout = (tee, course) => ({ id: 'scout', scouting: true, holeCount: 18, holes: {}, updated: Date.now(), ...(tee ? { tee } : {}), ...(course ? { course } : {}) });
-export function startScouting(tee, course) { try { sessionStorage.setItem('gs:scouting', '1'); } catch { /* ignore */ } scoutRound = newScout(tee, course); }
+export function startScouting(tee, course) { endWatching(); try { sessionStorage.setItem('gs:scouting', '1'); } catch { /* ignore */ } scoutRound = newScout(tee, course); }
 export function endScouting() { try { sessionStorage.removeItem('gs:scouting'); } catch { /* ignore */ } scoutRound = null; }
 
+// Live view: someone else's round, opened from a share link. Held in memory
+// only and never saved here; `watch` is what was fetched:
+// { id, round, at (the hole being played), live, name }.
+let watch = null;
+export const watchingId = () => { try { return sessionStorage.getItem('gs:watch'); } catch { return null; } };
+export const isWatching = () => !!watchingId();
+export const watchInfo = () => (watch && watch.id === watchingId() ? watch : null);
+export function startWatching(id, doc) {
+  endScouting();
+  try { sessionStorage.setItem('gs:watch', id); } catch { /* ignore */ }
+  watch = { id, ...doc };
+}
+export function endWatching() { try { sessionStorage.removeItem('gs:watch'); } catch { /* ignore */ } watch = null; }
+
 export function currentRound() {
+  if (isWatching()) return watchInfo()?.round || null;
   if (isScouting()) return scoutRound || (scoutRound = newScout());
   let id = null;
   try { id = localStorage.getItem(CURRENT_KEY); } catch { /* ignore */ }

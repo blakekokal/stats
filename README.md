@@ -75,6 +75,20 @@ only admins can write, so they go live for every account. The table is created
 once by running `COURSE_EDITS_SQL` (`js/store.js`) in the Supabase SQL editor.
 Reset to original on the Course page takes a course's published edits down.
 
+## Live view
+
+While scoring a round (logged in), the **Live** button on the hole screen opens
+a box with a Live on/off switch and a share link (`#/live/<id>`). Anyone with
+the link, logged in or not, sees the round read-only: they can step through the
+holes, tap a shot for its distance, club and strokes gained, open the scorecard
+and tap **Refresh** (it also refreshes by itself every 20 seconds while live).
+Every shot recorded or edited is copied to the `live_rounds` table. Live is on
+from the start of a round until it is turned off or the round ends; off freezes
+what viewers see, and the finished round is always posted when it is submitted,
+so the link keeps working afterwards. The table is created once by running
+`LIVE_SQL` (`js/store.js`) in the Supabase SQL editor: only the owner can write
+a row, and rows can only be read one at a time by their share id.
+
 ## Accounts and sync
 
 Accounts are the ones in the coaching app's Supabase project (`config.js`).

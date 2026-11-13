@@ -9,13 +9,14 @@
 // shot reaches the green the map zooms onto it, the player places the pin,
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
-import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin } from './app.js';
+import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast } from './app.js';
 import { store, sync } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js';
-import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting } from './rounds.js';
+import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting, isWatching, watchInfo } from './rounds.js';
+import { liveLink, isLiveOn, setLiveOn, liveStatus, onLiveStatus, loadWatch, watchHole, shareCurrent } from './live.js';
 import { openBoundaryEditor, resumeEditAt, editFeatures } from './holeedit.js';
 
 const maplibregl = window.maplibregl;
@@ -45,7 +46,8 @@ const clubShort = n => (n === 'Putter' ? 'Putt' : /^(\d)I$/.test(n) ? n[0] + 'i'
 const strokeNo = (shots, i) => { let n = i + 1; for (let k = 0; k < i; k++) n += shots[k].pen || 0; for (let k = 1; k <= i; k++) if (shots[k].lie === 'water') n++; return n; };
 const SWING_NAME = { '3/4': '¾', '1/2': '½', punch: 'punch', recovery: 'recovery' };
 
-export function closeHole() { if (map) { map.remove(); map = null; } }
+let watchTimer = null, liveUnsub = null;
+export function closeHole() { clearInterval(watchTimer); watchTimer = null; liveUnsub?.(); liveUnsub = null; if (map) { map.remove(); map = null; } }
 export const lastHole = () => +sessionStorage.getItem('hole') || 1;
 
 // Compass direction from a to b, in degrees clockwise from north.
@@ -128,7 +130,9 @@ function leaveView() { localStorage.removeItem('gs:viewOnly'); localStorage.remo
 
 export function renderHole(view, n) {
   // A finished (submitted) round always reopens in view mode, unless it's being edited.
-  { const r0 = currentRound(); if (r0?.submitted && localStorage.getItem('gs:editingPast') !== '1') localStorage.setItem('gs:viewOnly', '1'); }
+  // Live view: someone else's round from a share link, read-only and never saved here.
+  const watching = isWatching();
+  if (!watching) { const r0 = currentRound(); if (r0?.submitted && localStorage.getItem('gs:editingPast') !== '1') localStorage.setItem('gs:viewOnly', '1'); }
   // A view to keep when the hole is re-rendered for Edit / Save / Cancel.
   let keepCam = null;
   try { const c = sessionStorage.getItem('gs:cam'); if (c) keepCam = JSON.parse(c); } catch { /* none */ }
@@ -169,13 +173,14 @@ export function renderHole(view, n) {
   const roundKey = () => { const r = currentRound(); return r ? roundKeyOf(r.id) : null; };
   const scouting = isScouting(); // GPS Scouting: a round held in memory only, never saved
   const holeNow = () => {
-    if (scouting) return currentRound().holes[n] || { pin: null, done: false, shots: [] };
+    if (scouting || watching) return currentRound().holes[n] || { pin: null, done: false, shots: [] };
     const k = roundKey(); return (k && store.get(k).holes[n]) || { pin: null, done: false, shots: [] };
   };
   const shotsNow = () => holeNow().shots || [];
   // The shots to plan from: none once the hole is finished, so the tools work from the tee again.
   const planShots = () => (holeNow().done ? [] : shotsNow());
   function saveHole(patch) {
+    if (watching) return;
     if (scouting) {
       const r = currentRound();
       r.holes = { ...r.holes, [n]: { pin: null, done: false, shots: [], ...r.holes[n], ...patch } }; r.updated = Date.now();
@@ -461,21 +466,21 @@ export function renderHole(view, n) {
 
   // Viewing a past round from Round History: holes open on the normal tee view
   // with the shots drawn and no recording controls, until Edit is tapped.
-  const viewing = () => localStorage.getItem('gs:viewOnly') === '1';
+  const viewing = () => watching || localStorage.getItem('gs:viewOnly') === '1';
   // Re-render this hole keeping the current view (zoom, position, rotation).
   const rerenderHere = () => {
     const c = m.getCenter();
     sessionStorage.setItem('gs:cam', JSON.stringify({ center: [c.lng, c.lat], zoom: m.getZoom(), bearing: m.getBearing() }));
     renderHole(view, n);
   };
-  const editBtn = h('button', { class: 'fab viewedit', hidden: !viewing(), onclick: () => {
+  const editBtn = h('button', { class: 'fab viewedit', hidden: !viewing() || watching, onclick: () => {
     const r = currentRound();
     if (r) localStorage.setItem('gs:editSnap', JSON.stringify(r.holes || {})); // for Cancel
     localStorage.removeItem('gs:viewOnly'); localStorage.setItem('gs:editingPast', '1'); rerenderHere();
   } }, '✎ Edit');
   // Editing a past round: Save (beside Undo) goes back to view mode. Changes are
   // already stored as they're made; Save just finishes editing.
-  const editingPast = () => localStorage.getItem('gs:editingPast') === '1' && !viewing();
+  const editingPast = () => !watching && localStorage.getItem('gs:editingPast') === '1' && !viewing();
   const finishEdit = () => { localStorage.removeItem('gs:editingPast'); localStorage.removeItem('gs:editSnap'); localStorage.setItem('gs:viewOnly', '1'); rerenderHere(); };
   const saveBtn = h('button', { class: 'fab savehole', hidden: !editingPast(), onclick: finishEdit }, '✓ Save');
   // Cancel puts every hole back the way it was when Edit was tapped.
@@ -886,6 +891,13 @@ export function renderHole(view, n) {
       h('button', { class: 'btn', onclick: () => { endScouting(); location.hash = '#/'; } }, 'Home'),
       h('small', { class: 'muted' }, 'GPS Scouting · shots are not saved'),
       credit)
+    : watching
+    ? h('div', { class: 'sheet', hidden: true },
+      h('button', { class: 'btn', onclick: () => { menu.hidden = true; refreshLive(true); } }, '↻ Refresh'),
+      h('button', { class: 'btn', onclick: () => { menu.hidden = true; openScorecard(); } }, 'Scorecard'),
+      h('a', { class: 'btn', href: '#/' }, 'Leave live view'),
+      h('small', { class: 'muted' }, 'Tap a numbered shot to see its distance, club and strokes gained.'),
+      credit)
     : viewing()
     ? h('div', { class: 'sheet', hidden: true },
       h('button', { class: 'btn', onclick: () => { leaveView(); location.hash = '#/history'; } }, 'Back to Round History'),
@@ -932,8 +944,77 @@ export function renderHole(view, n) {
         : null,
       h('button', { class: 'cancel', onclick: () => { leave.hidden = true; } }, 'Cancel')));
 
-  view.replaceChildren(h('div', { class: 'holeview' }, mapEl,
-    h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
+  // ---- Live view ----
+  // Watching: a badge saying whose round it is and whether it's live, and a
+  // Refresh button. The round also refreshes by itself while it's live.
+  const wi = watching ? watchInfo() : null;
+  const liveTag = wi ? h('div', { class: 'livetag' + (wi.live ? ' on' : '') },
+    h('b', {}, wi.live ? '● LIVE' : wi.round.submitted ? 'FINAL' : 'NOT LIVE'), wi.name ? ` ${wi.name}` : '') : null;
+  let refreshing = false;
+  async function refreshLive(manual) {
+    if (!wi || refreshing) return;
+    refreshing = true; refreshBtn.classList.add('busy');
+    const res = await loadWatch(wi.id);
+    refreshing = false;
+    if (map !== m) return; // left this hole meanwhile
+    refreshBtn.classList.remove('busy');
+    if (res !== 'ok') { if (manual) toast(res === 'missing' ? 'This round is no longer shared.' : 'Couldn’t refresh. Check your connection.'); return; }
+    const now = watchInfo();
+    if (now.sent === wi.sent && now.live === wi.live) { if (manual) toast(now.live ? 'Up to date' : 'Up to date · not live right now'); return; }
+    // New shots: follow the player to the next hole if we were on the one being played.
+    const was = wi.at || n, to = watchHole();
+    if (now.live && was === n && to !== n) location.hash = `#/hole/${to}`;
+    else rerenderHere();
+    if (manual) toast('Updated');
+  }
+  const refreshBtn = h('button', { class: 'fab viewedit refresh', hidden: !watching, 'aria-label': 'Refresh', onclick: () => refreshLive(true) }, '↻ Refresh');
+  if (wi?.live) watchTimer = setInterval(() => { if (!document.hidden && scorecard.hidden && sgView.hidden && !shotPopup?.isOpen()) refreshLive(false); }, 20000);
+
+  // Scoring: the Live button opens a box with the on/off switch and the link to share.
+  const liveBtn = h('button', { class: 'fab livebtn', hidden: true, 'aria-label': 'Live view', onclick: () => openLiveBox() }, h('i', {}), 'Live');
+  const liveBox = h('div', { class: 'leave livebox', hidden: true, onclick: e => { if (e.target === liveBox) liveBox.hidden = true; } });
+  function drawLiveBtn() {
+    const r = scouting || watching || viewing() ? null : currentRound();
+    liveBtn.hidden = !r;
+    liveBtn.classList.toggle('on', isLiveOn(r));
+  }
+  function openLiveBox() {
+    const r = currentRound();
+    if (!r) return;
+    const on = isLiveOn(r);
+    const link = sync.user ? liveLink(r.id) : '';
+    const linkEl = h('input', { class: 'livelink', readonly: true, value: link, 'aria-label': 'Share link', onclick: e => e.target.select() });
+    const copied = h('small', { class: 'livenote' });
+    const copy = async () => {
+      try { await navigator.clipboard.writeText(link); } catch { linkEl.select(); try { document.execCommand('copy'); } catch { /* select it for a manual copy */ } }
+      copied.textContent = 'Link copied. Paste it in a message to share.';
+    };
+    const share = navigator.share ? () => navigator.share({ title: 'Watch my round', text: `Follow ${r.player || 'my'} round live`, url: link }).catch(() => {}) : null;
+    const st = liveStatus.state;
+    const statusText = st === 'error' ? `Couldn’t update the live view yet (${liveStatus.error}). It will keep trying.`
+      : st === 'sending' ? 'Updating…' : st === 'ok' && on ? 'Live view is up to date.' : '';
+    liveBox.replaceChildren(h('div', { class: 'leavebox' },
+      h('strong', {}, 'Live view'),
+      !sync.user
+        ? [h('p', {}, 'Log in to share this round live. Your shots are still saved on this phone.'), h('a', { class: 'btn', href: '#/account' }, 'Log in')]
+        : [
+          h('label', { class: 'liveswitch' }, h('span', {}, 'Live'), h('input', { type: 'checkbox', checked: on, onchange: e => { setLiveOn(r.id, e.target.checked); drawLiveBtn(); openLiveBox(); } }), h('i', {})),
+          h('p', {}, on ? 'People with the link can watch this round. Every shot you record or edit shows up for them.'
+            : 'Paused: people with the link see the round as it was when you turned this off. The finished round is still posted when you end it.'),
+          h('small', { class: 'livehead' }, 'Share link (view only, works after the round too)'),
+          linkEl,
+          h('div', { class: 'liverow' }, h('button', { class: 'pause', onclick: copy }, 'Copy link'), share ? h('button', { class: 'pause', onclick: share }, 'Share…') : null),
+          copied,
+          statusText ? h('small', { class: 'livenote' + (st === 'error' ? ' err' : '') }, statusText) : null,
+        ],
+      h('button', { class: 'cancel', onclick: () => { liveBox.hidden = true; } }, 'Close')));
+    liveBox.hidden = false;
+  }
+  liveUnsub = onLiveStatus(() => { if (!liveBox.hidden) openLiveBox(); });
+  if (!scouting && !watching && !viewing()) shareCurrent();
+
+  view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') }, mapEl,
+    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
@@ -1404,6 +1485,7 @@ export function renderHole(view, n) {
     teeBtn.hidden = onGreen;
     pinBtn.hidden = st === 'pin' || st === 'done';
     sgViewBtn.hidden = !viewing();
+    drawLiveBtn();
     holeEl()?.classList.toggle('viewing', viewing()); // hides the crosshair and its readouts
     { const k = `${level}|${currentRound()?.updated}`; if (k !== sgViewKey) { sgViewKey = k; drawSgView(); } }
     if (!viewing()) sgView.hidden = true;
