@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.46.0', ['Opening view on par 4s and 5s aims at the hole\'s own fairway near your drive distance (shorter, longer or a lay-up when there\'s no fairway right there), never a bunker, water or OB spot', 'Course outline edits by an admin are published and go live for everyone']],
   ['0.45.0', ['Course outline editing (Course tab, Edit boundaries) is now for admin accounts only; everyone else sees the courses as published']],
   ['0.44.15', ['Squaw Creek and Bear Creek – West: updated fairway, green, tee, bunker, water, recovery and OB outlines for everyone']],
   ['0.44.14', ['GPS Scouting: changing Tees in the menu moves the tee', 'The tee always starts on the hole\'s tee box closest to the scorecard yardage for your tees (a dragged tee is no longer remembered)']],

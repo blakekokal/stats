@@ -64,6 +64,14 @@ move the crosshair onto the hole and tap **Set pin**; putts are then recorded in
 feet. Tap **Holed** to finish. A shot that finishes in water costs a penalty
 stroke.
 
+## Published course outlines
+
+An admin's outline edits (Course page or Edit boundaries) are saved on the
+device and published to the `course_edits` table, which everyone can read and
+only admins can write, so they go live for every account. The table is created
+once by running `COURSE_EDITS_SQL` (`js/store.js`) in the Supabase SQL editor.
+Reset to original on the Course page takes a course's published edits down.
+
 ## Accounts and sync
 
 Accounts are the ones in the coaching app's Supabase project (`config.js`).

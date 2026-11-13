@@ -6,7 +6,7 @@
 // tombstones so they propagate to other devices. Accounts are the ones shared
 // with the coaching app (same Supabase project).
 
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from '../config.js';
+import { SUPABASE_URL, SUPABASE_ANON_KEY, ADMIN_EMAIL_SHA256 } from '../config.js';
 
 const DOCS_KEY = 'gs:docs';
 const OWNER_KEY = 'gs:owner'; // the account the local documents belong to
@@ -236,3 +236,45 @@ export const SETUP_SQL = `create table if not exists shot_tracker_docs (
 alter table shot_tracker_docs enable row level security;
 create policy "own rows" on shot_tracker_docs for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);`;
+
+// ---------- published course outlines ----------
+// An admin's outline edits are published to `course_edits`, which everyone
+// (signed in or not) can read and only admins (config.js) can write, so they
+// go live for every account. Run COURSE_EDITS_SQL once in the Supabase SQL editor.
+
+const ADMIN_CHECK = `encode(sha256(convert_to(lower(auth.jwt() ->> 'email'), 'UTF8')), 'hex') in (${ADMIN_EMAIL_SHA256.map(x => `'${x}'`).join(', ')})`;
+export const COURSE_EDITS_SQL = `create table if not exists course_edits (
+  course_id text primary key,
+  doc jsonb not null,
+  updated bigint not null,
+  updated_by uuid default auth.uid()
+);
+alter table course_edits enable row level security;
+drop policy if exists "everyone reads" on course_edits;
+create policy "everyone reads" on course_edits for select using (true);
+drop policy if exists "admins write" on course_edits;
+create policy "admins write" on course_edits for all to authenticated
+  using (${ADMIN_CHECK}) with check (${ADMIN_CHECK});`;
+
+// Every published course: { [courseId]: { features, ob, updated } }, or null if unavailable.
+export async function fetchPublishedCourses() {
+  const c = getClient();
+  if (!c) return null;
+  const { data, error } = await c.from('course_edits').select('course_id, doc, updated');
+  if (error) return null;
+  return Object.fromEntries(data.map(r => [r.course_id, { ...r.doc, updated: r.updated }]));
+}
+// Take a course's published outlines down: everyone goes back to the course file.
+export async function unpublishCourse(id) {
+  const c = getClient();
+  if (!c || !sync.user) throw new Error('not signed in');
+  const { error } = await c.from('course_edits').delete().eq('course_id', id);
+  if (error) throw new Error(error.message);
+}
+// Publish a course's outlines for everyone. Throws with a reason if it can't.
+export async function publishCourse(id, doc, updated) {
+  const c = getClient();
+  if (!c || !sync.user) throw new Error('not signed in');
+  const { error } = await c.from('course_edits').upsert({ course_id: id, doc, updated }, { onConflict: 'course_id' });
+  if (error) throw new Error(error.message);
+}
