@@ -34,7 +34,9 @@ server, or host the repo with GitHub Pages.
   whole shape, the ⤡ at its corner (or Size − / +) to resize it, drag its white points (drag a small dot
   between two to add a point; tap a point to delete it), change its type,
   cut it in two between two corners (✂ Cut; on the course OB line it
-  picks the stretch between them to drag as one unit), or delete it. **Draw new boundary** picks a type (fairway, rough, bunker, water,
+  picks the stretch between them to drag as one unit), or delete it. A
+  cut-out in the course OB is removed by tapping one of its corners, then
+  **Delete cutout**. **Draw new boundary** picks a type (fairway, rough, bunker, water,
   recovery, tee box, green, OB) and adds corners where you tap. A rough
   boundary overrides fairway and recovery. Fairways, tee boxes, greens and rough drawn or edited
   there stay tied to that hole. Tee boxes are labelled with the tee sets that play

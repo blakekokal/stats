@@ -17,8 +17,8 @@ only the boundary itself (the inner rings), as a single line. Existing "ob"
 features in course.json are replaced. Needs shapely.
 """
 import json, math, sys
-from shapely.geometry import LineString, Point, Polygon, box
-from shapely.ops import unary_union, linemerge, polygonize
+from shapely.geometry import LineString, MultiPoint, Point, Polygon, box
+from shapely.ops import unary_union, linemerge, nearest_points, polygonize
 
 PAD = 800  # metres of OB box around the course
 ROADS = {"motorway": 12, "motorway_link": 8, "trunk": 12, "primary": 11, "secondary": 9, "tertiary": 8,
@@ -59,7 +59,15 @@ def main(src, extra, cfg_path, dst):
     golf = [Polygon([xy_app(q) for q in f["p"][0]]).buffer(0) for f in course["features"] if f["t"] in ("fairway", "green", "tee")]
     left = inside.difference(unary_union(cut).buffer(3).buffer(-3)).buffer(-2).buffer(2)  # tidy slivers
     left = unary_union([g for g in (left.geoms if hasattr(left, "geoms") else [left]) if any(g.intersects(x) for x in golf)])
-    inside = unary_union([left, *golf])  # never cut into a fairway, green or tee
+    # Never cut into a fairway, green or tee. One just outside the boundary (a tee
+    # box past the outline, say) is joined to the course by a strip, rather than
+    # left as a little island cut out of the OB.
+    def joined(g):
+        if g.intersects(left) or g.distance(left) > 60:
+            return g
+        p = nearest_points(g, left)[1]
+        return unary_union([g, MultiPoint([*g.convex_hull.exterior.coords, *Point(p.x, p.y).buffer(4).exterior.coords]).convex_hull])
+    inside = unary_union([left, *[joined(g) for g in golf]])
     # "fillGaps" (metres): where the outline cuts in between holes (round groves of
     # trees, say), close those gaps back into the course and mark them recovery.
     recovery = []
