@@ -9,7 +9,7 @@
 // shot reaches the green the map zooms onto it, the player places the pin,
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
-import { h, course, TILE_URL, LIE_COLOR, teePosition } from './app.js';
+import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin } from './app.js';
 import { store, sync } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
@@ -880,7 +880,7 @@ export function renderHole(view, n) {
     ? h('div', { class: 'sheet', hidden: true },
       h('label', {}, 'Tees ', h('select', { onchange: e => { const r = currentRound(); if (r) r.tee = e.target.value; store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHole(view, n); } },
         course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
-      h('button', { class: 'btn', onclick: () => { menu.hidden = true; editBoundaries(); } }, '✏️ Edit boundaries'),
+      isAdmin ? h('button', { class: 'btn', onclick: () => { menu.hidden = true; editBoundaries(); } }, '✏️ Edit boundaries') : null,
       h('button', { class: 'btn', onclick: () => { endScouting(); location.hash = '#/'; } }, 'Home'),
       h('small', { class: 'muted' }, 'GPS Scouting · shots are not saved'),
       credit)
@@ -894,7 +894,7 @@ export function renderHole(view, n) {
         course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
       h('button', { class: 'btn', onclick: () => { menu.hidden = true; if (currentRound()) leave.hidden = false; else location.hash = '#/'; } }, 'Home'),
       currentRound() ? h('a', { class: 'btn', href: `#/round/${currentRound().id}/edit` }, 'Round info') : null,
-      h('a', { class: 'btn', href: '#/course' }, 'Edit course outlines'),
+      isAdmin ? h('a', { class: 'btn', href: '#/course' }, 'Edit course outlines') : null,
       h('a', { class: 'btn', href: '#/settings' }, 'Settings'),
       credit);
 
@@ -1597,7 +1597,7 @@ export function renderHole(view, n) {
     if (keepCam) m.jumpTo(keepCam);
     else if (stage() !== 'play' && !viewing()) zoomToGreen();
     update();
-    if (scouting && resumeEditAt(n)) editBoundaries(); // moved here with ‹ › while editing boundaries
+    if (scouting && isAdmin && resumeEditAt(n)) editBoundaries(); // moved here with ‹ › while editing boundaries
   });
   update();
 }
