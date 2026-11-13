@@ -17,7 +17,15 @@
 <link rel="stylesheet" href="css/coach.css">
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="coach">
+<script>
+// Pick the page's look before anything is drawn, so the old top bar never
+// flashes up while the app starts (js/app.js keeps this up to date after).
+(function () {
+  var t = location.hash.replace(/^#\/?/, '').split('/')[0];
+  if (['hole', 'course', 'stats', 'device'].indexOf(t) >= 0) document.body.className = t === 'hole' ? 'playing' : '';
+})();
+</script>
 <nav id="nav">
   <a href="#/" data-tab="home">Home</a>
   <a href="#/stats" data-tab="stats">Stats</a>
