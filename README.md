@@ -33,8 +33,9 @@ server, or host the repo with GitHub Pages.
   on screen (the ones its map outlines). Tap one to select it, drag the ✥ in its middle to move the
   whole shape, the ⤡ at its corner (or Size − / +) to resize it, drag its white points (drag a small dot
   between two to add a point; tap a point to delete it), change its type,
-  cut it in two between two corners (✂ Cut; on the course OB line it
-  picks the stretch between them to drag as one unit), or delete it. A
+  cut it in two between two corners (✂ Cut; on the course OB line, a
+  cut through OB cuts off the OB beyond it as its own shape, and a cut across
+  the course picks the stretch of line between them to drag as one unit), or delete it. A
   cut-out in the course OB is removed by tapping one of its corners, then
   **Delete cutout**. **Draw new boundary** picks a type (fairway, rough, bunker, water,
   recovery, tee box, green, OB) and adds corners where you tap. A rough
