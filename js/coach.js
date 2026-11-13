@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.43.1', ['Squaw Creek rebuilt from the course yardage book: every hole, fairway, bunker and the creek placed to match']],
   ['0.43.0', ['New course: Squaw Creek Golf Course (Willow Park), laid out from the club\'s course map']],
   ['0.42.0', ['New course: Tangle Ridge Golf Club (Grand Prairie)']],
   ['0.41.0', ['New course: Bear Creek Golf Club – East', 'Course search: tap 🔍 beside the course list on New Round or GPS Scouting']],
