@@ -166,6 +166,8 @@ export function renderHole(view, n) {
     const k = roundKey(); return (k && store.get(k).holes[n]) || { pin: null, done: false, shots: [] };
   };
   const shotsNow = () => holeNow().shots || [];
+  // The shots to plan from: none once the hole is finished, so the tools work from the tee again.
+  const planShots = () => (holeNow().done ? [] : shotsNow());
   function saveHole(patch) {
     if (scouting) {
       const r = currentRound();
@@ -555,7 +557,7 @@ export function renderHole(view, n) {
   const SWINGS = [['full', 'Full'], ['3/4', '¾'], ['1/2', '½'], ['punch', 'Punch'], ['recovery', 'Recovery']];
   let pickedClub = null;
   function autoClub() {
-    const shots = shotsNow(), from = shots.length ? shots[shots.length - 1].pos : tee;
+    const shots = planShots(), from = shots.length ? shots[shots.length - 1].pos : tee;
     if (!shots.length && ch.par >= 4) return (bag().find(c => /^Dr/.test(c.name)) || bag()[0]).name;
     const d = yards(from, target);
     let best = null;
@@ -619,7 +621,7 @@ export function renderHole(view, n) {
   let autoPick = null; // { club, sg, from } while on
   const autoKey = h('div', { class: 'zonelegend autokey', hidden: true });
   function findBest() {
-    const shots = shotsNow(), last = shots[shots.length - 1], from = last ? last.pos : tee;
+    const shots = planShots(), last = shots[shots.length - 1], from = last ? last.pos : tee;
     const toPinYd = yards(from, pin);
     const fromExp = last ? expectedFrom(last.lie, toPinYd) : expected('tee', toPinYd, level);
     const box = boundsOf([from, pin], 350);
@@ -700,7 +702,7 @@ export function renderHole(view, n) {
       if (Math.hypot(ev.clientX - compDrag.x, ev.clientY - compDrag.y) > 4) compDrag.moved = true;
       if (!compDrag.moved) return;
       const r = mapEl.getBoundingClientRect(), q = m.unproject([ev.clientX - r.left, ev.clientY - r.top]);
-      const shots = shotsNow(), from = shots.length ? shots[shots.length - 1].pos : tee;
+      const shots = planShots(), from = shots.length ? shots[shots.length - 1].pos : tee;
       compAim[club] = bearing(from, [q.lat, q.lng]);
       update();
     };
@@ -750,7 +752,7 @@ export function renderHole(view, n) {
   // Slide the crosshair out to `yd` from the ball, along the line being aimed
   // (towards the pin if the crosshair is on the ball).
   function snapTo(yd) {
-    const shots = shotsNow(), from = shots.length ? shots[shots.length - 1].pos : tee;
+    const shots = planShots(), from = shots.length ? shots[shots.length - 1].pos : tee;
     const brg = (bearing(from, yards(from, target) > 5 ? target : pin) * Math.PI) / 180, k = Math.cos((from[0] * Math.PI) / 180), dm = yd / YD_PER_M;
     m.easeTo({ center: ll([from[0] + (dm * Math.cos(brg)) / M_PER_DEG, from[1] + (dm * Math.sin(brg)) / (M_PER_DEG * k)]), duration: 450 });
   }
@@ -777,6 +779,10 @@ export function renderHole(view, n) {
     const s = shotsNow();
     const shots = s.length ? [...s] : [{ pos: tee, lie: 'tee' }];
     shots[shots.length - 1] = { ...shots[shots.length - 1], ...(club ? { club } : {}), ...(swing && swing !== 'full' ? { swing } : {}) };
+    // A recovery swing (punching out) means the last shot finished in a recovery
+    // spot, whatever the map says there: score and describe it that way.
+    const here = shots[shots.length - 1];
+    if (swing === 'recovery' && here.lie !== 'tee' && here.lie !== 'green') shots[shots.length - 1] = { ...here, lie: 'recovery', mapLie: here.mapLie || here.lie };
     const lie = stage() === 'putt' ? 'green' : lieOn(target, course.features);
     if (lie === 'ob' || lie === 'water') { pickedClub = null; return openPenalty(shots, lie, target); }
     const shot = { pos: target, lie };
@@ -1037,7 +1043,7 @@ export function renderHole(view, n) {
   // Shot wording. Title: "Shot 1 from tee", "Shot 2 from left rough", "Putt 1 from 14 ft".
   // Detail: club (or "Hit") with how far and where it finished, then what was left —
   //   "Hit 257 yds to left rough" / "148 yds to hole";  "Putter 12 ft" / "2 ft to hole".
-  const SHORT_LIE = { tee: 'tee', fairway: 'fwy', rough: 'rough', bunker: 'bunker', green: 'green', water: 'water', recovery: 'trees' };
+  const SHORT_LIE = { tee: 'tee', fairway: 'fwy', rough: 'rough', bunker: 'bunker', green: 'green', water: 'water', recovery: 'recovery area' };
   // Rough is called left or right of the line from where the shot was hit to the pin.
   function lieName(p, from, hp) {
     const base = SHORT_LIE[p.lie] || p.lie;
@@ -1292,9 +1298,11 @@ export function renderHole(view, n) {
     if (moving === 'tee') { tee = [c.lat, c.lng]; teeMark.setLngLat(ll(tee)); target = aim; } // the crosshair is dragging the tee
     else target = [c.lat, c.lng];
     const lie = lieOn(target, course.features);
-    const shots = shotsNow(), last = shots[shots.length - 1], st = stage();
+    const shots = shotsNow(), st = stage(), plan = planShots(), last = plan[plan.length - 1];
     const from = last ? last.pos : tee;
-    const onGreen = st !== 'play';
+    // On the green (placing the pin, putting) the aiming tools go; once the hole is
+    // finished they come back, working from the tee.
+    const onGreen = st === 'pin' || st === 'putt';
     const w = showWidth && !onGreen ? fairwayWidth(from, target, fairways) : null;
     const fromTee = yards(from, target), toPin = yards(target, pin);
     undoBtn.hidden = !shots.length && !holeNow().done;
@@ -1310,7 +1318,7 @@ export function renderHole(view, n) {
     compModeBtn.hidden = compBtn.hidden || !showComp;
     compModeBtn.firstChild.textContent = compMode === 'arc' ? '◠' : '⁘'; compModeBtn.lastChild.textContent = compMode === 'arc' ? 'Arc' : 'Disp';
     if (compBtn.hidden) compLegend.hidden = true;
-    sgtBtn.hidden = onGreen || shots.length > 0; // SG is the drive heat map, from the tee only
+    sgtBtn.hidden = onGreen || plan.length > 0; // SG is the drive heat map, from the tee only
     arcSlider.hidden = !(showArc || showDisp) || onGreen || !arcAdjOpen;
     dispBtn.hidden = onGreen;
     dispAdjBtn.hidden = !showDisp || onGreen;
@@ -1386,7 +1394,7 @@ export function renderHole(view, n) {
       // Sized by club only, so it changes when a club is tapped, not as the
       // crosshair moves: the tapped club (or the driver off a par 4/5 tee), with
       // its arc from My Bag, else 15% of its bag yardage; otherwise the slider width.
-      const club = (autoPick && autoPick.club) || pickedClub || (!shots.length && ch.par >= 4 ? (bag().find(c => /^Dr/.test(c.name)) || {}).name : null);
+      const club = (autoPick && autoPick.club) || pickedClub || (!plan.length && ch.par >= 4 ? (bag().find(c => /^Dr/.test(c.name)) || {}).name : null);
       if (club && ((store.get('clubArcs') || {})[club] > 0 || bagYards(club))) arcW = clubArcW(club);
       arcValue.textContent = `Auto · ${arcW} yd`; arcRange.value = arcW;
     }
@@ -1434,7 +1442,7 @@ export function renderHole(view, n) {
       h('b', { class: c.sg >= 0 ? 'pos' : 'neg' }, `${c.sg >= 0 ? '+' : '−'}${Math.abs(c.sg).toFixed(2)}`))));
     overlay(viewing() ? {} : lines); // no aiming lines while just viewing
     // SG: the drive heat map, from the tee only.
-    showZones(showSgt && !shots.length);
+    showZones(showSgt && !plan.length);
     // Appr in SG mode: the ring around the pin for the chosen SG value.
     const rings = [];
     if (showAppr && apprMode === 'sg') rings.push({ v: sgCfg.rings.value, ft: sgFeet(last ? last.lie : 'tee', yards(from, pin), sgCfg.rings.value) });
