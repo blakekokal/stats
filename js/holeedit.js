@@ -4,7 +4,8 @@
 // drag the ✥ in its middle to move the whole shape, the ⤡ at its corner (or
 // Size − / +) to resize it, drag its white corner dots to move them, drag a small dot between two corners
 // to add a corner, tap a corner then "Delete point" to remove it, change its type
-// with the type buttons, or delete the whole boundary. "Draw" adds a new
+// with the type buttons, cut it in two between two corners (✂ Cut), or delete
+// the whole boundary. "Draw" adds a new
 // boundary: pick its type, tap the map to place its corners, then Finish (or tap
 // the first corner again). Nothing is kept until Save; Undo steps back.
 // ‹ › go to another hole without saving: the edits carry over until Save or Cancel.
@@ -14,6 +15,7 @@
 
 import { h, course, toast, LIE_COLOR, loadCourse, along } from './app.js';
 import { store } from './store.js';
+import { inPolygon } from './geo.js';
 
 const maplibregl = window.maplibregl;
 export const EDIT_TYPES = ['fairway', 'rough', 'bunker', 'water', 'recovery', 'tee', 'green', 'ob'];
@@ -48,7 +50,8 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   let selVtx = null; // [ring, index] of the selected corner
   let drawType = sessionStorage.getItem('gs:drawType') || 'fairway';
   let draft = null; // corners of a boundary being drawn
-  let mode = 'pick'; // pick | draw
+  let mode = 'pick'; // pick | draw | cut
+  let cutA = null; // cut: the first corner tapped (index in the outer ring)
   let handles = [];
   let dragEnd = 0; // a drag ends with a click on the dot: ignore it
   const justDragged = () => Date.now() - dragEnd < 400;
@@ -122,6 +125,16 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
       (draft || []).forEach((p, i) => {
         const mk = marker('bvtx draft' + (i === 0 && draft.length > 2 ? ' first' : ''), p);
         if (i === 0) mk.getElement().addEventListener('click', e => { e.stopPropagation(); if (draft.length > 2) finishDraw(); });
+      });
+      return;
+    }
+    if (mode === 'cut') {
+      const seen = visibleBox(), r = open(sel.p[0]);
+      if (r.filter(seen).length > MAX_HANDLES) { hint.textContent = 'Zoom in to pick the corners to cut between.'; return; }
+      r.forEach((p, vi) => {
+        if (!seen(p)) return;
+        const mk = marker('bvtx cut' + (vi === cutA ? ' on' : ''), p);
+        mk.getElement().addEventListener('click', e => { e.stopPropagation(); cutAt(vi); });
       });
       return;
     }
@@ -257,6 +270,10 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
           h('button', { onclick: () => { mode = 'pick'; draft = null; refresh(); } }, 'Cancel'),
           h('button', { disabled: !n, onclick: () => { draft.pop(); refresh(); } }, 'Remove point'),
           h('button', { class: 'bgo', disabled: n < 3, onclick: finishDraw }, 'Finish')));
+    } else if (mode === 'cut') {
+      if (!hint.textContent) hint.textContent = cutA == null ? '\u2702 Tap the corner to start the cut.' : '\u2702 Now tap the corner to cut to. The shape splits along the straight line between them.';
+      panel.replaceChildren(hint, h('div', { class: 'brow' },
+        h('button', { onclick: () => { mode = 'pick'; cutA = null; refresh(); } }, 'Cancel cut')));
     } else if (sel) {
       const ringLen = selVtx ? open(sel.p[selVtx[0]]).length : 0;
       if (!hint.textContent) hint.textContent = selVtx ? 'Corner selected: drag it, or delete it.' : 'Drag \u2725 to move the whole shape, \u2921 to resize it, or the white dots to move corners; drag a small dot between them to add one (zoom in if there are none). Tap a type to change it.';
@@ -266,6 +283,9 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
           canReshape(sel) ? h('span', { class: 'bsize' }, 'Size',
             h('button', { 'aria-label': 'Smaller', onclick: () => nudgeScale(0.97) }, '\u2212'),
             h('button', { 'aria-label': 'Bigger', onclick: () => nudgeScale(1.03) }, '+')) : null,
+          canReshape(sel) && open(sel.p[0]).length >= 4 ? h('button', { onclick: () => {
+            mode = 'cut'; cutA = selVtx && selVtx[0] === 0 ? selVtx[1] : null; selVtx = null; refresh();
+          } }, '\u2702 Cut') : null,
           h('button', { class: 'bdel', onclick: () => { push(); work = work.filter(f => f !== sel); scoped.delete(sel); sel = null; selVtx = null; dirty = true; refresh(); } }, 'Delete boundary'),
           selVtx ? h('button', { disabled: ringLen <= 3, onclick: () => {
             const [ri, vi] = selVtx; push(); setRing(ri, r => r.filter((_, k) => k !== vi)); selVtx = null; refresh();
@@ -277,6 +297,25 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
         h('button', { class: 'bgo', onclick: () => { mode = 'draw'; draft = []; sel = null; selVtx = null; refresh(); } }, '✏️ Draw new boundary')),
         h('small', { class: 'muted' }, 'Anything outside every boundary counts as rough.'));
     }
+  }
+
+  // Cut: split the selected shape in two along the straight line between two
+  // of its corners. Each piece keeps the type; any hole goes with the piece it's in.
+  function cutAt(vi) {
+    if (cutA == null || cutA === vi) { cutA = cutA === vi ? null : vi; refresh(); return; }
+    const r = open(sel.p[0]), n = r.length, i = Math.min(cutA, vi), j = Math.max(cutA, vi);
+    if (j - i < 2 || n - (j - i) < 2) { toast('Pick two corners that aren\u2019t next to each other.'); return; }
+    const pieces = [r.slice(i, j + 1), [...r.slice(j), ...r.slice(0, i + 1)]].map(close);
+    const holes = sel.p.slice(1);
+    const parts = pieces.map(pc => tag({ ...sel, p: [pc, ...holes.filter(hr => inPolygon(hr[0], [pc]))] }));
+    const mid = [(r[i][0] + r[j][0]) / 2, (r[i][1] + r[j][1]) / 2];
+    push();
+    const k = work.indexOf(sel);
+    work = [...work.slice(0, k), ...parts, ...work.slice(k + 1)];
+    scoped.delete(sel); parts.forEach(f => scoped.add(f));
+    sel = parts[0]; selVtx = null; cutA = null; mode = 'pick'; dirty = true;
+    refresh();
+    toast(inPolygon(mid, [close(r)]) ? 'Cut in two. Tap either piece to move it.' : 'Cut in two, but the cut line runs outside the shape. Undo if it looks wrong.');
   }
 
   function finishDraw() {
@@ -302,6 +341,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   // ---------- map taps ----------
   function onClick(e) {
     if (e.originalEvent?.target?.closest?.('.bvtx, .bmid, .bmove, .bscale') || justDragged()) return;
+    if (mode === 'cut') return; // only the corners count while cutting
     if (mode === 'draw') { draft.push([e.lngLat.lat, e.lngLat.lng]); refresh(); return; }
     // The smallest boundary under the tap (a bunker in a fairway, not the fairway).
     const hits = m.queryRenderedFeatures(e.point, { layers: ['bedit-fill'] }).map(x => work[x.properties.k]).filter(Boolean);
@@ -333,6 +373,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   // Another hole, still editing: the changes so far go with it (Undo starts afresh there).
   function toHole(k) {
     if (mode === 'draw' && draft && draft.length >= 3) finishDraw();
+    if (mode === 'cut') { mode = 'pick'; cutA = null; }
     if (dirty) tagScoped();
     pending = { course: course.id, work, dirty, goto: k };
     teardown();

@@ -32,8 +32,8 @@ server, or host the repo with GitHub Pages.
 - **Edit boundaries** (GPS Scouting, ☰ menu): edits only the boundaries of the hole
   on screen (the ones its map outlines). Tap one to select it, drag the ✥ in its middle to move the
   whole shape, the ⤡ at its corner (or Size − / +) to resize it, drag its white points (drag a small dot
-  between two to add a point; tap a point to delete it), change its type or
-  delete it. **Draw new boundary** picks a type (fairway, rough, bunker, water,
+  between two to add a point; tap a point to delete it), change its type,
+  cut it in two between two corners (✂ Cut), or delete it. **Draw new boundary** picks a type (fairway, rough, bunker, water,
   recovery, tee box, green, OB) and adds corners where you tap. A rough
   boundary overrides fairway and recovery. Fairways, tee boxes, greens and rough drawn or edited
   there stay tied to that hole. Tee boxes are labelled with the tee sets that play
