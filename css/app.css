@@ -339,3 +339,6 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .penopt b { font-size: 16px; } .penopt small { color: #9a9a9a; font-size: 12px; }
 .shotmark.pen { background: #ff6b6b; } /* went into water or OB */
 .shotmark.drop { background: #4dd0ff; } /* the drop, numbered after the penalty */
+.clubbox .ydmode { justify-self: center; display: flex; gap: 4px; background: #ffffff14; border-radius: 999px; padding: 2px; }
+.clubbox .ydmode button { min-height: 28px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: #fff; font-size: 13px; font-weight: 700; }
+.ydmode button.on { background: #fff !important; color: #111 !important; }

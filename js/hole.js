@@ -561,12 +561,23 @@ export function renderHole(view, n) {
     if (!shots.length && ch.par >= 4) return (bag().find(c => /^Dr/.test(c.name)) || bag()[0]).name;
     const d = yards(from, target);
     let best = null;
-    for (const c of bag()) { const y = +(c.total || c.carry); if (y > 0 && (!best || Math.abs(y - d) < Math.abs(best.y - d))) best = { name: c.name, y }; }
+    for (const c of bag()) { const y = clubYd(c); if (y && (!best || Math.abs(y - d) < Math.abs(best.y - d))) best = { name: c.name, y }; }
     return best ? best.name : null;
   }
   const currentClub = () => pickedClub || autoClub();
   // A club's yardage from My Bag (total, else carry), or null.
-  function bagYards(name) { const c = bag().find(x => x.name === name || (name === 'Dr' && /^Dr/.test(x.name))); const y = c && +(c.total || c.carry); return y > 0 ? y : null; }
+  // Club yardages: carry by default (where the ball lands, which is what the arcs,
+  // dispersion, Comp and Auto plot), or total with roll; either falls back to the other.
+  let ydMode = localStorage.getItem('gs:ydMode') === 'total' ? 'total' : 'carry';
+  const clubYd = c => { const y = c && +(ydMode === 'total' ? c.total || c.carry : c.carry || c.total); return y > 0 ? y : null; };
+  function bagYards(name) { return clubYd(bag().find(x => x.name === name || (name === 'Dr' && /^Dr/.test(x.name)))); }
+  // A Carry | Total switch, shown in the Arc/Disp slider and the Comp picker.
+  const ydToggle = after => h('div', { class: 'modes ydmode' }, ['carry', 'total'].map(v => h('button', { class: ydMode === v ? 'on' : '', onclick: e => {
+    ydMode = v; localStorage.setItem('gs:ydMode', v);
+    document.querySelectorAll('.ydmode button').forEach(b => b.classList.toggle('on', b.textContent.toLowerCase() === v));
+    e.stopPropagation(); update(); after?.();
+  } }, v === 'carry' ? 'Carry' : 'Total')));
+  arcSlider.prepend(ydToggle());
   // Typical yardages, for Comp when My Bag has none for a club.
   const TYPICAL_YDS = { Dr: 230, '3W': 210, '5W': 195, '4HY': 185, '4I': 175, '5I': 165, '6I': 155, '7I': 145, '8I': 135, '9I': 125, PW: 115, GW: 100, SW: 85, LW: 70 };
   const compYards = name => bagYards(name) || TYPICAL_YDS[name] || TYPICAL_YDS[name.replace(/\d$/, '')] || null;
@@ -589,6 +600,7 @@ export function renderHole(view, n) {
     let sel = compClubs.filter(c => compYards(c));
     const draw = () => compSheet.replaceChildren(h('div', { class: 'clubbox' },
       h('div', { class: 'clubhead' }, h('strong', {}, 'Compare · pick 2–3 clubs'), h('button', { class: 'x', onclick: () => { compSheet.hidden = true; } }, '✕')),
+      ydToggle(draw),
       h('div', { class: 'clubgrid' }, bag().map(c => {
         const i = sel.indexOf(c.name), yd = compYards(c.name);
         return h('button', { class: i >= 0 ? 'on comp' : '', style: i >= 0 ? `background:${COMP_COLORS[i]}` : '', disabled: !yd,
@@ -768,7 +780,7 @@ export function renderHole(view, n) {
           const y = bagYards(c.name); if (y) snapTo(y); // the crosshair jumps to that club's distance
           update();
         } },
-          h('b', {}, clubShort(c.name)), h('small', {}, c.total || c.carry ? `${c.total || c.carry} yds` : ''))))));
+          h('b', {}, clubShort(c.name)), h('small', {}, clubYd(c) ? `${clubYd(c)} yds` : ''))))));
     clubPicker.hidden = false;
     void cur;
   }
@@ -831,7 +843,7 @@ export function renderHole(view, n) {
       h('div', { class: 'clubhead' }, h('strong', {}, `Shot ${shots.length ? strokeNo(shots, shots.length - 1) : 1} · ${Math.round(yards(from, target))} yds`), h('button', { class: 'x', onclick: () => { shotConfirm.hidden = true; } }, '✕')),
       h('small', { class: 'muted' }, club ? `Club: ${clubName(club)}` : 'Which club did you hit?'),
       h('div', { class: 'clubgrid' }, bag().map(c => h('button', { class: club === c.name ? 'on' : '', onclick: () => { club = c.name; draw(); } },
-        h('b', {}, clubShort(c.name)), h('small', {}, c.total || c.carry ? `${c.total || c.carry}` : '')))),
+        h('b', {}, clubShort(c.name)), h('small', {}, clubYd(c) ? `${clubYd(c)}` : '')))),
       h('div', { class: 'swings' }, SWINGS.map(([k, label]) => h('button', { class: swing === k ? 'on' : '', onclick: () => { swing = k; draw(); } }, label))),
       h('button', { class: 'record', onclick: () => { shotConfirm.hidden = true; recordShot(club, swing); } }, 'Record shot')));
     draw();

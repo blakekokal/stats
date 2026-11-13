@@ -377,6 +377,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.40.1', ['Club distances use carry by default for arcs, dispersion, Comp and Auto; a Carry | Total switch is in the Arc/Disp Adj panel and the Comp picker']],
   ['0.40.0', ['Finishing a hole keeps the aiming buttons (they work from the tee again)', 'Choosing Recovery for a punch-out marks the previous shot as finishing in a recovery area (scored with the recovery baseline)']],
   ['0.39.7', ['Penalty numbering on the map: shot into water shows 1 (red), the drop shows 2 (blue), the next shot is 3']],
   ['0.39.6', ['After a drop the shot number sits on the drop, with a small red dot where the ball went in', 'Shot details read like "9 Iron 126 yds into the water" / "Dropped in fwy (+1 penalty)"']],
