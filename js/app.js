@@ -55,6 +55,7 @@ export const COURSES = [
   { id: 'bearcreek-west', name: 'Bear Creek Golf Club – West', file: 'data/bearcreek-west.json' },
   { id: 'bearcreek-east', name: 'Bear Creek Golf Club – East', file: 'data/bearcreek-east.json' },
   { id: 'cowboys', name: 'Cowboys Golf Club', file: 'data/cowboys.json' },
+  { id: 'tangleridge', name: 'Tangle Ridge Golf Club', file: 'data/tangleridge.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 const base = {}; // id -> the course file as shipped

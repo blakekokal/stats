@@ -1,7 +1,7 @@
 # Shot Tracker
 
 A golf stat tracker for Bridlewood Golf Club (Flower Mound, TX) and Bear Creek
-Golf Club – West and East (DFW Airport, TX) and Cowboys Golf Club (Grapevine, TX); pick the course on New Round or GPS Scouting. It shows each hole on
+Golf Club – West and East (DFW Airport, TX) and Cowboys Golf Club (Grapevine, TX) and Tangle Ridge Golf Club (Grand Prairie, TX); pick the course on New Round or GPS Scouting. It shows each hole on
 satellite imagery with mapped outlines for fairway, rough, bunker, water and
 green, and a movable target for measuring distances. No GPS is used.
 
