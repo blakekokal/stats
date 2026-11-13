@@ -287,7 +287,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
           h('button', { class: 'bgo', disabled: n < 3, onclick: finishDraw }, 'Finish')));
     } else if (mode === 'cut') {
       if (!hint.textContent) hint.textContent = isCourseOb(sel)
-        ? (cutA == null ? '\u2702 Tap a corner on the boundary line where the stretch starts.' : '\u2702 Now tap the corner where it ends. That stretch of line can then be moved on its own.')
+        ? (cutA == null ? '\u2702 Tap a corner on the boundary line where the cut starts.' : '\u2702 Now tap the corner where it ends. If the straight line between them runs through OB, the OB beyond it is cut off as its own shape; if it runs across the course, that stretch of line can be dragged instead.')
         : (cutA == null ? '\u2702 Tap the corner to start the cut.' : '\u2702 Now tap the corner to cut to. The shape splits along the straight line between them.');
       panel.replaceChildren(hint, h('div', { class: 'brow' },
         h('button', { onclick: () => { mode = 'pick'; cutA = null; refresh(); } }, 'Cancel cut')));
@@ -345,6 +345,31 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   }
   // The corners from a to b going round the ring one way, or (other) the other way.
   const arc = (n, a, b) => { const out = [a]; for (let i = a; i !== b;) { i = (i + 1) % n; out.push(i); } return out; };
+  // Cut on the course OB between corners a and b of course line `ri`. Where the
+  // straight line between them runs through OB (across the mouth of OB jutting
+  // into the course), the OB beyond it is cut off as its own shape, to move or
+  // delete like a bunker. Where it runs across the course, there's no OB to
+  // cut, so that stretch of line is picked out to drag instead.
+  function cutCourseOb(ri, a, b) {
+    const r = open(sel.p[ri]), n = r.length, A = r[a], B = r[b];
+    const course = [close(r)];
+    const inside = Array.from({ length: 24 }, (_, k) => { const t = (k + 1) / 25; return inPolygon([A[0] + (B[0] - A[0]) * t, A[1] + (B[1] - A[1]) * t], course); });
+    if (inside.every(Boolean)) { pickSection(ri, a, b); return; }
+    if (inside.some(Boolean)) { toast('The line between those corners crosses the course line. Pick two corners with a straight run through the OB between them.'); cutA = null; refresh(); return; }
+    // The two ways round the course line from a to b, each closed by the cut
+    // line: the smaller is the OB jutting in, the larger the course with it filled in.
+    const [one, two] = [arc(n, a, b), arc(n, b, a)].map(ix => ix.map(i => r[i]));
+    const [piece, rest] = ringArea(close(one)) < ringArea(close(two)) ? [one, two] : [two, one];
+    if (piece.length < 3) { toast('Pick two corners that aren\u2019t next to each other.'); return; }
+    push();
+    replace(sel, { ...sel, p: sel.p.map((x, k) => (k === ri ? close(rest) : x)) });
+    const f = { t: 'ob', p: [close(piece)] };
+    const k = work.indexOf(sel);
+    work = [...work.slice(0, k + 1), f, ...work.slice(k + 1)];
+    scoped.add(f); sel = f; selVtx = null; cutA = null; section = null; mode = 'pick'; dirty = true;
+    refresh();
+    toast('Cut off as its own OB shape. Delete boundary removes it (that ground stops being OB), or move it.');
+  }
   function pickSection(ri, a, b) {
     const n = open(sel.p[ri]).length, one = arc(n, a, b), two = arc(n, b, a);
     section = { f: sel, ri, n, idx: one.length <= two.length ? one : two, other: one.length <= two.length ? two : one };
@@ -358,7 +383,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   function cutAt(ri, vi) {
     if (!cutA || (cutA[0] === ri && cutA[1] === vi)) { cutA = cutA ? null : [ri, vi]; refresh(); return; }
     if (cutA[0] !== ri) { toast('Pick two corners on the same line.'); return; }
-    if (isCourseOb(sel)) { pickSection(ri, cutA[1], vi); return; }
+    if (isCourseOb(sel)) { cutCourseOb(ri, cutA[1], vi); return; }
     const r = open(sel.p[0]), n = r.length, i = Math.min(cutA[1], vi), j = Math.max(cutA[1], vi);
     if (j - i < 2 || n - (j - i) < 2) { toast('Pick two corners that aren\u2019t next to each other.'); return; }
     const pieces = [r.slice(i, j + 1), [...r.slice(j), ...r.slice(0, i + 1)]].map(close);
