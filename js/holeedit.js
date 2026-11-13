@@ -7,6 +7,7 @@
 // with the type buttons, or delete the whole boundary. "Draw" adds a new
 // boundary: pick its type, tap the map to place its corners, then Finish (or tap
 // the first corner again). Nothing is kept until Save; Undo steps back.
+// ‹ › go to another hole without saving: the edits carry over until Save or Cancel.
 //
 // Edits are stored like the Course page's: the whole feature list, out of bounds
 // included, under 'course:<id>' (with ob: true so the OB edits are used too).
@@ -30,10 +31,19 @@ const round6 = p => [+p[0].toFixed(6), +p[1].toFixed(6)];
 
 // `own`: the boundaries that belong to this hole (the ones its map outlines);
 // only those are shown and editable, plus any drawn here.
-export function openBoundaryEditor({ m, root, ch, own, onClose }) {
-  let work = course.features.slice(); // features are replaced, never changed in place
+// Edits not saved yet, kept while moving between holes (‹ ›) so one Save stores
+// them all. `goto`: the hole to reopen the editor on.
+let pending = null;
+export const resumeEditAt = n => !!pending && pending.course === course.id && pending.goto === n;
+// The boundaries as they stand in the editor (unsaved edits included).
+export const editFeatures = () => (pending && pending.course === course.id ? pending.work : course.features);
+
+export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }) {
+  const resumed = pending && pending.course === course.id ? pending : null;
+  pending = null;
+  let work = resumed ? resumed.work : course.features.slice(); // features are replaced, never changed in place
   const history = [];
-  let dirty = false;
+  let dirty = resumed ? resumed.dirty : false;
   let sel = null; // the selected feature object (in work)
   let selVtx = null; // [ring, index] of the selected corner
   let drawType = sessionStorage.getItem('gs:drawType') || 'fairway';
@@ -192,7 +202,10 @@ export function openBoundaryEditor({ m, root, ch, own, onClose }) {
   const saveBtn = h('button', { class: 'bsave', onclick: save }, 'Save');
   const top = h('div', { class: 'beditbar' },
     h('button', { onclick: cancel }, 'Cancel'),
-    h('strong', {}, `Hole ${ch.n} boundaries`),
+    h('div', { class: 'bnav' },
+      h('button', { 'aria-label': `Hole ${prev}`, onclick: () => toHole(prev) }, '\u2039'),
+      h('strong', {}, `Hole ${ch.n}`),
+      h('button', { 'aria-label': `Hole ${next}`, onclick: () => toHole(next) }, '\u203a')),
     undoBtn, saveBtn);
   const hint = h('p', { class: 'bhint' });
   const panel = h('div', { class: 'beditpanel' });
@@ -281,16 +294,25 @@ export function openBoundaryEditor({ m, root, ch, own, onClose }) {
     window.onbeforeunload = null;
   }
   function cancel() {
-    if (dirty && !confirm('Discard your boundary changes on this hole?')) return;
+    if (dirty && !confirm('Discard all your unsaved boundary changes?')) return;
     teardown(); onClose(false);
+  }
+  // Another hole, still editing: the changes so far go with it (Undo starts afresh there).
+  function toHole(k) {
+    if (mode === 'draw' && draft && draft.length >= 3) finishDraw();
+    pending = { course: course.id, work, dirty, goto: k };
+    teardown();
+    if (dirty) window.onbeforeunload = () => 'Unsaved boundary edits';
+    go(k);
   }
   async function save() {
     if (mode === 'draw' && draft && draft.length >= 3) finishDraw();
+    if (!dirty) { teardown(); onClose(false); return; }
     const features = work.filter(f => f.p.length && f.p[0].length >= 4);
     store.set('course:' + course.id, { features, ob: true });
     await loadCourse(true);
     teardown();
-    toast('Boundaries saved. New shots use them; past rounds keep their lies.');
+    toast('Boundaries saved on every hole you changed. New shots use them; past rounds keep their lies.');
     onClose(true);
   }
   window.onbeforeunload = () => (dirty ? 'Unsaved boundary edits' : undefined);
