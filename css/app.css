@@ -385,3 +385,5 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .btee .bteeset i { width: 10px; height: 10px; border-radius: 50%; border: 1px solid #fff8; }
 .bvtx.cut { border-color: #ef4444; width: 20px; height: 20px; cursor: pointer; }
 .bvtx.cut.on { background: #ef4444; border-color: #fff; width: 24px; height: 24px; }
+.bvtx.sec { background: #ef4444; }
+.bmove.sec { background: #ef4444; color: #fff; }
