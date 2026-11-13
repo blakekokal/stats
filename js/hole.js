@@ -16,6 +16,7 @@ import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js';
 import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting } from './rounds.js';
+import { openBoundaryEditor } from './holeedit.js';
 
 const maplibregl = window.maplibregl;
 const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR', ob: 'OB', recovery: 'REC' };
@@ -874,8 +875,9 @@ export function renderHole(view, n) {
     ? h('div', { class: 'sheet', hidden: true },
       h('label', {}, 'Tees ', h('select', { onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHole(view, n); } },
         course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
+      h('button', { class: 'btn', onclick: () => { menu.hidden = true; editBoundaries(); } }, '✏️ Edit boundaries'),
       h('button', { class: 'btn', onclick: () => { endScouting(); location.hash = '#/'; } }, 'Home'),
-      h('small', { class: 'muted' }, 'GPS Scouting · nothing is saved'),
+      h('small', { class: 'muted' }, 'GPS Scouting · shots are not saved'),
       credit)
     : viewing()
     ? h('div', { class: 'sheet', hidden: true },
@@ -1561,6 +1563,13 @@ export function renderHole(view, n) {
   // map's pivot on the crosshair and refresh the readout.
   m.on('resize', () => { m.setPadding({ top: 0, left: 0, right: 0, bottom: mapEl.clientHeight * (1 - 2 * CROSSHAIR_Y) }); update(); });
   m.on('click', () => { menu.hidden = true; });
+
+  // GPS Scouting: edit this hole's boundaries (fairway, rough, bunker, water,
+  // recovery, tee box, green, OB) on the map. Saving reloads the hole with them.
+  function editBoundaries() {
+    if (!m.isStyleLoaded()) { m.once('idle', editBoundaries); return; }
+    openBoundaryEditor({ m, root: holeEl(), ch, own: holeFeatures(ch), onClose: saved => { if (saved) rerenderHere(); } });
+  }
 
   m.on('load', () => {
     if (map !== m) return;

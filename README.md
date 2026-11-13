@@ -29,6 +29,13 @@ server, or host the repo with GitHub Pages.
   dot to give it its own line (tap it to put it back); lines reset after each shot. The tee and pin dots can be dragged; tee
   positions are remembered per tee set.
 - **Course**: fix or redraw any outline. Anything inside no outline is rough.
+- **Edit boundaries** (GPS Scouting, ☰ menu): edits only the boundaries of the hole
+  on screen (the ones its map outlines). Tap one to select it, drag the ✥ in its middle to move the
+  whole shape, the ⤡ at its corner (or Size − / +) to resize it, drag its white points (drag a small dot
+  between two to add a point; tap a point to delete it), change its type or
+  delete it. **Draw new boundary** picks a type (fairway, rough, bunker, water,
+  recovery, tee box, green, OB) and adds corners where you tap. A rough
+  boundary overrides fairway and recovery. Save keeps the edits on this device.
 - **Out of bounds**: everything outside the course boundary (from OpenStreetMap,
   built with `tools/add_ob.py`) is OB, drawn as one white line. A shot finishing
   there is stroke and distance: a penalty stroke and the next shot from the same
