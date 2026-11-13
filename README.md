@@ -1,7 +1,7 @@
 # Shot Tracker
 
 A golf stat tracker for Bridlewood Golf Club (Flower Mound, TX) and Bear Creek
-Golf Club – West and East (DFW Airport, TX) and Cowboys Golf Club (Grapevine, TX) and Tangle Ridge Golf Club (Grand Prairie, TX) and Squaw Creek Golf Course (Willow Park, TX); pick the course on New Round or GPS Scouting. It shows each hole on
+Golf Club – West and East (DFW Airport, TX) and Cowboys Golf Club (Grapevine, TX) and Tangle Ridge Golf Club (Grand Prairie, TX) and Squaw Creek Golf Course (Willow Park, TX); pick the course on New Round or GPS Overview. It shows each hole on
 satellite imagery with mapped outlines for fairway, rough, bunker, water and
 green, and a movable target for measuring distances. No GPS is used.
 
@@ -35,7 +35,7 @@ server, or host the repo with GitHub Pages.
 - **Course** (admin accounts only, listed in `config.js` by email hash; the
   Course tab and Edit boundaries are hidden for everyone else, and only an
   admin's saved edits are used): fix or redraw any outline. Anything inside no outline is rough.
-- **Edit boundaries** (GPS Scouting, ☰ menu): edits only the boundaries of the hole
+- **Edit boundaries** (GPS Overview, ☰ menu): edits only the boundaries of the hole
   on screen (the ones its map outlines). Tap one to select it, drag the ✥ in its middle to move the
   whole shape, the ⤡ at its corner (or Size − / +) to resize it, drag its white points (drag a small dot
   between two to add a point; tap a point to delete it), change its type,
