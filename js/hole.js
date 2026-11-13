@@ -944,6 +944,7 @@ export function renderHole(view, n) {
         : null,
       h('button', { class: 'cancel', onclick: () => { leave.hidden = true; } }, 'Cancel')));
 
+  let holePill;
   // ---- Live view ----
   // Watching: a badge saying whose round it is and whether it's live, and a
   // Refresh button. The round also refreshes by itself while it's live.
@@ -1018,7 +1019,7 @@ export function renderHole(view, n) {
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
-    h('div', { class: 'holepill' },
+    holePill = h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
       h('a', { href: `#/hole/${nextHole}`, 'aria-label': 'Next hole' }, '›'))));
@@ -1263,6 +1264,8 @@ export function renderHole(view, n) {
     }
     return { r, strokes, toPar: strokes - par, thru, thruToPar: thruStrokes - thruPar };
   }
+  // The score tiles are as wide as the hole pill below them.
+  if (window.ResizeObserver) new ResizeObserver(() => { if (holePill.offsetWidth) chips.style.width = `${holePill.offsetWidth}px`; }).observe(holePill);
   let chipKey = null;
   function drawScoreChips() {
     const { r, strokes, toPar: tp, thru, thruToPar } = roundTotals();
@@ -1487,6 +1490,10 @@ export function renderHole(view, n) {
     sgViewBtn.hidden = !viewing();
     drawLiveBtn();
     holeEl()?.classList.toggle('viewing', viewing()); // hides the crosshair and its readouts
+    // Holed out: just the hole and the shots played, with no crosshair or aiming lines
+    // (they come back while the tee is being moved).
+    const holedOut = st === 'done' && !moving;
+    holeEl()?.classList.toggle('holedout', holedOut);
     { const k = `${level}|${currentRound()?.updated}`; if (k !== sgViewKey) { sgViewKey = k; drawSgView(); } }
     if (!viewing()) sgView.hidden = true;
     drawShotList();
@@ -1592,13 +1599,13 @@ export function renderHole(view, n) {
     compLegend.replaceChildren(h('small', {}, 'Compare · avg SG'), ...comps.map(c => h('span', {},
       h('i', { style: `background:${c.color}` }), `${clubShort(c.club)} ${c.yd}y · `,
       h('b', { class: c.sg >= 0 ? 'pos' : 'neg' }, `${c.sg >= 0 ? '+' : '−'}${Math.abs(c.sg).toFixed(2)}`))));
-    overlay(viewing() ? {} : lines); // no aiming lines while just viewing
+    overlay(viewing() || holedOut ? {} : lines); // no aiming lines while just viewing, or once holed out
     // SG: the drive heat map, from the tee only.
-    showZones(showSgt && !plan.length);
+    showZones(showSgt && !plan.length && !watching);
     // Appr in SG mode: the ring around the pin for the chosen SG value.
     const rings = [];
     if (showAppr && apprMode === 'sg') rings.push({ v: sgCfg.rings.value, ft: sgFeet(last ? last.lie : 'tee', yards(from, pin), sgCfg.rings.value) });
-    setRings(cleanView ? [] : rings);
+    setRings(cleanView || watching ? [] : rings);
   }
 
   const dragMarker = (el, pos, onMove) => {

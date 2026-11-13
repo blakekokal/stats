@@ -434,3 +434,15 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .liveerr strong { font-size: 20px; }
 .liveerr p { margin: 0 0 6px; color: #b5b5b5; }
 .liveerr .btn { min-width: 180px; }
+
+/* Holed out: no crosshair or readouts, just the hole and its shots. */
+.holeview.holedout .crosshair, .holeview.holedout .readout { display: none; }
+/* Score tiles span the hole pill's width (set in js/hole.js). */
+.chips { box-sizing: border-box; }
+.chips .scorechip { flex: 1 1 0; height: 58px; }
+.chips .scorechip small { font-size: 11.5px; }
+.chips .scorechip strong { font-size: 23px; }
+.chips .scorechip strong em, .chips .scorechip > em { font-size: 13px; }
+/* Watching a live round: just the hole, the shots and the score. No aiming tools or expected strokes. */
+.holeview.watching .fab.cleanview, .holeview.watching .fab.sgt, .holeview.watching .fab.appr, .holeview.watching .fab.disp,
+.holeview.watching .fab.arc, .holeview.watching .fab.width, .holeview.watching .fab.arcadj, .holeview.watching .sliders, .holeview.watching .exppill, .holeview.watching .keys { display: none !important; }
