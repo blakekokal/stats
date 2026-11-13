@@ -39,6 +39,9 @@ export function clubName(n) {
   return n;
 }
 const clubShort = n => (n === 'Putter' ? 'Putt' : /^(\d)I$/.test(n) ? n[0] + 'i' : /^(\d)HY$/.test(n) ? n[0] + 'H' : /^\d\d$/.test(n) ? n + '°' : n);
+// The stroke number of the shot at index i: earlier penalty strokes count too
+// (a re-tee after OB is shot 3). Old rounds mark water with a 'water' lie.
+const strokeNo = (shots, i) => { let n = i + 1; for (let k = 0; k < i; k++) n += shots[k].pen || 0; for (let k = 1; k <= i; k++) if (shots[k].lie === 'water') n++; return n; };
 const SWING_NAME = { '3/4': '¾', '1/2': '½', punch: 'punch', recovery: 'recovery' };
 
 export function closeHole() { if (map) { map.remove(); map = null; } }
@@ -490,7 +493,7 @@ export function renderHole(view, n) {
       if (isPutt) putt++;
       const len = isPutt ? `${a.ft ?? Math.round(yards(a.pos, pin) * FT_PER_YD)} ft` : `${Math.round(yards(a.pos, b ? b.pos : pin))} yd`;
       const to = !b ? 'holed' : b.lie === 'green' ? (isPutt ? `${b.ft ?? Math.round(yards(b.pos, pin) * FT_PER_YD)} ft` : 'GRN') : LIE_TAG[b.lie] || b.lie;
-      const label = `${isPutt ? `Putt ${putt}` : `Shot ${i}`} · ${len} → ${to}`;
+      const label = `${isPutt ? `Putt ${putt}` : `Shot ${strokeNo(shots, i - 1)}`} · ${len} → ${to}`;
       rows.push(b
         ? h('button', { class: 'shotrow' + (movingShot === i ? ' on' : ''), onclick: () => (movingShot === i ? endShotMove() : startShotMove(i)) }, label)
         : h('div', { class: 'shotrow last' }, label));
@@ -819,7 +822,7 @@ export function renderHole(view, n) {
     const shots = shotsNow(), from = shots.length ? shots[shots.length - 1].pos : tee;
     let club = currentClub(), swing = 'full';
     const draw = () => shotConfirm.replaceChildren(h('div', { class: 'clubbox' },
-      h('div', { class: 'clubhead' }, h('strong', {}, `Shot ${Math.max(1, shots.length)} · ${Math.round(yards(from, target))} yds`), h('button', { class: 'x', onclick: () => { shotConfirm.hidden = true; } }, '✕')),
+      h('div', { class: 'clubhead' }, h('strong', {}, `Shot ${shots.length ? strokeNo(shots, shots.length - 1) : 1} · ${Math.round(yards(from, target))} yds`), h('button', { class: 'x', onclick: () => { shotConfirm.hidden = true; } }, '✕')),
       h('small', { class: 'muted' }, club ? `Club: ${clubName(club)}` : 'Which club did you hit?'),
       h('div', { class: 'clubgrid' }, bag().map(c => h('button', { class: club === c.name ? 'on' : '', onclick: () => { club = c.name; draw(); } },
         h('b', {}, clubShort(c.name)), h('small', {}, c.total || c.carry ? `${c.total || c.carry}` : '')))),
@@ -1037,7 +1040,7 @@ export function renderHole(view, n) {
       let no = 0; for (let k = 0; k <= i; k++) if (shots[k].lie === 'green') no++;
       return `Putt ${no} from ${s.ft ?? Math.round(yards(s.pos, hp) * FT_PER_YD)} ft`;
     }
-    return `Shot ${i + 1} from ${i === 0 ? 'tee' : lieName(s, shots[i - 1].pos, hp)}`;
+    return `Shot ${strokeNo(shots, i)} from ${i === 0 || s.replay ? (s.lie === 'tee' ? 'tee' : 'the same spot') : s.drop ? 'drop' : lieName(s, shots[i - 1].pos, hp)}`;
   }
   function shotLines(hl, i) {
     const shots = hl.shots || [], s = shots[i], next = shots[i + 1];
@@ -1502,10 +1505,10 @@ export function renderHole(view, n) {
     shotPopup?.remove(); shotPopup = null;
     const shots = shotsNow();
     // The dot numbered k marks where shot k finished (shot index k-1).
-    shotMarks = shots.slice(1).map((s, i) => new maplibregl.Marker({ element: tappable(h('div', { class: 'shotmark' }, String(i + 1)), i, s.pos) }).setLngLat(ll(s.pos)).addTo(m));
+    shotMarks = shots.slice(1).map((s, i) => { const at = shots[i].obAt || s.pos; return new maplibregl.Marker({ element: tappable(h('div', { class: 'shotmark' }, String(strokeNo(shots, i))), i, at) }).setLngLat(ll(at)).addTo(m); }); // a penalty shot's dot is where it went in
     // Once holed, the number of the stroke that went in sits just above the hole.
     if (holeNow().done && shots.length) {
-      shotMarks.push(new maplibregl.Marker({ element: tappable(h('div', { class: 'shotmark holedmark', title: 'Holed' }, String(shots.length)), shots.length - 1, pin), anchor: 'bottom', offset: [0, -9] }).setLngLat(ll(pin)).addTo(m));
+      shotMarks.push(new maplibregl.Marker({ element: tappable(h('div', { class: 'shotmark holedmark', title: 'Holed' }, String(strokeNo(shots, shots.length - 1))), shots.length - 1, pin), anchor: 'bottom', offset: [0, -9] }).setLngLat(ll(pin)).addTo(m));
     }
   }
   drawShots();

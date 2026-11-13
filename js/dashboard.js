@@ -70,7 +70,8 @@ export function toCoachRound(r) {
       shots.push({ shotNum: ++num, lie, isPutt,
         distanceBefore: isPutt ? feetOf(s, pin) : Math.round(yards(s.pos, pin)),
         distanceAfter: !nxt ? 0 : nxt.lie === 'green' ? feetOf(nxt, pin) : Math.round(yards(nxt.pos, pin)) });
-      if (lie === 'WATER') shots.push({ shotNum: ++num, lie: 'PENALTY' });
+      // Penalty strokes (water or OB): one entry each, so the next shot's number is right.
+      for (let k = s.pen || (lie === 'WATER' ? 1 : 0); k > 0; k--) shots.push({ shotNum: ++num, lie: 'PENALTY' });
     });
     const putts = shots.filter(s => s.isPutt);
     const hole = { hole: ch.n, par: ch.par, yards: Math.round(yards(P[0].pos, pin)), score: num, putts: putts.length,
