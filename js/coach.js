@@ -114,8 +114,23 @@ export function renderNewRound(view, { scout = false } = {}) {
   } }, 'START');
 
   // Picking another course redraws the page with that course's tee boxes.
-  const courseBox = h('select', { class: 'bigsel', 'aria-label': 'Course', onchange: e => { setActiveCourse(e.target.value); renderNewRound(view, { scout }); } },
+  // Course: a dropdown, with a search button beside it that opens a box to type
+  // in; matching courses are listed below it to tap.
+  const pickCourse = id => { setActiveCourse(id); renderNewRound(view, { scout }); };
+  const courseSel = h('select', { class: 'bigsel', 'aria-label': 'Course', style: 'flex:1;', onchange: e => pickCourse(e.target.value) },
     COURSES.map(c => h('option', { value: c.id, selected: c.id === course.id }, c.name)));
+  const results = h('div', { class: 'courseresults', hidden: true });
+  const search = h('input', { type: 'search', placeholder: 'Search courses…', 'aria-label': 'Search courses', hidden: true, oninput: () => {
+    const q = search.value.trim().toLowerCase();
+    const hits = COURSES.filter(c => !q || c.name.toLowerCase().includes(q) || c.id.includes(q));
+    results.replaceChildren(...(hits.length ? hits.map(c => h('button', { class: c.id === course.id ? 'on' : '', onclick: () => pickCourse(c.id) }, c.name)) : [h('div', { class: 'none' }, 'No courses match')]));
+    results.hidden = false;
+  } });
+  const searchBtn = h('button', { class: 'coursesearch', 'aria-label': 'Search courses', title: 'Search courses', onclick: () => {
+    search.hidden = !search.hidden; results.hidden = search.hidden;
+    if (!search.hidden) { search.value = ''; search.dispatchEvent(new Event('input')); search.focus(); }
+  } }, '🔍');
+  const courseBox = h('div', { style: 'width:100%;max-width:320px;display:grid;gap:6px;' }, h('div', { class: 'row', style: 'gap:6px;' }, courseSel, searchBtn), search, results);
   if (scout) {
     view.replaceChildren(page('top', backBtn(),
       h('div', { style: 'font-size:22px;font-weight:800;' }, 'GPS Scouting'),
@@ -377,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.41.0', ['New course: Bear Creek Golf Club – East', 'Course search: tap 🔍 beside the course list on New Round or GPS Scouting']],
   ['0.40.1', ['Club distances use carry by default for arcs, dispersion, Comp and Auto; a Carry | Total switch is in the Arc/Disp Adj panel and the Comp picker']],
   ['0.40.0', ['Finishing a hole keeps the aiming buttons (they work from the tee again)', 'Choosing Recovery for a punch-out marks the previous shot as finishing in a recovery area (scored with the recovery baseline)']],
   ['0.39.7', ['Penalty numbering on the map: shot into water shows 1 (red), the drop shows 2 (blue), the next shot is 3']],
