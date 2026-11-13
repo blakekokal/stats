@@ -1,4 +1,5 @@
 import { yards } from './geo.js';
+import { ADMIN_EMAIL_SHA256 } from '../config.js';
 import { store, sync, init as initSync } from './store.js';
 import { renderHole, closeHole, lastHole } from './hole.js';
 import { renderCourseEditor } from './editor.js';
@@ -77,7 +78,7 @@ function dropOldCutouts(features, drops) {
 export function courseById(id) {
   const b = base[id] || base[DEFAULT_COURSE];
   const edited = store.get('course:' + b.id);
-  if (!edited) return b;
+  if (!edited || !isAdmin) return b; // only an admin's outline edits are used
   if (edited.ob) return { ...b, features: dropOldCutouts(edited.features, b.dropObRings) };
   return { ...b, features: [...edited.features.filter(f => f.t !== 'ob'), ...b.features.filter(f => f.t === 'ob')] };
 }
@@ -120,6 +121,7 @@ export function teePosition(teeName, ch, boxes) {
 async function route() {
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   await loadCourse(parts[0] === 'hole');
+  if (parts[0] === 'course' && !isAdmin) { location.hash = '#/'; return; } // course editing is for admins
   const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag'].includes(parts[0]) ? parts[0] : 'home';
   // Pages laid out like the coaching app hide this app's top bar.
   document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout'].includes(tab));
@@ -147,6 +149,14 @@ window.addEventListener('hashchange', route);
 // (that would reset the crosshair).
 store.onChange(() => { if (document.body.classList.contains('playing')) return; route(); });
 let lastUser;
+// Admins (config.js) can edit course outlines; nobody else sees the tools.
+export let isAdmin = false;
+async function checkAdmin() {
+  const email = (sync.user?.email || '').trim().toLowerCase();
+  if (!email || !window.crypto?.subtle) return false;
+  const hash = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(email));
+  return ADMIN_EMAIL_SHA256.includes([...new Uint8Array(hash)].map(x => x.toString(16).padStart(2, '0')).join(''));
+}
 sync.onStatus(() => {
   const dot = document.getElementById('sync-dot');
   dot.className = sync.status;
@@ -154,7 +164,15 @@ sync.onStatus(() => {
   document.getElementById('account-name').textContent = sync.user ? sync.name : 'Log in';
   // Logging in or out changes what most pages show.
   const user = sync.user?.id || null;
-  if (user !== lastUser) { lastUser = user; if (!document.body.classList.contains('playing')) route(); }
+  if (user !== lastUser) {
+    lastUser = user;
+    checkAdmin().then(a => {
+      const changed = a !== isAdmin;
+      isAdmin = a; document.body.classList.toggle('admin', a);
+      // Becoming (or no longer being) an admin changes the outlines and tools, even on a hole.
+      if (changed || !document.body.classList.contains('playing')) route();
+    });
+  }
 });
 
 // Load the stylesheets for this exact version, so a phone never pairs new code

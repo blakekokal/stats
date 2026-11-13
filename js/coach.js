@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.45.0', ['Course outline editing (Course tab, Edit boundaries) is now for admin accounts only; everyone else sees the courses as published']],
   ['0.44.15', ['Squaw Creek and Bear Creek – West: updated fairway, green, tee, bunker, water, recovery and OB outlines for everyone']],
   ['0.44.14', ['GPS Scouting: changing Tees in the menu moves the tee', 'The tee always starts on the hole\'s tee box closest to the scorecard yardage for your tees (a dragged tee is no longer remembered)']],
   ['0.44.13', ['Edit boundaries: ✂ Cut on the course OB across the mouth of OB jutting into the course cuts that piece off as its own shape, to delete or move like a bunker']],
