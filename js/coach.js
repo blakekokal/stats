@@ -392,7 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
-  ['0.44.4', ['Edit boundaries: ‹ › move to the previous or next hole while editing; changes carry over until you Save once']],
+  ['0.44.5', ['Edit boundaries: ‹ › move to the previous or next hole while editing; changes carry over until you Save once']],
   ['0.44.4', ['Squaw Creek rebuilt from the course yardage book: every hole, fairway, bunker and the creek placed to match']],
   ['0.44.3', ['Edit boundaries shows only the hole you are on: its fairways, green and tee boxes, plus the bunkers, water and recovery areas along it']],
   ['0.44.2', ['Edit boundaries: drag the ⤡ at a selected boundary\'s corner to resize it, or use Size − / + for small steps']],
