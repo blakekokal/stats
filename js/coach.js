@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.51.0', ['GPS (to test): the GPS button on a hole shows where you are as a blue dot with the distance to the pin', '"Shot here" records a shot finishing where you are standing; + still records the crosshair as before']],
   ['0.50.1', ['Live view: no Lines button and no course outlines for people watching']],
   ['0.50.0', ['Home screen: the main buttons show just their names, no descriptions', 'Enter New Round is now New Round and GPS Scouting is now GPS Overview']],
   ['0.49.0', ['Stats Dashboard: the star charts are gone. Strokes gained is shown as simple bars, red to the left of 0 and green to the right, for Total, Off The Tee, Approach, Around Green and Putting']],

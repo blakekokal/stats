@@ -3,7 +3,11 @@
 A golf stat tracker for Bridlewood Golf Club (Flower Mound, TX) and Bear Creek
 Golf Club – West and East (DFW Airport, TX) and Cowboys Golf Club (Grapevine, TX) and Tangle Ridge Golf Club (Grand Prairie, TX) and Squaw Creek Golf Course (Willow Park, TX); pick the course on New Round or GPS Overview. It shows each hole on
 satellite imagery with mapped outlines for fairway, rough, bunker, water and
-green, and a movable target for measuring distances. No GPS is used.
+green, and a movable target for measuring distances. GPS is optional: the
+**GPS** button on a hole shows where the phone is (a blue dot) and its distance
+to the pin, and **Shot here** records a shot finishing at that spot (the **+**
+button records the crosshair as always; putts are not recorded by GPS). It only
+works while the app is open on screen.
 
 It is a static site with no build step: open `index.html` through any web
 server, or host the repo with GitHub Pages.
