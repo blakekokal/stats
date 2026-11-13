@@ -1,7 +1,7 @@
 // Boundary editor for one hole, on the hole map (GPS Scouting).
 //
 // Shows the boundaries around the hole being looked at. Tap one to select it:
-// drag its white corner dots to move them, drag a small dot between two corners
+// drag the ✥ in its middle to move the whole shape, drag its white corner dots to move them, drag a small dot between two corners
 // to add a corner, tap a corner then "Delete point" to remove it, change its type
 // with the type buttons, or delete the whole boundary. "Draw" adds a new
 // boundary: pick its type, tap the map to place its corners, then Finish (or tap
@@ -93,6 +93,7 @@ export function openBoundaryEditor({ m, root, ch, onClose }) {
     if (!sel) return;
     const seen = visibleBox();
     const rings = sel.p.map(open);
+    addMoveHandle(rings, seen);
     const count = rings.reduce((a, r) => a + r.filter(seen).length, 0);
     if (count > MAX_HANDLES) { hint.textContent = 'Zoom in to move this boundary’s points.'; return; }
     rings.forEach((r, ri) => {
@@ -118,6 +119,27 @@ export function openBoundaryEditor({ m, root, ch, onClose }) {
         mk.on('dragend', () => { dragEnd = Date.now(); refresh(); });
       });
     });
+  }
+
+  // The ✥ dot in the middle of the selected boundary drags the whole shape, to
+  // line it up with the imagery. Not offered for the course-wide OB area (the
+  // course boundary), which only makes sense point by point.
+  function addMoveHandle(rings, seen) {
+    if (rings.length > 1 && sel.t === 'ob') return;
+    const pts = rings[0].filter(seen);
+    if (!pts.length) return;
+    const at = [pts.reduce((a, p) => a + p[0], 0) / pts.length, pts.reduce((a, p) => a + p[1], 0) / pts.length];
+    const mk = new maplibregl.Marker({ element: h('div', { class: 'bmove', title: 'Drag to move the whole shape' }, '\u2725'), draggable: true }).setLngLat(ll(at)).addTo(m);
+    handles.push(mk);
+    let from = null, orig = null;
+    mk.on('dragstart', () => { push(); from = mk.getLngLat(); orig = sel.p; root.classList.add('bmoving'); });
+    mk.on('drag', () => {
+      const to = mk.getLngLat(), dLat = to.lat - from.lat, dLng = to.lng - from.lng;
+      replace(sel, { ...sel, p: orig.map(r => r.map(p => round6([p[0] + dLat, p[1] + dLng]))) });
+      dirty = true; drawLayers();
+    });
+    mk.on('dragend', () => { dragEnd = Date.now(); root.classList.remove('bmoving'); selVtx = null; refresh(); });
+    mk.getElement().addEventListener('click', e => e.stopPropagation());
   }
 
   // Replace ring `ri` of the selected feature (fn gets and returns an open ring).
@@ -166,7 +188,7 @@ export function openBoundaryEditor({ m, root, ch, onClose }) {
           h('button', { class: 'bgo', disabled: n < 3, onclick: finishDraw }, 'Finish')));
     } else if (sel) {
       const ringLen = selVtx ? open(sel.p[selVtx[0]]).length : 0;
-      if (!hint.textContent) hint.textContent = selVtx ? 'Corner selected: drag it, or delete it.' : 'Drag the white dots to move corners; drag a small dot between them to add one (zoom in if there are none). Tap a type to change it.';
+      if (!hint.textContent) hint.textContent = selVtx ? 'Corner selected: drag it, or delete it.' : 'Drag \u2725 to move the whole shape, or the white dots to move corners; drag a small dot between them to add one (zoom in if there are none). Tap a type to change it.';
       panel.replaceChildren(hint,
         typeChips(sel.t, t => { if (t === sel.t) return; push(); replace(sel, { ...sel, t }); dirty = true; refresh(); }),
         h('div', { class: 'brow' },
@@ -205,7 +227,7 @@ export function openBoundaryEditor({ m, root, ch, onClose }) {
 
   // ---------- map taps ----------
   function onClick(e) {
-    if (e.originalEvent?.target?.closest?.('.bvtx, .bmid') || justDragged()) return;
+    if (e.originalEvent?.target?.closest?.('.bvtx, .bmid, .bmove') || justDragged()) return;
     if (mode === 'draw') { draft.push([e.lngLat.lat, e.lngLat.lng]); refresh(); return; }
     // The smallest boundary under the tap (a bunker in a fairway, not the fairway).
     const hits = m.queryRenderedFeatures(e.point, { layers: ['bedit-fill'] }).map(x => work[x.properties.k]).filter(Boolean);
