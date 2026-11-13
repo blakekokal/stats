@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.44.8', ['Edit boundaries: ✂ Cut splits a shape in two between two corners you tap, so each piece can be moved on its own']],
   ['0.44.7', ['The opening crosshair and Auto aim only at the hole you are on: another hole\'s fairway counts as rough for aiming', 'Fairways, tee boxes and greens drawn or edited in Edit boundaries stay tied to that hole']],
   ['0.44.6', ['Edit boundaries labels each tee box with the tee sets that play from it (e.g. Blue 147) and its yardage']],
   ['0.44.5', ['Edit boundaries: ‹ › move to the previous or next hole while editing; changes carry over until you Save once']],
