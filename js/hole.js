@@ -996,9 +996,28 @@ export function renderHole(view, n) {
     // centred on the tee), falling back to the route if there is no fairway there.
     let focus = pin;
     if (ch.par !== 3) {
-      const onRoute = pointAlong(route(), bagYards('Dr') || sync.avgDrive || evenDrive());
-      const w = fairwayWidth(tee, onRoute, ownFairways, 40);
-      focus = w ? w.arc((w.l + w.r) / 2) : onRoute;
+      // The middle of this hole's fairway at driving distance, as near the drive
+      // as possible: if there's no fairway there, 5 yd shorter, then longer, and
+      // so on up to 60 yd either way. A spot in a bunker, water or OB on the
+      // fairway doesn't count.
+      const pts = route(), len = pts.slice(1).reduce((a, q, i) => a + yards(pts[i], q), 0);
+      const drive = Math.min(bagYards('Dr') || sync.avgDrive || evenDrive(), len - 30);
+      const spotAt = d => {
+        const w = fairwayWidth(tee, pointAlong(pts, d), ownFairways, 60);
+        if (!w) return null;
+        const mid = (w.l + w.r) / 2;
+        for (let o = 0; o <= (w.r - w.l) / 2; o += 1) {
+          for (const x of o ? [mid - o, mid + o] : [mid]) { const q = w.arc(x); if (lieAt(q, course.features) === 'fairway') return q; }
+        }
+        return null;
+      };
+      let spot = null;
+      for (let k = 0; k <= 12 && !spot; k++) {
+        for (const d of k ? [drive - 5 * k, drive + 5 * k] : [drive]) {
+          if (d >= 100 && d <= len - 20 && (spot = spotAt(d))) break;
+        }
+      }
+      focus = spot || pointAlong(pts, drive);
     }
     // Looking straight down the line from the tee to that point, as if standing on the tee.
     const brgDeg = bearing(tee, focus);
