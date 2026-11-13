@@ -1,5 +1,5 @@
-// Stats Dashboard, ported from the coaching app's dashboard (same tabs, tables
-// and radar charts). This app's GPS rounds are converted into the coaching
+// Stats Dashboard, ported from the coaching app's dashboard (same tabs and
+// tables, with strokes-gained sliders). This app's GPS rounds are converted into the coaching
 // app's shot-by-shot round format first, then the ported code renders them.
 
 import { h, courseById } from './app.js';
@@ -8,7 +8,7 @@ import { expected } from './sg.js';
 import { yards } from './geo.js';
 import { historyRounds } from './rounds.js';
 
-const S = {}; // shared state for the ported dashboard and radar code
+const S = {}; // shared state for the ported dashboard code
 var hcpLabels = { 'pro': 'Tour Pro', '0': 'Scratch', '5': '5 HCP', '10': '10 HCP', '15': '15 HCP', '20': '20 HCP', '25': '25 HCP', '30': '30 HCP' };
 const lvl = hcp => levelFromPref(hcp) || 'Pro';
 function getExpectedPutts(ft, hcp) { return ft <= 0 ? 0 : expected('green', ft, lvl(hcp)); }
@@ -159,7 +159,7 @@ export function downloadRoundCsv(r) {
   document.body.append(a); a.click(); a.remove();
 }
 
-// ---------- ported from the coaching app (js/stats/dashboard.js, radar.js, handicap-index.js) ----------
+// ---------- ported from the coaching app (js/stats/dashboard.js, handicap-index.js) ----------
 
 export function renderDashboard(data, hcp, targetId) {
   var content = document.getElementById(targetId || 'dashContent');
@@ -378,6 +378,21 @@ export function renderDashboard(data, hcp, targetId) {
   function row(l,v,s){return'<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #282828;"><span style="color:#9a9a9a;">'+l+'</span><span style="font-weight:700;">'+v+(s?' <span style="font-size:11px;color:#606060;">'+s+'</span>':'')+'</span></div>';}
   function hdr(t){return'<div style="font-size:14px;font-weight:800;color:#00b87a;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:2px;">'+t+'</div>';}
   function tbl(headers,rows){var h='<div style="overflow-x:auto;margin:4px 0;"><table style="width:100%;font-size:12px;border-collapse:collapse;"><tr>';headers.forEach(function(c){h+='<td style="padding:4px 6px;font-weight:700;color:#9a9a9a;border-bottom:1px solid #3d3d3d;">'+c+'</td>';});h+='</tr>';rows.forEach(function(r){h+='<tr>';r.forEach(function(c){h+='<td style="padding:3px 6px;border-bottom:1px solid #282828;">'+c+'</td>';});h+='</tr>';});return h+'</table></div>';}
+  // A strokes-gained slider: 0 in the middle, red to the left for strokes lost,
+  // green to the right for strokes gained. Title above the bar, number below.
+  function sgBar(l,v,R,big){
+    var p=Math.max(-R,Math.min(R,v))/R*50, c=sgC(v), ht=big?14:10;
+    return '<div style="padding:10px 0 8px;border-bottom:1px solid #282828;text-align:center;">'
+      +'<div style="margin-bottom:8px;'+(big?'font-size:15px;font-weight:700;color:#ffffff;':'color:#9a9a9a;')+'">'+l+'</div>'
+      +'<div style="position:relative;height:'+ht+'px;border-radius:'+(ht/2)+'px;background:#2a2a2a;">'
+      +'<div style="position:absolute;top:0;bottom:0;border-radius:'+(ht/2)+'px;background:'+c+';left:'+(v>=0?50:50+p)+'%;width:'+Math.abs(p)+'%;"></div>'
+      +'<div style="position:absolute;left:50%;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:#8a8a8a;"></div></div>'
+      +'<div style="margin-top:7px;font-weight:800;font-variant-numeric:tabular-nums;font-size:'+(big?22:17)+'px;color:'+c+';">'+sgFmt(v)+'</div></div>';
+  }
+  function sgScale(R){
+    var f=function(x){return (x>0?'+':x<0?'\u2212':'')+Math.abs(x);};
+    return '<div style="display:flex;justify-content:space-between;font-size:11px;color:#606060;margin-top:6px;"><span>'+f(-R)+'</span><span>'+f(-R/2)+'</span><span>0</span><span>'+f(R/2)+'</span><span>'+f(R)+'</span></div>';
+  }
   function sgRow(l,v,s){return'<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #282828;"><span style="color:#9a9a9a;">'+l+'</span><span style="font-weight:700;color:'+sgC(v)+';">'+sgFmt(v)+(s?' <span style="font-size:11px;color:#606060;">'+s+'</span>':'')+'</span></div>';}
   
   var n=A.n;
@@ -396,50 +411,6 @@ export function renderDashboard(data, hcp, targetId) {
   var twoPutts=detailedHoles-A.onePutt-A.threePutt;
   var sgTot=A.sgOTT+A.sgAPP+A.sgARG+A.sgPutt;
   
-  // Store SG data for radar chart (per round averages, exclude simple rounds)
-  S.dashSGData = {
-    tot: sgTot/nDetailed,
-    ott: A.sgOTT/nDetailed,
-    app: A.sgAPP/nDetailed,
-    arg: A.sgARG/nDetailed,
-    putt: A.sgPutt/nDetailed
-  };
-  
-  // Store all radar chart data
-  S.dashRadarData = {
-    // Scoring
-    birdieAvg: A.birdies/n,
-    scoringAvg: avg18 || (A.totScore/n),
-    par5Avg: A.c5 ? A.p5/A.c5 : 5,
-    par4Avg: A.c4 ? A.p4/A.c4 : 4,
-    par3Avg: A.c3 ? A.p3/A.c3 : 3,
-    // Driving
-    sgOTT: A.sgOTT/nDetailed,
-    missRight: A.fwOpp > 0 ? Math.round(A.fwRight/A.fwOpp*100) : 0,
-    accuracy: A.fwOpp > 0 ? Math.round(A.fwHit/A.fwOpp*100) : 0,
-    avgDistance: avgDrv,
-    missLeft: A.fwOpp > 0 ? Math.round(A.fwLeft/A.fwOpp*100) : 0,
-    // Approach
-    girPct: detailedHoles > 0 ? Math.round(A.girHit/detailedHoles*100) : 0,
-    sgAPP: A.sgAPP/nDetailed,
-    proxOutside100: A.appRanges.filter(function(r){return r.min>=100;}).reduce(function(sum,r){return sum.concat(r.s);},[]).length > 0 ? davg(A.appRanges.filter(function(r){return r.min>=100;}).reduce(function(sum,r){return sum.concat(r.s);},[])) : 30,
-    proxInside100: A.shortRanges.reduce(function(sum,r){return sum.concat(r.s);},[]).length > 0 ? davg(A.shortRanges.reduce(function(sum,r){return sum.concat(r.s);},[])) : 20,
-    proximity: A.girHit > 0 ? Math.round(A.girFirstPuttDist/A.girHit) : 30,
-    // ARG
-    scrambling: A.scrOpp > 0 ? Math.round(A.scrMade/A.scrOpp*100) : 0,
-    sgARG: A.sgARG/nDetailed,
-    scrFromRough: A.scrOpp > 0 ? Math.round(A.scrMade/A.scrOpp*100) : 0,
-    sandSave: A.bunOpp > 0 ? Math.round(A.bunMade/A.bunOpp*100) : 0,
-    scr30In: A.scrOpp > 0 ? Math.round(A.scrMade/A.scrOpp*100) : 0,
-    // Putting
-    puttsPerRound: A.totPutts/nWithStats,
-    make9ft: A.allPuttRanges[0].t + A.allPuttRanges[1].t + A.allPuttRanges[2].t > 0 ? Math.round((A.allPuttRanges[0].m + A.allPuttRanges[1].m + A.allPuttRanges[2].m) / (A.allPuttRanges[0].t + A.allPuttRanges[1].t + A.allPuttRanges[2].t) * 100) : 70,
-    sgPutt: A.sgPutt/nDetailed,
-    avgMadeDist: A.longestMadePutt > 0 ? Math.min(A.longestMadePutt/2, 15) : 5,
-    threePuttAvoid: A.holes > 0 ? Math.round((1 - A.threePutt/A.holes) * 100) : 90,
-    onePuttPct: A.holes > 0 ? Math.round(A.onePutt/A.holes*100) : 30
-  };
-  
   // Handicap label
   var hcpLabel=hcpLabels[hcp]||hcp;
 
@@ -455,15 +426,17 @@ export function renderDashboard(data, hcp, targetId) {
   
   // ===== TAB 0: STROKES GAINED =====
   html+='<div id="dsub_0" class="dsubContent">';
-  html+='<div style="background:#222222; border-radius:12px; padding:10px; margin-bottom:12px; display:flex; justify-content:center; align-items:center;">'
-     + '<canvas id="sgRadarDash" style="display:block; margin:0 auto;"></canvas>'
-     + '</div>';
-  html+=hdr('STROKES GAINED vs '+hcpLabel);
-  html+=sgRow('SG: Total', sgTot/n, '/round');
-  html+=sgRow('SG: Off The Tee', A.sgOTT/n, '/round');
-  html+=sgRow('SG: Approach', A.sgAPP/n, '/round');
-  html+=sgRow('SG: Around Green', A.sgARG/n, '/round');
-  html+=sgRow('SG: Putting', A.sgPutt/n, '/round');
+  // Per-round strokes gained on one shared scale, wide enough for the biggest of them.
+  var nd=nDetailed||1, sgPer={tot:sgTot/nd,ott:A.sgOTT/nd,app:A.sgAPP/nd,arg:A.sgARG/nd,putt:A.sgPutt/nd};
+  var sgMax=Math.max(Math.abs(sgPer.tot),Math.abs(sgPer.ott),Math.abs(sgPer.app),Math.abs(sgPer.arg),Math.abs(sgPer.putt));
+  var sgR=[3,5,10,20,40].filter(function(x){return x>=sgMax;})[0]||Math.ceil(sgMax/10)*10;
+  html+=hdr('STROKES GAINED vs '+hcpLabel+' \u00b7 per round');
+  html+=sgBar('SG: Total', sgPer.tot, sgR, true);
+  html+=sgBar('SG: Off The Tee', sgPer.ott, sgR);
+  html+=sgBar('SG: Approach', sgPer.app, sgR);
+  html+=sgBar('SG: Around Green', sgPer.arg, sgR);
+  html+=sgBar('SG: Putting', sgPer.putt, sgR);
+  html+=sgScale(sgR);
   html+=hdr('TOTALS ('+n+' rounds)');
   html+=sgRow('SG: Total', sgTot);
   html+=sgRow('SG: Off The Tee', A.sgOTT);
@@ -478,9 +451,6 @@ export function renderDashboard(data, hcp, targetId) {
   
   // ===== TAB 1: SCORING =====
   html+='<div id="dsub_1" class="dsubContent" style="display:none;">';
-  html+='<div style="background:#222222; border-radius:12px; padding:10px; margin-bottom:12px; display:flex; justify-content:center; align-items:center;">'
-     + '<canvas id="scoringRadarDash" style="display:block; margin:0 auto;"></canvas>'
-     + '</div>';
   // Inline handicap calculation from the data we already have
   var hcpResult = calcHandicapIndex(data);
   var hcpDisplay = hcpResult.index !== null ? hcpResult.index.toFixed(1) : '--';
@@ -509,12 +479,10 @@ export function renderDashboard(data, hcp, targetId) {
   
   // ===== TAB 2: OFF THE TEE =====
   html+='<div id="dsub_2" class="dsubContent" style="display:none;">';
-  html+='<div style="background:#222222; border-radius:12px; padding:10px; margin-bottom:12px; display:flex; justify-content:center; align-items:center;">'
-     + '<canvas id="drivingRadarDash" style="display:block; margin:0 auto;"></canvas>'
-     + '</div>';
   html+=hdr('SG: OFF THE TEE vs '+hcpLabel);
+  html+=sgBar('SG: Off The Tee \u00b7 per round',sgPer.ott,sgR);
+  html+=sgScale(sgR);
   html+=sgRow('Total',A.sgOTT,nDetailed+' rounds');
-  html+=sgRow('Per Round',A.sgOTT/nDetailed);
   html+=hdr('FAIRWAY ACCURACY');
   html+=row('Fairways Hit',pct(A.fwHit,A.fwOpp),A.fwHit+'/'+A.fwOpp);
   html+=row('Missed Left',A.fwLeft,pct(A.fwLeft,A.fwOpp));
@@ -530,12 +498,10 @@ export function renderDashboard(data, hcp, targetId) {
   
   // ===== TAB 3: APPROACH =====
   html+='<div id="dsub_3" class="dsubContent" style="display:none;">';
-  html+='<div style="background:#222222; border-radius:12px; padding:10px; margin-bottom:12px; display:flex; justify-content:center; align-items:center;">'
-     + '<canvas id="approachRadarDash" style="display:block; margin:0 auto;"></canvas>'
-     + '</div>';
   html+=hdr('SG: APPROACH vs '+hcpLabel);
+  html+=sgBar('SG: Approach \u00b7 per round',sgPer.app,sgR);
+  html+=sgScale(sgR);
   html+=sgRow('Total',A.sgAPP,nDetailed+' rounds');
-  html+=sgRow('Per Round',A.sgAPP/nDetailed);
   html+=hdr('GREENS IN REGULATION');
   html+=row('GIR',pct(A.girHit,detailedHoles),A.girHit+'/'+detailedHoles);
   html+=row('Proximity when GIR',A.girHit>0?Math.round(A.girFirstPuttDist/A.girHit)+' ft':'\u2013');
@@ -561,12 +527,10 @@ export function renderDashboard(data, hcp, targetId) {
   
   // ===== TAB 4: SHORT GAME =====
   html+='<div id="dsub_4" class="dsubContent" style="display:none;">';
-  html+='<div style="background:#222222; border-radius:12px; padding:10px; margin-bottom:12px; display:flex; justify-content:center; align-items:center;">'
-     + '<canvas id="argRadarDash" style="display:block; margin:0 auto;"></canvas>'
-     + '</div>';
   html+=hdr('SG: AROUND THE GREEN vs '+hcpLabel);
+  html+=sgBar('SG: Around Green \u00b7 per round',sgPer.arg,sgR);
+  html+=sgScale(sgR);
   html+=sgRow('Total',A.sgARG,nDetailed+' rounds');
-  html+=sgRow('Per Round',A.sgARG/nDetailed);
   html+=hdr('SCRAMBLING');
   html+=row('Scrambling',pct(A.scrMade,A.scrOpp),A.scrMade+'/'+A.scrOpp);
   html+=row('Bunker Saves',pct(A.bunMade,A.bunOpp),A.bunMade+'/'+A.bunOpp);
@@ -580,12 +544,10 @@ export function renderDashboard(data, hcp, targetId) {
   
   // ===== TAB 5: PUTTING =====
   html+='<div id="dsub_5" class="dsubContent" style="display:none;">';
-  html+='<div style="background:#222222; border-radius:12px; padding:10px; margin-bottom:12px; display:flex; justify-content:center; align-items:center;">'
-     + '<canvas id="puttingRadarDash" style="display:block; margin:0 auto;"></canvas>'
-     + '</div>';
   html+=hdr('SG: PUTTING vs '+hcpLabel);
+  html+=sgBar('SG: Putting \u00b7 per round',sgPer.putt,sgR);
+  html+=sgScale(sgR);
   html+=sgRow('Total',A.sgPutt,nDetailed+' rounds');
-  html+=sgRow('Per Round',A.sgPutt/nDetailed);
   html+=hdr('PUTTING SUMMARY');
   html+=row('Total Putts',A.totPutts,detailedHoles>0?(A.totPutts/detailedHoles).toFixed(1)+'/hole':'');
   html+=row('Putts per GIR',A.girHit>0?(A.girPutts/A.girHit).toFixed(1):'\u2013');
@@ -602,11 +564,6 @@ export function renderDashboard(data, hcp, targetId) {
   
   content.innerHTML=html;
   
-  // Render radar chart on initial load
-  setTimeout(function(){
-    var canvas=document.getElementById('sgRadarDash');
-    if(canvas && S.dashSGData) renderSGRadarDash(canvas, S.dashSGData);
-  },50);
 }
 
 function showDashSub(idx) {
@@ -616,410 +573,7 @@ function showDashSub(idx) {
     var tab=document.getElementById('dashTab_'+i);
     if(tab){tab.style.background=i===idx?'#2d7abc':'#282828';tab.style.color=i===idx?'#ffffff':'#606060';}
   }
-  
-  setTimeout(function(){
-    if(idx===0){
-      var canvas=document.getElementById('sgRadarDash');
-      if(canvas && S.dashSGData) renderSGRadarDash(canvas, S.dashSGData);
-    } else if(idx===1 && S.dashRadarData){
-      renderScoringRadar();
-    } else if(idx===2 && S.dashRadarData){
-      renderDrivingRadar();
-    } else if(idx===3 && S.dashRadarData){
-      renderApproachRadar();
-    } else if(idx===4 && S.dashRadarData){
-      renderARGRadar();
-    } else if(idx===5 && S.dashRadarData){
-      renderPuttingRadar();
-    }
-  },50);
 }
-
-
-var _sgRadarChartFullInstance = null;
-var _sgRadarDashInstance = null;
-var _sgRadarSummaryInstance = null;
-
-function renderSGRadar(canvas, values, instance) {
-  if (instance && instance.destroy) instance.destroy();
-  
-  var size = 300;
-  var dpr = window.devicePixelRatio || 1;
-  canvas.width = size * dpr;
-  canvas.height = size * dpr;
-  canvas.style.width = size + 'px';
-  canvas.style.height = size + 'px';
-  var ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  
-  var cx = size / 2;
-  var cy = size / 2;
-  var radius = 95;
-  var rings = 4;
-  var n = values.length;
-  var startAngle = -Math.PI / 2;
-  var rawLabels = ['SG:TOTAL', 'SG:OTT', 'SG:APP', 'SG:ARG', 'SG:PUTT'];
-  
-  // Find scale range
-  var absMax = 0.5;
-  for (var i = 0; i < n; i++) { absMax = Math.max(absMax, Math.abs(values[i])); }
-  absMax = Math.ceil(absMax * 2) / 2;
-  if (absMax < 1) absMax = 1;
-  var scaleMax = absMax;
-  
-  ctx.clearRect(0, 0, size, size);
-  
-  // Draw rings
-  for (var r = 1; r <= rings; r++) {
-    var rr = (radius / rings) * r;
-    ctx.beginPath();
-    for (var i = 0; i <= n; i++) {
-      var angle = startAngle + (2 * Math.PI / n) * (i % n);
-      var x = cx + rr * Math.cos(angle);
-      var y = cy + rr * Math.sin(angle);
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.strokeStyle = '#3d3d3d';
-    ctx.lineWidth = 0.7;
-    ctx.stroke();
-  }
-  
-  // Draw angle lines
-  for (var i = 0; i < n; i++) {
-    var angle = startAngle + (2 * Math.PI / n) * i;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + radius * Math.cos(angle), cy + radius * Math.sin(angle));
-    ctx.strokeStyle = '#333333';
-    ctx.lineWidth = 0.7;
-    ctx.stroke();
-  }
-  
-  // Draw zero ring (middle circle) 
-  var zeroR = radius / 2;
-  ctx.beginPath();
-  for (var i = 0; i <= n; i++) {
-    var angle = startAngle + (2 * Math.PI / n) * (i % n);
-    var x = cx + zeroR * Math.cos(angle);
-    var y = cy + zeroR * Math.sin(angle);
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.strokeStyle = '#606060';
-  ctx.lineWidth = 1;
-  ctx.setLineDash([3, 3]);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  
-  // Draw data polygon - map values from [-scaleMax, +scaleMax] to [0, radius]
-  ctx.beginPath();
-  for (var i = 0; i < n; i++) {
-    var angle = startAngle + (2 * Math.PI / n) * i;
-    var normalized = ((values[i] + scaleMax) / (2 * scaleMax));
-    normalized = Math.max(0, Math.min(1, normalized));
-    var dr = normalized * radius;
-    var x = cx + dr * Math.cos(angle);
-    var y = cy + dr * Math.sin(angle);
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(46, 125, 50, 0.15)';
-  ctx.fill();
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  
-  // Draw data points and labels
-  for (var i = 0; i < n; i++) {
-    var angle = startAngle + (2 * Math.PI / n) * i;
-    var normalized = ((values[i] + scaleMax) / (2 * scaleMax));
-    normalized = Math.max(0, Math.min(1, normalized));
-    var dr = normalized * radius;
-    var px = cx + dr * Math.cos(angle);
-    var py = cy + dr * Math.sin(angle);
-    
-    var color = values[i] >= 0 ? '#007a52' : '#e06060';
-    
-    // Point dot
-    ctx.beginPath();
-    ctx.arc(px, py, 5, 0, 2 * Math.PI);
-    ctx.fillStyle = color;
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    
-    // Label
-    var labelR = radius + 22;
-    var lx = cx + labelR * Math.cos(angle);
-    var ly = cy + labelR * Math.sin(angle);
-    
-    var sign = values[i] >= 0 ? '+' : '';
-    var labelColor = values[i] >= 0 ? '#00a06d' : '#d4706e';
-    
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = labelColor;
-    ctx.font = 'bold 11px -apple-system, sans-serif';
-    ctx.fillText(rawLabels[i], lx, ly - 7);
-    ctx.font = 'bold 10px -apple-system, sans-serif';
-    ctx.fillText('(' + sign + values[i].toFixed(1) + ')', lx, ly + 7);
-  }
-  
-  return { destroy: function() { ctx.clearRect(0, 0, canvas.width, canvas.height); } };
-}
-
-export function renderSGRadarChartFull(canvas) {
-  var sgTot = S.sgOTTTotal + S.sgAPPTotal + S.sgARGTotal + S.sgPuttingTotal;
-  var values = [sgTot, S.sgOTTTotal, S.sgAPPTotal, S.sgARGTotal, S.sgPuttingTotal];
-  _sgRadarChartFullInstance = renderSGRadar(canvas, values, _sgRadarChartFullInstance);
-}
-
-export function renderSGRadarDash(canvas, data) {
-  var values = [data.tot, data.ott, data.app, data.arg, data.putt];
-  _sgRadarDashInstance = renderSGRadar(canvas, values, _sgRadarDashInstance);
-}
-
-export function renderSGRadarSummary() {
-  var canvas = document.getElementById('sgRadarSummary');
-  if (!canvas) return;
-  var sgTot = S.sgOTTTotal + S.sgAPPTotal + S.sgARGTotal + S.sgPuttingTotal;
-  var values = [sgTot, S.sgOTTTotal, S.sgAPPTotal, S.sgARGTotal, S.sgPuttingTotal];
-  _sgRadarSummaryInstance = renderSGRadar(canvas, values, _sgRadarSummaryInstance);
-}
-
-// ===== NEW CATEGORY RADAR CHARTS =====
-var _scoringRadarInstance = null;
-var _drivingRadarInstance = null;
-var _approachRadarInstance = null;
-var _argRadarInstance = null;
-var _puttingRadarInstance = null;
-
-function normalizeValue(val, min, max, higherIsBetter) {
-  var clamped = Math.max(min, Math.min(max, val));
-  var pct = (clamped - min) / (max - min) * 100;
-  return higherIsBetter ? pct : (100 - pct);
-}
-
-function getRadarColor(normalizedVal) {
-  if (normalizedVal >= 60) return '#00b87a';  // Green - good
-  if (normalizedVal >= 40) return '#ffffff';  // White - average
-  return '#d4706e';  // Red - bad
-}
-
-function createCategoryRadar(canvasId, labels, rawData, units, scales, instanceVar) {
-  var canvas = document.getElementById(canvasId);
-  if (!canvas) return null;
-  
-  if (instanceVar && instanceVar.destroy) instanceVar.destroy();
-  
-  // Fixed dimensions
-  var size = 300;
-  var dpr = window.devicePixelRatio || 1;
-  canvas.width = size * dpr;
-  canvas.height = size * dpr;
-  canvas.style.width = size + 'px';
-  canvas.style.height = size + 'px';
-  var ctx = canvas.getContext('2d');
-  ctx.scale(dpr, dpr);
-  
-  var cx = size / 2;
-  var cy = size / 2;
-  var radius = 95;
-  var rings = 4;
-  var n = labels.length;
-  var startAngle = -Math.PI / 2;
-  
-  var normalizedData = rawData.map(function(val, i) {
-    var s = scales[i];
-    return normalizeValue(val, s.min, s.max, s.higher);
-  });
-  var colorData = normalizedData.map(function(v, i) {
-    return scales[i].invertColor ? (100 - v) : v;
-  });
-  
-  ctx.clearRect(0, 0, size, size);
-  
-  // Draw rings
-  for (var r = 1; r <= rings; r++) {
-    var rr = (radius / rings) * r;
-    ctx.beginPath();
-    for (var i = 0; i <= n; i++) {
-      var angle = startAngle + (2 * Math.PI / n) * (i % n);
-      var x = cx + rr * Math.cos(angle);
-      var y = cy + rr * Math.sin(angle);
-      if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-    }
-    ctx.closePath();
-    ctx.strokeStyle = '#3d3d3d';
-    ctx.lineWidth = 0.7;
-    ctx.stroke();
-  }
-  
-  // Draw angle lines
-  for (var i = 0; i < n; i++) {
-    var angle = startAngle + (2 * Math.PI / n) * i;
-    ctx.beginPath();
-    ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + radius * Math.cos(angle), cy + radius * Math.sin(angle));
-    ctx.strokeStyle = '#333333';
-    ctx.lineWidth = 0.7;
-    ctx.stroke();
-  }
-  
-  // Draw data polygon
-  ctx.beginPath();
-  for (var i = 0; i < n; i++) {
-    var angle = startAngle + (2 * Math.PI / n) * i;
-    var val = Math.max(0, Math.min(100, normalizedData[i]));
-    var dr = (val / 100) * radius;
-    var x = cx + dr * Math.cos(angle);
-    var y = cy + dr * Math.sin(angle);
-    if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-  }
-  ctx.closePath();
-  ctx.fillStyle = 'rgba(46, 125, 50, 0.15)';
-  ctx.fill();
-  ctx.strokeStyle = '#ffffff';
-  ctx.lineWidth = 2;
-  ctx.stroke();
-  
-  // Draw data points and labels
-  for (var i = 0; i < n; i++) {
-    var angle = startAngle + (2 * Math.PI / n) * i;
-    var val = Math.max(0, Math.min(100, normalizedData[i]));
-    var dr = (val / 100) * radius;
-    var px = cx + dr * Math.cos(angle);
-    var py = cy + dr * Math.sin(angle);
-    
-    // Point dot
-    ctx.beginPath();
-    ctx.arc(px, py, 5, 0, 2 * Math.PI);
-    ctx.fillStyle = getRadarColor(colorData[i]);
-    ctx.fill();
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    
-    // Label
-    var labelR = radius + 22;
-    var lx = cx + labelR * Math.cos(angle);
-    var ly = cy + labelR * Math.sin(angle);
-    
-    var displayVal = typeof rawData[i] === 'number' ? (Number.isInteger(rawData[i]) ? rawData[i] : rawData[i].toFixed(1)) : rawData[i];
-    var labelText = labels[i];
-    var valueText = '(' + displayVal + (units[i] || '') + ')';
-    
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillStyle = getRadarColor(colorData[i]);
-    ctx.font = 'bold 11px -apple-system, sans-serif';
-    ctx.fillText(labelText, lx, ly - 7);
-    ctx.font = 'bold 10px -apple-system, sans-serif';
-    ctx.fillText(valueText, lx, ly + 7);
-  }
-  
-  return { destroy: function() { ctx.clearRect(0, 0, canvas.width, canvas.height); } };
-}
-
-export function renderScoringRadar() {
-  var d = S.dashRadarData;
-  if (!d) return;
-  _scoringRadarInstance = createCategoryRadar('scoringRadarDash',
-    ['Birdie Avg', 'Scoring Avg', 'Par 5 Avg', 'Par 4 Avg', 'Par 3 Avg'],
-    [d.birdieAvg, d.scoringAvg, d.par5Avg, d.par4Avg, d.par3Avg],
-    ['/rd', '', '', '', ''],
-    [
-      {min: 0, max: 5, higher: true},
-      {min: 65, max: 120, higher: false},
-      {min: 4, max: 8, higher: false},
-      {min: 3, max: 7, higher: false},
-      {min: 2, max: 6, higher: false}
-    ],
-    _scoringRadarInstance
-  );
-}
-
-export function renderDrivingRadar() {
-  var d = S.dashRadarData;
-  if (!d) return;
-  _drivingRadarInstance = createCategoryRadar('drivingRadarDash',
-    ['SG: OTT', 'Miss Right', 'Accuracy', 'Avg Distance', 'Miss Left'],
-    [d.sgOTT, d.missRight, d.accuracy, d.avgDistance, d.missLeft],
-    ['', '%', '%', ' yds', '%'],
-    [
-      {min: -5, max: 5, higher: true},
-      {min: 5, max: 50, higher: true, invertColor: true},
-      {min: 30, max: 80, higher: true},
-      {min: 150, max: 320, higher: true},
-      {min: 5, max: 50, higher: true, invertColor: true}
-    ],
-    _drivingRadarInstance
-  );
-}
-
-export function renderApproachRadar() {
-  var d = S.dashRadarData;
-  if (!d) return;
-  _approachRadarInstance = createCategoryRadar('approachRadarDash',
-    ['GIR %', 'SG: APP', 'Outside 100', 'Inside 100', 'Proximity'],
-    [d.girPct, d.sgAPP, d.proxOutside100, d.proxInside100, d.proximity],
-    ['', '', ' ft', ' ft', ' ft'],
-    [
-      {min: 20, max: 80, higher: true},
-      {min: -5, max: 5, higher: true},
-      {min: 15, max: 50, higher: false},
-      {min: 5, max: 30, higher: false},
-      {min: 10, max: 45, higher: false}
-    ],
-    _approachRadarInstance
-  );
-}
-
-export function renderARGRadar() {
-  var d = S.dashRadarData;
-  if (!d) return;
-  _argRadarInstance = createCategoryRadar('argRadarDash',
-    ['Scrambling', 'SG: ARG', 'From Rough', 'Sand Save', '30 Yds & In'],
-    [d.scrambling, d.sgARG, d.scrFromRough, d.sandSave, d.scr30In],
-    ['%', '', '%', '%', '%'],
-    [
-      {min: 20, max: 70, higher: true},
-      {min: -5, max: 5, higher: true},
-      {min: 20, max: 70, higher: true},
-      {min: 10, max: 60, higher: true},
-      {min: 10, max: 60, higher: true}
-    ],
-    _argRadarInstance
-  );
-}
-
-export function renderPuttingRadar() {
-  var d = S.dashRadarData;
-  if (!d) return;
-  _puttingRadarInstance = createCategoryRadar('puttingRadarDash',
-    ['Putts/Round', 'Make %<9ft', 'SG: Putt', 'Avg Made Dist', '3-Putt Avoid', 'One-Putt %'],
-    [d.puttsPerRound, d.make9ft, d.sgPutt, d.avgMadeDist, d.threePuttAvoid, d.onePuttPct],
-    ['', '%', '', ' ft', '%', ''],
-    [
-      {min: 26, max: 38, higher: false},
-      {min: 50, max: 95, higher: true},
-      {min: -5, max: 5, higher: true},
-      {min: 3, max: 15, higher: true},
-      {min: 80, max: 100, higher: true},
-      {min: 20, max: 50, higher: true}
-    ],
-    _puttingRadarInstance
-  );
-}
-
-// ===== FULL STATS RADAR CHART FUNCTIONS =====
-var _scoringRadarFullInstance = null;
-var _drivingRadarFullInstance = null;
-var _approachRadarFullInstance = null;
-var _argRadarFullInstance = null;
-var _puttingRadarFullInstance = null;
 
 
 function calcHandicapDifferential(score, rating, slope) {
