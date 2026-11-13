@@ -210,7 +210,14 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     dirty = true;
     if (live) drawLayers();
   }
+  // Fairways, tee boxes, greens and rough drawn or changed here belong to this
+  // hole from then on (`h`), however close they sit to another hole's line.
+  const OWNED = ['fairway', 'tee', 'green', 'rough'];
+  const tag = f => (OWNED.includes(f.t) && f.h !== ch.n ? { ...f, h: ch.n } : f);
+  // Pin the hole's current fairways etc. to it when leaving or saving.
+  function tagScoped() { [...scoped].forEach(f => { const g = tag(f); if (g !== f) replace(f, g); }); }
   function replace(old, nu) {
+    nu = tag(nu);
     const i = work.indexOf(old);
     work = [...work.slice(0, i), nu, ...work.slice(i + 1)];
     if (scoped.has(old)) { scoped.delete(old); scoped.add(nu); }
@@ -275,7 +282,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   function finishDraw() {
     if (!draft || draft.length < 3) return;
     push();
-    const f = { t: drawType, p: [close(draft.map(round6))] };
+    const f = tag({ t: drawType, p: [close(draft.map(round6))] });
     work = [...work, f]; scoped.add(f); sel = f; selVtx = null;
     draft = null; mode = 'pick'; dirty = true;
     refresh();
@@ -326,6 +333,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   // Another hole, still editing: the changes so far go with it (Undo starts afresh there).
   function toHole(k) {
     if (mode === 'draw' && draft && draft.length >= 3) finishDraw();
+    if (dirty) tagScoped();
     pending = { course: course.id, work, dirty, goto: k };
     teardown();
     if (dirty) window.onbeforeunload = () => 'Unsaved boundary edits';
@@ -334,6 +342,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   async function save() {
     if (mode === 'draw' && draft && draft.length >= 3) finishDraw();
     if (!dirty) { teardown(); onClose(false); return; }
+    tagScoped();
     const features = work.filter(f => f.p.length && f.p[0].length >= 4);
     store.set('course:' + course.id, { features, ob: true });
     await loadCourse(true);

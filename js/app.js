@@ -109,6 +109,7 @@ function teeBoxesOf(ch) {
     teeOwners = new Map();
     for (const f of course.features) {
       if (f.t !== 'tee') continue;
+      if (f.h != null) { if (course.holes[f.h - 1]) teeOwners.set(f, course.holes[f.h - 1]); continue; } // tied in the boundary editor
       const c = centroid(f.p[0]);
       const ranked = course.holes.map((o, i) => [o, distToLine(c, lines[i])]).sort((x, y) => x[1] - y[1]);
       const [[o, d], [, d2]] = ranked;
