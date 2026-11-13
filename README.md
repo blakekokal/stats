@@ -22,8 +22,8 @@ server, or host the repo with GitHub Pages.
   bunker or water near it). A crosshair dot stays a third of the way down the screen; pan, zoom
   or rotate the map under it to see how far that spot is from the tee, how far
   is left to the pin, and the strokes gained by a tee shot finishing there.
-  The top-right corner shows the expected strokes for the hole and a handicap
-  dropdown that sets the benchmark. Tapping the expected strokes opens the
+  The top-right corner shows the expected strokes for the hole. Tapping it opens
+  the handicap levels to compare to (tap one to set the benchmark) and the
   scorecard filled in with what that handicap level is expected to shoot on
   each hole, front nine, back nine and round, from the scorecard yardage for
   your tees. **Lines** shows or hides the outlines.

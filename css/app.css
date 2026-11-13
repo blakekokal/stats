@@ -460,3 +460,10 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .gpsdist small { font-size: 10.5px; color: #8fb8ff; font-weight: 600; }
 .gpsdot { width: 16px; height: 16px; border-radius: 50%; background: #2f7df6; border: 3px solid #fff; box-shadow: 0 0 0 6px #2f7df640, 0 1px 4px #000a; }
 .holeview.clean .gpsdist, .holeview.clean .fab.gpsshot, .holeview.comparing .gpsdist, .holeview.comparing .fab.gps, .holeview.comparing .fab.gpsshot { display: none; }
+
+/* Expected: a small tile; tapping it opens the expected scorecard with the handicap levels. */
+.exppill { padding: 5px 12px; border-radius: 14px; gap: 0; }
+.exppill small { font-size: 10px; } .exppill strong { font-size: 18px; }
+.explevels { display: flex; flex-wrap: wrap; gap: 6px; margin: 10px 0 4px; }
+.explevels button { min-height: 34px; padding: 0 11px; border: 0; border-radius: 999px; background: #ffffff1c; color: #fff; font-size: 13px; font-weight: 700; }
+.explevels button.on { background: #ffb020; color: #111; }
