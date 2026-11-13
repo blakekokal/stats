@@ -869,37 +869,8 @@ export function renderHole(view, n) {
   const banner = h('div', { class: 'greenbar', hidden: true }, bannerText);
 
   const expValue = h('strong', {});
-  // Tapping the expected strokes opens a scorecard of what two handicap levels
-  // are expected to shoot on each hole and over the round, from the scorecard
-  // yardage for these tees.
-  const expCard = h('div', { class: 'scorecard expcard', hidden: true, onclick: e => { if (e.target === expCard) expCard.hidden = true; } });
-  let expA = 'Scratch', expB = null;
-  function openExpected() {
-    if (!expB) expB = level !== 'Scratch' && level !== 'Pro' ? level : '15';
-    const tees = teeSet, holes = course.holes;
-    const exp = (k, l) => { const yd = tees.yards[k - 1]; return yd ? expected('tee', yd, l) : null; };
-    const fmt = v => (v == null ? '\u2013' : v.toFixed(1));
-    const toPar = d => (Math.abs(d) < 0.05 ? 'E' : (d > 0 ? '+' : '\u2212') + Math.abs(d).toFixed(1));
-    const pick = (cur, set) => h('select', { 'aria-label': 'Handicap level', onchange: e => { set(e.target.value); openExpected(); } },
-      LEVELS.map(l => h('option', { value: l, selected: l === cur }, levelName(l))));
-    const sum = (ks, f) => ks.reduce((a, k) => a + (f(k) || 0), 0);
-    const nines = holes.length > 9 ? [['Out', holes.slice(0, 9)], ['In', holes.slice(9)]] : [];
-    const row = (label, ks, cls) => {
-      const par = sum(ks.map(x => x.n), k => holes[k - 1].par);
-      const a = sum(ks.map(x => x.n), k => exp(k, expA)), b = sum(ks.map(x => x.n), k => exp(k, expB));
-      return h('tr', { class: cls }, h('td', {}, label), h('td', {}, String(par)), h('td', {}, String(sum(ks.map(x => x.n), k => tees.yards[k - 1]))),
-        h('td', {}, fmt(a), h('small', {}, toPar(a - par))), h('td', {}, fmt(b), h('small', {}, toPar(b - par))));
-    };
-    expCard.replaceChildren(h('div', { class: 'scbox' },
-      h('div', { class: 'schead' }, h('strong', {}, 'Expected scores'), h('span', {}, `${tees.name} tees`), h('button', { 'aria-label': 'Close', onclick: () => { expCard.hidden = true; } }, '\u2715')),
-      h('div', { class: 'expscroll' }, h('table', {},
-        h('tr', {}, h('th', {}, 'Hole'), h('th', {}, 'Par'), h('th', {}, 'Yds'), h('th', {}, pick(expA, v => { expA = v; })), h('th', {}, pick(expB, v => { expB = v; }))),
-        holes.map(c => h('tr', { class: c.n === n ? 'cur' : '' }, h('td', {}, String(c.n)), h('td', {}, String(c.par)), h('td', {}, String(tees.yards[c.n - 1] || '')), h('td', {}, fmt(exp(c.n, expA))), h('td', {}, fmt(exp(c.n, expB))))),
-        nines.map(([label, ks]) => row(label, ks, 'sum')),
-        row('Total', holes, 'sum total'))),
-      h('small', { class: 'muted' }, 'Average strokes for each level from the tee at the scorecard yardage. Pick a level at the top of each column.')));
-    expCard.hidden = false;
-  }
+  // Tapping the expected strokes opens the scorecard filled in with what the
+  // chosen handicap level is expected to shoot on each hole (opened below).
   const expPill = h('div', { class: 'exppill' },
     h('div', { class: 'expopen', role: 'button', title: 'Expected scores for the round', onclick: openExpected }, h('small', {}, 'Expected'), expValue),
     h('select', { 'aria-label': 'Handicap level', onchange: e => { level = e.target.value; sessionStorage.setItem('gs:level', level); update(); } },
@@ -962,7 +933,7 @@ export function renderHole(view, n) {
       h('button', { class: 'cancel', onclick: () => { leave.hidden = true; } }, 'Cancel')));
 
   view.replaceChildren(h('div', { class: 'holeview' }, mapEl,
-    h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard, expCard,
+    h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Scouting' : `v${VERSION}`), compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
@@ -1248,6 +1219,33 @@ export function renderHole(view, n) {
       h('div', { class: 'schead' }, h('strong', {}, 'Scorecard'), h('span', {}, strokes ? `${strokes} (${toPar(tp)})` : ''), h('button', { 'aria-label': 'Close', onclick: () => { scorecard.hidden = true; } }, '✕')),
       h('div', { class: 'scscroll' }, nines.map((nn, i) => table(nn, nines.length > 1 ? (i ? 'In' : 'Out') : 'Tot'))),
       h('small', { class: 'muted' }, 'Tap a hole to go to it.')));
+    scorecard.hidden = false;
+  }
+
+  // The same scorecard, filled in with the expected score for the chosen
+  // handicap level on each hole (from the scorecard yardage for these tees).
+  function openExpected() {
+    const count = holeCount, nines = count > 9 ? [[1, 9], [10, count]] : [[1, count]];
+    const cls = (sc, par) => (sc == null ? '' : sc <= par - 2 ? 'eagle' : sc === par - 1 ? 'birdie' : sc === par ? 'par' : sc === par + 1 ? 'bogey' : 'dbl');
+    const tees = teeSet;
+    const ex = k => (tees.yards[k - 1] ? expected('tee', tees.yards[k - 1], level) : null);
+    const all = Array.from({ length: count }, (_, i) => i + 1);
+    const total = all.reduce((t, k) => t + (ex(k) || 0), 0), par = all.reduce((t, k) => t + course.holes[k - 1].par, 0);
+    const toParX = d => (Math.abs(d) < 0.05 ? 'E' : (d > 0 ? '+' : '\u2212') + Math.abs(d).toFixed(1));
+    const table = ([a, b], label) => {
+      const ns = Array.from({ length: b - a + 1 }, (_, i) => a + i);
+      const sum = f => ns.reduce((t, k) => t + (f(k) || 0), 0);
+      const go = k => () => { scorecard.hidden = true; location.hash = `#/hole/${k}`; };
+      return h('table', {},
+        h('tr', {}, h('th', {}, 'Hole'), ns.map(k => h('th', { class: k === n ? 'cur' : '', onclick: go(k) }, String(k))), h('th', {}, label)),
+        h('tr', { class: 'yds' }, h('td', {}, 'Yds'), ns.map(k => h('td', {}, String(tees.yards[k - 1]))), h('td', {}, String(sum(k => tees.yards[k - 1])))),
+        h('tr', {}, h('td', {}, 'Par'), ns.map(k => h('td', {}, String(course.holes[k - 1].par))), h('td', {}, String(sum(k => course.holes[k - 1].par)))),
+        h('tr', { class: 'score' }, h('td', {}, 'Exp'), ns.map(k => h('td', { onclick: go(k) }, h('span', { class: cls(ex(k) == null ? null : Math.round(ex(k)), course.holes[k - 1].par) }, ex(k) == null ? '' : ex(k).toFixed(1)))), h('td', {}, sum(ex).toFixed(1))));
+    };
+    scorecard.replaceChildren(h('div', { class: 'scbox expected' },
+      h('div', { class: 'schead' }, h('strong', {}, `Expected \u00b7 ${levelName(level)}`), h('span', {}, `${total.toFixed(1)} (${toParX(total - par)})`), h('button', { 'aria-label': 'Close', onclick: () => { scorecard.hidden = true; } }, '\u2715')),
+      h('div', { class: 'scscroll' }, nines.map((nn, i) => table(nn, nines.length > 1 ? (i ? 'In' : 'Out') : 'Tot'))),
+      h('small', { class: 'muted' }, `What a ${levelName(level)} is expected to shoot from the ${tees.name} tees. Change the level beside Expected. Tap a hole to go to it.`)));
     scorecard.hidden = false;
   }
 

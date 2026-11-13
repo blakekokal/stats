@@ -391,16 +391,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 /* course editing is for admins only */
 body:not(.admin) #nav a[data-tab="course"] { display: none; }
 
-/* expected scores card (tap Expected) */
+/* expected scores (tap Expected): the scorecard, with decimal scores */
 .exppill .expopen { cursor: pointer; }
-.expcard .expscroll { max-height: min(62vh, 560px); overflow-y: auto; }
-.expcard table { font-size: 13px; }
-.expcard th { cursor: default; position: sticky; top: 0; z-index: 1; }
-.expcard th select { min-height: 28px; padding: 2px 4px; font-size: 12px; font-weight: 700; border-radius: 8px; background: #0b5c3f; color: #fff; border: 1px solid #ffffff55; }
-.expcard td { padding: 5px 4px; }
-.expcard td small { display: block; font-size: 10px; color: #9a9a9a; font-weight: 600; }
-.expcard tr.cur td { background: #ffb02033; }
-.expcard tr.sum td { font-weight: 800; background: #ffffff0d; }
-.expcard tr.total td { background: #007a5244; font-size: 14px; }
-.expcard .scbox th:last-child, .expcard .scbox td:last-child { font-weight: inherit; }
-.expcard .scbox th:first-child { background: #1e1e1e; }
+.scbox.expected th, .scbox.expected td { padding: 4px 1px; min-width: 0; }
+.scbox.expected tr.score span { min-width: 0; padding: 0 2px; height: 20px; font-size: 11px; }
