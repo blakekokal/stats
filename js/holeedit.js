@@ -56,6 +56,10 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   // Cut picks out a stretch of its boundary line instead, to drag as one unit.
   let section = null; // { f: the feature, ri: ring, idx: [corner indices], n: ring length }
   const isCourseOb = f => f.p.length > 1 && f.t === 'ob';
+  // A little island cut out of the course OB (not the course itself, the
+  // biggest cut-out): deleting it makes that spot OB again.
+  const ringArea = r => { let a = 0; for (let i = 1; i < r.length; i++) a += r[i - 1][1] * r[i][0] - r[i][1] * r[i - 1][0]; return Math.abs(a); };
+  const isCutout = (f, v) => !!v && isCourseOb(f) && v[0] > 0 && f.p.length > 2 && ringArea(f.p[v[0]]) < Math.max(...f.p.slice(1).map(ringArea));
   let handles = [];
   let dragEnd = 0; // a drag ends with a click on the dot: ignore it
   const justDragged = () => Date.now() - dragEnd < 400;
@@ -290,6 +294,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     } else if (sel) {
       const ringLen = selVtx ? open(sel.p[selVtx[0]]).length : 0;
       if (!hint.textContent && section) hint.textContent = 'Drag the red \u2725 to move the highlighted stretch of the boundary; Other side switches to the rest of the line.';
+      if (!hint.textContent && isCutout(sel, selVtx)) hint.textContent = 'Corner of a cut-out in the OB selected: drag it, or Delete cutout to make that spot OB again.';
       if (!hint.textContent) hint.textContent = selVtx ? 'Corner selected: drag it, or delete it.' : 'Drag \u2725 to move the whole shape, \u2921 to resize it, or the white dots to move corners; drag a small dot between them to add one (zoom in if there are none). Tap a type to change it.';
       panel.replaceChildren(hint,
         typeChips(sel.t, t => { if (t === sel.t) return; push(); replace(sel, { ...sel, t }); dirty = true; refresh(); }),
@@ -302,6 +307,9 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
           } }, '\u2702 Cut') : null,
           section ? h('button', { onclick: () => { const { idx, other } = section; section = { ...section, idx: other, other: idx }; refresh(); } }, 'Other side') : null,
           h('button', { class: 'bdel', onclick: () => { push(); work = work.filter(f => f !== sel); scoped.delete(sel); sel = null; selVtx = null; dirty = true; refresh(); } }, 'Delete boundary'),
+          isCutout(sel, selVtx) ? h('button', { class: 'bdel', onclick: () => {
+            const ri = selVtx[0]; push(); replace(sel, { ...sel, p: sel.p.filter((_, k) => k !== ri) }); selVtx = null; section = null; dirty = true; refresh();
+          } }, 'Delete cutout') : null,
           selVtx ? h('button', { disabled: ringLen <= 3, onclick: () => {
             const [ri, vi] = selVtx; push(); setRing(ri, r => r.filter((_, k) => k !== vi)); selVtx = null; refresh();
           } }, 'Delete point') : null,
