@@ -13,7 +13,7 @@
 // Edits are stored like the Course page's: the whole feature list, out of bounds
 // included, under 'course:<id>' (with ob: true so the OB edits are used too).
 
-import { h, course, toast, LIE_COLOR, loadCourse, along } from './app.js';
+import { h, course, toast, LIE_COLOR, loadCourse, along, boxCentre, teeBoxFor } from './app.js';
 import { store } from './store.js';
 import { inPolygon } from './geo.js';
 
@@ -99,15 +99,11 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   const TEE_INK = { black: '#111', blue: '#2563eb', white: '#fff', red: '#dc2626', gold: '#eab308', yellow: '#eab308', green: '#16a34a', silver: '#c0c0c0', orange: '#f97316', purple: '#9333ea' };
   function drawTeeLabels() {
     teeLabels.forEach(mk => mk.remove()); teeLabels = [];
-    const boxes = work.filter(f => f.t === 'tee' && inScope(f)).map(f => {
-      const r = open(f.p[0]), c = [r.reduce((a, p) => a + p[0], 0) / r.length, r.reduce((a, p) => a + p[1], 0) / r.length];
-      return { f, c, yd: Math.round(along(ch, c)), sets: [] };
-    });
+    const own = work.filter(f => f.t === 'tee' && inScope(f));
+    const boxes = own.map(f => { const c = boxCentre(f); return { f, c, yd: Math.round(along(ch, c)), sets: [] }; });
     if (!boxes.length) return;
-    for (const t of course.tees) {
-      const want = t.yards[ch.n - 1];
-      if (want) boxes.reduce((b, x) => (Math.abs(x.yd - want) < Math.abs(b.yd - want) ? x : b)).sets.push(t);
-    }
+    // The same choice the hole map makes (closest yardage), so the labels match it.
+    for (const t of course.tees) { const f = teeBoxFor(t.name, ch, own); if (f) boxes.find(b => b.f === f).sets.push(t); }
     for (const b of boxes) {
       const el = h('div', { class: 'btee' + (b.f === sel ? ' sel' : '') },
         b.sets.map(t => h('span', { class: 'bteeset' }, h('i', { style: `background:${TEE_INK[t.name.toLowerCase()] || '#888'}` }), `${t.name} ${t.yards[ch.n - 1]}`)),

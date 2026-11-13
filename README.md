@@ -26,8 +26,9 @@ server, or host the repo with GitHub Pages.
   total, set with the slider. **Comp** (left side) compares 2–3 clubs on one
   target line: each is drawn as an arc at its yardage, sized to its arc width,
   with the average strokes gained over the spots that arc covers. Drag a club's
-  dot to give it its own line (tap it to put it back); lines reset after each shot. The tee and pin dots can be dragged; tee
-  positions are remembered per tee set.
+  dot to give it its own line (tap it to put it back); lines reset after each shot. The tee and pin dots can be dragged. The tee
+  starts on the hole's tee box whose yardage is closest to the scorecard's for
+  the chosen tees.
 - **Course**: fix or redraw any outline. Anything inside no outline is rough.
 - **Edit boundaries** (GPS Scouting, ☰ menu): edits only the boundaries of the hole
   on screen (the ones its map outlines). Tap one to select it, drag the ✥ in its middle to move the
