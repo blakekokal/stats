@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.42.0', ['New course: Tangle Ridge Golf Club (Grand Prairie)']],
   ['0.41.0', ['New course: Bear Creek Golf Club – East', 'Course search: tap 🔍 beside the course list on New Round or GPS Scouting']],
   ['0.40.1', ['Club distances use carry by default for arcs, dispersion, Comp and Auto; a Carry | Total switch is in the Arc/Disp Adj panel and the Comp picker']],
   ['0.40.0', ['Finishing a hole keeps the aiming buttons (they work from the tee again)', 'Choosing Recovery for a punch-out marks the previous shot as finishing in a recovery area (scored with the recovery baseline)']],
