@@ -65,11 +65,20 @@ export let course = null;
 // A course with any outline edits made on this device. Edits saved with
 // `ob: true` (the hole boundary editor) include out of bounds; older edits
 // don't, so their OB comes from the course file.
+// A course file can list OB cut-outs an earlier version of it had by mistake
+// (`dropObRings`): they're removed from saved edits too, which would otherwise
+// keep them, since saved edits replace the file's outlines.
+const sameRing = (a, b) => a.length === b.length && a.every(p => b.some(q => Math.abs(p[0] - q[0]) < 2e-6 && Math.abs(p[1] - q[1]) < 2e-6));
+function dropOldCutouts(features, drops) {
+  if (!drops?.length) return features;
+  return features.map(f => (f.t === 'ob' && f.p.length > 1 && f.p.slice(1).some(r => drops.some(d => sameRing(r, d)))
+    ? { ...f, p: [f.p[0], ...f.p.slice(1).filter(r => !drops.some(d => sameRing(r, d)))] } : f));
+}
 export function courseById(id) {
   const b = base[id] || base[DEFAULT_COURSE];
   const edited = store.get('course:' + b.id);
   if (!edited) return b;
-  if (edited.ob) return { ...b, features: edited.features };
+  if (edited.ob) return { ...b, features: dropOldCutouts(edited.features, b.dropObRings) };
   return { ...b, features: [...edited.features.filter(f => f.t !== 'ob'), ...b.features.filter(f => f.t === 'ob')] };
 }
 const pickedCourse = () => { try { return localStorage.getItem('gs:course'); } catch { return null; } };

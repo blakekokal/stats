@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.44.12', ['Squaw Creek: the OB cut-outs by hole 12\'s tee are removed from saved boundary edits too']],
   ['0.44.11', ['Squaw Creek: the little OB cut-outs by hole 12\'s tee are gone; that ground is out of bounds']],
   ['0.44.10', ['Edit boundaries: tap a corner of a cut-out in the course OB, then Delete cutout to remove it']],
   ['0.44.9', ['Edit boundaries: ✂ Cut on the course OB line picks the stretch between two corners you tap, to drag as one unit (Other side switches to the rest of the line)']],
