@@ -1,4 +1,4 @@
-import { yards, distToLine } from './geo.js';
+import { yards } from './geo.js';
 import { store, sync, init as initSync } from './store.js';
 import { renderHole, closeHole, lastHole } from './hole.js';
 import { renderCourseEditor } from './editor.js';
@@ -93,59 +93,26 @@ export async function loadCourse(onHole = false) {
 }
 export const originalFeatures = () => base[course.id].features;
 
-function centroid(ring) {
-  let la = 0, lo = 0;
-  for (const p of ring) { la += p[0]; lo += p[1]; }
-  return [la / ring.length, lo / ring.length];
-}
-
-// Each outlined tee box belongs to exactly one hole: the hole whose tee-shot line
-// (from 60 yd behind its back tee to 170 yd in front of it) passes closest to
-// the box. A box is left unassigned if no line passes within 35 yd (or 50 yd
-// when the next-nearest hole is at least twice as far), or if it is more than
-// 30 yd farther from the green than the hole's back tee.
+// How far a spot plays to the green: to the hole's first turn, then along its line.
 export const along = (ch, p) => { let d = yards(p, ch.line[1]); for (let i = 1; i < ch.line.length - 1; i++) d += yards(ch.line[i], ch.line[i + 1]); return d; };
-function teeLine(ch) {
-  const t = ch.tee, a = ch.line[1], len = yards(t, a) || 1;
-  const at = k => [t[0] + (a[0] - t[0]) * k, t[1] + (a[1] - t[1]) * k];
-  return [at(-60 / len), at(Math.min(170, len) / len)];
+// The middle of a tee box.
+export function boxCentre(f) {
+  const r = f.p[0].length > 1 && f.p[0][0][0] === f.p[0].at(-1)[0] && f.p[0][0][1] === f.p[0].at(-1)[1] ? f.p[0].slice(0, -1) : f.p[0];
+  return [r.reduce((a, p) => a + p[0], 0) / r.length, r.reduce((a, p) => a + p[1], 0) / r.length];
 }
-let teeOwners = null, ownersFor = null;
-function teeBoxesOf(ch) {
-  if (ownersFor !== course.features) {
-    ownersFor = course.features;
-    const lines = course.holes.map(teeLine);
-    teeOwners = new Map();
-    for (const f of course.features) {
-      if (f.t !== 'tee') continue;
-      if (f.h != null) { if (course.holes[f.h - 1]) teeOwners.set(f, course.holes[f.h - 1]); continue; } // tied in the boundary editor
-      const c = centroid(f.p[0]);
-      const ranked = course.holes.map((o, i) => [o, distToLine(c, lines[i])]).sort((x, y) => x[1] - y[1]);
-      const [[o, d], [, d2]] = ranked;
-      if ((d <= 35 || (d <= 50 && d2 >= 2 * d)) && along(o, c) <= along(o, o.tee) + 30) teeOwners.set(f, o);
-    }
-  }
-  return course.features.filter(f => teeOwners.get(f) === ch).map(f => centroid(f.p[0]));
+// The tee box (of `boxes`, the hole's own) a set of tees plays from: the one
+// whose yardage is closest to the scorecard's for this hole. No box is tied to
+// a colour; it's worked out from the yardage every time.
+export function teeBoxFor(teeName, ch, boxes) {
+  const want = course.tees.find(t => t.name === teeName)?.yards[ch.n - 1];
+  if (!want || !boxes.length) return null;
+  return boxes.reduce((best, f) => (Math.abs(along(ch, boxCentre(f)) - want) < Math.abs(along(ch, boxCentre(best)) - want) ? f : best));
 }
-
-// Put the tee on this hole's own tee box whose distance to the green is closest
-// to the scorecard yardage for the chosen tees; remembered once the user drags
-// the tee marker.
-export function teePosition(teeName, ch) {
-  const saved = (store.get('settings') || {}).teePos || {};
-  const key = `${course.id}:${teeName}:${ch.n}`;
-  if (saved[key]) return saved[key];
-  const tee = course.tees.find(t => t.name === teeName);
-  const target = tee ? tee.yards[ch.n - 1] : null;
-  const boxes = teeBoxesOf(ch);
-  if (!target || !boxes.length) return ch.tee;
-  return boxes.reduce((best, c) => (Math.abs(along(ch, c) - target) < Math.abs(along(ch, best) - target) ? c : best));
-}
-
-export function rememberTee(teeName, ch, pos) {
-  const s = store.get('settings') || {};
-  s.teePos = { ...(s.teePos || {}), [`${course.id}:${teeName}:${ch.n}`]: pos };
-  store.set('settings', s);
+// Where the tee goes for a set of tees: the middle of its box (the hole's own
+// tee line start if the hole has no tee boxes).
+export function teePosition(teeName, ch, boxes) {
+  const box = teeBoxFor(teeName, ch, boxes);
+  return box ? boxCentre(box) : ch.tee;
 }
 
 // ---------- router ----------

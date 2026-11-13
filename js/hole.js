@@ -9,7 +9,7 @@
 // shot reaches the green the map zooms onto it, the player places the pin,
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
-import { h, course, TILE_URL, LIE_COLOR, teePosition, rememberTee } from './app.js';
+import { h, course, TILE_URL, LIE_COLOR, teePosition } from './app.js';
 import { store, sync } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
@@ -149,7 +149,7 @@ export function renderHole(view, n) {
   const aimFeatures = course.features.filter(f => !(f.t === 'fairway' || f.t === 'tee') || ownFeats.has(f));
   const ownFairways = course.features.filter(f => f.t === 'fairway' && ownFeats.has(f)).map(f => ({ p: f.p, box: boundsOf(f.p[0], 200) }));
 
-  let tee = teePosition(teeName, ch);
+  let tee = teePosition(teeName, ch, holeFeatures(ch).filter(f => f.t === 'tee'));
   let pin = ch.pin; // replaced by the round's pin for this hole once it is placed
   let target = tee;
   const flag = (key, def) => (localStorage.getItem(key) ?? def) === '1';
@@ -446,7 +446,6 @@ export function renderHole(view, n) {
     }
   }
   const setTeeBtn = h('button', { class: 'setnext tee', hidden: true, onclick: () => {
-    if (!scouting) rememberTee(teeName, ch, tee);
     const shots = shotsNow();
     if (shots.length && shots[0].lie === 'tee') saveShots([{ ...shots[0], pos: tee }, ...shots.slice(1)]);
     endMove(true);
@@ -879,7 +878,7 @@ export function renderHole(view, n) {
   // Viewing a past round: just Back to Round History and Home.
   const menu = scouting
     ? h('div', { class: 'sheet', hidden: true },
-      h('label', {}, 'Tees ', h('select', { onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHole(view, n); } },
+      h('label', {}, 'Tees ', h('select', { onchange: e => { const r = currentRound(); if (r) r.tee = e.target.value; store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHole(view, n); } },
         course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
       h('button', { class: 'btn', onclick: () => { menu.hidden = true; editBoundaries(); } }, '✏️ Edit boundaries'),
       h('button', { class: 'btn', onclick: () => { endScouting(); location.hash = '#/'; } }, 'Home'),
@@ -1476,7 +1475,7 @@ export function renderHole(view, n) {
     mk.on('dragend', () => { const p = mk.getLngLat(); onMove([p.lat, p.lng], true); });
     return mk;
   };
-  const teeMark = dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, (p, done) => { tee = p; if (done && !scouting) rememberTee(teeName, ch, p); update(); });
+  const teeMark = dragMarker(h('div', { class: 'teemark', title: 'Tee (drag to move)' }), tee, p => { tee = p; update(); });
   const pinMark = dragMarker(h('div', { class: 'pinmark', title: 'Pin (drag to move)' }), pin, (p, done) => {
     pin = p;
     if (done && holeNow().pin) saveHole({ pin, shots: shotsNow().map(x => (x.lie === 'green' ? { ...x, ft: Math.max(1, Math.round(yards(x.pos, pin) * FT_PER_YD)) } : x)) });
