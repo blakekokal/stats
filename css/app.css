@@ -133,7 +133,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .compass { position: absolute; top: calc(34px + env(safe-area-inset-top)); left: 10px; z-index: 3; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); display: grid; place-items: center; box-shadow: 0 1px 4px #0008; }
 .compass svg { width: 26px; height: 26px; transition: transform .1s linear; }
 .sheet .credit { font-size: 11px; max-width: 220px; }
-.fab.width, .fab.arc, .fab.autotarget, .fab.disp, .fab.appr, .fab.comp, .fab.cleanview, .fab.sgt, .fab.club, .fab.outline, .fab.movetee, .fab.movepin { display: grid; place-content: center; line-height: 1; font-size: 18px; }
+.fab.gps, .fab.width, .fab.arc, .fab.autotarget, .fab.disp, .fab.appr, .fab.comp, .fab.cleanview, .fab.sgt, .fab.club, .fab.outline, .fab.movetee, .fab.movepin { display: grid; place-content: center; line-height: 1; font-size: 18px; }
 .fab.width, .fab.arc { left: auto; right: 14px; }
 .fab.add { left: auto; right: 9px; bottom: calc(18px + env(safe-area-inset-bottom)); width: 58px; height: 58px; font-size: 34px; font-weight: 600; background: #ffb020; color: #111; }
 .fab.undo { top: calc(66px + env(safe-area-inset-top)); bottom: auto; left: auto; right: 10px; width: 44px; height: 44px; font-size: 22px; font-weight: 700; background: #ffb020; color: #111; box-shadow: 0 1px 6px #0008; z-index: 4; }
@@ -446,3 +446,17 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 /* Watching a live round: just the hole, the shots and the score. No aiming tools or expected strokes. */
 .holeview.watching .fab.outline, .holeview.watching .fab.cleanview, .holeview.watching .fab.sgt, .holeview.watching .fab.appr, .holeview.watching .fab.disp,
 .holeview.watching .fab.arc, .holeview.watching .fab.width, .holeview.watching .fab.arcadj, .holeview.watching .sliders, .holeview.watching .exppill, .holeview.watching .keys { display: none !important; }
+
+/* ---- GPS ---- */
+.fab.gps { bottom: calc(428px + env(safe-area-inset-bottom)); }
+.fab.gps[hidden] { display: none; }
+.fab.gps.on { background: #2f7df6; color: #fff; }
+.gpspill { display: grid; gap: 6px; justify-items: start; pointer-events: auto; }
+.gpspill[hidden] { display: none; }
+.gpsdist { display: grid; justify-items: start; gap: 1px; min-height: 0; padding: 6px 10px; border: 0; border-radius: 12px; background: #111c; backdrop-filter: blur(8px); color: #fff; line-height: 1.1; text-align: left; }
+.gpsdist b { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.gpsdist small { font-size: 10.5px; color: #8fb8ff; font-weight: 600; }
+.gpsshot { min-height: 40px; padding: 0 12px; border: 0; border-radius: 999px; background: #2f7df6; color: #fff; font-size: 14px; font-weight: 700; box-shadow: 0 1px 6px #0008; }
+.gpsshot[hidden] { display: none; }
+.gpsdot { width: 16px; height: 16px; border-radius: 50%; background: #2f7df6; border: 3px solid #fff; box-shadow: 0 0 0 6px #2f7df640, 0 1px 4px #000a; }
+.holeview.clean .gpspill, .holeview.comparing .gpspill { display: none; }

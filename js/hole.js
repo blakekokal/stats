@@ -47,7 +47,11 @@ const strokeNo = (shots, i) => { let n = i + 1; for (let k = 0; k < i; k++) n +=
 const SWING_NAME = { '3/4': '¾', '1/2': '½', punch: 'punch', recovery: 'recovery' };
 
 let watchTimer = null, liveUnsub = null;
-export function closeHole() { clearInterval(watchTimer); watchTimer = null; liveUnsub?.(); liveUnsub = null; if (map) { map.remove(); map = null; } }
+// GPS: the phone's position while the hole screen is open (only while the GPS
+// button is on). The last fix is kept between holes so the dot shows at once.
+let gpsWatch = null, gpsFix = null; // gpsFix = { pos: [lat, lng], acc (metres), at (ms) }
+function stopGps() { if (gpsWatch != null) { navigator.geolocation.clearWatch(gpsWatch); gpsWatch = null; } }
+export function closeHole() { stopGps(); clearInterval(watchTimer); watchTimer = null; liveUnsub?.(); liveUnsub = null; if (map) { map.remove(); map = null; } }
 export const lastHole = () => +sessionStorage.getItem('hole') || 1;
 
 // Compass direction from a to b, in degrees clockwise from north.
@@ -798,7 +802,8 @@ export function renderHole(view, n) {
   const clubBtn = h('button', { class: 'fab club', 'aria-label': 'Club', title: 'Club for the next shot', onclick: openClubPicker }, h('span', {}, ''), h('small', {}, 'Club'));
 
   // Recording a shot: + asks which club and swing was used (putts use the putter).
-  function recordShot(club, swing) {
+  // `at` is where the shot finished: the crosshair, or the phone's position for a GPS shot.
+  function recordShot(club, swing, at = target, gps = false) {
     const s = shotsNow();
     const shots = s.length ? [...s] : [{ pos: tee, lie: 'tee' }];
     shots[shots.length - 1] = { ...shots[shots.length - 1], ...(club ? { club } : {}), ...(swing && swing !== 'full' ? { swing } : {}) };
@@ -806,10 +811,10 @@ export function renderHole(view, n) {
     // spot, whatever the map says there: score and describe it that way.
     const here = shots[shots.length - 1];
     if (swing === 'recovery' && here.lie !== 'tee' && here.lie !== 'green') shots[shots.length - 1] = { ...here, lie: 'recovery', mapLie: here.mapLie || here.lie };
-    const lie = stage() === 'putt' ? 'green' : lieOn(target, course.features);
-    if (lie === 'ob' || lie === 'water') { pickedClub = null; return openPenalty(shots, lie, target); }
-    const shot = { pos: target, lie };
-    if (lie === 'green' && holeNow().pin) shot.ft = Math.max(1, Math.round(yards(target, pin) * FT_PER_YD));
+    const lie = stage() === 'putt' ? 'green' : lieOn(at, course.features);
+    if (lie === 'ob' || lie === 'water') { pickedClub = null; return openPenalty(shots, lie, at); }
+    const shot = { pos: at, lie, ...(gps ? { gps: true } : {}) };
+    if (lie === 'green' && holeNow().pin) shot.ft = Math.max(1, Math.round(yards(at, pin) * FT_PER_YD));
     shots.push(shot);
     const wasPlaying = stage() === 'play';
     pickedClub = null;
@@ -847,21 +852,80 @@ export function renderHole(view, n) {
     penaltySheet.hidden = false;
   }
   const shotConfirm = h('div', { class: 'clubsheet', hidden: true, onclick: e => { if (e.target === shotConfirm) shotConfirm.hidden = true; } });
-  function openShotConfirm() {
+  function openShotConfirm(at = target, gps = false) {
     const shots = shotsNow(), from = shots.length ? shots[shots.length - 1].pos : tee;
     let club = currentClub(), swing = 'full';
     const draw = () => shotConfirm.replaceChildren(h('div', { class: 'clubbox' },
-      h('div', { class: 'clubhead' }, h('strong', {}, `Shot ${shots.length ? strokeNo(shots, shots.length - 1) : 1} · ${Math.round(yards(from, target))} yds`), h('button', { class: 'x', onclick: () => { shotConfirm.hidden = true; } }, '✕')),
+      h('div', { class: 'clubhead' }, h('strong', {}, `${gps ? '📍 ' : ''}Shot ${shots.length ? strokeNo(shots, shots.length - 1) : 1} · ${Math.round(yards(from, at))} yds`), h('button', { class: 'x', onclick: () => { shotConfirm.hidden = true; } }, '✕')),
+      gps ? h('small', { class: 'muted' }, `Finishing where you are standing (${LIE_TAG[lieOn(at, course.features)] || ''}, GPS ±${Math.round(gpsFix.acc * YD_PER_M)} yd)`) : null,
       h('small', { class: 'muted' }, club ? `Club: ${clubName(club)}` : 'Which club did you hit?'),
       h('div', { class: 'clubgrid' }, bag().map(c => h('button', { class: club === c.name ? 'on' : '', onclick: () => { club = c.name; draw(); } },
         h('b', {}, clubShort(c.name)), h('small', {}, clubYd(c) ? `${clubYd(c)}` : '')))),
       h('div', { class: 'swings' }, SWINGS.map(([k, label]) => h('button', { class: swing === k ? 'on' : '', onclick: () => { swing = k; draw(); } }, label))),
-      h('button', { class: 'record', onclick: () => { shotConfirm.hidden = true; recordShot(club, swing); } }, 'Record shot')));
+      h('button', { class: 'record', onclick: () => { shotConfirm.hidden = true; recordShot(club, swing, at, gps); } }, 'Record shot')));
     draw();
     shotConfirm.hidden = false;
   }
   const addBtn = h('button', { class: 'fab add', 'aria-label': 'Record shot here', title: 'Record shot at the crosshair',
     onclick: () => { if (stage() === 'putt') recordShot('Putter'); else openShotConfirm(); } }, '+');
+  // ---- GPS ----
+  // The GPS button shows where the phone is (a blue dot) and how far that is
+  // from the pin. "Shot here" records a shot finishing at that spot, as + does
+  // for the crosshair. Putts are still entered with the crosshair: GPS is only
+  // good to a few yards.
+  let gpsOn = !watching && localStorage.getItem('gs:gps') === '1', gpsMark = null;
+  const gpsBtn = h('button', { class: 'fab gps' + (gpsOn ? ' on' : ''), 'aria-pressed': String(gpsOn), 'aria-label': 'GPS', title: 'Show where you are and the distance to the pin',
+    onclick: () => setGps(!gpsOn) }, h('span', {}, '⌖'), h('small', {}, 'GPS'));
+  const gpsDist = h('button', { class: 'gpsdist', title: 'Centre the map on where you are', onclick: () => {
+    if (gpsFresh() && yards(gpsFix.pos, pin) < 1500) m.easeTo({ center: ll(gpsFix.pos) });
+  } });
+  const gpsShotBtn = h('button', { class: 'gpsshot', hidden: true, onclick: () => {
+    if (!gpsFresh()) return toast('Waiting for GPS…');
+    const far = yards(gpsFix.pos, pin);
+    if (far > 1200) return toast(`GPS puts you ${(far / 1760).toFixed(1)} miles from this hole, so no shot was recorded.`);
+    if (gpsFix.acc * YD_PER_M > 25) toast(`GPS is only good to ±${Math.round(gpsFix.acc * YD_PER_M)} yd right now.`);
+    openShotConfirm([...gpsFix.pos], true);
+  } }, '📍 + Shot here');
+  const gpsPill = h('div', { class: 'gpspill', hidden: true }, gpsDist, gpsShotBtn);
+  const gpsFresh = () => !!gpsFix && Date.now() - gpsFix.at < 30000;
+  function drawGps() {
+    const show = gpsOn && !viewing();
+    gpsBtn.hidden = viewing();
+    gpsPill.hidden = !show;
+    if (!show) { gpsMark?.remove(); gpsMark = null; return; }
+    if (!gpsFresh()) {
+      gpsMark?.remove(); gpsMark = null;
+      gpsDist.replaceChildren(h('b', {}, 'Finding GPS…'));
+      gpsShotBtn.hidden = true;
+      return;
+    }
+    if (!gpsMark) gpsMark = new maplibregl.Marker({ element: h('div', { class: 'gpsdot', title: 'You are here' }) }).setLngLat(ll(gpsFix.pos)).addTo(m);
+    else gpsMark.setLngLat(ll(gpsFix.pos));
+    const d = yards(gpsFix.pos, pin), st = stage();
+    gpsDist.replaceChildren(h('b', {}, d > 1500 ? `${(d / 1760).toFixed(1)} mi to pin` : `${Math.round(d)} yd to pin`), h('small', {}, `You · GPS ±${Math.round(gpsFix.acc * YD_PER_M)} yd`));
+    // A GPS shot can be recorded whenever + can, except putts.
+    gpsShotBtn.hidden = st !== 'play' || !!dropping || !!moving;
+  }
+  function startGps() {
+    stopGps();
+    if (!gpsOn || viewing()) return;
+    if (!navigator.geolocation) { toast('This browser has no GPS.'); gpsOn = false; gpsBtn.classList.remove('on'); return; }
+    gpsWatch = navigator.geolocation.watchPosition(p => {
+      gpsFix = { pos: [p.coords.latitude, p.coords.longitude], acc: p.coords.accuracy || 0, at: Date.now() };
+      if (map === m) drawGps();
+    }, err => {
+      if (map !== m) return;
+      if (err.code === 1) { toast('Location is blocked for this site. Allow it in your browser settings, then tap GPS again.'); setGps(false); }
+      else drawGps(); // no fix yet: keeps trying
+    }, { enableHighAccuracy: true, maximumAge: 2000, timeout: 20000 });
+  }
+  function setGps(v) {
+    gpsOn = v; localStorage.setItem('gs:gps', v ? '1' : '0');
+    gpsBtn.classList.toggle('on', v); gpsBtn.setAttribute('aria-pressed', String(v));
+    if (v) startGps(); else stopGps();
+    drawGps();
+  }
+
   const holedBtn = h('button', { class: 'holed', onclick: () => saveHole({ done: true }) }, 'Holed');
   const setPinBtn = h('button', { class: 'setpin', hidden: true, onclick: () => {
     pin = target;
@@ -1018,7 +1082,7 @@ export function renderHole(view, n) {
     watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
+    addBtn, gpsBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, gpsPill, zoneLegend, ringLegend, compLegend, autoKey),
     holePill = h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1489,6 +1553,7 @@ export function renderHole(view, n) {
     pinBtn.hidden = st === 'pin' || st === 'done';
     sgViewBtn.hidden = !viewing();
     drawLiveBtn();
+    drawGps();
     holeEl()?.classList.toggle('viewing', viewing()); // hides the crosshair and its readouts
     // Holed out: just the hole and the shots played, with no crosshair or aiming lines
     // (they come back while the tee is being moved).
@@ -1740,4 +1805,5 @@ export function renderHole(view, n) {
     if (scouting && isAdmin && resumeEditAt(n)) editBoundaries(); // moved here with ‹ › while editing boundaries
   });
   update();
+  startGps();
 }
