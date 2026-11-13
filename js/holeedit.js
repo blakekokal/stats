@@ -1,6 +1,6 @@
 // Boundary editor for one hole, on the hole map (GPS Scouting).
 //
-// Shows the boundaries around the hole being looked at. Tap one to select it:
+// Shows only the boundaries of the hole being looked at. Tap one to select it:
 // drag the ✥ in its middle to move the whole shape, the ⤡ at its corner (or
 // Size − / +) to resize it, drag its white corner dots to move them, drag a small dot between two corners
 // to add a corner, tap a corner then "Delete point" to remove it, change its type
@@ -13,7 +13,6 @@
 
 import { h, course, toast, LIE_COLOR, loadCourse } from './app.js';
 import { store } from './store.js';
-import { distToLine } from './geo.js';
 
 const maplibregl = window.maplibregl;
 export const EDIT_TYPES = ['fairway', 'rough', 'bunker', 'water', 'recovery', 'tee', 'green', 'ob'];
@@ -22,7 +21,6 @@ export const EDIT_LABEL = { fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker'
 // imports this module before LIE_COLOR exists.)
 const color = t => (t === 'rough' ? '#7dbb4a' : LIE_COLOR[t] || '#fff');
 const ll = p => [p[1], p[0]];
-const SCOPE_M = 160; // a boundary belongs to this hole's editor if any corner is this close to its line
 const MAX_HANDLES = 400; // corners shown at once; zoom in for more
 
 // Rings are stored closed (last point = first); the editor works on open rings.
@@ -30,7 +28,9 @@ const open = r => (r.length > 1 && r[0][0] === r.at(-1)[0] && r[0][1] === r.at(-
 const close = r => [...r, r[0]];
 const round6 = p => [+p[0].toFixed(6), +p[1].toFixed(6)];
 
-export function openBoundaryEditor({ m, root, ch, onClose }) {
+// `own`: the boundaries that belong to this hole (the ones its map outlines);
+// only those are shown and editable, plus any drawn here.
+export function openBoundaryEditor({ m, root, ch, own, onClose }) {
   let work = course.features.slice(); // features are replaced, never changed in place
   const history = [];
   let dirty = false;
@@ -43,8 +43,7 @@ export function openBoundaryEditor({ m, root, ch, onClose }) {
   let dragEnd = 0; // a drag ends with a click on the dot: ignore it
   const justDragged = () => Date.now() - dragEnd < 400;
 
-  const near = f => f.p.some(r => r.some(p => distToLine(p, ch.line) <= SCOPE_M));
-  const scoped = new Set(work.filter(near));
+  const scoped = new Set(own);
   const inScope = f => scoped.has(f);
 
   // ---------- map layers ----------

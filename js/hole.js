@@ -1568,7 +1568,7 @@ export function renderHole(view, n) {
   // recovery, tee box, green, OB) on the map. Saving reloads the hole with them.
   function editBoundaries() {
     if (!m.isStyleLoaded()) { m.once('idle', editBoundaries); return; }
-    openBoundaryEditor({ m, root: holeEl(), ch, onClose: saved => { if (saved) rerenderHere(); } });
+    openBoundaryEditor({ m, root: holeEl(), ch, own: holeFeatures(ch), onClose: saved => { if (saved) rerenderHere(); } });
   }
 
   m.on('load', () => {

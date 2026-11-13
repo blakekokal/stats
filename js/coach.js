@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.44.3', ['Edit boundaries shows only the hole you are on: its fairways, green and tee boxes, plus the bunkers, water and recovery areas along it']],
   ['0.44.2', ['Edit boundaries: drag the ⤡ at a selected boundary\'s corner to resize it, or use Size − / + for small steps']],
   ['0.44.1', ['Edit boundaries: drag the ✥ in the middle of a selected boundary to move the whole shape']],
   ['0.44.0', ['GPS Scouting: ☰ → Edit boundaries edits the hole you are on. Tap a boundary to drag its points, change its type or delete it; Draw adds a new one', 'Boundary types: fairway, rough, bunker, water, recovery, tee box, green and OB']],
