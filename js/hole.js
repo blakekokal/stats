@@ -160,7 +160,7 @@ export function renderHole(view, n) {
   let showWidth = flag('gs:fairwayWidth', '0');
   let showArc = flag('gs:arc', '0');
   let arcYd = Math.min(80, Math.max(10, +localStorage.getItem('gs:arcYd') || 40));
-  let showOutlines = flag('gs:outlines', '1');
+  let showOutlines = !watching && flag('gs:outlines', '1'); // no outlines (or Lines button) when watching a live round
   // Strokes-gained baseline: the round's "compare to" choice (which defaults to
   // the profile's handicap), unless it was changed on this screen this visit.
   const pick = l => (LEVELS.includes(l) ? l : null);
