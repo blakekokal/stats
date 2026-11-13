@@ -886,12 +886,14 @@ export function renderHole(view, n) {
     if (gpsFix.acc * YD_PER_M > 25) toast(`GPS is only good to ±${Math.round(gpsFix.acc * YD_PER_M)} yd right now.`);
     openShotConfirm([...gpsFix.pos], true);
   } }, '📍 + Shot here');
-  const gpsPill = h('div', { class: 'gpspill', hidden: true }, gpsDist, gpsShotBtn);
+  // Top right, under Expected: the distance beside the GPS button, Shot here below.
+  const gpsBox = h('div', { class: 'gpsbox' }, h('div', { class: 'gpsrow' }, gpsDist, gpsBtn), gpsShotBtn);
   const gpsFresh = () => !!gpsFix && Date.now() - gpsFix.at < 30000;
   function drawGps() {
     const show = gpsOn && !viewing();
-    gpsBtn.hidden = viewing();
-    gpsPill.hidden = !show;
+    gpsBox.hidden = viewing();
+    gpsDist.hidden = !show;
+    if (!show) gpsShotBtn.hidden = true;
     if (!show) { gpsMark?.remove(); gpsMark = null; return; }
     if (!gpsFresh()) {
       gpsMark?.remove(); gpsMark = null;
@@ -1082,7 +1084,7 @@ export function renderHole(view, n) {
     watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, gpsBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, gpsPill, zoneLegend, ringLegend, compLegend, autoKey),
+    addBtn, gpsBox, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
     holePill = h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),

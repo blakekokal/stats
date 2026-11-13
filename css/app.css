@@ -448,15 +448,17 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .holeview.watching .fab.arc, .holeview.watching .fab.width, .holeview.watching .fab.arcadj, .holeview.watching .sliders, .holeview.watching .exppill, .holeview.watching .keys { display: none !important; }
 
 /* ---- GPS ---- */
-.fab.gps { bottom: calc(428px + env(safe-area-inset-bottom)); }
-.fab.gps[hidden] { display: none; }
+/* Top right under Expected, beside Undo: distance to the pin, the GPS button, and Shot here below. */
+.gpsbox { position: absolute; top: calc(66px + env(safe-area-inset-top)); right: 62px; z-index: 4; display: grid; gap: 6px; justify-items: end; }
+.gpsbox[hidden] { display: none; }
+.gpsrow { display: flex; align-items: center; gap: 6px; }
+.fab.gps { position: static; width: 44px; height: 44px; box-shadow: 0 1px 6px #0008; }
 .fab.gps.on { background: #2f7df6; color: #fff; }
-.gpspill { display: grid; gap: 6px; justify-items: start; pointer-events: auto; }
-.gpspill[hidden] { display: none; }
-.gpsdist { display: grid; justify-items: start; gap: 1px; min-height: 0; padding: 6px 10px; border: 0; border-radius: 12px; background: #111c; backdrop-filter: blur(8px); color: #fff; line-height: 1.1; text-align: left; }
+.gpsdist { display: grid; justify-items: end; gap: 1px; height: 44px; min-height: 0; padding: 0 10px; align-content: center; border: 0; border-radius: 12px; background: #111c; backdrop-filter: blur(8px); color: #fff; line-height: 1.1; text-align: right; box-shadow: 0 1px 6px #0008; }
+.gpsdist[hidden] { display: none; }
 .gpsdist b { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .gpsdist small { font-size: 10.5px; color: #8fb8ff; font-weight: 600; }
 .gpsshot { min-height: 40px; padding: 0 12px; border: 0; border-radius: 999px; background: #2f7df6; color: #fff; font-size: 14px; font-weight: 700; box-shadow: 0 1px 6px #0008; }
 .gpsshot[hidden] { display: none; }
 .gpsdot { width: 16px; height: 16px; border-radius: 50%; background: #2f7df6; border: 3px solid #fff; box-shadow: 0 0 0 6px #2f7df640, 0 1px 4px #000a; }
-.holeview.clean .gpspill, .holeview.comparing .gpspill { display: none; }
+.holeview.clean .gpsdist, .holeview.clean .gpsshot, .holeview.comparing .gpsbox, .holeview.watching .gpsbox { display: none; }
