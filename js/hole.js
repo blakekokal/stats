@@ -683,7 +683,7 @@ export function renderHole(view, n) {
   } }, h('span', {}, '✦'), h('small', {}, 'Auto'));
   const viewBtn = toggle('cleanview', 'View', '◉', 'Hide the aiming line and shot tracer', () => cleanView, v => {
     cleanView = v;
-    for (const id of ['shots', 'shots-shadow']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', v ? 'none' : 'visible');
+    for (const id of ['shots', 'shots-shadow', 'shotspen', 'shotspen-shadow']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', v ? 'none' : 'visible');
     holeEl()?.classList.toggle('clean', v);
   });
   const compDots = h('div', { class: 'compdots' });
@@ -1013,7 +1013,19 @@ export function renderHole(view, n) {
 
   const line = pts => ({ type: 'Feature', geometry: { type: 'LineString', coordinates: pts.map(ll) } });
   // The recorded shots, joined up; once holed, the last putt runs into the hole.
-  const trace = shots => [...shots.flatMap(x => (x.obAt ? [x.pos, x.obAt] : [x.pos])), ...(holeNow().done && shots.length ? [pin] : [])];
+  // The shot lines, solid, and the penalty jumps (from where a ball went in to the
+  // drop or back to where it was replayed), dotted.
+  function traceLines(shots) {
+    const solid = [], dotted = [], done = holeNow().done;
+    shots.forEach((x, i) => {
+      const next = shots[i + 1] ? shots[i + 1].pos : done ? pin : null;
+      if (x.obAt) { solid.push([x.pos, x.obAt]); if (next) dotted.push([x.obAt, next]); }
+      else if (next) solid.push([x.pos, next]);
+    });
+    const ml = segs => ({ type: 'Feature', geometry: { type: 'MultiLineString', coordinates: segs.map(sg => sg.map(ll)) } });
+    return { solid: ml(solid), dotted: ml(dotted) };
+  }
+  const setTrace = (set, shots) => { const t = traceLines(shots); set('shots', t.solid); set('shotspen', t.dotted); };
 
   // Strokes Gained panel (viewing a past round): round total and this hole, each
   // opening to Off the tee / Approach / Around green / Putting, then this hole's
@@ -1348,7 +1360,7 @@ export function renderHole(view, n) {
       expValue.textContent = teeExp.toFixed(2);
       const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
       overlay(viewing() ? {} : { path: st === 'pin' ? [from, target] : st === 'done' ? [] : [from, target, pin] });
-      set('shots', line(trace(shots)));
+      setTrace(set, shots);
       setRings([]); showZones(false); compDots.replaceChildren(); compLegend.hidden = true; drawDispDots([]);
       return;
     }
@@ -1377,7 +1389,7 @@ export function renderHole(view, n) {
     const half = arcW / 2 / YD_PER_M;
     const set = (id, data) => { const src = m.getSource(id); if (src) src.setData(data); };
     const lines = { path: [from, target, pin] };
-    set('shots', line(trace(shots)));
+    setTrace(set, shots);
     if (w) lines.width = arcPoints(w.arc, w.l, w.r);
     if (arc) lines.arc = arcPoints(arc, -half, half);
     if (showAppr && apprMode === 'ft') lines.appr = ring(target, apprFt * 0.3048);
@@ -1531,6 +1543,8 @@ export function renderHole(view, n) {
       m.addLayer({ id, type: 'line', source: id, layout, paint });
     };
     addLine('shots', 5, { 'line-color': '#ffb020', 'line-width': 2.5 }, { 'line-cap': 'round' });
+    addLine('shotspen', 4, { 'line-color': '#ffb020', 'line-width': 2.5, 'line-dasharray': [0.1, 2] }, { 'line-cap': 'round' });
+    m.setPaintProperty('shotspen-shadow', 'line-dasharray', [0.1, 1.25]); m.setLayoutProperty('shotspen-shadow', 'line-cap', 'round'); // dotted shadow too
     m.addSource('sgt', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     m.addLayer({ id: 'sgt-shadow', type: 'line', source: 'sgt', paint: { 'line-color': '#000', 'line-width': 4.5, 'line-opacity': 0.35 } });
     m.addLayer({ id: 'sgt', type: 'line', source: 'sgt', paint: { 'line-color': ['get', 'color'], 'line-width': 2.5, 'line-dasharray': [2, 1.2] } });
