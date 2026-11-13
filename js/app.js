@@ -9,7 +9,8 @@ import { renderAccount } from './account.js';
 import { renderStatsDashboard } from './dashboard.js';
 import { renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin, renderWhatsNew, renderEditRound, renderBag } from './coach.js';
 import { VERSION } from './version.js';
-import { currentRound } from './rounds.js';
+import { currentRound, isWatching, endWatching, watchInfo, watchingId } from './rounds.js';
+import { loadWatch, watchHole } from './live.js';
 
 const L = window.L;
 const view = document.getElementById('view');
@@ -173,6 +174,23 @@ export function teePosition(teeName, ch, boxes) {
 async function route() {
   const parts = location.hash.replace(/^#\/?/, '').split('/');
   if (parts[0] === 'course' && !isAdmin) { location.hash = '#/'; return; } // course editing is for admins
+  // A live view link: fetch the shared round, then open it (read-only) on the hole being played.
+  if (parts[0] === 'live') {
+    document.body.classList.add('coach'); document.body.classList.remove('playing');
+    closeHole();
+    const id = (parts[1] || '').replace(/[^a-z0-9]/gi, '');
+    const res = id ? await loadWatch(id) : 'missing';
+    if (!location.hash.startsWith('#/live')) return; // moved on while it loaded
+    if (res !== 'ok') { endWatching(); renderLiveError(res, route); return; }
+    location.replace(`${location.pathname}${location.search}#/hole/${watchHole()}`);
+    return;
+  }
+  if (parts[0] !== 'hole' && isWatching()) endWatching(); // leaving the holes leaves the live view
+  // The page was reloaded while watching: fetch the round again first.
+  if (parts[0] === 'hole' && isWatching() && !watchInfo()) {
+    const id = watchingId(), res = await loadWatch(id);
+    if (res !== 'ok') { document.body.classList.add('coach'); document.body.classList.remove('playing'); closeHole(); renderLiveError(res, route); return; }
+  }
   const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag'].includes(parts[0]) ? parts[0] : 'home';
   // Pages laid out like the coaching app hide this app's top bar. Set before
   // waiting for the course, so the old top bar never shows while it loads.
@@ -195,6 +213,15 @@ async function route() {
   else if (tab === 'bag') renderBag(view);
   else if (tab === 'scout') renderNewRound(view, { scout: true });
   else renderHome(view);
+}
+
+// A live view link that can't be opened.
+function renderLiveError(res, retry) {
+  view.replaceChildren(h('div', { class: 'liveerr' },
+    h('strong', {}, res === 'missing' ? 'This round isn\u2019t available' : 'Couldn\u2019t load the round'),
+    h('p', {}, res === 'missing' ? 'The link may be wrong, or the round was deleted.' : 'Check your connection and try again.'),
+    res === 'missing' ? null : h('button', { class: 'btn', onclick: retry }, '\u21bb Try again'),
+    h('a', { class: 'btn', href: '#/' }, 'Home')));
 }
 
 window.addEventListener('hashchange', route);

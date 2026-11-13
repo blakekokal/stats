@@ -24,6 +24,9 @@ let docs = {};
 try { docs = JSON.parse(localStorage.getItem(DOCS_KEY) || '{}'); } catch { docs = {}; }
 
 const listeners = new Set();
+// Told about every change made on this device: (key, data or null if removed, what was there before).
+const setHooks = new Set();
+const afterSet = (key, data, prev) => setHooks.forEach(fn => { try { fn(key, data, prev); } catch { /* a hook never blocks a save */ } });
 function persist() { localStorage.setItem(DOCS_KEY, JSON.stringify(docs)); }
 function emit() { listeners.forEach(fn => fn()); }
 function clearLocal() { docs = {}; persist(); emit(); }
@@ -33,9 +36,10 @@ export const store = {
   list(prefix) {
     return Object.keys(docs).filter(k => k.startsWith(prefix) && !docs[k].deleted).map(k => docs[k].data);
   },
-  set(key, data) { docs[key] = { data, updated: Date.now() }; persist(); scheduleSync(); },
-  remove(key) { docs[key] = { data: null, updated: Date.now(), deleted: true }; persist(); scheduleSync(); },
+  set(key, data) { const prev = store.get(key); docs[key] = { data, updated: Date.now() }; persist(); scheduleSync(); afterSet(key, data, prev); },
+  remove(key) { const prev = store.get(key); docs[key] = { data: null, updated: Date.now(), deleted: true }; persist(); scheduleSync(); afterSet(key, null, prev); },
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+  onSet(fn) { setHooks.add(fn); },
   exportAll() { return JSON.stringify(docs); },
   importAll(json) {
     const incoming = JSON.parse(json);
@@ -277,4 +281,44 @@ export async function publishCourse(id, doc, updated) {
   if (!c || !sync.user) throw new Error('not signed in');
   const { error } = await c.from('course_edits').upsert({ course_id: id, doc, updated }, { onConflict: 'course_id' });
   if (error) throw new Error(error.message);
+}
+
+// ---------- live view ----------
+// A round shared by link: the scorer's device keeps a copy of the round in
+// `live_rounds` under a long random id, and anyone with that id (logged in or
+// not) can read it through live_round(). Only the owner can write, and nobody
+// can list other people's rounds. Run LIVE_SQL once in the Supabase SQL editor.
+export const LIVE_SQL = `create table if not exists live_rounds (
+  id text primary key,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  doc jsonb not null,
+  updated bigint not null
+);
+alter table live_rounds enable row level security;
+drop policy if exists "own rows" on live_rounds;
+create policy "own rows" on live_rounds for all to authenticated
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+create or replace function live_round(share_id text) returns jsonb
+  language sql stable security definer set search_path = public
+  as $$ select doc from live_rounds where id = share_id $$;
+grant execute on function live_round(text) to anon, authenticated;`;
+
+// The shared round with this id, or null if there is none. Throws if it can't be reached.
+export async function fetchLive(id) {
+  const c = getClient();
+  if (!c) throw new Error('unavailable');
+  const { data, error } = await c.rpc('live_round', { share_id: id });
+  if (error) throw new Error(error.message);
+  return data || null;
+}
+export async function pushLive(id, doc) {
+  const c = getClient();
+  if (!c || !sync.user) throw new Error('not signed in');
+  const { error } = await c.from('live_rounds').upsert({ id, user_id: sync.user.id, doc, updated: Date.now() }, { onConflict: 'id' });
+  if (error) throw new Error(error.message);
+}
+export async function deleteLive(id) {
+  const c = getClient();
+  if (!c || !sync.user) return;
+  await c.from('live_rounds').delete().eq('id', id);
 }
