@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.44.0', ['GPS Scouting: ☰ → Edit boundaries edits the hole you are on. Tap a boundary to drag its points, change its type or delete it; Draw adds a new one', 'Boundary types: fairway, rough, bunker, water, recovery, tee box, green and OB']],
   ['0.43.0', ['New course: Squaw Creek Golf Course (Willow Park), laid out from the club\'s course map']],
   ['0.42.0', ['New course: Tangle Ridge Golf Club (Grand Prairie)']],
   ['0.41.0', ['New course: Bear Creek Golf Club – East', 'Course search: tap 🔍 beside the course list on New Round or GPS Scouting']],

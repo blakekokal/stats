@@ -348,3 +348,26 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .courseresults button, .cx .courseresults button { max-width: none; width: 100%; height: auto; min-height: 40px; padding: 8px 12px; border: 1px solid #333; border-radius: 10px; background: #1e1e1e; color: #fff; text-align: left; font-size: 14px; font-weight: 600; }
 .courseresults button.on, .cx .courseresults button.on { border-color: #007a52; }
 .courseresults .none { color: #606060; font-size: 13px; text-align: center; padding: 6px; }
+
+/* boundary editor on the hole map (GPS Scouting) */
+.holeview.bedit > :not(#gmap):not(.beditbar):not(.beditpanel) { display: none !important; }
+.holeview.bedit .maplibregl-marker:not(.bvtx):not(.bmid), .holeview.bedit .maplibregl-popup, .holeview.bedit .liveoverlay { display: none !important; }
+.beditbar { position: absolute; top: calc(8px + env(safe-area-inset-top)); left: 8px; right: 8px; z-index: 6; display: flex; align-items: center; gap: 6px; background: #111d; backdrop-filter: blur(8px); border-radius: 14px; padding: 6px; color: #fff; }
+.beditbar strong { flex: 1; text-align: center; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.beditbar button, .beditpanel button { min-height: 38px; padding: 0 12px; border: 0; border-radius: 10px; background: #2a2f2c; color: #fff; font: 600 14px system-ui, sans-serif; }
+.beditbar button:disabled, .beditpanel button:disabled { opacity: .4; }
+.beditbar .bsave, .beditpanel .bgo { background: #22c55e; color: #062414; }
+.beditpanel .bdel { background: #7f1d1d; }
+.beditpanel { position: absolute; left: 8px; right: 8px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 6; display: grid; gap: 8px; background: #111d; backdrop-filter: blur(8px); border-radius: 14px; padding: 10px; color: #fff; }
+.beditpanel .bhint { margin: 0; font-size: 13px; line-height: 1.3; }
+.beditpanel small { font-size: 11px; }
+.beditpanel .brow { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
+.btypes { display: flex; flex-wrap: wrap; gap: 6px; }
+.beditpanel .btype { min-height: 32px; padding: 0 10px; display: inline-flex; align-items: center; gap: 6px; font-size: 13px; background: #2a2f2c; border: 2px solid transparent; }
+.beditpanel .btype i { width: 12px; height: 12px; border-radius: 3px; background: var(--c); }
+.beditpanel .btype.on { border-color: var(--c); background: #3a423e; }
+.bvtx { width: 16px; height: 16px; border-radius: 50%; background: #fff; border: 2px solid #111; box-shadow: 0 1px 3px #000a; cursor: grab; touch-action: none; }
+.bvtx.on { background: #ffb020; width: 20px; height: 20px; }
+.bvtx.draft { background: #ffe14d; }
+.bvtx.draft.first { width: 22px; height: 22px; background: #22c55e; }
+.bmid { width: 11px; height: 11px; border-radius: 50%; background: #fff8; border: 1.5px solid #111a; cursor: grab; touch-action: none; }
