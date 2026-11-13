@@ -172,13 +172,14 @@ export function teePosition(teeName, ch, boxes) {
 
 async function route() {
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  await loadCourse(parts[0] === 'hole');
   if (parts[0] === 'course' && !isAdmin) { location.hash = '#/'; return; } // course editing is for admins
   const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag'].includes(parts[0]) ? parts[0] : 'home';
-  // Pages laid out like the coaching app hide this app's top bar.
+  // Pages laid out like the coaching app hide this app's top bar. Set before
+  // waiting for the course, so the old top bar never shows while it loads.
   document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout'].includes(tab));
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   document.body.classList.toggle('playing', tab === 'hole');
+  await loadCourse(parts[0] === 'hole');
   if (tab !== 'hole') closeHole();
   if (tab === 'hole') renderHole(view, Math.min(18, Math.max(1, parseInt(parts[1], 10) || lastHole())));
   else if (tab === 'course') renderCourseEditor(view);
@@ -229,9 +230,15 @@ sync.onStatus(() => {
 
 // Load the stylesheets for this exact version, so a phone never pairs new code
 // with an old cached stylesheet (new buttons would land in the wrong place).
+// The new copy goes in beside the old one, which stays until it has loaded, so
+// the page is never drawn unstyled in between.
 document.querySelectorAll('link[rel="stylesheet"][href^="css/"]').forEach(l => {
   const href = l.getAttribute('href').split('?')[0];
-  if (l.getAttribute('href') !== `${href}?v=${VERSION}`) l.setAttribute('href', `${href}?v=${VERSION}`);
+  if (l.getAttribute('href') === `${href}?v=${VERSION}`) return;
+  const fresh = l.cloneNode();
+  fresh.setAttribute('href', `${href}?v=${VERSION}`);
+  fresh.onload = fresh.onerror = () => l.remove();
+  l.after(fresh);
 });
 route();
 initSync();

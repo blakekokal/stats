@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.47.2', ['The old page layout no longer flashes up for a moment when the app opens']],
   ['0.47.1', ['Tap Expected (top right of a hole) for the scorecard filled in with what your chosen handicap is expected to shoot on each hole and over the round']],
   ['0.47.0', ['Tap Expected (top right of a hole) for a scorecard of what two handicap levels are expected to shoot on each hole and over the round, from your tees']],
   ['0.46.0', ['Opening view on par 4s and 5s aims at the hole\'s own fairway near your drive distance (shorter, longer or a lay-up when there\'s no fairway right there), never a bunker, water or OB spot', 'Course outline edits by an admin are published and go live for everyone']],
