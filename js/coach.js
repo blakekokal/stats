@@ -377,6 +377,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.39.4', ['Shot numbers count penalty strokes: a re-tee after OB is Shot 3']],
   ['0.39.3', ['Auto stays further from trouble: 15 yd from OB, 10 from water, 5 from bunkers']],
   ['0.39.2', ['Auto keeps its dispersion dots 5 yd clear of water, OB and bunkers where it can', 'Turning Auto off also turns the dots off']],
   ['0.39.1', ['Cleaner course outlines: overlapping fairway and green shapes merged, no outlines on top of each other']],
