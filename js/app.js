@@ -61,12 +61,14 @@ const DEFAULT_COURSE = COURSES[0].id;
 const base = {}; // id -> the course file as shipped
 export let course = null;
 
-// A course with any outline edits made on this device. Out of bounds (outside
-// the course boundary) always comes from the course file, edited or not.
+// A course with any outline edits made on this device. Edits saved with
+// `ob: true` (the hole boundary editor) include out of bounds; older edits
+// don't, so their OB comes from the course file.
 export function courseById(id) {
   const b = base[id] || base[DEFAULT_COURSE];
   const edited = store.get('course:' + b.id);
   if (!edited) return b;
+  if (edited.ob) return { ...b, features: edited.features };
   return { ...b, features: [...edited.features.filter(f => f.t !== 'ob'), ...b.features.filter(f => f.t === 'ob')] };
 }
 const pickedCourse = () => { try { return localStorage.getItem('gs:course'); } catch { return null; } };

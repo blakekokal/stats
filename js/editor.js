@@ -6,8 +6,8 @@ import { store } from './store.js';
 import { boundsOf } from './geo.js';
 
 const L = window.L;
-const TYPES = ['fairway', 'green', 'bunker', 'water', 'tee'];
-const LABEL = { fairway: 'Fairway', green: 'Green', bunker: 'Bunker', water: 'Water', tee: 'Tee box' };
+const TYPES = ['fairway', 'rough', 'green', 'bunker', 'water', 'recovery', 'tee'];
+const LABEL = { fairway: 'Fairway', rough: 'Rough', green: 'Green', bunker: 'Bunker', water: 'Water', recovery: 'Recovery', tee: 'Tee box' };
 let map = null;
 
 export function renderCourseEditor(view) {
@@ -63,7 +63,9 @@ export function renderCourseEditor(view) {
       const p = rings.map(r => r.map(ll => [+ll.lat.toFixed(6), +ll.lng.toFixed(6)])).filter(r => r.length >= 3);
       if (p.length) features.push({ t: layer.featureType, p });
     });
-    store.set('course:' + course.id, { features });
+    // OB isn't edited here: keep it as it is (including any edits from the hole editor).
+    features.push(...course.features.filter(f => f.t === 'ob'));
+    store.set('course:' + course.id, { features, ob: true });
     loadCourse();
     dirty = false; saveBtn.disabled = true;
     toast('Outlines saved. Lies on past rounds are unchanged; new shots use the new outlines.');

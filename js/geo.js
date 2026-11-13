@@ -27,7 +27,8 @@ export function inPolygon(p, poly) {
 
 // When outlines overlap (a bunker inside a fairway, a green inside a fairway),
 // the more specific surface wins.
-const PRIORITY = ['ob', 'green', 'bunker', 'water', 'tee', 'fairway', 'recovery']; // out of bounds beats everything
+// A drawn rough area beats fairway and recovery, so rough can be carved out of them.
+const PRIORITY = ['ob', 'green', 'bunker', 'water', 'tee', 'rough', 'fairway', 'recovery']; // out of bounds beats everything
 
 // Returns the lie at a point: ob | green | bunker | water | tee | fairway | recovery | rough.
 export function lieAt(p, features) {
