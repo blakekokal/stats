@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.49.0', ['Stats Dashboard: the star charts are gone. Strokes gained is shown as simple bars, red to the left of 0 and green to the right, for Total, Off The Tee, Approach, Around Green and Putting']],
   ['0.48.1', ['Live view is simpler for people watching: no View, SG, Appr, Disp, Arc or Width buttons and no Expected strokes', 'Once a hole is holed out the crosshair and aiming lines go, leaving the hole and its shots', 'Bigger score tiles, as wide as the hole bar below them']],
   ['0.48.0', ['Live view: tap Live on a hole to get a link others can watch your round with (view only). They can tap shots for distance and club, open the scorecard and refresh', 'Live is on until you turn it off or end the round; the link keeps showing the round afterwards']],
   ['0.47.3', ['Bear Creek West and East: each course only uses its own tee boxes, fairways and greens (West #1 was teeing off from East #1)']],
