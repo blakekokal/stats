@@ -19,10 +19,10 @@ server, or host the repo with GitHub Pages.
   or rotate the map under it to see how far that spot is from the tee, how far
   is left to the pin, and the strokes gained by a tee shot finishing there.
   The top-right corner shows the expected strokes for the hole and a handicap
-  dropdown that sets the benchmark. Tapping the expected strokes opens a
-  scorecard of what two handicap levels (picked at the top of each column) are
-  expected to shoot on each hole, front nine, back nine and round, from the
-  scorecard yardage for your tees. **Lines** shows or hides the outlines.
+  dropdown that sets the benchmark. Tapping the expected strokes opens the
+  scorecard filled in with what that handicap level is expected to shoot on
+  each hole, front nine, back nine and round, from the scorecard yardage for
+  your tees. **Lines** shows or hides the outlines.
   **Width** measures the fairway
   along an arc through the crosshair (every point on it is the same distance
   from the tee). **Arc** draws a dispersion arc there, 10 to 80 yards wide in
