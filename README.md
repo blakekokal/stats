@@ -29,8 +29,8 @@ server, or host the repo with GitHub Pages.
   dot to give it its own line (tap it to put it back); lines reset after each shot. The tee and pin dots can be dragged; tee
   positions are remembered per tee set.
 - **Course**: fix or redraw any outline. Anything inside no outline is rough.
-- **Edit boundaries** (GPS Scouting, ☰ menu): edits the boundaries around the
-  hole on screen. Tap one to select it, drag the ✥ in its middle to move the
+- **Edit boundaries** (GPS Scouting, ☰ menu): edits only the boundaries of the hole
+  on screen (the ones its map outlines). Tap one to select it, drag the ✥ in its middle to move the
   whole shape, the ⤡ at its corner (or Size − / +) to resize it, drag its white points (drag a small dot
   between two to add a point; tap a point to delete it), change its type or
   delete it. **Draw new boundary** picks a type (fairway, rough, bunker, water,
