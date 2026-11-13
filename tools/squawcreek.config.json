@@ -1,0 +1,18 @@
+{
+  "id": "squawcreek",
+  "name": "Squaw Creek Golf Course",
+  "location": "Willow Park, TX",
+  "_comment_course": "Not mapped in OSM beyond its boundary: holes placed from the course map on the scorecard, outlines traced from imagery.",
+  "par": [5,4,4,4,4,3,4,3,4, 4,4,4,3,4,4,5,3,5],
+  "hcp": [17,1,5,13,7,15,3,11,9, 12,18,4,10,16,8,2,6,14],
+  "_comment_tees": "Scorecard from GolfPass and the club's card.",
+  "tees": [
+    {"name": "Black",  "rating": 74.6, "slope": 137, "yards": [562,429,400,394,379,167,408,213,396, 432,341,449,234,398,436,589,231,500]},
+    {"name": "Blue",   "rating": 71.3, "slope": 134, "yards": [511,404,357,363,339,150,401,194,368, 407,322,421,197,370,415,544,168,481]},
+    {"name": "Member", "rating": 70.3, "slope": 131, "yards": [511,322,357,363,379,150,401,177,332, 378,341,389,144,370,383,544,151,481]},
+    {"name": "White",  "rating": 68.6, "slope": 127, "yards": [474,322,317,335,301,132,307,177,332, 378,296,389,144,335,383,490,151,458]},
+    {"name": "Gold",   "rating": 65.8, "slope": 119, "yards": [425,271,248,293,260,98,278,143,283, 268,254,332,113,302,349,429,132,420]}
+  ],
+  "shift": {"east": 0, "north": 0},
+  "drop": []
+}

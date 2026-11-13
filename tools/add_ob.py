@@ -70,6 +70,8 @@ def main(src, extra, cfg_path, dst):
         extra = grown.difference(inside).buffer(-1).buffer(1)  # labelled recovery; slivers just become rough
         recovery = [g for g in (extra.geoms if hasattr(extra, "geoms") else [extra]) if g.geom_type == "Polygon" and g.area > 300]
         inside = grown
+    # Water on the course (a lake the outline leaves out, say) is a hazard, not out of bounds.
+    inside = unary_union([inside, *[Polygon([xy_app(q) for q in f['p'][0]]).buffer(0) for f in course['features'] if f['t'] == 'water']])
     ob = box(*inside.bounds).buffer(PAD, join_style=2).difference(inside).simplify(0.3)
 
     feats = [f for f in course["features"] if f["t"] != "ob" and not f.get("filled")]
