@@ -879,32 +879,31 @@ export function renderHole(view, n) {
   const gpsDist = h('button', { class: 'gpsdist', title: 'Centre the map on where you are', onclick: () => {
     if (gpsFresh() && yards(gpsFix.pos, pin) < 1500) m.easeTo({ center: ll(gpsFix.pos) });
   } });
-  const gpsShotBtn = h('button', { class: 'gpsshot', hidden: true, onclick: () => {
+  const gpsShotBtn = h('button', { class: 'fab gpsshot', hidden: true, 'aria-label': 'Record a shot where you are standing', title: 'Record a shot where you are standing', onclick: () => {
     if (!gpsFresh()) return toast('Waiting for GPS…');
     const far = yards(gpsFix.pos, pin);
     if (far > 1200) return toast(`GPS puts you ${(far / 1760).toFixed(1)} miles from this hole, so no shot was recorded.`);
     if (gpsFix.acc * YD_PER_M > 25) toast(`GPS is only good to ±${Math.round(gpsFix.acc * YD_PER_M)} yd right now.`);
     openShotConfirm([...gpsFix.pos], true);
-  } }, '📍 + Shot here');
-  // Top right, under Expected: the distance beside the GPS button, Shot here below.
-  const gpsBox = h('div', { class: 'gpsbox' }, h('div', { class: 'gpsrow' }, gpsDist, gpsBtn), gpsShotBtn);
+  } }, h('span', {}, '📍'), h('small', {}, 'Shot'));
+  // Under Expected: the GPS button at the right edge, Undo and the Shot pin to its left, and the distance in the top middle.
   const gpsFresh = () => !!gpsFix && Date.now() - gpsFix.at < 30000;
   function drawGps() {
     const show = gpsOn && !viewing();
-    gpsBox.hidden = viewing();
+    gpsBtn.hidden = viewing();
     gpsDist.hidden = !show;
     if (!show) gpsShotBtn.hidden = true;
     if (!show) { gpsMark?.remove(); gpsMark = null; return; }
     if (!gpsFresh()) {
       gpsMark?.remove(); gpsMark = null;
-      gpsDist.replaceChildren(h('b', {}, 'Finding GPS…'));
+      gpsDist.replaceChildren(h('small', {}, 'Finding GPS…'));
       gpsShotBtn.hidden = true;
       return;
     }
     if (!gpsMark) gpsMark = new maplibregl.Marker({ element: h('div', { class: 'gpsdot', title: 'You are here' }) }).setLngLat(ll(gpsFix.pos)).addTo(m);
     else gpsMark.setLngLat(ll(gpsFix.pos));
     const d = yards(gpsFix.pos, pin), st = stage();
-    gpsDist.replaceChildren(h('b', {}, d > 1500 ? `${(d / 1760).toFixed(1)} mi to pin` : `${Math.round(d)} yd to pin`), h('small', {}, `You · GPS ±${Math.round(gpsFix.acc * YD_PER_M)} yd`));
+    gpsDist.replaceChildren(h('b', {}, d > 1500 ? `${(d / 1760).toFixed(d > 17600 ? 0 : 1)} mi` : `${Math.round(d)} yd`), h('small', {}, `to pin · ±${Math.round(gpsFix.acc * YD_PER_M)}`));
     // A GPS shot can be recorded whenever + can, except putts.
     gpsShotBtn.hidden = st !== 'play' || !!dropping || !!moving;
   }
@@ -1084,7 +1083,7 @@ export function renderHole(view, n) {
     watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, gpsBox, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
+    addBtn, gpsBtn, gpsDist, gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
     holePill = h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),

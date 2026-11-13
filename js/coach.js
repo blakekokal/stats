@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.51.2', ['GPS button sits at the right edge; your yardage to the pin is in the top middle', 'Shot here is now a small blue pin button']],
   ['0.51.1', ['GPS button and your yardage to the pin moved to the top right, under Expected']],
   ['0.51.0', ['GPS (to test): the GPS button on a hole shows where you are as a blue dot with the distance to the pin', '"Shot here" records a shot finishing where you are standing; + still records the crosshair as before']],
   ['0.50.1', ['Live view: no Lines button and no course outlines for people watching']],
