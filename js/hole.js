@@ -942,9 +942,7 @@ export function renderHole(view, n) {
   // Tapping the expected strokes opens the scorecard filled in with what the
   // chosen handicap level is expected to shoot on each hole (opened below).
   const expPill = h('div', { class: 'exppill' },
-    h('div', { class: 'expopen', role: 'button', title: 'Expected scores for the round', onclick: openExpected }, h('small', {}, 'Expected'), expValue),
-    h('select', { 'aria-label': 'Handicap level', onchange: e => { level = e.target.value; sessionStorage.setItem('gs:level', level); update(); } },
-      LEVELS.map(l => h('option', { value: l, selected: l === level }, levelName(l)))));
+    h('div', { class: 'expopen', role: 'button', title: 'Expected scores and handicap level', onclick: openExpected }, h('small', {}, 'Expected'), expValue));
 
   const credit = h('small', { class: 'muted credit' }, 'Imagery © Esri, Maxar · Outlines © OpenStreetMap contributors');
   // Viewing a past round: just Back to Round History and Home.
@@ -1393,8 +1391,11 @@ export function renderHole(view, n) {
     };
     scorecard.replaceChildren(h('div', { class: 'scbox expected' },
       h('div', { class: 'schead' }, h('strong', {}, `Expected \u00b7 ${levelName(level)}`), h('span', {}, `${total.toFixed(1)} (${toParX(total - par)})`), h('button', { 'aria-label': 'Close', onclick: () => { scorecard.hidden = true; } }, '\u2715')),
+      // The handicap level everything is compared to: tap one to switch.
+      h('div', { class: 'explevels' }, LEVELS.map(l => h('button', { class: l === level ? 'on' : '', 'aria-pressed': String(l === level),
+        onclick: () => { level = l; sessionStorage.setItem('gs:level', level); update(); openExpected(); } }, levelName(l)))),
       h('div', { class: 'scscroll' }, nines.map((nn, i) => table(nn, nines.length > 1 ? (i ? 'In' : 'Out') : 'Tot'))),
-      h('small', { class: 'muted' }, `What a ${levelName(level)} is expected to shoot from the ${tees.name} tees. Change the level beside Expected. Tap a hole to go to it.`)));
+      h('small', { class: 'muted' }, `What a ${levelName(level)} is expected to shoot from the ${tees.name} tees. Tap a handicap above to compare to it. Tap a hole to go to it.`)));
     scorecard.hidden = false;
   }
 
