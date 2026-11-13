@@ -95,7 +95,7 @@ function centroid(ring) {
 // the box. A box is left unassigned if no line passes within 35 yd (or 50 yd
 // when the next-nearest hole is at least twice as far), or if it is more than
 // 30 yd farther from the green than the hole's back tee.
-const along = (ch, p) => { let d = yards(p, ch.line[1]); for (let i = 1; i < ch.line.length - 1; i++) d += yards(ch.line[i], ch.line[i + 1]); return d; };
+export const along = (ch, p) => { let d = yards(p, ch.line[1]); for (let i = 1; i < ch.line.length - 1; i++) d += yards(ch.line[i], ch.line[i + 1]); return d; };
 function teeLine(ch) {
   const t = ch.tee, a = ch.line[1], len = yards(t, a) || 1;
   const at = k => [t[0] + (a[0] - t[0]) * k, t[1] + (a[1] - t[1]) * k];

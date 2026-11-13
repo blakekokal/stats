@@ -392,6 +392,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.44.6', ['Edit boundaries labels each tee box with the tee sets that play from it (e.g. Blue 147) and its yardage']],
   ['0.44.5', ['Edit boundaries: ‹ › move to the previous or next hole while editing; changes carry over until you Save once']],
   ['0.44.4', ['Squaw Creek rebuilt from the course yardage book: every hole, fairway, bunker and the creek placed to match']],
   ['0.44.3', ['Edit boundaries shows only the hole you are on: its fairways, green and tee boxes, plus the bunkers, water and recovery areas along it']],
