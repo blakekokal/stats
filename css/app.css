@@ -300,6 +300,8 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .swings { display: flex; gap: 5px; } .swings button { flex: 1; min-height: 36px; padding: 0 4px; border: 0; border-radius: 999px; background: #2a2f2c; color: #fff; font-weight: 700; font-size: 13px; }
 .swings button.on { background: #4dd0ff; color: #111; }
 .clubbox .record { min-height: 46px; border: 0; border-radius: 12px; background: #ffb020; color: #111; font-size: 16px; font-weight: 800; }
+.clubbox .recordrow { display: flex; gap: 8px; } .clubbox .recordrow .record { flex: 1; }
+.clubbox .lostball { min-height: 46px; border: 0; border-radius: 12px; background: #3d3d3d; color: #fff; font-size: 15px; font-weight: 700; padding: 0 14px; }
 .fab.arcadj { left: auto; right: 68px; bottom: calc(150px + env(safe-area-inset-bottom)); width: 40px; height: 40px; display: grid; place-content: center; line-height: 1; font-size: 14px; }
 .fab.arcadj small { font-size: 9px; font-weight: 600; }
 .fab.arcadj.on { background: #fff; color: #111; }
