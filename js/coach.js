@@ -6,6 +6,7 @@ import { h, course, toast, COURSES, courseById, setActiveCourse } from './app.js
 import { store, sync } from './store.js';
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
+import { checkCoachingDot } from './coaching/index.js';
 import { VERSION } from './version.js';
 import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting } from './rounds.js';
 import { downloadRoundCsv } from './dashboard.js';
@@ -41,6 +42,11 @@ export function renderHome(view) {
   brand.querySelectorAll('.wn').forEach(el => el.addEventListener('click', () => { location.hash = '#/whatsnew'; }));
   brand.append(h('div', { style: 'font-size:11px;color:#2e2e2e;margin-top:3px;' }, sync.user ? '👤 ' + sync.name : ''));
 
+  // Coaching, with a dot when a note, message or assignment is waiting.
+  const coaching = go('🎓', 'Coaching', '#00402c', '#/coaching');
+  coaching.append(h('span', { id: 'coachingNotifDot', style: 'display:none;width:10px;height:10px;border-radius:50%;background:#d4706e;margin-left:auto;flex-shrink:0;' }));
+  if (sync.user) checkCoachingDot();
+
   view.replaceChildren(page('center',
     h('div', { style: 'width:100%;max-width:320px;display:flex;flex-direction:column;gap:7px;' },
       // Help on the left and search + settings on the right, level with the
@@ -60,7 +66,7 @@ export function renderHome(view) {
       divider(),
       soon('🏌️', 'Practice and Learning', '#d49a10',
         h('span', { style: 'background:#d4706e;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 7px;flex-shrink:0;white-space:nowrap;animation:cxpulse 1.5s infinite;' }, 'NEW!')),
-      soon('🎓', 'Coaching', '#00402c')),
+      coaching),
     sync.user ? null : h('button', { class: 'linkbtn', style: 'margin-top:18px;', onclick: () => { location.hash = '#/account'; } }, 'Log In / Sign Up')));
 }
 
@@ -392,6 +398,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.52.0', ['Coaching is here, shared with the coaching app: feedback from your coach, assigned drills, goals, messages and your invite code', 'Coaches: activity, notes, assignments, messages, students and teams, and each student\u2019s dashboard, rounds, notes, goals, bag and schedule from this app', 'Coaches can open a student\u2019s round on the map and watch a round live while it is being played']],
   ['0.51.3', ['Expected is a smaller tile without the handicap dropdown; tap it to pick the handicap and see the expected scorecard']],
   ['0.51.2', ['GPS button sits at the right edge; your yardage to the pin is in the top middle', 'Shot here is now a small blue pin button']],
   ['0.51.1', ['GPS button and your yardage to the pin moved to the top right, under Expected']],

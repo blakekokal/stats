@@ -37,3 +37,10 @@ body.coach { background: #1e1e1e; }
 .cx .ok { color: #00b87a; } .cx .err { color: #d4706e; }
 .cx .card { background: #282828; border-radius: 10px; padding: 12px; margin: 6px 0; text-align: left; border: 0; }
 @keyframes cxpulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
+
+/* Coaching (js/coaching): the coaching app's pages, shown one at a time inside .coachroot. */
+.cx.coachroot { display: block; padding: 0; height: 100%; min-height: 0; overflow: hidden; }
+.coachroot .page { display: none; height: 100%; padding: max(50px, calc(env(safe-area-inset-top) + 40px)) 16px 70px; flex-direction: column; align-items: center; justify-content: center; gap: 8px; text-align: center; overflow-y: auto; position: relative; }
+.coachroot .page.active { display: flex; }
+.coachroot textarea, .coachroot select { font-family: inherit; }
+.coachroot input[type="checkbox"], .coachroot input[type="radio"] { width: auto; height: auto; }
