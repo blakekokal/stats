@@ -93,6 +93,29 @@ so the link keeps working afterwards. The table is created once by running
 `LIVE_SQL` (`js/store.js`) in the Supabase SQL editor: only the owner can write
 a row, and rows can only be read one at a time by their share id.
 
+## Coaching
+
+The **Coaching** button on Home is the coaching app's Coaching section
+(`js/coaching`, ported from its `v6/js/coaching` modules and page markup). It
+uses the same accounts and the coaching app's own tables (`coach_students`,
+`coach_teams`, `coach_notes`, `coach_messages`, `coach_drill_assignments`,
+`coach_combine_assignments`, `coach_requests`, `notifications`, `profiles`), so
+anything done in one app shows in the other.
+
+- **Students** see their coach's feedback, assigned drills and combines (and
+  mark them done), goals and handicap, messages, and their invite code.
+- **Coaches** (role `coach` on the profile, or an admin) get activity, notes,
+  assignments, messages, students and teams. Opening a student shows their
+  dashboard and rounds **from this app's GPS rounds**, plus notes, goals, bag
+  and schedule. A round opens read-only on the hole screen, and students who
+  are playing right now are listed under **Live now** with a Watch button.
+- Not brought over yet (they need parts this app doesn't have): running a
+  combine, the practice log and Performance Analysis.
+
+A coach reads a student's rounds through two database functions that only
+answer for students on the caller's roster. Create them once by running
+`COACHING_SQL` (`js/store.js`) in the Supabase SQL editor (after `LIVE_SQL`).
+
 ## Accounts and sync
 
 Accounts are the ones in the coaching app's Supabase project (`config.js`).

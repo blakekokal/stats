@@ -956,9 +956,9 @@ export function renderHole(view, n) {
       credit)
     : watching
     ? h('div', { class: 'sheet', hidden: true },
-      h('button', { class: 'btn', onclick: () => { menu.hidden = true; refreshLive(true); } }, '↻ Refresh'),
+      isWatching() && !watchInfo()?.id.startsWith('sv-') ? h('button', { class: 'btn', onclick: () => { menu.hidden = true; refreshLive(true); } }, '↻ Refresh') : null,
       h('button', { class: 'btn', onclick: () => { menu.hidden = true; openScorecard(); } }, 'Scorecard'),
-      h('a', { class: 'btn', href: '#/' }, 'Leave live view'),
+      h('a', { class: 'btn', href: sessionStorage.getItem('gs:watchBack') || '#/' }, sessionStorage.getItem('gs:watchBack') ? 'Back to Coaching' : 'Leave live view'),
       h('small', { class: 'muted' }, 'Tap a numbered shot to see its distance, club and strokes gained.'),
       credit)
     : viewing()
@@ -1031,7 +1031,7 @@ export function renderHole(view, n) {
     else rerenderHere();
     if (manual) toast('Updated');
   }
-  const refreshBtn = h('button', { class: 'fab viewedit refresh', hidden: !watching, 'aria-label': 'Refresh', onclick: () => refreshLive(true) }, '↻ Refresh');
+  const refreshBtn = h('button', { class: 'fab viewedit refresh', hidden: !watching || wi.id.startsWith('sv-'), 'aria-label': 'Refresh', onclick: () => refreshLive(true) }, '↻ Refresh');
   if (wi?.live) watchTimer = setInterval(() => { if (!document.hidden && scorecard.hidden && sgView.hidden && !shotPopup?.isOpen()) refreshLive(false); }, 20000);
 
   // Scoring: the Live button opens a box with the on/off switch and the link to share.

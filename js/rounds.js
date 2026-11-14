@@ -29,7 +29,7 @@ export function startWatching(id, doc) {
   try { sessionStorage.setItem('gs:watch', id); } catch { /* ignore */ }
   watch = { id, ...doc };
 }
-export function endWatching() { try { sessionStorage.removeItem('gs:watch'); } catch { /* ignore */ } watch = null; }
+export function endWatching() { try { sessionStorage.removeItem('gs:watch'); sessionStorage.removeItem('gs:watchBack'); } catch { /* ignore */ } watch = null; }
 
 export function currentRound() {
   if (isWatching()) return watchInfo()?.round || null;

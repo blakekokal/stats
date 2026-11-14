@@ -11,6 +11,7 @@ import { renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLo
 import { VERSION } from './version.js';
 import { currentRound, isWatching, endWatching, watchInfo, watchingId } from './rounds.js';
 import { loadWatch, watchHole } from './live.js';
+import { renderCoaching, closeCoaching } from './coaching/index.js';
 
 const L = window.L;
 const view = document.getElementById('view');
@@ -188,17 +189,20 @@ async function route() {
   if (parts[0] !== 'hole' && isWatching()) endWatching(); // leaving the holes leaves the live view
   // The page was reloaded while watching: fetch the round again first.
   if (parts[0] === 'hole' && isWatching() && !watchInfo()) {
-    const id = watchingId(), res = await loadWatch(id);
+    const id = watchingId();
+    if (id.startsWith('sv-')) { endWatching(); location.hash = '#/coaching'; return; }
+    const res = await loadWatch(id);
     if (res !== 'ok') { document.body.classList.add('coach'); document.body.classList.remove('playing'); closeHole(); renderLiveError(res, route); return; }
   }
-  const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag'].includes(parts[0]) ? parts[0] : 'home';
+  const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag', 'coaching'].includes(parts[0]) ? parts[0] : 'home';
   // Pages laid out like the coaching app hide this app's top bar. Set before
   // waiting for the course, so the old top bar never shows while it loads.
-  document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout'].includes(tab));
+  document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout', 'coaching'].includes(tab));
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   document.body.classList.toggle('playing', tab === 'hole');
   await loadCourse(parts[0] === 'hole');
   if (tab !== 'hole') closeHole();
+  if (tab !== 'coaching') closeCoaching();
   if (tab === 'hole') renderHole(view, Math.min(18, Math.max(1, parseInt(parts[1], 10) || lastHole())));
   else if (tab === 'course') renderCourseEditor(view);
   else if (tab === 'settings') renderSettingsPage(view);
@@ -212,6 +216,7 @@ async function route() {
   else if (tab === 'round') renderEditRound(view, parts[1]);
   else if (tab === 'bag') renderBag(view);
   else if (tab === 'scout') renderNewRound(view, { scout: true });
+  else if (tab === 'coaching') renderCoaching(view);
   else renderHome(view);
 }
 
@@ -227,7 +232,7 @@ function renderLiveError(res, retry) {
 window.addEventListener('hashchange', route);
 // Re-render when another device's changes arrive, but not while looking at a hole
 // (that would reset the crosshair).
-store.onChange(() => { if (document.body.classList.contains('playing')) return; route(); });
+store.onChange(() => { if (document.body.classList.contains('playing') || location.hash.startsWith('#/coaching')) return; route(); });
 let lastUser;
 // Admins (config.js) can edit course outlines; nobody else sees the tools.
 export let isAdmin = false;

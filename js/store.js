@@ -322,3 +322,41 @@ export async function deleteLive(id) {
   if (!c || !sync.user) return;
   await c.from('live_rounds').delete().eq('id', id);
 }
+
+// ---------- coaching ----------
+// The coaching pages (js/coaching) use the same client and the coaching app's
+// own tables. A coach reads their students' rounds from this app through two
+// functions, which only answer for students on the caller's roster
+// (coach_students). Run COACHING_SQL once in the Supabase SQL editor.
+export const supabaseClient = () => getClient();
+export const COACHING_SQL = `create or replace function coach_student_docs(student uuid)
+  returns table(key text, doc jsonb, updated bigint)
+  language sql stable security definer set search_path = public
+  as $$ select d.key, d.doc, d.updated from shot_tracker_docs d
+        where d.user_id = student and d.key like 'round:%'
+          and exists (select 1 from coach_students cs where cs.coach_id = auth.uid() and cs.student_id = student) $$;
+grant execute on function coach_student_docs(uuid) to authenticated;
+create or replace function coach_live_rounds()
+  returns table(id text, student_id uuid, doc jsonb, updated bigint)
+  language sql stable security definer set search_path = public
+  as $$ select l.id, l.user_id, l.doc, l.updated from live_rounds l
+        where (l.doc->>'live')::boolean is true
+          and l.updated > (extract(epoch from now()) * 1000)::bigint - 6 * 3600 * 1000
+          and exists (select 1 from coach_students cs where cs.coach_id = auth.uid() and cs.student_id = l.user_id) $$;
+grant execute on function coach_live_rounds() to authenticated;`;
+// A student's rounds from this app (for their coach). Throws if they can't be read.
+export async function fetchStudentRounds(studentId) {
+  const c = getClient();
+  if (!c || !sync.user) throw new Error('not signed in');
+  const { data, error } = await c.rpc('coach_student_docs', { student: studentId });
+  if (error) throw new Error(error.message);
+  return (data || []).filter(r => r.doc && !r.doc.deleted && r.doc.data).map(r => r.doc.data);
+}
+// The coach's students who are playing right now: [{ id (share id), student_id, doc, updated }].
+export async function fetchStudentsLive() {
+  const c = getClient();
+  if (!c || !sync.user) return [];
+  const { data, error } = await c.rpc('coach_live_rounds');
+  if (error) throw new Error(error.message);
+  return data || [];
+}
