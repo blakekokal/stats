@@ -408,6 +408,49 @@ export function renderHole(view, n) {
     if (m.getSource('sgzones')) m.getSource('sgzones')._shownKey = zoneKey;
     if (m.getLayer('sgzones')) m.setLayoutProperty('sgzones', 'visibility', z ? 'visible' : 'none');
   }
+  // Live view: everything away from this hole is dimmed with a soft edge, so the
+  // hole being played stands out from the ones beside it. Drawn once as a picture
+  // laid over the map: dark all over, cleared along the hole's line, its own
+  // fairways, greens, tee boxes and nearby bunkers, and wherever shots were played.
+  const DIM = 'rgba(5, 12, 6, 0.74)';
+  function holeSpotlight() {
+    const line = route(), own = holeFeatures(ch), shots = shotsNow().filter(x => x.pos).map(x => x.pos);
+    const lats = line.map(p => p[0]), lngs = line.map(p => p[1]);
+    const lat0 = (Math.min(...lats) + Math.max(...lats)) / 2, lng0 = (Math.min(...lngs) + Math.max(...lngs)) / 2;
+    const HALF = 900, N = 1400; // metres from the middle of the hole to the picture's edge; pixels across
+    const dLat = HALF / M_PER_DEG, dLng = dLat / Math.cos((lat0 * Math.PI) / 180);
+    const west = lng0 - dLng, east = lng0 + dLng, north = lat0 + dLat, south = lat0 - dLat;
+    const px = p => [((p[1] - west) / (east - west)) * N, ((north - p[0]) / (north - south)) * N];
+    const yd = N / (2 * HALF) / YD_PER_M; // pixels per yard
+    const cv = document.createElement('canvas'); cv.width = cv.height = N;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = DIM; ctx.fillRect(0, 0, N, N);
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.lineJoin = ctx.lineCap = 'round'; ctx.strokeStyle = ctx.fillStyle = '#000';
+    const trace = (pts, close) => { ctx.beginPath(); pts.forEach((p, i) => { const [x, y] = px(p); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); if (close) ctx.closePath(); };
+    // Each shape is cleared out to `r` yards around it, fading over the next FEATHER yards.
+    const shapes = [{ pts: line, r: 34 }];
+    if (shots.length > 1) shapes.push({ pts: shots, r: 16 });
+    own.forEach(f => {
+      if (f.t === 'fairway' || f.t === 'green' || f.t === 'tee') shapes.push({ pts: f.p[0], r: 18, fill: true });
+      else if (f.t === 'bunker') shapes.push({ pts: f.p[0], r: 6, fill: true });
+    });
+    const FEATHER = 22, STEPS = 9;
+    for (let i = 0; i <= STEPS; i++) {
+      ctx.globalAlpha = i === STEPS ? 1 : 0.28;
+      for (const sh of shapes) {
+        trace(sh.pts, sh.fill);
+        if (sh.fill) ctx.fill();
+        ctx.lineWidth = 2 * (sh.r + FEATHER * (1 - i / STEPS)) * yd; ctx.stroke();
+      }
+    }
+    // The picture, plus the same tint over the rest of the world beyond it.
+    m.addSource('spot', { type: 'image', url: cv.toDataURL('image/png'), coordinates: [[west, north], [east, north], [east, south], [west, south]] });
+    m.addLayer({ id: 'spot', type: 'raster', source: 'spot', paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' } });
+    m.addSource('spotfar', { type: 'geojson', data: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [
+      [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]], [[west, south], [west, north], [east, north], [east, south], [west, south]]] } } });
+    m.addLayer({ id: 'spotfar', type: 'fill', source: 'spotfar', paint: { 'fill-color': DIM, 'fill-antialias': false } });
+  }
   function ring(c, rM) {
     const k = Math.cos((c[0] * Math.PI) / 180), pts = [];
     for (let i = 0; i <= 72; i++) { const t = (i / 72) * 2 * Math.PI; pts.push([c[0] + (rM * Math.cos(t)) / M_PER_DEG, c[1] + (rM * Math.sin(t)) / (M_PER_DEG * k)]); }
@@ -1790,6 +1833,7 @@ export function renderHole(view, n) {
     m.addSource('outlines', { type: 'geojson', data: { type: 'FeatureCollection', features: holeFeatures(ch).map(f => ({
       type: 'Feature', properties: { color: LIE_COLOR[f.t] }, geometry: { type: 'MultiLineString', coordinates: (f.t === 'ob' ? obLines(f) : f.p).map(r => r.map(ll)) } })) } });
     m.addLayer({ id: 'outlines', type: 'line', source: 'outlines', layout: { visibility: showOutlines ? 'visible' : 'none' }, paint: { 'line-color': ['get', 'color'], 'line-width': 1.25, 'line-opacity': 0.7 } });
+    if (watching) { try { holeSpotlight(); } catch { /* the hole still shows, just without the tint */ } }
     const addLine = (id, shadow, paint, layout = {}) => {
       m.addSource(id, { type: 'geojson', data: line([]) });
       m.addLayer({ id: id + '-shadow', type: 'line', source: id, paint: { 'line-color': '#000', 'line-width': shadow, 'line-opacity': 0.35 } });
