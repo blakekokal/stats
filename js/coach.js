@@ -398,6 +398,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.52.2', ['Live view: lighter tint, and only the green of the hole being played is highlighted, not its neighbours']],
   ['0.52.1', ['Live view: the holes around the one being played are tinted dark, so the hole stands out']],
   ['0.52.0', ['Coaching is here, shared with the coaching app: feedback from your coach, assigned drills, goals, messages and your invite code', 'Coaches: activity, notes, assignments, messages, students and teams, and each student\u2019s dashboard, rounds, notes, goals, bag and schedule from this app', 'Coaches can open a student\u2019s round on the map and watch a round live while it is being played']],
   ['0.51.3', ['Expected is a smaller tile without the handicap dropdown; tap it to pick the handicap and see the expected scorecard']],
