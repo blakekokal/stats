@@ -412,7 +412,7 @@ export function renderHole(view, n) {
   // hole being played stands out from the ones beside it. Drawn once as a picture
   // laid over the map: dark all over, cleared along the hole's line, its own
   // fairways, greens, tee boxes and nearby bunkers, and wherever shots were played.
-  const DIM = 'rgba(5, 12, 6, 0.74)';
+  const DIM = 'rgba(5, 12, 6, 0.56)';
   function holeSpotlight() {
     const line = route(), own = holeFeatures(ch), shots = shotsNow().filter(x => x.pos).map(x => x.pos);
     const lats = line.map(p => p[0]), lngs = line.map(p => p[1]);
@@ -422,28 +422,44 @@ export function renderHole(view, n) {
     const west = lng0 - dLng, east = lng0 + dLng, north = lat0 + dLat, south = lat0 - dLat;
     const px = p => [((p[1] - west) / (east - west)) * N, ((north - p[0]) / (north - south)) * N];
     const yd = N / (2 * HALF) / YD_PER_M; // pixels per yard
-    const cv = document.createElement('canvas'); cv.width = cv.height = N;
-    const ctx = cv.getContext('2d');
+    const canvas = () => { const c = document.createElement('canvas'); c.width = c.height = N; return c; };
+    // `mask` is how much of the tint to take away at each spot.
+    const mask = canvas(), mx = mask.getContext('2d');
+    mx.lineJoin = mx.lineCap = 'round'; mx.strokeStyle = mx.fillStyle = '#fff';
+    const trace = (pts, close) => { mx.beginPath(); pts.forEach((p, i) => { const [x, y] = px(p); i ? mx.lineTo(x, y) : mx.moveTo(x, y); }); if (close) mx.closePath(); };
+    // Paint each shape out to `r` yards around it, fading over the next `feather` yards.
+    const paint = (shapes, feather) => {
+      const STEPS = 9;
+      for (let i = 0; i <= STEPS; i++) {
+        mx.globalAlpha = i === STEPS ? 1 : 0.28;
+        for (const sh of shapes) {
+          trace(sh.pts, sh.fill);
+          if (sh.fill) mx.fill();
+          mx.lineWidth = 2 * (sh.r + feather * (1 - i / STEPS)) * yd; mx.stroke();
+        }
+      }
+    };
+    // Clear: the hole's line, its own fairways, green, tee boxes and bunkers, and the shots played.
+    const clear = [{ pts: line, r: 26 }];
+    if (shots.length > 1) clear.push({ pts: shots, r: 14 });
+    own.forEach(f => {
+      if (f.t === 'fairway' || f.t === 'green' || f.t === 'tee') clear.push({ pts: f.p[0], r: 18, fill: true });
+      // Only bunkers close to this hole's line: ones further out usually guard a neighbour's green.
+      else if (f.t === 'bunker' && f.p[0].some(p => distToLine(p, ch.line) <= 40)) clear.push({ pts: f.p[0], r: 6, fill: true });
+    });
+    paint(clear, 18);
+    // Tinted again: other holes' greens, fairways and tee boxes that fall inside that area.
+    const ownSet = new Set(own);
+    const others = course.features.filter(f => (f.t === 'green' || f.t === 'fairway' || f.t === 'tee') && !ownSet.has(f))
+      .filter(f => f.p[0].some(p => p[0] > south && p[0] < north && p[1] > west && p[1] < east))
+      .map(f => ({ pts: f.p[0], r: f.t === 'green' ? 5 : 1, fill: true }));
+    mx.globalCompositeOperation = 'destination-out';
+    paint(others, 7);
+    // The tint, with the mask taken out of it.
+    const cv = canvas(), ctx = cv.getContext('2d');
     ctx.fillStyle = DIM; ctx.fillRect(0, 0, N, N);
     ctx.globalCompositeOperation = 'destination-out';
-    ctx.lineJoin = ctx.lineCap = 'round'; ctx.strokeStyle = ctx.fillStyle = '#000';
-    const trace = (pts, close) => { ctx.beginPath(); pts.forEach((p, i) => { const [x, y] = px(p); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); }); if (close) ctx.closePath(); };
-    // Each shape is cleared out to `r` yards around it, fading over the next FEATHER yards.
-    const shapes = [{ pts: line, r: 34 }];
-    if (shots.length > 1) shapes.push({ pts: shots, r: 16 });
-    own.forEach(f => {
-      if (f.t === 'fairway' || f.t === 'green' || f.t === 'tee') shapes.push({ pts: f.p[0], r: 18, fill: true });
-      else if (f.t === 'bunker') shapes.push({ pts: f.p[0], r: 6, fill: true });
-    });
-    const FEATHER = 22, STEPS = 9;
-    for (let i = 0; i <= STEPS; i++) {
-      ctx.globalAlpha = i === STEPS ? 1 : 0.28;
-      for (const sh of shapes) {
-        trace(sh.pts, sh.fill);
-        if (sh.fill) ctx.fill();
-        ctx.lineWidth = 2 * (sh.r + FEATHER * (1 - i / STEPS)) * yd; ctx.stroke();
-      }
-    }
+    ctx.drawImage(mask, 0, 0);
     // The picture, plus the same tint over the rest of the world beyond it.
     m.addSource('spot', { type: 'image', url: cv.toDataURL('image/png'), coordinates: [[west, north], [east, north], [east, south], [west, south]] });
     m.addLayer({ id: 'spot', type: 'raster', source: 'spot', paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' } });
