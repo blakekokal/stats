@@ -1373,16 +1373,33 @@ export function renderHole(view, n) {
   // scorecard overlay when either is tapped. Only while a round is under way.
   const toPar = v => (v === 0 ? 'E' : v > 0 ? `+${v}` : `−${-v}`);
   const strokesOf = hh => (hh.shots || []).reduce((t, x) => t + 1 + (x.lie === 'water' ? 1 : 0) + (x.pen || 0), 0);
-  // Totals for the whole round, and to par through this hole (holes 1..n), so
-  // stepping through a round shows the running score hole by hole.
+  // The hole a round started on. Not stored, so it is worked out from the
+  // holes played: the first one after the longest run of unplayed holes
+  // (going round from 18 back to 1), e.g. 10 for a round started on the back.
+  function startHoleOf(r, count) {
+    const done = i => !!r?.holes?.[i]?.done;
+    let best = 1, bestGap = -1;
+    for (let i = 1; i <= count; i++) {
+      if (!done(i)) continue;
+      let gap = 0;
+      for (let j = i - 1; gap < count; j--, gap++) if (done(((j - 1 + count) % count) + 1)) break;
+      if (gap > bestGap) { bestGap = gap; best = i; }
+    }
+    return best;
+  }
+  // Totals for the whole round, and to par through this hole (the holes played
+  // from the starting hole up to this one), so stepping through a round shows
+  // the running score hole by hole, also for a round started on 10.
   function roundTotals() {
     const r = currentRound();
+    const count = Math.max(holeCountOf(r), course.holes.length);
+    const start = startHoleOf(r, count), pos = k => (k - start + count) % count;
     let strokes = 0, par = 0, thruPar = 0, thruStrokes = 0, thru = 0;
     for (const o of course.holes) {
       const hh = r?.holes?.[o.n];
       if (!hh?.done) continue;
       strokes += strokesOf(hh); par += o.par;
-      if (o.n <= n) { thruStrokes += strokesOf(hh); thruPar += o.par; thru++; }
+      if (pos(o.n) <= pos(n)) { thruStrokes += strokesOf(hh); thruPar += o.par; thru++; }
     }
     return { r, strokes, toPar: strokes - par, thru, thruToPar: thruStrokes - thruPar };
   }
