@@ -387,6 +387,21 @@ export async function fetchCoachStudents() {
   if (error) throw new Error(error.message);
   return data || [];
 }
+// When each student was last active, as { student id: ms }: the newest
+// notification they sent this coach or the newest round they saved, whichever is later.
+export async function fetchStudentActivity(students) {
+  const c = getClient(), last = {};
+  if (!c || !sync.user) return last;
+  const note = (id, at) => { if (id && at > (last[id] || 0)) last[id] = at; };
+  try {
+    const { data } = await c.from('notifications').select('student_id, created_at').eq('user_id', sync.user.id).order('created_at', { ascending: false }).limit(500);
+    (data || []).forEach(n => note(n.student_id, Date.parse(n.created_at) || 0));
+  } catch { /* rounds only */ }
+  await Promise.all(students.map(async st => {
+    try { (await fetchStudentRounds(st.student_id)).forEach(r => note(st.student_id, r.updated || 0)); } catch { /* notifications only */ }
+  }));
+  return last;
+}
 // Someone's My Bag clubs (a coach reading a student's): [{ name, carry, total, ... }].
 export async function fetchBagOf(userId) {
   const c = getClient();
