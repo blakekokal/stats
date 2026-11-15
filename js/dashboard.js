@@ -436,9 +436,10 @@ export function renderDashboard(data, hcp, targetId, opts) {
   // or, for one round picked from the list, which round it is and the way back.
   var top=opts.single&&data[0]?'<div style="display:flex;align-items:center;gap:8px;margin:2px 0 6px;"><button onclick="dashAllRounds()" style="height:34px;font-size:13px;font-weight:700;background:#282828;border-radius:8px;padding:0 12px;max-width:none;width:auto;color:#9a9a9a;border:1px solid #333333;margin:0;">\u2190 All rounds</button>'
     +'<div style="font-size:13px;color:#9a9a9a;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(data[0].course_name||'')+' \u00b7 '+data[0].round_date+'</div></div>':'';
-  html+=top+'<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:2px;">'
+  html+=top+'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:2px;">'
     +'<div style="font-size:14px;font-weight:800;color:#00b87a;">STROKES GAINED \u00b7 '+(opts.single?'this round':'per round')+'</div>'
-    +(opts.single?'':'<button onclick="toggleDashFilters()" style="height:28px;font-size:12px;font-weight:700;background:#282828;border-radius:8px;padding:0 10px;max-width:none;width:auto;color:#ffffff;border:1px solid #3d3d3d;margin:0 0 3px;">\u2630 Filter</button>')+'</div>';
+    // A quiet text link on the same line as the heading.
+    +(opts.single?'':'<button onclick="toggleDashFilters()" style="height:auto;min-height:0;font-size:11px;font-weight:600;background:none;border:none;border-radius:0;padding:0;margin:0;max-width:none;width:auto;color:#606060;line-height:1;letter-spacing:.03em;">Filter \u25be</button>')+'</div>';
   html+=sgBar('SG: Total', sgPer.tot, sgR, true, 1);
   html+=sgBar('SG: Off The Tee', sgPer.ott, sgR, false, 2);
   html+=sgBar('SG: Approach', sgPer.app, sgR, false, 3);
