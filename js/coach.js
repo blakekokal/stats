@@ -79,15 +79,21 @@ export function renderNewRound(view, { scout = false } = {}) {
   const date = h('input', { type: 'date', value: today(), style: 'flex:1;' });
   const lastTee = (store.get('settings') || {}).tee;
   const teeInfo = h('div', { style: 'width:100%;max-width:320px;text-align:center;font-size:12px;color:#606060;margin-top:-4px;' });
-  const tee = h('select', { class: 'bigsel', 'aria-label': 'Tee box', onchange: () => showTee() },
-    h('option', { value: '' }, 'Select Tee Box...'),
-    course.tees.map(t => h('option', { value: t.name, selected: t.name === lastTee }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yds`)));
-  const par = course.holes.reduce((a, c) => a + c.par, 0);
+  // The course starts blank: type to filter the list, tap one to pick it.
+  let chosen = null;
+  const tee = h('select', { class: 'bigsel', 'aria-label': 'Tee box', disabled: true, onchange: () => showTee() }, h('option', { value: '' }, 'Select Tee Box...'));
+  function fillTees() {
+    tee.replaceChildren(h('option', { value: '' }, chosen ? 'Select Tee Box...' : 'Pick a course first'),
+      ...(chosen ? chosen.tees.map(t => h('option', { value: t.name, selected: t.name === lastTee }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yds`)) : []));
+    tee.disabled = !chosen;
+    showTee();
+  }
   function showTee() {
-    const t = course.tees.find(x => x.name === tee.value);
+    const t = chosen?.tees.find(x => x.name === tee.value);
+    const par = chosen ? chosen.holes.reduce((a, c) => a + c.par, 0) : 0;
     teeInfo.textContent = t ? `Par ${par} · ${t.yards.reduce((a, b) => a + b, 0).toLocaleString()} yds` + (t.rating ? ` · Rating ${t.rating} / Slope ${t.slope}` : '') : '';
   }
-  showTee();
+  fillTees();
   const place = h('input', { type: 'number', inputmode: 'numeric', min: 1, placeholder: 'Place (e.g. 1, 2, 3...)' });
   const placeWrap = h('div', { style: 'width:100%;max-width:320px;', hidden: true }, place);
   const type = h('select', { class: 'bigsel', 'aria-label': 'Round type', onchange: () => { placeWrap.hidden = type.value !== 'Tournament'; } },
@@ -101,6 +107,7 @@ export function renderNewRound(view, { scout = false } = {}) {
 
   const err = h('div', { class: 'msg err' });
   const confirm = h('button', { class: 'holes9', onclick: () => {
+    if (!chosen) { err.textContent = 'Select a course.'; return; }
     if (!tee.value) { err.textContent = 'Select a tee box.'; return; }
     if (scout) {
       store.set('settings', { ...(store.get('settings') || {}), tee: tee.value });
@@ -119,24 +126,26 @@ export function renderNewRound(view, { scout = false } = {}) {
     location.hash = '#/hole/1';
   } }, 'START');
 
-  // Picking another course redraws the page with that course's tee boxes.
-  // Course: a dropdown, with a search button beside it that opens a box to type
-  // in; matching courses are listed below it to tap.
-  const pickCourse = id => { setActiveCourse(id); renderNewRound(view, { scout }); };
-  const courseSel = h('select', { class: 'bigsel', 'aria-label': 'Course', style: 'flex:1;', onchange: e => pickCourse(e.target.value) },
-    COURSES.map(c => h('option', { value: c.id, selected: c.id === course.id }, c.name)));
+  // Course: a blank box to type in; the courses matching what's typed are listed
+  // below it to tap. Picking one fills in its tee boxes.
   const results = h('div', { class: 'courseresults', hidden: true });
-  const search = h('input', { type: 'search', placeholder: 'Search courses…', 'aria-label': 'Search courses', hidden: true, oninput: () => {
-    const q = search.value.trim().toLowerCase();
-    const hits = COURSES.filter(c => !q || c.name.toLowerCase().includes(q) || c.id.includes(q));
-    results.replaceChildren(...(hits.length ? hits.map(c => h('button', { class: c.id === course.id ? 'on' : '', onclick: () => pickCourse(c.id) }, c.name)) : [h('div', { class: 'none' }, 'No courses match')]));
+  const pickCourse = c => {
+    setActiveCourse(c.id); chosen = courseById(c.id);
+    search.value = c.name; results.hidden = true; err.textContent = '';
+    fillTees();
+  };
+  const hitsFor = () => { const q = search.value.trim().toLowerCase(); return COURSES.filter(c => !q || c.name.toLowerCase().includes(q) || c.id.includes(q)); };
+  const showHits = () => {
+    const hits = hitsFor();
+    results.replaceChildren(...(hits.length ? hits.map(c => h('button', { class: c.id === chosen?.id ? 'on' : '', onmousedown: e => e.preventDefault(), onclick: () => pickCourse(c) }, c.name)) : [h('div', { class: 'none' }, 'No courses match')]));
     results.hidden = false;
-  } });
-  const searchBtn = h('button', { class: 'coursesearch', 'aria-label': 'Search courses', title: 'Search courses', onclick: () => {
-    search.hidden = !search.hidden; results.hidden = search.hidden;
-    if (!search.hidden) { search.value = ''; search.dispatchEvent(new Event('input')); search.focus(); }
-  } }, '🔍');
-  const courseBox = h('div', { style: 'width:100%;max-width:320px;display:grid;gap:6px;' }, h('div', { class: 'row', style: 'gap:6px;' }, courseSel, searchBtn), search, results);
+  };
+  const search = h('input', { type: 'search', placeholder: 'Course name', 'aria-label': 'Course', autocomplete: 'off', value: '',
+    oninput: () => { if (chosen && search.value !== chosen.name) { chosen = null; fillTees(); } showHits(); },
+    onfocus: showHits,
+    onblur: () => { results.hidden = true; },
+    onkeydown: e => { if (e.key === 'Enter') { const hits = hitsFor(); if (hits.length === 1) { pickCourse(hits[0]); search.blur(); } } } });
+  const courseBox = h('div', { style: 'width:100%;max-width:320px;display:grid;gap:6px;' }, search, results);
   if (scout) {
     view.replaceChildren(page('top', backBtn(),
       h('div', { style: 'font-size:22px;font-weight:800;' }, 'GPS Overview'),
@@ -398,6 +407,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.53.0', ['New Round and GPS Overview: the course box starts blank. Type the course name and the list narrows to the matching courses; tap one to pick it and choose its tee box']],
   ['0.52.6', ['Live view: the latest shot shows in a thin strip at the top (e.g. "Shot 1 · Driver 290 yds to fwy"); tap it to see the shot', 'Refresh is a small button in the bottom right corner']],
   ['0.52.5', ['Lost ball: a drop is +1 stroke, like water (out of bounds stays +2)']],
   ['0.52.4', ['Lost ball button on the shot sheet: re-hit (+1) or drop (+2), like out of bounds']],
