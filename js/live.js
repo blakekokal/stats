@@ -11,7 +11,7 @@
 // Viewer: #/live/<share id> fetches that copy and opens it read-only on the
 // hole screen (rounds.js holds it in memory; nothing is saved on the device).
 
-import { store, sync, pushLive, deleteLive, fetchLive } from './store.js';
+import { store, sync, pushLive, deleteLive, fetchLive, notifyCoach } from './store.js';
 import { roundKeyOf, startWatching, watchingId, watchInfo } from './rounds.js';
 
 const infoKey = roundId => 'live:' + roundId;
@@ -71,10 +71,20 @@ async function flush() {
     const at = (r.id === currentId() && +sessionStorage.getItem('hole')) || null;
     try { await pushLive(info.id, { round: r, at, live: isLiveOn(r), name: r.player || sync.name || '', sent: Date.now() }); }
     catch (e) { pending.add(roundId); failed = e.message || String(e); break; }
+    announce(r, info);
   }
   sending = false;
   if (failed) { setStatus('error', failed); timer = setTimeout(flush, 15000); } // e.g. no signal: keep trying
   else { setStatus('ok'); if (pending.size) timer = setTimeout(flush, 700); }
+}
+
+// The first time a round being played is live (once it's actually reachable by
+// the link), the player's coach gets a "went live" item in Recent Activity with
+// a Watch button. Once per round, so turning Live off and on doesn't repeat it.
+function announce(r, info) {
+  if (info.told || !isLiveOn(r) || r.id !== currentId()) return;
+  store.set(infoKey(r.id), { ...liveInfo(r.id), told: true });
+  notifyCoach({ type: 'live_round', title: '{name} is live', message: `{name} is playing ${r.courseName} \u00b7 tap Watch to follow along`, round_id: info.id });
 }
 
 store.onSet((key, data, prev) => {
