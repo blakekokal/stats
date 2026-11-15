@@ -862,7 +862,7 @@ export function renderHole(view, n) {
 
   // Recording a shot: + asks which club and swing was used (putts use the putter).
   // `at` is where the shot finished: the crosshair, or the phone's position for a GPS shot.
-  function recordShot(club, swing, at = target, gps = false) {
+  function recordShot(club, swing, at = target, gps = false, lost = false) {
     const s = shotsNow();
     const shots = s.length ? [...s] : [{ pos: tee, lie: 'tee' }];
     shots[shots.length - 1] = { ...shots[shots.length - 1], ...(club ? { club } : {}), ...(swing && swing !== 'full' ? { swing } : {}) };
@@ -871,6 +871,7 @@ export function renderHole(view, n) {
     const here = shots[shots.length - 1];
     if (swing === 'recovery' && here.lie !== 'tee' && here.lie !== 'green') shots[shots.length - 1] = { ...here, lie: 'recovery', mapLie: here.mapLie || here.lie };
     const lie = stage() === 'putt' ? 'green' : lieOn(at, course.features);
+    if (lost) { pickedClub = null; return openPenalty(shots, 'lost', at); }
     if (lie === 'ob' || lie === 'water') { pickedClub = null; return openPenalty(shots, lie, at); }
     const shot = { pos: at, lie, ...(gps ? { gps: true } : {}) };
     if (lie === 'green' && holeNow().pin) shot.ft = Math.max(1, Math.round(yards(at, pin) * FT_PER_YD));
@@ -880,9 +881,11 @@ export function renderHole(view, n) {
     saveShots(shots);
     if (wasPlaying && lie === 'green') zoomToGreen();
   }
-  // Penalty: a shot into water or out of bounds asks how the player carried on.
+  // Penalty: a shot into water or out of bounds, or a lost ball (Lost ball on
+  // the shot sheet, with the crosshair where it was lost), asks how the player
+  // carried on.
   //  Re-hit from where it was played (stroke and distance): 1 penalty stroke.
-  //  Drop: 1 penalty stroke for water, 2 for out of bounds (the local rule), then
+  //  Drop: 1 penalty stroke for water or a lost ball, 2 for out of bounds (the local rule), then
   //  the crosshair is moved to where the ball was dropped and Set drop records it.
   // The penalty is charged to the shot that went in; the next shot carries
   // `penalty` so Undo can take it back off.
@@ -899,11 +902,11 @@ export function renderHole(view, n) {
     const charge = n => [...shots.slice(0, -1), { ...prev, pen: (prev.pen || 0) + n, obAt: at, penKind: kind }];
     const opt = (label, sub, fn) => h('button', { class: 'penopt', onclick: () => { penaltySheet.hidden = true; fn(); } }, h('b', {}, label), h('small', {}, sub));
     penaltySheet.replaceChildren(h('div', { class: 'clubbox' },
-      h('div', { class: 'clubhead' }, h('strong', {}, water ? 'In the water' : 'Out of bounds'), h('button', { class: 'x', onclick: () => { penaltySheet.hidden = true; } }, '✕')),
+      h('div', { class: 'clubhead' }, h('strong', {}, water ? 'In the water' : kind === 'lost' ? 'Lost ball' : 'Out of bounds'), h('button', { class: 'x', onclick: () => { penaltySheet.hidden = true; } }, '✕')),
       h('div', { class: 'penopts' },
         opt(prev.lie === 'tee' ? 'Re-tee' : 'Replay', '+1 stroke · hit again from the same spot', () => saveShots([...charge(1), { pos: prev.pos, lie: prev.lie, replay: true, penalty: 1 }])),
-        opt('Drop', `+${water ? 1 : 2} stroke${water ? '' : 's'} · move the crosshair to the drop, then Set drop`, () => {
-          const n = water ? 1 : 2;
+        opt('Drop', `+${kind === 'ob' ? '2 strokes' : '1 stroke'} · move the crosshair to the drop, then Set drop`, () => {
+          const n = kind === 'ob' ? 2 : 1;
           dropping = { shots: charge(n), n };
           setDropBtn.textContent = `Set drop (+${n})`; setDropBtn.hidden = false; holeEl()?.classList.add('dropping');
           update();
@@ -921,7 +924,9 @@ export function renderHole(view, n) {
       h('div', { class: 'clubgrid' }, bag().map(c => h('button', { class: club === c.name ? 'on' : '', onclick: () => { club = c.name; draw(); } },
         h('b', {}, clubShort(c.name)), h('small', {}, clubYd(c) ? `${clubYd(c)}` : '')))),
       h('div', { class: 'swings' }, SWINGS.map(([k, label]) => h('button', { class: swing === k ? 'on' : '', onclick: () => { swing = k; draw(); } }, label))),
-      h('button', { class: 'record', onclick: () => { shotConfirm.hidden = true; recordShot(club, swing, at, gps); } }, 'Record shot')));
+      h('div', { class: 'recordrow' },
+        h('button', { class: 'lostball', title: 'Ball lost where the crosshair is: adds the penalty', onclick: () => { shotConfirm.hidden = true; recordShot(club, swing, at, gps, true); } }, 'Lost ball'),
+        h('button', { class: 'record', onclick: () => { shotConfirm.hidden = true; recordShot(club, swing, at, gps); } }, 'Record shot'))));
     draw();
     shotConfirm.hidden = false;
   }
@@ -1090,7 +1095,23 @@ export function renderHole(view, n) {
     else rerenderHere();
     if (manual) toast('Updated');
   }
-  const refreshBtn = h('button', { class: 'fab viewedit refresh', hidden: !watching || wi.id.startsWith('sv-'), 'aria-label': 'Refresh', onclick: () => refreshLive(true) }, '↻ Refresh');
+  const refreshBtn = h('button', { class: 'fab liverefresh', hidden: !watching || wi.id.startsWith('sv-'), 'aria-label': 'Refresh', title: 'Refresh', onclick: () => refreshLive(true) }, '↻');
+  // Watching: a thin strip across the top with the latest shot on this hole,
+  // e.g. "Shot 1 · Driver 290 yds to fwy · 148 yds to hole". Tap it to see that shot.
+  const lastShotBar = watching ? h('button', { class: 'lastshot', hidden: true, 'aria-label': 'Latest shot' }) : null;
+  function drawLastShot() {
+    if (!lastShotBar) return;
+    const hl = holeNow(), shots = hl.shots || [];
+    const i = hl.done ? shots.length - 1 : shots.length - 2;
+    const lines = i >= 0 ? shotLines(hl, i) : null;
+    lastShotBar.hidden = !lines;
+    if (!lines) return;
+    let putt = 0; for (let k = 0; k <= i; k++) if (shots[k].lie === 'green') putt++;
+    const label = shots[i].lie === 'green' ? `Putt ${putt}` : `Shot ${strokeNo(shots, i)}`;
+    const at = shots[i].obAt || shots[i + 1]?.pos || hl.pin || pin;
+    lastShotBar.onclick = () => showShotInfo(i, at);
+    lastShotBar.replaceChildren(h('b', {}, label), h('span', {}, `\u00a0· ${lines[0]} · ${lines[1]}`));
+  }
   if (wi?.live) watchTimer = setInterval(() => { if (!document.hidden && scorecard.hidden && sgView.hidden && !shotPopup?.isOpen()) refreshLive(false); }, 20000);
 
   // Scoring: the Live button opens a box with the on/off switch and the link to share.
@@ -1137,7 +1158,7 @@ export function renderHole(view, n) {
   if (!scouting && !watching && !viewing()) shareCurrent();
 
   view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') }, mapEl,
-    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
+    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, gpsBtn, gpsDist, gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
@@ -1314,7 +1335,7 @@ export function renderHole(view, n) {
     const went = isPutt ? `${Math.round(travel * FT_PER_YD)} ft` : `${Math.round(travel)} yds`;
     const club = s.club ? clubName(s.club) + (s.swing ? ` (${SWING_NAME[s.swing] || s.swing})` : '') : isPutt ? 'Putter' : 'Hit';
     if (s.obAt && next) { // into water or OB, then a drop or a re-hit
-      const into = s.penKind === 'water' ? 'into the water' : 'out of bounds', pen = `+${s.pen} penalty`;
+      const into = s.penKind === 'water' ? 'into the water' : s.penKind === 'lost' ? 'lost' : 'out of bounds', pen = `+${s.pen} penalty`;
       return [`${club} ${went} ${into}`, next.drop ? `Dropped in ${lieName(next, s.obAt, hp)} (${pen}) · ${Math.round(yards(next.pos, hp))} yds to hole` : `Re-hit from the same spot (${pen})`];
     }
     const first = isPutt ? `${club} ${went}` : `${club} ${went} to ${next ? lieName(next, s.pos, hp) : 'the hole'}`;
@@ -1373,16 +1394,33 @@ export function renderHole(view, n) {
   // scorecard overlay when either is tapped. Only while a round is under way.
   const toPar = v => (v === 0 ? 'E' : v > 0 ? `+${v}` : `−${-v}`);
   const strokesOf = hh => (hh.shots || []).reduce((t, x) => t + 1 + (x.lie === 'water' ? 1 : 0) + (x.pen || 0), 0);
-  // Totals for the whole round, and to par through this hole (holes 1..n), so
-  // stepping through a round shows the running score hole by hole.
+  // The hole a round started on. Not stored, so it is worked out from the
+  // holes played: the first one after the longest run of unplayed holes
+  // (going round from 18 back to 1), e.g. 10 for a round started on the back.
+  function startHoleOf(r, count) {
+    const done = i => !!r?.holes?.[i]?.done;
+    let best = 1, bestGap = -1;
+    for (let i = 1; i <= count; i++) {
+      if (!done(i)) continue;
+      let gap = 0;
+      for (let j = i - 1; gap < count; j--, gap++) if (done(((j - 1 + count) % count) + 1)) break;
+      if (gap > bestGap) { bestGap = gap; best = i; }
+    }
+    return best;
+  }
+  // Totals for the whole round, and to par through this hole (the holes played
+  // from the starting hole up to this one), so stepping through a round shows
+  // the running score hole by hole, also for a round started on 10.
   function roundTotals() {
     const r = currentRound();
+    const count = Math.max(holeCountOf(r), course.holes.length);
+    const start = startHoleOf(r, count), pos = k => (k - start + count) % count;
     let strokes = 0, par = 0, thruPar = 0, thruStrokes = 0, thru = 0;
     for (const o of course.holes) {
       const hh = r?.holes?.[o.n];
       if (!hh?.done) continue;
       strokes += strokesOf(hh); par += o.par;
-      if (o.n <= n) { thruStrokes += strokesOf(hh); thruPar += o.par; thru++; }
+      if (pos(o.n) <= pos(n)) { thruStrokes += strokesOf(hh); thruPar += o.par; thru++; }
     }
     return { r, strokes, toPar: strokes - par, thru, thruToPar: thruStrokes - thruPar };
   }
@@ -1828,6 +1866,7 @@ export function renderHole(view, n) {
     }
   }
   drawShots();
+  drawLastShot();
 
   m.on('move', update);
   // The browser's toolbars showing or hiding changes the screen height: keep the

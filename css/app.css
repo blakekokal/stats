@@ -300,6 +300,8 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .swings { display: flex; gap: 5px; } .swings button { flex: 1; min-height: 36px; padding: 0 4px; border: 0; border-radius: 999px; background: #2a2f2c; color: #fff; font-weight: 700; font-size: 13px; }
 .swings button.on { background: #4dd0ff; color: #111; }
 .clubbox .record { min-height: 46px; border: 0; border-radius: 12px; background: #ffb020; color: #111; font-size: 16px; font-weight: 800; }
+.clubbox .recordrow { display: flex; gap: 8px; } .clubbox .recordrow .record { flex: 1; }
+.clubbox .lostball { min-height: 46px; border: 0; border-radius: 12px; background: #3d3d3d; color: #fff; font-size: 15px; font-weight: 700; padding: 0 14px; }
 .fab.arcadj { left: auto; right: 68px; bottom: calc(150px + env(safe-area-inset-bottom)); width: 40px; height: 40px; display: grid; place-content: center; line-height: 1; font-size: 14px; }
 .fab.arcadj small { font-size: 9px; font-weight: 600; }
 .fab.arcadj.on { background: #fff; color: #111; }
@@ -428,8 +430,14 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .livetag b { letter-spacing: .04em; color: #bdbdbd; }
 .livetag.on { background: #c8102e; }
 .livetag.on b { color: #fff; }
-.fab.viewedit.refresh { background: #fff; color: #111; }
-.fab.viewedit.refresh.busy { opacity: .6; }
+/* Refresh: a small round button in the bottom right corner. */
+.fab.liverefresh { left: auto; right: 10px; bottom: calc(22px + env(safe-area-inset-bottom)); width: 40px; height: 40px; font-size: 20px; font-weight: 700; background: #fff; color: #111; box-shadow: 0 1px 6px #0008; z-index: 4; display: grid; place-content: center; line-height: 1; }
+.fab.liverefresh[hidden] { display: none; }
+.fab.liverefresh.busy { opacity: .6; }
+/* The latest shot, in a thin strip across the top. */
+.lastshot { position: absolute; top: calc(46px + env(safe-area-inset-top)); left: 52px; right: 10px; z-index: 3; height: 28px; min-height: 0; padding: 0 12px; border: 0; border-radius: 999px; background: #111d; backdrop-filter: blur(8px); color: #fff; font-size: 13px; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 1px 6px #0008; }
+.lastshot b { color: #ffb020; }
+.lastshot[hidden] { display: none; }
 .liveerr { min-height: 70vh; display: grid; place-content: center; justify-items: center; gap: 12px; padding: 24px; text-align: center; color: #fff; }
 .liveerr strong { font-size: 20px; }
 .liveerr p { margin: 0 0 6px; color: #b5b5b5; }
