@@ -15,7 +15,7 @@ let scoutRound = null;
 export const isScouting = () => { try { return sessionStorage.getItem('gs:scouting') === '1'; } catch { return false; } };
 const newScout = (tee, course) => ({ id: 'scout', scouting: true, holeCount: 18, holes: {}, updated: Date.now(), ...(tee ? { tee } : {}), ...(course ? { course } : {}) });
 export function startScouting(tee, course) { endWatching(); try { sessionStorage.setItem('gs:scouting', '1'); } catch { /* ignore */ } scoutRound = newScout(tee, course); }
-export function endScouting() { try { sessionStorage.removeItem('gs:scouting'); } catch { /* ignore */ } scoutRound = null; }
+export function endScouting() { try { sessionStorage.removeItem('gs:scouting'); sessionStorage.removeItem('gs:scoutBag'); } catch { /* ignore */ } scoutRound = null; }
 
 // Live view: someone else's round, opened from a share link. Held in memory
 // only and never saved here; `watch` is what was fetched:
