@@ -592,7 +592,11 @@ function dashOneRound(i) {
 function dashViewRound(i) {
   var r = _dash && _dash.data[i];
   if (!r) return;
-  if (r._gps) { if (window.svViewRound) window.svViewRound(r.id); return; }
+  if (r._gps) {
+    document.getElementById('coachSgOverlay')?.style.setProperty('display', 'none');
+    if (r._name && window.coachViewRound) window.coachViewRound(r._gps, r._name); else if (window.svViewRound) window.svViewRound(r.id);
+    return;
+  }
   var own = historyRounds().find(function(x) { return x.id === r.id; });
   if (!own) return;
   setCurrentRound(own.id); localStorage.setItem('gs:viewOnly', '1'); localStorage.removeItem('gs:editingPast'); sessionStorage.removeItem('gs:level');

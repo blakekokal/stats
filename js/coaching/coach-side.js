@@ -8,7 +8,8 @@ import { setCoachNoteType, showCoachCoachingTab } from './student-side.js';
 import { loadCoachTeams } from './teams.js';
 import { _sb } from './core.js';
 import { escapeHtml } from './core.js';
-import { studentRounds } from './gps.js';
+import { studentRounds, viewRound } from './gps.js';
+import { renderDashboard } from '../dashboard.js';
 
 export async function loadCoachingPageCoachView() {
   loadCoachRequests(); // Show pending coach requests for admin
@@ -149,7 +150,7 @@ async function loadCoachActivityFeed() {
         });
         if (dupe) return;
         var name = x.st.student_name || 'Student', tp = r.to_par === 0 ? 'E' : r.to_par > 0 ? '+' + r.to_par : '\u2212' + -r.to_par;
-        data.push({ type: 'new_round', student_id: x.st.student_id, student_name: name, read: at <= seenAt, created_at: new Date(at).toISOString(),
+        data.push({ type: 'new_round', student_id: x.st.student_id, student_name: name, round_id: g.id, read: at <= seenAt, created_at: new Date(at).toISOString(),
           title: (g.submitted ? 'New round from ' : 'Round in progress: ') + name,
           message: (r.course_name || 'A course') + (r.holes ? ' \u00b7 ' + r.score + ' (' + tp + ') over ' + r.holes + ' hole' + (r.holes === 1 ? '' : 's') : '') });
       });
@@ -172,12 +173,19 @@ async function loadCoachActivityFeed() {
     var dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
     var icon = n.type === 'new_round' ? '⛳' : (n.type === 'new_combine' || n.type === 'combine_completed') ? '🎯' : n.type === 'drill_completed' ? '📋' : n.type === 'new_signup' ? '👤' : n.type === 'student_message' ? '💬' : '📌';
     var unreadStyle = !n.read ? 'border-left:3px solid #2d7abc;padding-left:10px;' : 'padding-left:13px;';
+    // Profile, and for a round: View round (the hole screen) and Strokes gained
+    // (that round's SG in a pop-up), so the profile isn't needed every time.
     var viewBtn = '';
     if (n.student_id) {
       var safeName = escapeHtml(n.student_name || 'Student').replace(/'/g, "\\'");
-      viewBtn = '<button onclick="viewStudent(\'' + n.student_id + '\',\'' + safeName + '\',\'\')" '
-        + 'style="margin-top:6px;font-size:11px;font-weight:700;background:#2d7abc;color:#ffffff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;height:auto;max-width:none;width:auto;">'
-        + 'View Profile</button>';
+      var bs = 'flex:1;min-width:0;height:30px;min-height:0;font-size:11px;font-weight:700;color:#ffffff;border:none;border-radius:6px;padding:0 4px;cursor:pointer;max-width:none;width:auto;white-space:nowrap;margin:0;';
+      viewBtn = '<div style="display:flex;gap:6px;margin-top:8px;"><button onclick="viewStudent(\'' + n.student_id + '\',\'' + safeName + '\',\'\')" style="' + bs + 'background:#2d7abc;">Profile</button>';
+      if (n.type === 'new_round') {
+        var args = '\'' + n.student_id + '\',\'' + String(n.round_id || '').replace(/[^\w-]/g, '') + '\',' + (Date.parse(n.created_at) || 0);
+        viewBtn += '<button onclick="coachActRound(' + args + ',\'view\')" style="' + bs + 'background:#007a52;">View round</button>'
+          + '<button onclick="coachActRound(' + args + ',\'sg\')" style="' + bs + 'background:#6b4fbb;">Strokes gained</button>';
+      }
+      viewBtn += '</div>';
     }
     return '<div style="' + unreadStyle + 'margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #282828;">'
       + '<div style="display:flex;align-items:flex-start;gap:8px;">'
@@ -186,8 +194,7 @@ async function loadCoachActivityFeed() {
       + '<div style="font-size:13px;font-weight:700;color:' + (!n.read ? '#44b8f0' : '#9a9a9a') + ';">' + escapeHtml(n.title) + '</div>'
       + '<div style="font-size:12px;color:#606060;margin-top:1px;">' + escapeHtml(n.message) + '</div>'
       + '<div style="font-size:10px;color:#2e2e2e;margin-top:3px;">' + dateStr + '</div>'
-      + viewBtn
-      + '</div></div></div>';
+      + '</div></div>' + viewBtn + '</div>';
   }).join('');
 }
 
@@ -340,6 +347,41 @@ function openStudentFromList(id) {
   window.viewStudent(s.student_id, s.student_name || 'Student', s.student_email || '');
 }
 
+// A round from Recent Activity: by its id, or else the student's round saved
+// nearest the time of the activity.
+async function coachActRound(studentId, roundId, at, mode) {
+  var st = (S.coachRosterData || []).find(function(x) { return x.student_id === studentId; }) || {};
+  var name = st.student_name || 'Student';
+  var rounds;
+  try { rounds = await studentRounds(studentId); } catch (e) { alert('Couldn’t load ' + name + '’s rounds.'); return; }
+  var i = rounds.findIndex(function(r) { return roundId && r._gps && r._gps.id === roundId; });
+  if (i < 0 && rounds.length) {
+    i = 0;
+    rounds.forEach(function(r, k) { if (Math.abs(((r._gps || {}).updated || 0) - at) < Math.abs(((rounds[i]._gps || {}).updated || 0) - at)) i = k; });
+  }
+  if (i < 0) { alert('That round couldn’t be found.'); return; }
+  if (mode === 'view') { viewRound(rounds[i]._gps, name); return; }
+  // Strokes gained: that round's dashboard in a pop-up over this page (All rounds shows the rest).
+  var hcp = 'pro';
+  try { var { data: prof } = await _sb.from('profiles').select('hcp_preference').eq('id', studentId).single(); if (prof && prof.hcp_preference) hcp = prof.hcp_preference; } catch (e) { /* default */ }
+  var sv = document.getElementById('svDashContent'); if (sv) sv.innerHTML = ''; // one dashboard on the page at a time (they share ids); Student View redraws its own
+  var box = document.getElementById('coachSgOverlay');
+  if (!box) {
+    box = document.createElement('div'); box.id = 'coachSgOverlay';
+    box.style.cssText = 'position:fixed;inset:0;z-index:200;background:#1b1b1b;overflow-y:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom));text-align:left;';
+    document.body.appendChild(box);
+  }
+  box.innerHTML = '<div style="max-width:420px;margin:0 auto;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">'
+    + '<div style="font-size:17px;font-weight:800;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(name) + '</div>'
+    + '<button onclick="document.getElementById(\'coachSgOverlay\').style.display=\'none\'" aria-label="Close" style="flex-shrink:0;width:36px;height:36px;max-width:none;padding:0;border-radius:50%;background:#282828;border:1px solid #333333;color:#ffffff;font-size:16px;">✕</button></div>'
+    + '<div id="coachSgContent"></div></div>';
+  box.style.display = 'block';
+  var data = rounds.map(function(r) { return Object.assign({}, r, { _name: name }); });
+  renderDashboard(data, hcp, 'coachSgContent');
+  window.dashOneRound(i);
+}
+window.coachViewRound = viewRound; // the dashboard's View round, for a round opened here
+
 export function init() {
 
 document.addEventListener('click', function(e) {
@@ -352,4 +394,4 @@ document.addEventListener('click', function(e) {
 }
 
 // Functions called from inline HTML handlers
-expose({ drawCoachStudentList, openStudentFromList, filterCoachNoteStudents, clearCoachNoteStudent, openChatWithStudent, markCoachNotificationsRead, coachAddStudentFromCoachingPage, sendCoachNote });
+expose({ coachActRound, drawCoachStudentList, openStudentFromList, filterCoachNoteStudents, clearCoachNoteStudent, openChatWithStudent, markCoachNotificationsRead, coachAddStudentFromCoachingPage, sendCoachNote });
