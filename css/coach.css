@@ -151,3 +151,6 @@ body.coach { background: #1e1e1e; }
 .coachroot .dg-stat-box { background:#2a2a2a;border-radius:10px;padding:12px;margin-bottom:14px;display:flex;justify-content:space-around;text-align:center;border:1px solid #333; }
 .coachroot .dg-stat-label { font-size:10px;color:#999;text-transform:uppercase;margin-bottom:3px; }
 .coachroot .dg-stat-value { font-size:1.3rem;font-weight:700;color:#fff; }
+
+/* Student View: the "vs" level badge isn't shown. */
+#studentViewHcpBadge { display: none !important; }
