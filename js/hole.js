@@ -15,7 +15,7 @@ import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.j
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js';
-import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting, isWatching, watchInfo } from './rounds.js';
+import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
 import { liveLink, isLiveOn, setLiveOn, liveStatus, onLiveStatus, loadWatch, watchHole, shareCurrent } from './live.js';
 import { openBoundaryEditor, resumeEditAt, editFeatures } from './holeedit.js';
 
@@ -47,6 +47,8 @@ const strokeNo = (shots, i) => { let n = i + 1; for (let k = 0; k < i; k++) n +=
 const SWING_NAME = { '3/4': '¾', '1/2': '½', punch: 'punch', recovery: 'recovery' };
 
 let watchTimer = null, liveUnsub = null;
+// Replay state, kept as the hole screen moves from hole to hole: { playing, speed, hole, step, done }.
+let replay = null;
 // GPS: the phone's position while the hole screen is open (only while the GPS
 // button is on). The last fix is kept between holes so the dot shows at once.
 let gpsWatch = null, gpsFix = null; // gpsFix = { pos: [lat, lng], acc (metres), at (ms) }
@@ -147,7 +149,8 @@ export function renderHole(view, n) {
   const settings = store.get('settings') || {};
   const round0 = currentRound();
   const teeName = round0?.tee || settings.tee || 'Blue';
-  const holeCount = holeCountOf(round0);
+  // ‹ › go round the holes of the round; a 9-hole round on the back nine goes 10 to 18.
+  const holeCount = Math.min(course.holes.length, Math.max(holeCountOf(round0), n, ...Object.keys(round0?.holes || {}).map(Number).filter(k => k > 0)));
   const prevHole = n === 1 ? holeCount : n - 1, nextHole = n >= holeCount ? 1 : n + 1;
   const teeSet = course.tees.find(t => t.name === teeName) || course.tees[0];
   const fairways = course.features.filter(f => f.t === 'fairway').map(f => ({ p: f.p, box: boundsOf(f.p[0], 200) }));
@@ -176,8 +179,18 @@ export function renderHole(view, n) {
   const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
   const roundKey = () => { const r = currentRound(); return r ? roundKeyOf(r.id) : null; };
   const scouting = isScouting(); // GPS Scouting: a round held in memory only, never saved
+  // Replay (a client's past round, played back shot by shot): this hole shows
+  // only the strokes played so far.
+  const rp = watching && sessionStorage.getItem('gs:replay') === '1' ? (replay ||= { playing: true, speed: 1 }) : null;
+  if (!rp) replay = null;
+  else if (rp.hole !== n) { rp.hole = n; rp.step = 0; rp.done = false; }
+  const strokesIn = hl => Math.max(0, (hl.shots || []).length - (hl.done ? 0 : 1));
   const holeNow = () => {
-    if (scouting || watching) return currentRound().holes[n] || { pin: null, done: false, shots: [] };
+    if (scouting || watching) {
+      const hl = currentRound().holes[n] || { pin: null, done: false, shots: [] };
+      if (!rp || rp.step >= strokesIn(hl)) return hl;
+      return { ...hl, done: false, shots: hl.shots.slice(0, rp.step + 1) };
+    }
     const k = roundKey(); return (k && store.get(k).holes[n]) || { pin: null, done: false, shots: [] };
   };
   const shotsNow = () => holeNow().shots || [];
@@ -1445,17 +1458,6 @@ export function renderHole(view, n) {
   // The hole a round started on. Not stored, so it is worked out from the
   // holes played: the first one after the longest run of unplayed holes
   // (going round from 18 back to 1), e.g. 10 for a round started on the back.
-  function startHoleOf(r, count) {
-    const done = i => !!r?.holes?.[i]?.done;
-    let best = 1, bestGap = -1;
-    for (let i = 1; i <= count; i++) {
-      if (!done(i)) continue;
-      let gap = 0;
-      for (let j = i - 1; gap < count; j--, gap++) if (done(((j - 1 + count) % count) + 1)) break;
-      if (gap > bestGap) { bestGap = gap; best = i; }
-    }
-    return best;
-  }
   // Totals for the whole round, and to par through this hole (the holes played
   // from the starting hole up to this one), so stepping through a round shows
   // the running score hole by hole, also for a round started on 10.
@@ -1465,7 +1467,7 @@ export function renderHole(view, n) {
     const start = startHoleOf(r, count), pos = k => (k - start + count) % count;
     let strokes = 0, par = 0, thruPar = 0, thruStrokes = 0, thru = 0;
     for (const o of course.holes) {
-      const hh = r?.holes?.[o.n];
+      const hh = o.n === n ? holeNow() : r?.holes?.[o.n]; // this hole as shown (part played, in a replay)
       if (!hh?.done) continue;
       strokes += strokesOf(hh); par += o.par;
       if (pos(o.n) <= pos(n)) { thruStrokes += strokesOf(hh); thruPar += o.par; thru++; }
@@ -1478,14 +1480,14 @@ export function renderHole(view, n) {
   function drawScoreChips() {
     const { r, strokes, toPar: tp, thru, thruToPar } = roundTotals();
     const show = !!r;
-    const key = show ? [strokes, tp, thru, thruToPar, r.holes?.[n]?.done ? strokesOf(r.holes[n]) : '-'].join('|') : 'none';
+    const key = show ? [strokes, tp, thru, thruToPar, holeNow().done ? strokesOf(holeNow()) : '-'].join('|') : 'none';
     if (key === chipKey) return;
     chipKey = key;
     chips.hidden = !show;
     holeEl()?.classList.toggle('haschips', show);
     if (!show) return;
     void strokes; void tp; // the total is on the scorecard
-    const hh = r.holes?.[n];
+    const hh = holeNow();
     holeChip.replaceChildren(
       h('div', { class: 'sc' }, h('small', {}, 'Score'), // the hole number is already on the hole pill
         h('strong', {}, hh?.done ? String(strokesOf(hh)) : '–', h('em', {}, hh?.done ? ` (${toPar(strokesOf(hh) - ch.par)})` : ''))),
@@ -1949,6 +1951,87 @@ export function renderHole(view, n) {
       go: k => { location.hash = `#/hole/${k}`; }, onClose: saved => { if (saved) rerenderHere(); } });
   }
 
+  // ---- Replay ----
+  // Plays a past round back one shot at a time: the camera turns to look down
+  // each shot, a tracer flies from where it was hit to where it finished, then
+  // the view closes in on where it landed. Then on to the next hole played.
+  // Pause / play, 2x speed, and ✕ to leave the replay (the round stays open).
+  const rpBar = rp ? h('div', { class: 'replaybar' }) : null;
+  const rpAlive = () => map === m && replay === rp;
+  const rpOrder = () => playOrder(currentRound(), course);
+  function drawRpBar() {
+    if (!rpBar) return;
+    const order = rpOrder(), finished = rp.done && order[order.length - 1] === n;
+    const hl = currentRound().holes[n] || { shots: [] }, total = strokesIn(hl);
+    const sh = hl.shots || [], putt = sh.slice(0, rp.step + 1).filter(x => x.lie === 'green').length;
+    const label = finished ? 'Replay finished' : rp.step >= total ? `Hole ${n} done`
+      : `Hole ${n} · ${sh[rp.step]?.lie === 'green' ? `Putt ${putt}` : `Shot ${strokeNo(sh, rp.step)}`}`;
+    rpBar.replaceChildren(
+      h('button', { class: 'rpplay', 'aria-label': finished ? 'Replay again' : rp.playing ? 'Pause' : 'Play', onclick: () => {
+        if (finished) { replay = { playing: true, speed: rp.speed }; if (order[0] === n) renderHole(view, n); else location.hash = `#/hole/${order[0]}`; return; }
+        rp.playing = !rp.playing; drawRpBar();
+      } }, finished ? '↺' : rp.playing ? '❚❚' : '▶'),
+      h('span', { class: 'rplabel' }, label),
+      h('button', { class: 'rpspeed' + (rp.speed === 2 ? ' on' : ''), 'aria-pressed': String(rp.speed === 2), onclick: () => { rp.speed = rp.speed === 2 ? 1 : 2; drawRpBar(); } }, '2x'),
+      h('button', { class: 'rpexit', 'aria-label': 'End replay', title: 'End replay', onclick: () => { sessionStorage.removeItem('gs:replay'); replay = null; renderHole(view, n); } }, '✕'));
+  }
+  // Waits `ms` of replay time: stopped while paused, twice as fast at 2x. False if the replay ended meanwhile.
+  const rpWait = ms => new Promise(res => {
+    let left = ms, t0 = performance.now();
+    const tick = () => {
+      if (!rpAlive()) return res(false);
+      const now = performance.now();
+      if (rp.playing) left -= (now - t0) * rp.speed;
+      t0 = now;
+      if (left <= 0) return res(true);
+      setTimeout(tick, 40);
+    };
+    tick();
+  });
+  const rpClear = () => m.getSource('replay')?.setData({ type: 'FeatureCollection', features: [] });
+  // The tracer: a line growing from `from` to `to`, with the ball at its head.
+  const rpTrace = (from, to, ms) => new Promise(res => {
+    let f = 0, t0 = performance.now();
+    const frame = () => {
+      if (!rpAlive()) return res(false);
+      const now = performance.now();
+      if (rp.playing) f = Math.min(1, f + ((now - t0) * rp.speed) / ms);
+      t0 = now;
+      const e = 1 - (1 - f) * (1 - f); // fast off the club, slowing as it lands
+      const p = [from[0] + (to[0] - from[0]) * e, from[1] + (to[1] - from[1]) * e];
+      m.getSource('replay')?.setData({ type: 'FeatureCollection', features: [line([from, p]), { type: 'Feature', geometry: { type: 'Point', coordinates: ll(p) } }] });
+      if (f >= 1) return res(true);
+      requestAnimationFrame(frame);
+    };
+    frame();
+  });
+  // Look down the shot: the landing spot on the crosshair, where it was hit from below it.
+  function rpCamera(from, to, ms) {
+    const dm = yards(from, to) / YD_PER_M, k = Math.cos((to[0] * Math.PI) / 180);
+    const mPerPx = Math.max((dm * 1.15) / (mapEl.clientHeight * (1 - CROSSHAIR_Y) - 150), 0.03);
+    m.easeTo({ center: ll(to), zoom: Math.min(20, Math.log2((78271.517 * k) / mPerPx)), bearing: bearing(from, to), duration: ms });
+  }
+  async function runReplay() {
+    const hl = currentRound().holes[n] || { shots: [] }, shots = hl.shots || [], total = strokesIn(hl);
+    drawRpBar();
+    if (!(await rpWait(900))) return;
+    while (rp.step < total) {
+      const j = rp.step, sh = shots[j], to = sh.obAt || (shots[j + 1] ? shots[j + 1].pos : hl.pin || pin);
+      rpCamera(sh.pos, to, 900 / rp.speed);
+      if (!(await rpWait(1000))) return;
+      if (!(await rpTrace(sh.pos, to, sh.lie === 'green' ? 1100 : 1700))) return;
+      rp.step++;
+      rpClear(); drawShots(); update(); drawRpBar();
+      m.easeTo({ center: ll(to), zoom: Math.min(20.5, m.getZoom() + 0.8), duration: 700 / rp.speed }); // close in on where it landed
+      if (!(await rpWait(1400))) return;
+    }
+    rp.done = true; drawRpBar();
+    const order = rpOrder(), next = order[order.indexOf(n) + 1];
+    if (!next) { rp.playing = false; drawRpBar(); return; }
+    if (!(await rpWait(1500))) return;
+    location.hash = `#/hole/${next}`;
+  }
+
   m.on('load', () => {
     if (map !== m) return;
     m.resize(); place();
@@ -1971,6 +2054,14 @@ export function renderHole(view, n) {
     else if (stage() !== 'play' && !viewing()) zoomToGreen();
     update();
     if (scouting && isAdmin && resumeEditAt(n)) editBoundaries(); // moved here with ‹ › while editing boundaries
+    if (rp) {
+      m.addSource('replay', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+      m.addLayer({ id: 'replay-shadow', type: 'line', source: 'replay', filter: ['==', '$type', 'LineString'], paint: { 'line-color': '#000', 'line-width': 6, 'line-opacity': 0.35 }, layout: { 'line-cap': 'round' } });
+      m.addLayer({ id: 'replay-line', type: 'line', source: 'replay', filter: ['==', '$type', 'LineString'], paint: { 'line-color': '#fff', 'line-width': 3 }, layout: { 'line-cap': 'round' } });
+      m.addLayer({ id: 'replay-ball', type: 'circle', source: 'replay', filter: ['==', '$type', 'Point'], paint: { 'circle-radius': 5, 'circle-color': '#fff', 'circle-stroke-color': '#111', 'circle-stroke-width': 1.5 } });
+      holeEl().append(rpBar);
+      runReplay();
+    }
   });
   update();
   startGps();

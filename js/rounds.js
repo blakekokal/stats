@@ -29,7 +29,7 @@ export function startWatching(id, doc) {
   try { sessionStorage.setItem('gs:watch', id); } catch { /* ignore */ }
   watch = { id, ...doc };
 }
-export function endWatching() { try { sessionStorage.removeItem('gs:watch'); sessionStorage.removeItem('gs:watchBack'); } catch { /* ignore */ } watch = null; }
+export function endWatching() { try { sessionStorage.removeItem('gs:watch'); sessionStorage.removeItem('gs:watchBack'); sessionStorage.removeItem('gs:replay'); } catch { /* ignore */ } watch = null; }
 
 export function currentRound() {
   if (isWatching()) return watchInfo()?.round || null;
@@ -43,6 +43,29 @@ export function setCurrentRound(id) {
 }
 
 export const holeCountOf = r => (r && r.holeCount) || 18;
+
+// The hole a round started on: the finished hole with the longest run of
+// unfinished holes before it (going round the course), e.g. 10 for a round
+// played on the back nine. 1 when nothing is finished.
+export function startHoleOf(r, count) {
+  const done = i => !!r?.holes?.[i]?.done;
+  let best = 1, bestGap = -1;
+  for (let i = 1; i <= count; i++) {
+    if (!done(i)) continue;
+    let gap = 0;
+    for (let j = i - 1; gap < count; j--, gap++) if (done(((j - 1 + count) % count) + 1)) break;
+    if (gap > bestGap) { bestGap = gap; best = i; }
+  }
+  return best;
+}
+const countOf = (r, course) => Math.max(holeCountOf(r), course?.holes?.length || 0);
+// The holes with shots on them, in the order they were played (from the start hole, round the course).
+export function playOrder(r, course) {
+  const count = countOf(r, course), start = startHoleOf(r, count);
+  return Array.from({ length: count }, (_, i) => ((start - 1 + i) % count) + 1).filter(k => r?.holes?.[k]?.shots?.length);
+}
+// The hole to open a past round on: the first one played.
+export const firstHoleOf = (r, course) => playOrder(r, course)[0] || startHoleOf(r, countOf(r, course));
 
 // Score, par and progress over the holes finished so far.
 export function summarize(r, course, level) {
