@@ -171,7 +171,7 @@ async function loadCoachActivityFeed() {
   el.innerHTML = data.map(function(n) {
     var d = new Date(n.created_at);
     var dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    var icon = n.type === 'new_round' ? '⛳' : (n.type === 'new_combine' || n.type === 'combine_completed') ? '🎯' : n.type === 'drill_completed' ? '📋' : n.type === 'new_signup' ? '👤' : n.type === 'student_message' ? '💬' : '📌';
+    var icon = n.type === 'live_round' ? '🔴' : n.type === 'new_round' ? '⛳' : (n.type === 'new_combine' || n.type === 'combine_completed') ? '🎯' : n.type === 'drill_completed' ? '📋' : n.type === 'new_signup' ? '👤' : n.type === 'student_message' ? '💬' : '📌';
     var unreadStyle = !n.read ? 'border-left:3px solid #2d7abc;padding-left:10px;' : 'padding-left:13px;';
     // Profile, and for a round: View round (the hole screen) and Strokes gained
     // (that round's SG in a pop-up), so the profile isn't needed every time.
@@ -180,6 +180,9 @@ async function loadCoachActivityFeed() {
       var safeName = escapeHtml(n.student_name || 'Student').replace(/'/g, "\\'");
       var bs = 'flex:1;min-width:0;height:30px;min-height:0;font-size:11px;font-weight:700;color:#ffffff;border:none;border-radius:6px;padding:0 4px;cursor:pointer;max-width:none;width:auto;white-space:nowrap;margin:0;';
       viewBtn = '<div style="display:flex;gap:6px;margin-top:8px;"><button onclick="viewStudent(\'' + n.student_id + '\',\'' + safeName + '\',\'\')" style="' + bs + 'background:#2d7abc;">Profile</button>';
+      if (n.type === 'live_round' && n.round_id) {
+        viewBtn += '<button onclick="coachWatchLive(\'' + String(n.round_id).replace(/[^a-z0-9]/gi, '') + '\')" style="' + bs + 'background:#c8102e;">Watch</button>';
+      }
       if (n.type === 'new_round') {
         var args = '\'' + n.student_id + '\',\'' + String(n.round_id || '').replace(/[^\w-]/g, '') + '\',' + (Date.parse(n.created_at) || 0);
         viewBtn += '<button onclick="coachActRound(' + args + ',\'view\')" style="' + bs + 'background:#007a52;">View round</button>'
@@ -294,7 +297,7 @@ async function sendCoachNote() {
 // this app, whichever is later.
 var _studentAct = {}; // student id -> { at (ms), type }
 var _actLoading = null;
-var ACT_LABEL = { new_round: 'Round', new_combine: 'Combine', combine_completed: 'Combine', drill_completed: 'Drill', practice_session: 'Practice', student_message: 'Message', new_signup: 'Joined' };
+var ACT_LABEL = { live_round: 'Live round', new_round: 'Round', new_combine: 'Combine', combine_completed: 'Combine', drill_completed: 'Drill', practice_session: 'Practice', student_message: 'Message', new_signup: 'Joined' };
 function noteAct(id, at, type) { if (id && at && (!_studentAct[id] || _studentAct[id].at < at)) _studentAct[id] = { at: at, type: type }; }
 function ago(ms) {
   var m = Math.round((Date.now() - ms) / 60000);
