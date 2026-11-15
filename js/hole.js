@@ -1121,7 +1121,9 @@ export function renderHole(view, n) {
   // Refresh button. The round also refreshes by itself while it's live.
   const wi = watching ? watchInfo() : null;
   const liveTag = wi ? h('div', { class: 'livetag' + (wi.live ? ' on' : '') },
-    h('b', {}, wi.live ? '● LIVE' : wi.round.submitted ? 'FINAL' : 'NOT LIVE'), wi.name ? ` ${wi.name}` : '') : null;
+    h('b', {}, wi.live ? '● LIVE' : wi.round.submitted ? 'FINAL' : 'NOT LIVE'), wi.name ? ` ${wi.name}` : '',
+    // then the date and course: "FINAL Sam · 11/12/2026 · Bear Creek"
+    ...[wi.round.date ? (([y, mo, d]) => `${+mo}/${+d}/${y}`)(wi.round.date.split('-')) : '', wi.round.courseName || course.name].filter(Boolean).map(t => h('span', {}, ` · ${t}`))) : null;
   let refreshing = false;
   async function refreshLive(manual) {
     if (!wi || refreshing) return;
@@ -1148,7 +1150,7 @@ export function renderHole(view, n) {
     const hl = holeNow(), shots = hl.shots || [];
     const i = hl.done ? shots.length - 1 : shots.length - 2;
     const lines = i >= 0 ? shotLines(hl, i) : null;
-    lastShotBar.hidden = !lines;
+    lastShotBar.hidden = !lines || !wi?.live; // a finished or past round doesn't need it
     if (!lines) return;
     let putt = 0; for (let k = 0; k <= i; k++) if (shots[k].lie === 'green') putt++;
     const label = shots[i].lie === 'green' ? `Putt ${putt}` : `Shot ${strokeNo(shots, i)}`;
@@ -1889,9 +1891,24 @@ export function renderHole(view, n) {
     const name = l => ({ tee: 'Tee', fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', green: 'Green', water: 'Water', recovery: 'Recovery', ob: 'Out of bounds' }[l] || l);
     const sgTxt = row.sg == null ? '–' : (row.sg >= 0 ? '+' : '−') + Math.abs(row.sg).toFixed(2);
     let puttNo = 0; for (let k = 0; k <= i; k++) if (shots[k].lie === 'green') puttNo++;
+    // "Shot 1 · 7 Iron" / "155 yds from tee to fairway" / "282 yds to hole" / Strokes gained.
+    // Putts: "Putt 1 · Putter" / "14 ft putt" / "2 ft to hole".
+    const hp = hl.pin || pin;
+    const club = s.club ? clubName(s.club) + (s.swing ? ` (${SWING_NAME[s.swing] || s.swing})` : '') : isPutt ? 'Putter' : '';
+    const lieLong = (p, from) => (p.lie === 'fairway' ? 'fairway' : p.lie === 'recovery' ? 'recovery area' : lieName(p, from, hp));
+    const fromTxt = i === 0 ? 'tee' : s.drop ? 'drop' : s.replay ? (s.lie === 'tee' ? 'tee' : 'the same spot') : lieLong(s, shots[i - 1].pos);
+    const went = isPutt ? `${Math.round(travel * FT_PER_YD)} ft` : `${Math.round(travel)} yds`;
+    const into = s.penKind === 'water' ? 'into the water' : s.penKind === 'lost' ? '(lost ball)' : 'out of bounds';
+    const line2 = isPutt ? `${went} putt`
+      : s.obAt ? `${Math.round(yards(s.pos, s.obAt))} yds from ${fromTxt} ${into} (+${s.pen} penalty)`
+      : `${went} from ${fromTxt} to ${next ? lieLong(next, s.pos) : 'the hole'}`;
+    const line3 = !next ? 'In the hole'
+      : s.obAt && !next.drop ? 'Re-hit from the same spot'
+      : `${next.lie === 'green' ? `${next.ft ?? Math.round(yards(next.pos, hp) * FT_PER_YD)} ft` : `${Math.round(yards(next.pos, hp))} yds`} to hole`;
     const el = h('div', { class: 'shotpop' },
-      h('strong', {}, shotTitle(hl, i)),
-      ...shotLineEls(hl, i, isPutt ? `${Math.round(travel * 3)} ft` : `${Math.round(travel)} yd`),
+      h('strong', {}, `${isPutt ? `Putt ${puttNo}` : `Shot ${strokeNo(shots, i)}`}${club ? ` · ${club}` : ''}`),
+      h('div', { class: 'line' }, h('b', {}, line2)),
+      h('div', { class: 'line sub' }, h('span', {}, line3)),
       h('div', {}, h('span', {}, 'Strokes gained'), h('b', { class: row.sg == null ? '' : row.sg >= 0 ? 'pos' : 'neg' }, sgTxt)));
     shotPopup?.remove();
     shotPopup = new maplibregl.Popup({ offset: 14, closeButton: true, className: 'shotpopup', maxWidth: '240px' }).setLngLat(ll(at)).setDOMContent(el).addTo(m);
