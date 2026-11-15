@@ -78,6 +78,7 @@ export function renderCoaching(view, tab = 'coaching') {
   // Close anything left open over the pages last time.
   root.querySelectorAll(':scope > div:not(.page)').forEach(el => { if (el.style.display && el.style.display !== 'none') el.style.display = 'none'; });
   S.currentStudentId = null;
+  S.coachReturnTab = 0; // coaching opens on Home
   if (tab === 'coaching') {
     goToCoaching().then(() => {
       drawLive();

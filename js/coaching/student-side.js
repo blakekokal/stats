@@ -1,10 +1,9 @@
 import { S } from './core.js';
 import { expose } from './core.js';
-import { loadCoachingPageCoachView } from './coach-side.js';
+import { loadCoachingPageCoachView, drawCoachStudentList } from './coach-side.js';
 import { loadCoachMessages, loadStudentMessages } from './messages.js';
 import { generateInviteCode } from './roles.js';
 import { loadCstGoalsAndHandicap } from './student-goals.js';
-import { showCoachTeamList } from './teams.js';
 import { show } from './core.js';
 import { _viewingAsStudent } from './core.js';
 import { _sb } from './core.js';
@@ -39,7 +38,8 @@ export function showCoachCoachingTab(idx) {
     if (pane) pane.style.display = i === idx ? 'block' : 'none';
   }
   if (idx === 3) loadCoachMessages();
-  if (idx === 4) showCoachTeamList();
+  if (idx === 4) drawCoachStudentList(true); // one list of students, latest activity first
+  S.coachReturnTab = idx;
 }
 
 export function setCoachNoteType(type) {
@@ -81,7 +81,7 @@ export async function goToCoaching() {
   if (role === 'coach' || (profile && profile.is_admin)) {
     document.getElementById('coachingSubtitle').textContent = 'Manage your students & feedback';
     document.getElementById('coachingCoachView').style.display = 'flex';
-    showCoachCoachingTab(0);
+    showCoachCoachingTab(S.coachReturnTab === 4 ? 4 : 0); // back from a student's page: their list
     loadCoachingPageCoachView();
   } else {
     document.getElementById('coachingSubtitle').textContent = 'Your connection to your coach';

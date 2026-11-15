@@ -164,8 +164,8 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
   <!-- ======================================== -->
   <div id="coachingCoachView" style="display:none;width:100%;max-width:420px;flex:1;overflow:hidden;display:flex;flex-direction:column;">
 
-    <!-- Tab bar -->
-    <div style="display:flex;gap:0;width:100%;flex-shrink:0;border-radius:10px;overflow:hidden;">
+    <!-- Tab bar: hidden. The coach side is one page (Home); Students opens from its tile. -->
+    <div style="display:none;gap:0;width:100%;flex-shrink:0;border-radius:10px;overflow:hidden;">
       <button id="cctTab0" onclick="showCoachCoachingTab(0)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#2d7abc;border-radius:0;border:none;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">Home</button>
       <button id="cctTab1" onclick="showCoachCoachingTab(1)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Notes</button>
       <button id="cctTab2" onclick="showCoachCoachingTab(2)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Assign</button>
@@ -183,21 +183,12 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#ff6b7f;margin-bottom:8px;">\u25cf Live now</div>
           <div id="coachLiveList"></div>
         </div>
-        <!-- Stats bar -->
-        <div style="display:flex;gap:8px;margin-bottom:14px;">
-          <div style="flex:1;background:#222222;border-radius:12px;padding:14px 6px;text-align:center;">
-            <div id="coachStatStudents" style="font-size:24px;font-weight:800;color:#44b8f0;">–</div>
-            <div style="font-size:10px;color:#2e2e2e;margin-top:2px;">Students</div>
-          </div>
-          <div style="flex:1;background:#222222;border-radius:12px;padding:14px 6px;text-align:center;">
-            <div id="coachStatNewRounds" style="font-size:24px;font-weight:800;color:#00b87a;">–</div>
-            <div style="font-size:10px;color:#2e2e2e;margin-top:2px;">New Rounds</div>
-          </div>
-          <div style="flex:1;background:#222222;border-radius:12px;padding:14px 6px;text-align:center;">
-            <div id="coachStatNotes" style="font-size:24px;font-weight:800;color:#f0c830;">–</div>
-            <div style="font-size:10px;color:#2e2e2e;margin-top:2px;">Notes Sent</div>
-          </div>
-        </div>
+        <!-- Students: tap for the list of students -->
+        <button onclick="showCoachCoachingTab(4)" style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:none;height:auto;background:#222222;border-radius:12px;padding:14px 18px;margin:0 0 14px;border:none;color:#ffffff;text-align:left;">
+          <div><div id="coachStatStudents" style="font-size:24px;font-weight:800;color:#44b8f0;line-height:1.1;">–</div>
+          <div style="font-size:12px;color:#9a9a9a;margin-top:2px;font-weight:600;">Students</div></div>
+          <div style="font-size:26px;color:#606060;line-height:1;">›</div>
+        </button>
         <!-- Admin: Pending Coach Requests (only visible to admin) -->
         <div id="coachRequestsSection" style="display:none;background:#222222;border-radius:14px;padding:16px 18px;margin-bottom:14px;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#f0c830;margin-bottom:10px;">⏳ Pending Coach Requests</div>
@@ -371,6 +362,12 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
 
       <!-- TAB 4: Students / Teams -->
       <div id="cctTabContent4" style="display:none;">
+        <!-- Students: one list, latest activity first, with a name search -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+          <button onclick="showCoachCoachingTab(0)" aria-label="Back" style="height:38px;font-size:18px;background:#282828;border-radius:8px;padding:0 12px;max-width:none;width:auto;color:#9a9a9a;border:1px solid #333333;">←</button>
+          <input id="coachStudentSearch" type="search" oninput="drawCoachStudentList()" placeholder="🔍 Search students" autocomplete="off" style="flex:1;height:38px;font-size:14px;max-width:none;text-align:left;border-radius:8px;">
+        </div>
+        <div id="coachStudentList" style="margin-bottom:14px;"><div style="text-align:center;color:#606060;font-size:13px;padding:20px 0;">Loading students...</div></div>
         <!-- Add student -->
         <div style="background:#222222;border-radius:14px;padding:14px 16px;margin-bottom:12px;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:10px;">Add Student by Invite Code</div>
@@ -381,7 +378,8 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
           <div id="coachAddStudentMsg" style="font-size:12px;min-height:14px;text-align:center;margin-top:6px;"></div>
         </div>
 
-        <!-- TEAM LIST VIEW (default) -->
+        <!-- Teams: no longer shown (one list of students above); kept for the code that fills it. -->
+        <div style="display:none;">
         <div id="coachTeamListView">
           <!-- Create team -->
           <div style="display:flex;gap:6px;margin-bottom:12px;">
@@ -416,6 +414,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
             <div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">No players.</div>
           </div>
         </div>
+        </div><!-- end hidden teams -->
       </div>
 
     </div><!-- end coach tab content scroll -->

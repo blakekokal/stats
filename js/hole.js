@@ -1114,7 +1114,7 @@ export function renderHole(view, n) {
     h('div', { class: 'leavebox' },
       h('strong', {}, 'Leave this round?'),
       h('button', { class: 'pause', onclick: leaveTo('#/', () => {}) }, 'Pause and save round'),
-      h('button', { class: 'submit', onclick: leaveTo('#/history', r => submitRound(r.id)) }, 'End and submit round'),
+      h('button', { class: 'submit', onclick: leaveTo('#/history', r => submitRound(r.id, course)) }, 'End and submit round'),
       h('button', { class: 'delete', onclick: () => {
         if (!confirm('Delete this round? This cannot be undone.')) return;
         leaveTo('#/', r => store.remove(roundKeyOf(r.id)))();
