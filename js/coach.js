@@ -389,8 +389,9 @@ export function renderLogin(view) {
 
 // ---------- what's new ----------
 
-  ['0.65.1', ['New Round and GPS Overview: tapping the course box lists every course again, so you can pick one without typing (handy when the keyboard doesn\u2019t come up). Typing still narrows the list']],
 const CHANGES = [
+  ['0.65.2', ['Fixed: the app showed a blank screen after the last update']],
+  ['0.65.1', ['New Round and GPS Overview: tapping the course box lists every course again, so you can pick one without typing (handy when the keyboard doesn\u2019t come up). Typing still narrows the list']],
   ['0.65.0', ['Live rounds: when a player\u2019s round goes live, their coach gets a \u201cis live\u201d update in Recent Activity with a Watch button that opens the round live']],
   ['0.64.0', ['Comp + Auto: with Comp on, tapping Auto puts each compared club on its own best line (the best average SG for that club, kept clear of hazards). Tap Auto again to put them back on one line']],
   ['0.63.1', ['Hole screen: the compass is round again, with a small gap above the wind circle']],
