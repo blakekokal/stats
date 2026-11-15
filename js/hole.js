@@ -1089,7 +1089,7 @@ export function renderHole(view, n) {
   // Score chips and scorecard (filled in by drawScoreChips / openScorecard below).
   const totalChip = h('button', { class: 'scorechip total', onclick: () => openScorecard() });
   const holeChip = h('button', { class: 'scorechip hole', onclick: () => openScorecard() });
-  const chips = h('div', { class: 'chips', hidden: true }, totalChip, holeChip);
+  const chips = h('div', { class: 'chips', hidden: true }, holeChip, totalChip);
   const scorecard = h('div', { class: 'scorecard', hidden: true, onclick: e => { if (e.target === scorecard) scorecard.hidden = true; } });
   const compass = h('button', { class: 'compass', 'aria-label': 'Compass: tap to straighten the view', title: 'Tap to straighten the view' });
   compass.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,16 12,16" fill="#ff4d4d"/><polygon points="16,29 20,16 12,16" fill="#fff"/><text x="16" y="11.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">N</text></svg>';
@@ -1481,7 +1481,7 @@ export function renderHole(view, n) {
     if (!show) return;
     totalChip.replaceChildren(h('small', {}, 'Total'), h('strong', {}, strokes ? `${strokes}` : '–', h('em', {}, strokes ? ` (${toPar(tp)})` : '')));
     const hh = r.holes?.[n];
-    holeChip.replaceChildren(h('small', {}, `Hole ${n}`),
+    holeChip.replaceChildren(h('small', {}, 'Score'), // the hole number is already on the hole pill
       h('strong', {}, hh?.done ? String(strokesOf(hh)) : '–', h('em', {}, hh?.done ? ` (${toPar(strokesOf(hh) - ch.par)})` : '')),
       h('em', {}, thru ? `${toPar(thruToPar)} thru ${thru}` : 'not started'));
   }
