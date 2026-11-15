@@ -135,17 +135,17 @@ export function renderNewRound(view, { scout = false } = {}) {
     search.value = c.name; results.hidden = true; err.textContent = '';
     fillTees();
   };
-  // Nothing is listed until something is typed; then the top 5 matches, names
-  // starting with what's typed first.
+  // Tapping the box lists every course, so one can be picked without typing (the
+  // keyboard doesn't always come up). Typing narrows it to the top 5 matches,
+  // names starting with what's typed first. With a course picked, the list shows them all again.
   const hitsFor = () => {
     const q = search.value.trim().toLowerCase();
-    if (!q) return [];
+    if (!q || (chosen && search.value === chosen.name)) return [...COURSES].sort((x, y) => x.name.localeCompare(y.name));
     const starts = c => c.name.toLowerCase().startsWith(q) || c.name.toLowerCase().split(/\s+/).some(w => w.startsWith(q));
     return COURSES.filter(c => c.name.toLowerCase().includes(q) || c.id.includes(q))
       .sort((x, y) => starts(y) - starts(x) || x.name.localeCompare(y.name)).slice(0, 5);
   };
   const showHits = () => {
-    if (!search.value.trim()) { results.hidden = true; return; }
     const hits = hitsFor();
     results.replaceChildren(...(hits.length ? hits.map(c => h('button', { class: c.id === chosen?.id ? 'on' : '', onmousedown: e => e.preventDefault(), onclick: () => pickCourse(c) }, c.name)) : [h('div', { class: 'none' }, 'No courses match')]));
     results.hidden = false;
@@ -153,6 +153,7 @@ export function renderNewRound(view, { scout = false } = {}) {
   const search = h('input', { type: 'search', placeholder: 'Course name', 'aria-label': 'Course', autocomplete: 'off', value: '',
     oninput: () => { if (chosen && search.value !== chosen.name) { chosen = null; fillTees(); } showHits(); },
     onfocus: showHits,
+    onclick: showHits, // already focused: show the list again
     onblur: () => { results.hidden = true; },
     onkeydown: e => { if (e.key === 'Enter') { const hits = hitsFor(); if (hits.length === 1) { pickCourse(hits[0]); search.blur(); } } } });
   const courseBox = h('div', { style: 'width:100%;max-width:320px;display:grid;gap:6px;' }, search, results);
@@ -388,6 +389,7 @@ export function renderLogin(view) {
 
 // ---------- what's new ----------
 
+  ['0.65.1', ['New Round and GPS Overview: tapping the course box lists every course again, so you can pick one without typing (handy when the keyboard doesn\u2019t come up). Typing still narrows the list']],
 const CHANGES = [
   ['0.65.0', ['Live rounds: when a player\u2019s round goes live, their coach gets a \u201cis live\u201d update in Recent Activity with a Watch button that opens the round live']],
   ['0.64.0', ['Comp + Auto: with Comp on, tapping Auto puts each compared club on its own best line (the best average SG for that club, kept clear of hazards). Tap Auto again to put them back on one line']],
