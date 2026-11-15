@@ -242,10 +242,11 @@ export function renderHole(view, n) {
     h('div', { class: 'presets' }, presets),
     h('div', { class: 'slide' }, h('span', {}, 'Arc'), arcRange, arcValue));
   const widthBtn = toggle('width', 'Width', '↔', 'Fairway width at the crosshair', () => showWidth, v => { showWidth = v; localStorage.setItem('gs:fairwayWidth', v ? '1' : '0'); });
-  const outlineBtn = toggle('outline', 'Lines', '⬭', 'Show bunker, fairway, water and green outlines', () => showOutlines, v => {
+  // Course lines (bunker, fairway, water and green outlines): a switch in the View box.
+  const setOutlines = v => {
     showOutlines = v; localStorage.setItem('gs:outlines', v ? '1' : '0');
     if (m.getLayer('outlines')) m.setLayoutProperty('outlines', 'visibility', v ? 'visible' : 'none');
-  });
+  };
   // Arc turns the arc on or off; while it's on, a small Adj button beside it
   // opens the width slider.
   let arcAdjOpen = false;
@@ -308,7 +309,8 @@ export function renderHole(view, n) {
   // green gains 0 strokes for the selected handicap, for an approach from where
   // the ball is now (the last recorded shot, or the tee). Labelled on the map.
   let showSgt = flag('gs:sgTarget', '0');
-  const sgtBtn = toggle('sgt', 'SG', '⊙', 'Strokes-gained heat map for the drive', () => showSgt, v => { showSgt = v; localStorage.setItem('gs:sgTarget', v ? '1' : '0'); });
+  // SG map view (a switch in the View box): the strokes-gained heat map for the drive.
+  const setSgt = v => { showSgt = v; localStorage.setItem('gs:sgTarget', v ? '1' : '0'); update(); };
   // The Appr pill's SG value (kept on this device).
   const SG_DEFAULT = { zones: { n: 3, min: 0, max: 0.5 }, rings: { value: 0 } };
   let sgCfg = SG_DEFAULT;
@@ -769,11 +771,39 @@ export function renderHole(view, n) {
     m.easeTo({ center: ll(b.aim), duration: 500 });
     update();
   } }, h('span', {}, '✦'), h('small', {}, 'Auto'));
-  const viewBtn = toggle('cleanview', 'View', '◉', 'Hide the aiming line and shot tracer', () => cleanView, v => {
+  // Clean view, for screenshots: just the map, the hole pill and the View and
+  // menu buttons (View drops to just above the menu).
+  const setClean = v => {
     cleanView = v;
     for (const id of ['shots', 'shots-shadow', 'shotspen', 'shotspen-shadow']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', v ? 'none' : 'visible');
     holeEl()?.classList.toggle('clean', v);
-  });
+    viewBtn.classList.toggle('on', v);
+    update();
+  };
+  // View: opens a box (like the menu) with switches for SG map view, course
+  // lines view and clean view.
+  const viewSwitch = (label, get, set, note) => {
+    const input = h('input', { type: 'checkbox', onchange: e => set(e.target.checked) });
+    const noteEl = note ? h('small', { class: 'muted' }, note) : null;
+    const row = h('label', { class: 'liveswitch viewswitch' }, h('span', {}, label, noteEl), input, h('i', {}));
+    row.sync = (enabled = true) => { input.checked = get(); input.disabled = !enabled; row.classList.toggle('off', !enabled); if (noteEl) noteEl.hidden = enabled; };
+    return row;
+  };
+  const sgtRow = viewSwitch('SG map view', () => showSgt, setSgt, 'From the tee only');
+  const linesRow = viewSwitch('Course lines view', () => showOutlines, setOutlines);
+  const cleanRow = viewSwitch('Clean view', () => cleanView, setClean);
+  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), sgtRow, linesRow, cleanRow);
+  const drawViewBox = () => { sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync(); };
+  const viewBtn = h('button', { class: 'fab cleanview', 'aria-label': 'View', title: 'SG map, course lines and clean view',
+    onclick: () => { menu.hidden = true; viewBox.hidden = !viewBox.hidden; drawViewBox(); } }, h('span', {}, '◉'), h('small', {}, 'View'));
+  // Tools: the aiming tools on the right sit behind one button and open up the
+  // column when it's tapped (remembered on this device).
+  let toolsOpen = localStorage.getItem('gs:toolsOpen') === '1';
+  const toolsBtn = h('button', { class: 'fab tools', 'aria-label': 'Tools', 'aria-expanded': String(toolsOpen), title: 'Aiming tools',
+    onclick: () => {
+      toolsOpen = !toolsOpen; localStorage.setItem('gs:toolsOpen', toolsOpen ? '1' : '0');
+      toolsBtn.setAttribute('aria-expanded', String(toolsOpen)); holeEl()?.classList.toggle('toolsopen', toolsOpen); update();
+    } }, h('span', {}, ''), h('small', {}, ''));
   const compDots = h('div', { class: 'compdots' });
   // Dragging a dot swings that club onto its own line (its distance stays the
   // club's yardage); the others keep following the crosshair. Tapping a moved
@@ -1157,11 +1187,11 @@ export function renderHole(view, n) {
   liveUnsub = onLiveStatus(() => { if (!liveBox.hidden) openLiveBox(); });
   if (!scouting && !watching && !viewing()) shareCurrent();
 
-  view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') }, mapEl,
+  view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (toolsOpen ? ' toolsopen' : '') }, mapEl,
     watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
-    h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, gpsBtn, gpsDist, gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
+    h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { viewBox.hidden = true; menu.hidden = !menu.hidden; } }, '☰'),
+    addBtn, gpsBtn, gpsDist, gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
     holePill = h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1635,7 +1665,6 @@ export function renderHole(view, n) {
     compModeBtn.hidden = compBtn.hidden || !showComp;
     compModeBtn.firstChild.textContent = compMode === 'arc' ? '◠' : '⁘'; compModeBtn.lastChild.textContent = compMode === 'arc' ? 'Arc' : 'Disp';
     if (compBtn.hidden) compLegend.hidden = true;
-    sgtBtn.hidden = onGreen || plan.length > 0; // SG is the drive heat map, from the tee only
     arcSlider.hidden = !(showArc || showDisp) || onGreen || !arcAdjOpen;
     dispBtn.hidden = onGreen;
     dispAdjBtn.hidden = !showDisp || onGreen;
@@ -1651,6 +1680,15 @@ export function renderHole(view, n) {
     teeBtn.hidden = onGreen;
     pinBtn.hidden = st === 'pin' || st === 'done';
     sgViewBtn.hidden = !viewing();
+    // Tools: hidden when it has nothing to open; shows how many tools are on.
+    const tools = [widthBtn, arcBtn, dispBtn, apprBtn, compBtn, autoBtn, clubBtn];
+    toolsBtn.hidden = tools.every(b => b.hidden);
+    const onCount = [showWidth, showArc, showDisp, showAppr, showComp, !!autoPick].filter(Boolean).length;
+    toolsBtn.classList.toggle('on', !toolsOpen && onCount > 0);
+    toolsBtn.firstChild.textContent = toolsOpen ? '✕' : onCount ? String(onCount) : '⋯';
+    toolsBtn.lastChild.textContent = toolsOpen ? 'Close' : 'Tools';
+    if (!toolsOpen) arcSlider.hidden = apprSlider.hidden = true;
+    if (!viewBox.hidden) drawViewBox();
     drawLiveBtn();
     drawGps();
     holeEl()?.classList.toggle('viewing', viewing()); // hides the crosshair and its readouts

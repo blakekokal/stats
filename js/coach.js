@@ -380,6 +380,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.55.0', ['New Round and GPS Overview: fewer buttons on the hole screen. The aiming tools sit behind one Tools button on the right that opens them up the column; on the left are the menu, Tee, Pin and View', 'View opens a box with switches for SG map view (the drive heat map, which replaces the SG button), course lines view and clean view', 'Clean view hides everything but the hole info, View and the menu, for screenshots']],
   ['0.54.0', ['My Bag is the full one from the coaching app: tap a club to edit its carry, total and \u00be yardages, label and arc width; add, remove and import clubs, Find Yardages, Wedge Gapping, Speed and the Gap Visualizer', 'Performance Analysis: your focus area and strokes gained breakdown from your last 10 rounds here, plus combines', 'Practice and Learning: combines (evaluation test, putting, short game, wedges, line drill, driver), practice plans and log, drills, and the learning tools (SG calculator, putting break, distance optimizer, proximity, distance guide, Guide to Golf)', 'Coaching: assigned combines and drills now open here']],
   ['0.53.0', ['New Round and GPS Overview: the course box starts blank. Type the course name and the list narrows to the matching courses; tap one to pick it and choose its tee box']],
   ['0.52.6', ['Live view: the latest shot shows in a thin strip at the top (e.g. "Shot 1 · Driver 290 yds to fwy"); tap it to see the shot', 'Refresh is a small button in the bottom right corner']],
