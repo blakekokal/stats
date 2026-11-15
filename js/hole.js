@@ -796,14 +796,27 @@ export function renderHole(view, n) {
   const drawViewBox = () => { sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync(); };
   const viewBtn = h('button', { class: 'fab cleanview', 'aria-label': 'View', title: 'SG map, course lines and clean view',
     onclick: () => { menu.hidden = true; viewBox.hidden = !viewBox.hidden; drawViewBox(); } }, h('span', {}, '◉'), h('small', {}, 'View'));
-  // Tools: the aiming tools on the right sit behind one button and open up the
-  // column when it's tapped (remembered on this device).
-  let toolsOpen = localStorage.getItem('gs:toolsOpen') === '1';
-  const toolsBtn = h('button', { class: 'fab tools', 'aria-label': 'Tools', 'aria-expanded': String(toolsOpen), title: 'Aiming tools',
-    onclick: () => {
-      toolsOpen = !toolsOpen; localStorage.setItem('gs:toolsOpen', toolsOpen ? '1' : '0');
-      toolsBtn.setAttribute('aria-expanded', String(toolsOpen)); holeEl()?.classList.toggle('toolsopen', toolsOpen); update();
+  // Two buttons that open up a column of tools when tapped (each remembered on
+  // this device): SG on the left (Auto and Comp), Tools on the right above Club
+  // (Width, Arc, Disp and Appr).
+  const groupBtn = (cls, key, label, title) => {
+    const btn = h('button', { class: `fab ${cls}`, 'aria-label': label, title, onclick: () => {
+      btn.open = !btn.open; localStorage.setItem(key, btn.open ? '1' : '0'); update();
     } }, h('span', {}, ''), h('small', {}, ''));
+    btn.open = localStorage.getItem(key) === '1';
+    btn.label = label;
+    return btn;
+  };
+  const toolsBtn = groupBtn('tools', 'gs:toolsOpen', 'Tools', 'Width, Arc, Disp and Appr');
+  const sgBtn = groupBtn('sgtools', 'gs:sgOpen', 'SG', 'Auto target and Compare clubs');
+  const drawGroup = (btn, members, onCount, icon, openCls) => {
+    btn.hidden = members.every(b => b.hidden);
+    btn.setAttribute('aria-expanded', String(btn.open));
+    btn.classList.toggle('on', !btn.open && onCount > 0);
+    btn.firstChild.textContent = btn.open ? '✕' : onCount ? String(onCount) : icon;
+    btn.lastChild.textContent = btn.open ? 'Close' : btn.label;
+    holeEl()?.classList.toggle(openCls, btn.open);
+  };
   const compDots = h('div', { class: 'compdots' });
   // Dragging a dot swings that club onto its own line (its distance stays the
   // club's yardage); the others keep following the crosshair. Tapping a moved
@@ -1187,11 +1200,11 @@ export function renderHole(view, n) {
   liveUnsub = onLiveStatus(() => { if (!liveBox.hidden) openLiveBox(); });
   if (!scouting && !watching && !viewing()) shareCurrent();
 
-  view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (toolsOpen ? ' toolsopen' : '') }, mapEl,
+  view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (toolsBtn.open ? ' toolsopen' : '') + (sgBtn.open ? ' sgopen' : '') }, mapEl,
     watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { viewBox.hidden = true; menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, gpsBtn, gpsDist, gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
+    addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist, gpsShotBtn), holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
     holePill = h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1674,20 +1687,15 @@ export function renderHole(view, n) {
     apprSlider.hidden = !showAppr || onGreen || !apprAdjOpen;
     apprAdjBtn.hidden = !showAppr || onGreen;
     apprAdjBtn.classList.toggle('on', apprAdjOpen);
-    slidersEl.classList.toggle('high', !apprSlider.hidden); // clear of the Appr Adj button
     setPinBtn.hidden = st !== 'pin';
     banner.hidden = true; // replaced by the score chips at the top
     teeBtn.hidden = onGreen;
     pinBtn.hidden = st === 'pin' || st === 'done';
     sgViewBtn.hidden = !viewing();
-    // Tools: hidden when it has nothing to open; shows how many tools are on.
-    const tools = [widthBtn, arcBtn, dispBtn, apprBtn, compBtn, autoBtn, clubBtn];
-    toolsBtn.hidden = tools.every(b => b.hidden);
-    const onCount = [showWidth, showArc, showDisp, showAppr, showComp, !!autoPick].filter(Boolean).length;
-    toolsBtn.classList.toggle('on', !toolsOpen && onCount > 0);
-    toolsBtn.firstChild.textContent = toolsOpen ? '✕' : onCount ? String(onCount) : '⋯';
-    toolsBtn.lastChild.textContent = toolsOpen ? 'Close' : 'Tools';
-    if (!toolsOpen) arcSlider.hidden = apprSlider.hidden = true;
+    // Tools and SG: hidden when there's nothing to open; closed, they show how many of their tools are on.
+    drawGroup(toolsBtn, [widthBtn, arcBtn, dispBtn, apprBtn], [showWidth, showArc, showDisp, showAppr].filter(Boolean).length, '⋯', 'toolsopen');
+    drawGroup(sgBtn, [compBtn, autoBtn], [showComp, !!autoPick].filter(Boolean).length, '⊙', 'sgopen');
+    if (!toolsBtn.open) arcSlider.hidden = apprSlider.hidden = true;
     if (!viewBox.hidden) drawViewBox();
     drawLiveBtn();
     drawGps();
