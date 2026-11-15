@@ -883,9 +883,9 @@ export function renderHole(view, n) {
   }
   // Penalty: a shot into water or out of bounds, or a lost ball (Lost ball on
   // the shot sheet, with the crosshair where it was lost), asks how the player
-  // carried on. A lost ball is charged like OB.
+  // carried on.
   //  Re-hit from where it was played (stroke and distance): 1 penalty stroke.
-  //  Drop: 1 penalty stroke for water, 2 for out of bounds (the local rule), then
+  //  Drop: 1 penalty stroke for water or a lost ball, 2 for out of bounds (the local rule), then
   //  the crosshair is moved to where the ball was dropped and Set drop records it.
   // The penalty is charged to the shot that went in; the next shot carries
   // `penalty` so Undo can take it back off.
@@ -905,8 +905,8 @@ export function renderHole(view, n) {
       h('div', { class: 'clubhead' }, h('strong', {}, water ? 'In the water' : kind === 'lost' ? 'Lost ball' : 'Out of bounds'), h('button', { class: 'x', onclick: () => { penaltySheet.hidden = true; } }, '✕')),
       h('div', { class: 'penopts' },
         opt(prev.lie === 'tee' ? 'Re-tee' : 'Replay', '+1 stroke · hit again from the same spot', () => saveShots([...charge(1), { pos: prev.pos, lie: prev.lie, replay: true, penalty: 1 }])),
-        opt('Drop', `+${water ? 1 : 2} stroke${water ? '' : 's'} · move the crosshair to the drop, then Set drop`, () => {
-          const n = water ? 1 : 2;
+        opt('Drop', `+${kind === 'ob' ? '2 strokes' : '1 stroke'} · move the crosshair to the drop, then Set drop`, () => {
+          const n = kind === 'ob' ? 2 : 1;
           dropping = { shots: charge(n), n };
           setDropBtn.textContent = `Set drop (+${n})`; setDropBtn.hidden = false; holeEl()?.classList.add('dropping');
           update();
