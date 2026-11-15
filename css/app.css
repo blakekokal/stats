@@ -132,6 +132,12 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .exppill select { min-height: 36px; padding: 4px 8px; border-radius: 10px; background: #2a2f2c; border-color: #444; }
 .compass { position: absolute; top: calc(34px + env(safe-area-inset-top)); left: 10px; z-index: 3; width: 34px; height: 34px; padding: 0; border: 0; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); display: grid; place-items: center; box-shadow: 0 1px 4px #0008; }
 .compass svg { width: 26px; height: 26px; transition: transform .1s linear; }
+.wind { position: absolute; top: calc(74px + env(safe-area-inset-top)); left: 10px; z-index: 3; width: 34px; height: 34px; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); display: grid; place-items: center; box-shadow: 0 1px 4px #0008; pointer-events: none; }
+.wind[hidden] { display: none; }
+.wind svg { grid-area: 1 / 1; width: 34px; height: 34px; transition: transform .1s linear; }
+.wind b { grid-area: 1 / 1; color: #fff; font: 800 12px/1 system-ui, sans-serif; font-variant-numeric: tabular-nums; }
+.holeview.replaying .wind { top: calc(114px + env(safe-area-inset-top)); }
+.holeview.replaying .keys { top: calc(156px + env(safe-area-inset-top)); }
 .sheet .credit { font-size: 11px; max-width: 220px; }
 .fab.gps, .fab.width, .fab.arc, .fab.autotarget, .fab.disp, .fab.appr, .fab.comp, .fab.cleanview, .fab.club, .fab.movetee, .fab.movepin { display: grid; place-content: center; line-height: 1; font-size: 18px; }
 .fab.width, .fab.arc { left: auto; right: 14px; }
@@ -200,7 +206,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .leavebox .delete { background: #e06060; }
 .leavebox .nosave { background: #3d3d3d; }
 .leavebox .cancel { background: transparent; color: #9a9a9a; min-height: 36px; }
-.keys { position: absolute; left: 10px; top: calc(76px + env(safe-area-inset-top)); z-index: 3; display: grid; gap: 6px; justify-items: start; pointer-events: none; }
+.keys { position: absolute; left: 10px; top: calc(116px + env(safe-area-inset-top)); z-index: 3; display: grid; gap: 6px; justify-items: start; pointer-events: none; }
 .zonelegend { display: grid; gap: 3px; background: #111d; backdrop-filter: blur(8px); border-radius: 10px; padding: 5px 7px; color: #fff; font: 600 11px/1.1 system-ui, sans-serif; }
 .zonelegend.heat { padding: 5px 6px 6px; }
 .heatbar { display: grid; width: 14px; margin-right: 30px; }

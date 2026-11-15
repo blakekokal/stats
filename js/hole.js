@@ -53,7 +53,22 @@ let replay = null;
 // button is on). The last fix is kept between holes so the dot shows at once.
 let gpsWatch = null, gpsFix = null; // gpsFix = { pos: [lat, lng], acc (metres), at (ms) }
 function stopGps() { if (gpsWatch != null) { navigator.geolocation.clearWatch(gpsWatch); gpsWatch = null; } }
-export function closeHole() { stopGps(); clearInterval(watchTimer); watchTimer = null; liveUnsub?.(); liveUnsub = null; if (map) { map.remove(); map = null; } }
+// Wind: the current wind at the course, from Open-Meteo (no key needed). Kept per
+// course for 10 minutes so moving between holes doesn't refetch it.
+const windCache = {}; // course id -> { at, speed (mph), dir (degrees the wind comes from) }
+let windTimer = null;
+async function fetchWind(id, at) {
+  const c = windCache[id];
+  if (c && Date.now() - c.at < 600000) return c;
+  try {
+    const r = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${at[0].toFixed(4)}&longitude=${at[1].toFixed(4)}&current=wind_speed_10m,wind_direction_10m&wind_speed_unit=mph`);
+    if (!r.ok) return c || null;
+    const cur = (await r.json()).current;
+    if (cur?.wind_speed_10m == null || cur.wind_direction_10m == null) return c || null;
+    return (windCache[id] = { at: Date.now(), speed: cur.wind_speed_10m, dir: cur.wind_direction_10m });
+  } catch { return c || null; }
+}
+export function closeHole() { clearInterval(windTimer); windTimer = null; stopGps(); clearInterval(watchTimer); watchTimer = null; liveUnsub?.(); liveUnsub = null; if (map) { map.remove(); map = null; } }
 export const lastHole = () => +sessionStorage.getItem('hole') || 1;
 
 // Compass direction from a to b, in degrees clockwise from north.
@@ -1160,6 +1175,10 @@ export function renderHole(view, n) {
   const scorecard = h('div', { class: 'scorecard', hidden: true, onclick: e => { if (e.target === scorecard) scorecard.hidden = true; } });
   const compass = h('button', { class: 'compass', 'aria-label': 'Compass: tap to straighten the view', title: 'Tap to straighten the view' });
   compass.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,16 12,16" fill="#ff4d4d"/><polygon points="16,29 20,16 12,16" fill="#fff"/><text x="16" y="11.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">N</text></svg>';
+  // Wind, under the compass: an arrow showing which way the wind is blowing on
+  // this view of the map (it turns with the map), and the speed in mph.
+  const wind = h('div', { class: 'wind', hidden: true, role: 'img', 'aria-label': 'Wind' });
+  wind.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,1.5 21,8.5 11,8.5" fill="#4dd0ff"/><rect x="14.6" y="24" width="2.8" height="6" rx="1.4" fill="#4dd0ff"/></svg><b></b>';
 
   // Leaving a round from the menu's Home button.
   const leaveTo = (hash, fn) => () => { const r = currentRound(); if (r) fn(r); setCurrentRound(null); localStorage.removeItem('gs:viewOnly'); localStorage.removeItem('gs:editingPast'); location.hash = hash; };
@@ -1270,7 +1289,7 @@ export function renderHole(view, n) {
   if (!scouting && !watching && !viewing()) shareCurrent();
 
   view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (wi && !wi.id.startsWith('sv-') ? ' watchlive' : '') + (toolsBtn.open ? ' toolsopen' : '') + (sgBtn.open ? ' sgopen' : '') }, mapEl,
-    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, chips, sgViewBtn, h('div', { class: 'topright' }, expPill), scorecard,
+    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { viewBox.hidden = true; menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist, gpsShotBtn), holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
@@ -1297,6 +1316,28 @@ export function renderHole(view, n) {
   const needle = compass.querySelector('svg');
   const turnNeedle = () => { needle.style.transform = `rotate(${-m.getBearing()}deg)`; };
   m.on('rotate', turnNeedle); turnNeedle();
+  // Wind arrow: points where the wind is going (it comes from w.dir).
+  let windNow = null;
+  const windArrow = wind.querySelector('svg');
+  const turnWind = () => { if (windNow) windArrow.style.transform = `rotate(${windNow.dir + 180 - m.getBearing()}deg)`; };
+  m.on('rotate', turnWind);
+  const showWind = w => {
+    if (map !== m || !w) return;
+    windNow = w;
+    wind.hidden = false;
+    wind.querySelector('b').textContent = Math.round(w.speed);
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const from = dirs[Math.round(w.dir / 45) % 8];
+    wind.setAttribute('aria-label', `Wind ${Math.round(w.speed)} mph from the ${from}`);
+    wind.title = `Wind ${Math.round(w.speed)} mph from the ${from}`;
+    turnWind();
+  };
+  const windAt = pin || tee;
+  if (windAt) {
+    fetchWind(course.id, windAt).then(showWind);
+    clearInterval(windTimer);
+    windTimer = setInterval(() => { if (!document.hidden) fetchWind(course.id, windAt).then(showWind); }, 600000);
+  }
   compass.onclick = () => { if (stage() === 'play') place(); else zoomToGreen(); };
   window.holeMap = m; // handy for debugging from the console
 
