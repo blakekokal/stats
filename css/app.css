@@ -108,11 +108,11 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .holeview { position: relative; height: 100%; overflow: hidden; background: #0b0e0c; }
 #gmap { position: absolute; inset: 0; }
 .liveoverlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
-.holepill { position: absolute; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; gap: 6px; background: #111c; backdrop-filter: blur(8px); border-radius: 999px; padding: 6px 8px; color: #fff; text-align: center; white-space: nowrap; }
+.holepill { position: absolute; left: 50%; bottom: calc(8px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: center; gap: 6px; background: #111c; backdrop-filter: blur(8px); border-radius: 999px; padding: 6px 8px; color: #fff; text-align: center; white-space: nowrap; }
 .holepill a { font-size: 30px; line-height: 1; text-decoration: none; padding: 4px 16px 8px; }
 .holepill small { display: block; font-size: 13px; opacity: .85; } .holepill strong { font-size: 17px; }
-.fab { position: absolute; left: 14px; bottom: calc(22px + env(safe-area-inset-bottom)); width: 48px; height: 48px; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); border: 0; color: #fff; font-size: 20px; padding: 0; }
-.sheet { position: absolute; left: 14px; bottom: calc(80px + env(safe-area-inset-bottom)); display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; z-index: 5; }
+.fab { position: absolute; left: 14px; bottom: calc(12px + env(safe-area-inset-bottom)); width: 48px; height: 48px; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); border: 0; color: #fff; font-size: 20px; padding: 0; }
+.sheet { position: absolute; left: 14px; bottom: calc(70px + env(safe-area-inset-bottom)); display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 12px; z-index: 5; }
 .sheet[hidden] { display: none; }
 .teemark { width: 18px; height: 18px; border-radius: 50%; background: #fff; border: 2px solid #111; box-shadow: 0 1px 4px #000a; cursor: grab; }
 /* The crosshair never moves: the map moves under it. Its height must match CROSSHAIR_Y in hole.js. */
@@ -135,41 +135,41 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .sheet .credit { font-size: 11px; max-width: 220px; }
 .fab.gps, .fab.width, .fab.arc, .fab.autotarget, .fab.disp, .fab.appr, .fab.comp, .fab.cleanview, .fab.club, .fab.movetee, .fab.movepin { display: grid; place-content: center; line-height: 1; font-size: 18px; }
 .fab.width, .fab.arc { left: auto; right: 14px; }
-.fab.add { left: auto; right: 9px; bottom: calc(18px + env(safe-area-inset-bottom)); width: 58px; height: 58px; font-size: 34px; font-weight: 600; background: #ffb020; color: #111; }
+.fab.add { left: auto; right: 9px; bottom: calc(8px + env(safe-area-inset-bottom)); width: 58px; height: 58px; font-size: 34px; font-weight: 600; background: #ffb020; color: #111; }
 .fab.undo { top: calc(66px + env(safe-area-inset-top)); bottom: auto; left: auto; right: 10px; width: 44px; height: 44px; font-size: 22px; font-weight: 700; background: #ffb020; color: #111; box-shadow: 0 1px 6px #0008; z-index: 4; }
 .fab.undo.low { top: calc(136px + env(safe-area-inset-top)); }
-.fab.movetee { bottom: calc(80px + env(safe-area-inset-bottom)); }
-.fab.movepin { bottom: calc(138px + env(safe-area-inset-bottom)); }
+.fab.movetee { bottom: calc(70px + env(safe-area-inset-bottom)); }
+.fab.movepin { bottom: calc(128px + env(safe-area-inset-bottom)); }
 .setnext { position: absolute; left: 70px; height: 44px; padding: 0 16px; border-radius: 999px; border: 0; background: #ffb020; color: #111; font-size: 15px; font-weight: 700; box-shadow: 0 1px 6px #0008; z-index: 4; }
-.setnext.tee { bottom: calc(82px + env(safe-area-inset-bottom)); }
-.setnext.pin { bottom: calc(140px + env(safe-area-inset-bottom)); }
+.setnext.tee { bottom: calc(72px + env(safe-area-inset-bottom)); }
+.setnext.pin { bottom: calc(130px + env(safe-area-inset-bottom)); }
 /* Moving the tee: the screen crosshair becomes the tee dot; the real tee marker hides under it. */
 .holeview.movingtee .crosshair { width: 22px; height: 22px; margin: -11px 0 0 -11px; background: #fff; border: 2px solid #111; box-shadow: 0 0 0 3px #ffb020, 0 1px 4px #000; }
 .holeview.movingtee .teemark { visibility: hidden; }
 .aimmark { width: 16px; height: 16px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1.5px #111, 0 1px 4px #000; background: transparent; pointer-events: none; }
 .fab[hidden] { display: none; }
-.holed { position: absolute; right: 9px; bottom: calc(88px + env(safe-area-inset-bottom)); height: 44px; padding: 0 16px; border-radius: 999px; border: 0; background: #22c55e; color: #fff; font-size: 16px; font-weight: 700; box-shadow: 0 1px 6px #0008; z-index: 3; }
+.holed { position: absolute; right: 9px; bottom: calc(78px + env(safe-area-inset-bottom)); height: 44px; padding: 0 16px; border-radius: 999px; border: 0; background: #22c55e; color: #fff; font-size: 16px; font-weight: 700; box-shadow: 0 1px 6px #0008; z-index: 3; }
 .holed[hidden] { display: none; }
-.setpin { position: absolute; right: 9px; bottom: calc(88px + env(safe-area-inset-bottom)); height: 50px; padding: 0 20px; border-radius: 999px; border: 0; background: #ffb020; color: #111; font-size: 17px; font-weight: 700; box-shadow: 0 1px 6px #0008; z-index: 3; }
+.setpin { position: absolute; right: 9px; bottom: calc(78px + env(safe-area-inset-bottom)); height: 50px; padding: 0 20px; border-radius: 999px; border: 0; background: #ffb020; color: #111; font-size: 17px; font-weight: 700; box-shadow: 0 1px 6px #0008; z-index: 3; }
 .setpin[hidden] { display: none; }
-.greenbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 4; display: flex; align-items: center; gap: 12px; background: #111d; backdrop-filter: blur(8px); border-radius: 999px; padding: 5px 5px 5px 16px; color: #fff; white-space: nowrap; }
+.greenbar { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(74px + env(safe-area-inset-bottom)); z-index: 4; display: flex; align-items: center; gap: 12px; background: #111d; backdrop-filter: blur(8px); border-radius: 999px; padding: 5px 5px 5px 16px; color: #fff; white-space: nowrap; }
 .greenbar[hidden] { display: none; }
 .greenbar > div { display: flex; align-items: baseline; gap: 10px; } .greenbar strong { font-size: 20px; line-height: 1; font-variant-numeric: tabular-nums; } .greenbar strong em { font-style: normal; font-size: 15px; opacity: .85; } .greenbar span { font-size: 13px; opacity: .85; font-variant-numeric: tabular-nums; }
 .greenbar .btn { flex: none; width: 32px; height: 32px; min-height: 0; padding: 0; border-radius: 50%; font-size: 20px; font-weight: 700; line-height: 1; }
 .readout .note { display: block; font-size: 15px; font-weight: 600; }
 .shotmark { width: 20px; height: 20px; border-radius: 50%; background: #ffb020; color: #111; border: 2px solid #111; font: 700 11px/16px system-ui, sans-serif; text-align: center; box-shadow: 0 1px 4px #000a; }
-.fab.width { bottom: calc(204px + env(safe-area-inset-bottom)); }
-.fab.arc { bottom: calc(262px + env(safe-area-inset-bottom)); }
-.fab.appr { left: auto; right: 14px; bottom: calc(378px + env(safe-area-inset-bottom)); }
-.fab.disp { left: auto; right: 14px; bottom: calc(320px + env(safe-area-inset-bottom)); }
-.fab.arcadj.dispadj { bottom: calc(324px + env(safe-area-inset-bottom)); }
+.fab.width { bottom: calc(194px + env(safe-area-inset-bottom)); }
+.fab.arc { bottom: calc(252px + env(safe-area-inset-bottom)); }
+.fab.appr { left: auto; right: 14px; bottom: calc(368px + env(safe-area-inset-bottom)); }
+.fab.disp { left: auto; right: 14px; bottom: calc(310px + env(safe-area-inset-bottom)); }
+.fab.arcadj.dispadj { bottom: calc(314px + env(safe-area-inset-bottom)); }
 .readout .sg.disp { font-size: 15px; }
 .fab.appr.on { background: #4dd0ff; color: #111; }
 .sgtlabel { background: #111d; color: #e9d5ff; font: 700 12px/1 system-ui, sans-serif; padding: 4px 7px; border-radius: 999px; white-space: nowrap; pointer-events: none; border: 1px solid #c084fc; }
 .fab small { font-size: 9px; font-weight: 600; }
 .fab.on { background: #ffe14d; color: #111; }
 .fab.arc.on { background: #fff; }
-.sliders { position: absolute; left: 70px; right: 70px; bottom: calc(88px + env(safe-area-inset-bottom)); max-width: 340px; margin: 0 auto; display: grid; gap: 6px; z-index: 4; }
+.sliders { position: absolute; left: 70px; right: 70px; bottom: calc(78px + env(safe-area-inset-bottom)); max-width: 340px; margin: 0 auto; display: grid; gap: 6px; z-index: 4; }
 .arcslider { display: grid; gap: 4px; background: #111c; backdrop-filter: blur(8px); border-radius: 18px; padding: 7px 12px 4px; color: #fff; font-size: 13px; z-index: 4; }
 .arcslider .presets { display: flex; gap: 5px; }
 .arcslider .preset { flex: 1; min-height: 28px; padding: 0; border-radius: 999px; border: 0; background: #ffffff22; color: #fff; font-size: 13px; font-weight: 700; font-variant-numeric: tabular-nums; }
@@ -231,7 +231,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .shotmove { display: flex; gap: 4px; }
 .shotmove button { flex: 1; min-height: 32px; padding: 0 6px; border: 0; border-radius: 8px; background: #ffffff22; color: #fff; font-weight: 700; font-size: 12px; }
 .shotmove button.go { background: #ffb020; color: #111; }
-.chips { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 3; display: flex; gap: 6px; }
+.chips { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(67px + env(safe-area-inset-bottom)); z-index: 3; display: flex; gap: 6px; }
 .chips[hidden] { display: none; }
 .scorechip { height: 50px; min-height: 0; padding: 4px 10px; border: 0; border-radius: 14px; background: #111c; backdrop-filter: blur(8px); color: #fff; display: grid; align-content: center; justify-items: center; gap: 1px; line-height: 1.05; }
 .scorechip small { font-size: 10px; opacity: .75; font-weight: 600; }
@@ -281,13 +281,13 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .holeview.viewing .crosshair, .holeview.viewing .readout { display: none; }
 .shotinfo .line, .shotpop .line { justify-content: flex-start; } .shotinfo .line b, .shotpop .line b { font-size: 13px; }
 .shotinfo .line.sub span, .shotpop .line.sub span { color: #cfcfcf; font-size: 13px; } .shotpop .line.sub { margin-bottom: 3px; }
-.fab.club { left: auto; right: 14px; bottom: calc(88px + env(safe-area-inset-bottom)); }
+.fab.club { left: auto; right: 14px; bottom: calc(78px + env(safe-area-inset-bottom)); }
 .fab.club span { font-size: 15px; font-weight: 800; }
 .fab.club.on { background: #ffb020; color: #111; }
 .vertag.scouting { background: #1a4a8a; }
 .clubsheet { position: absolute; inset: 0; z-index: 25; background: #000a; display: grid; place-items: end center; padding: 12px; }
 .clubsheet[hidden] { display: none; }
-.clubbox { width: min(420px, 100%); background: #1e1e1e; color: #fff; border-radius: 16px; padding: 12px; display: grid; gap: 10px; margin-bottom: calc(80px + env(safe-area-inset-bottom)); box-shadow: 0 8px 30px #000a; }
+.clubbox { width: min(420px, 100%); background: #1e1e1e; color: #fff; border-radius: 16px; padding: 12px; display: grid; gap: 10px; margin-bottom: calc(70px + env(safe-area-inset-bottom)); box-shadow: 0 8px 30px #000a; }
 .clubhead { display: flex; align-items: center; } .clubhead strong { flex: 1; font-size: 16px; }
 .clubhead .x { width: 32px; height: 32px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: #ffffff1c; color: #fff; }
 .clubgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(62px, 1fr)); gap: 6px; }
@@ -299,16 +299,16 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .clubbox .record { min-height: 46px; border: 0; border-radius: 12px; background: #ffb020; color: #111; font-size: 16px; font-weight: 800; }
 .clubbox .recordrow { display: flex; gap: 8px; } .clubbox .recordrow .record { flex: 1; }
 .clubbox .lostball { min-height: 46px; border: 0; border-radius: 12px; background: #3d3d3d; color: #fff; font-size: 15px; font-weight: 700; padding: 0 14px; }
-.fab.arcadj { left: auto; right: 68px; bottom: calc(266px + env(safe-area-inset-bottom)); width: 40px; height: 40px; display: grid; place-content: center; line-height: 1; font-size: 14px; }
+.fab.arcadj { left: auto; right: 68px; bottom: calc(256px + env(safe-area-inset-bottom)); width: 40px; height: 40px; display: grid; place-content: center; line-height: 1; font-size: 14px; }
 .fab.arcadj small { font-size: 9px; font-weight: 600; }
 .fab.arcadj.on { background: #fff; color: #111; }
-.fab.appradj { bottom: calc(382px + env(safe-area-inset-bottom)); } .fab.appradj.on { background: #4dd0ff; }
+.fab.appradj { bottom: calc(372px + env(safe-area-inset-bottom)); } .fab.appradj.on { background: #4dd0ff; }
 .arcslider { min-width: 0; }
 .arcslider .presets { min-width: 0; gap: 4px; }
 .arcslider .preset { min-width: 0; flex: 1 1 0; font-size: 12px; }
-.fab.comp { bottom: calc(370px + env(safe-area-inset-bottom)); }
-.fab.cleanview { bottom: calc(196px + env(safe-area-inset-bottom)); }
-.fab.autotarget { bottom: calc(312px + env(safe-area-inset-bottom)); }
+.fab.comp { bottom: calc(360px + env(safe-area-inset-bottom)); }
+.fab.cleanview { bottom: calc(186px + env(safe-area-inset-bottom)); }
+.fab.autotarget { bottom: calc(302px + env(safe-area-inset-bottom)); }
 .fab.autotarget.on { background: #22c55e; color: #111; }
 .autokey b.pos { color: #4ade80; } .autokey b.neg { color: #ff6b6b; } .autokey span.best { font-weight: 800; color: #fff; } .autokey span { color: #cfcfcf; }
 .holeview.clean .shotmark, .holeview.clean .crosshair, .holeview.clean .readout { display: none; }
@@ -329,8 +329,8 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .compdot.active i { transform: scale(1.7); box-shadow: 0 0 0 4px color-mix(in srgb, var(--c) 45%, transparent), 0 0 12px var(--c); }
 .compdot.active b { font-size: 21px; } .compdot.active .up { bottom: 13px; } .compdot.active .down { top: 13px; }
 .compdot.active { z-index: 1; }
-.fab.arcadj.compmode { left: 68px; right: auto; bottom: calc(374px + env(safe-area-inset-bottom)); background: #f472b6; color: #111; }
-.setnext.drop { bottom: calc(198px + env(safe-area-inset-bottom)); background: #4dd0ff; }
+.fab.arcadj.compmode { left: 68px; right: auto; bottom: calc(364px + env(safe-area-inset-bottom)); background: #f472b6; color: #111; }
+.setnext.drop { bottom: calc(188px + env(safe-area-inset-bottom)); background: #4dd0ff; }
 .setnext[hidden] { display: none; }
 .penopts { display: grid; gap: 8px; }
 .penopt { min-height: 56px; border: 0; border-radius: 12px; background: #2a2f2c; color: #fff; display: grid; gap: 2px; padding: 8px 12px; text-align: left; }
@@ -427,7 +427,7 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .livetag.on { background: #c8102e; }
 .livetag.on b { color: #fff; }
 /* Refresh: a small round button in the bottom right corner. */
-.fab.liverefresh { left: auto; right: 10px; bottom: calc(22px + env(safe-area-inset-bottom)); width: 40px; height: 40px; font-size: 20px; font-weight: 700; background: #fff; color: #111; box-shadow: 0 1px 6px #0008; z-index: 4; display: grid; place-content: center; line-height: 1; }
+.fab.liverefresh { left: auto; right: 10px; bottom: calc(12px + env(safe-area-inset-bottom)); width: 40px; height: 40px; font-size: 20px; font-weight: 700; background: #fff; color: #111; box-shadow: 0 1px 6px #0008; z-index: 4; display: grid; place-content: center; line-height: 1; }
 .fab.liverefresh[hidden] { display: none; }
 .fab.liverefresh.busy { opacity: .6; }
 /* The latest shot, in a thin strip across the top. */
@@ -443,9 +443,9 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .holeview.holedout .crosshair, .holeview.holedout .readout { display: none; }
 /* Score tiles span the hole pill's width (set in js/hole.js). */
 .chips { box-sizing: border-box; }
-.chips .scorechip { flex: 1 1 0; height: 58px; }
+.chips .scorechip { flex: 1 1 0; height: 48px; padding-top: 2px; padding-bottom: 2px; }
 .chips .scorechip small { font-size: 11.5px; }
-.chips .scorechip strong { font-size: 23px; }
+.chips .scorechip strong { font-size: 21px; }
 .chips .scorechip strong em, .chips .scorechip > em { font-size: 13px; }
 /* Watching a live round: just the hole, the shots and the score. No aiming tools or expected strokes. */
 .holeview.watching .fab.tools, .holeview.watching .fab.sgtools, .holeview.watching .fab.cleanview, .holeview.watching .viewbox, .holeview.watching .fab.appr, .holeview.watching .fab.disp,
@@ -475,12 +475,12 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 /* Hole screen, fewer buttons. Left: menu, Tee, Pin, View (View opens a box of
    switches). Right: + and Tools, which opens the aiming tools up the column. */
 .fab.tools, .fab.sgtools { display: grid; place-content: center; line-height: 1; font-size: 18px; }
-.fab.tools { left: auto; right: 14px; bottom: calc(146px + env(safe-area-inset-bottom)); }
-.fab.sgtools { bottom: calc(254px + env(safe-area-inset-bottom)); }
+.fab.tools { left: auto; right: 14px; bottom: calc(136px + env(safe-area-inset-bottom)); }
+.fab.sgtools { bottom: calc(244px + env(safe-area-inset-bottom)); }
 .fab.tools.on, .fab.sgtools.on { background: #ffe14d; color: #111; }
 .holeview:not(.toolsopen) :is(.fab.width, .fab.arc, .fab.disp, .fab.appr, .fab.arcadj:not(.compmode)) { display: none; }
 .holeview:not(.sgopen) :is(.fab.comp, .fab.autotarget, .fab.compmode) { display: none; }
-.sheet.viewbox { left: 70px; bottom: calc(196px + env(safe-area-inset-bottom)); min-width: 230px; gap: 4px; }
+.sheet.viewbox { left: 70px; bottom: calc(186px + env(safe-area-inset-bottom)); min-width: 230px; gap: 4px; }
 .viewbox > strong { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
 .viewswitch { font-size: 16px; }
 .viewswitch span small { display: block; font-size: 11px; font-weight: 500; }
@@ -489,8 +489,8 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 /* Clean view, for screenshots: only the map, the hole pill, the menu and View
    (moved down to just above the menu), plus any box they open. */
 .holeview.clean > :not(#gmap):not(.holepill):not(.menu):not(.cleanview):not(.sheet):not(.leave) { display: none !important; }
-.holeview.clean .fab.cleanview { bottom: calc(80px + env(safe-area-inset-bottom)); }
-.holeview.clean .sheet.viewbox { bottom: calc(80px + env(safe-area-inset-bottom)); }
+.holeview.clean .fab.cleanview { bottom: calc(70px + env(safe-area-inset-bottom)); }
+.holeview.clean .sheet.viewbox { bottom: calc(70px + env(safe-area-inset-bottom)); }
 /* GPS on: the distance to the pin and the GPS shot button sit at the very top. */
 /* The distance box starts just left of centre, clear of the Live pill on the left and Expected on the right. */
 .gpstop { position: absolute; top: calc(8px + env(safe-area-inset-top)); left: 50%; transform: translateX(-40px); z-index: 4; display: flex; gap: 6px; align-items: center; }
