@@ -398,6 +398,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.52.6', ['Live view: the latest shot shows in a thin strip at the top (e.g. "Shot 1 · Driver 290 yds to fwy"); tap it to see the shot', 'Refresh is a small button in the bottom right corner']],
   ['0.52.5', ['Lost ball: a drop is +1 stroke, like water (out of bounds stays +2)']],
   ['0.52.4', ['Lost ball button on the shot sheet: re-hit (+1) or drop (+2), like out of bounds']],
   ['0.52.3', ['Score tiles: "thru" counts holes in the order played, so a round started on 10 keeps counting after the turn']],

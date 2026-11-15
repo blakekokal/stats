@@ -1095,7 +1095,23 @@ export function renderHole(view, n) {
     else rerenderHere();
     if (manual) toast('Updated');
   }
-  const refreshBtn = h('button', { class: 'fab viewedit refresh', hidden: !watching || wi.id.startsWith('sv-'), 'aria-label': 'Refresh', onclick: () => refreshLive(true) }, '↻ Refresh');
+  const refreshBtn = h('button', { class: 'fab liverefresh', hidden: !watching || wi.id.startsWith('sv-'), 'aria-label': 'Refresh', title: 'Refresh', onclick: () => refreshLive(true) }, '↻');
+  // Watching: a thin strip across the top with the latest shot on this hole,
+  // e.g. "Shot 1 · Driver 290 yds to fwy · 148 yds to hole". Tap it to see that shot.
+  const lastShotBar = watching ? h('button', { class: 'lastshot', hidden: true, 'aria-label': 'Latest shot' }) : null;
+  function drawLastShot() {
+    if (!lastShotBar) return;
+    const hl = holeNow(), shots = hl.shots || [];
+    const i = hl.done ? shots.length - 1 : shots.length - 2;
+    const lines = i >= 0 ? shotLines(hl, i) : null;
+    lastShotBar.hidden = !lines;
+    if (!lines) return;
+    let putt = 0; for (let k = 0; k <= i; k++) if (shots[k].lie === 'green') putt++;
+    const label = shots[i].lie === 'green' ? `Putt ${putt}` : `Shot ${strokeNo(shots, i)}`;
+    const at = shots[i].obAt || shots[i + 1]?.pos || hl.pin || pin;
+    lastShotBar.onclick = () => showShotInfo(i, at);
+    lastShotBar.replaceChildren(h('b', {}, label), h('span', {}, `\u00a0· ${lines[0]} · ${lines[1]}`));
+  }
   if (wi?.live) watchTimer = setInterval(() => { if (!document.hidden && scorecard.hidden && sgView.hidden && !shotPopup?.isOpen()) refreshLive(false); }, 20000);
 
   // Scoring: the Live button opens a box with the on/off switch and the link to share.
@@ -1142,7 +1158,7 @@ export function renderHole(view, n) {
   if (!scouting && !watching && !viewing()) shareCurrent();
 
   view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') }, mapEl,
-    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
+    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, gpsBtn, gpsDist, gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, outlineBtn, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, sgtBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
@@ -1850,6 +1866,7 @@ export function renderHole(view, n) {
     }
   }
   drawShots();
+  drawLastShot();
 
   m.on('move', update);
   // The browser's toolbars showing or hiding changes the screen height: keep the
