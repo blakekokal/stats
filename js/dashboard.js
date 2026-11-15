@@ -124,7 +124,8 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
     h('div', { style: 'width:100%;max-width:360px;' },
       h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:6px;' }, only ? '📊 Round Stats' : '📊 Stats Dashboard'),
       only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || courseById(only.course).name} · ${only.date}${only.player ? ' · ' + only.player : ''}`) : null,
-      h('div', { style: 'display:flex;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;' }, only ? [fHcp] : [fType, fTime, fHcp]),
+      // The filters and the "vs" level are no longer shown: all rounds, compared with the player's own level.
+      h('div', { style: 'display:none;' }, only ? [fHcp] : [fType, fTime, fHcp]),
       content)));
 
   function draw() {
@@ -381,10 +382,11 @@ export function renderDashboard(data, hcp, targetId) {
   function tbl(headers,rows){var h='<div style="overflow-x:auto;margin:4px 0;"><table style="width:100%;font-size:12px;border-collapse:collapse;"><tr>';headers.forEach(function(c){h+='<td style="padding:4px 6px;font-weight:700;color:#9a9a9a;border-bottom:1px solid #3d3d3d;">'+c+'</td>';});h+='</tr>';rows.forEach(function(r){h+='<tr>';r.forEach(function(c){h+='<td style="padding:3px 6px;border-bottom:1px solid #282828;">'+c+'</td>';});h+='</tr>';});return h+'</table></div>';}
   // A strokes-gained slider: 0 in the middle, red to the left for strokes lost,
   // green to the right for strokes gained. Title above the bar, number below.
-  function sgBar(l,v,R,big){
+  // With `go`, the bar is a button that opens that category's detailed stats.
+  function sgBar(l,v,R,big,go){
     var p=Math.max(-R,Math.min(R,v))/R*50, c=sgC(v), ht=big?14:10;
-    return '<div style="padding:10px 0 8px;border-bottom:1px solid #282828;text-align:center;">'
-      +'<div style="margin-bottom:8px;'+(big?'font-size:15px;font-weight:700;color:#ffffff;':'color:#9a9a9a;')+'">'+l+'</div>'
+    return '<div'+(go!=null?' role="button" onclick="showDashSub('+go+')" style="cursor:pointer;':' style="')+'padding:10px 0 8px;border-bottom:1px solid #282828;text-align:center;">'
+      +'<div style="margin-bottom:8px;'+(big?'font-size:15px;font-weight:700;color:#ffffff;':'color:#9a9a9a;')+'">'+l+(go!=null?' <span style="color:#606060;font-weight:700;">\u203a</span>':'')+'</div>'
       +'<div style="position:relative;height:'+ht+'px;border-radius:'+(ht/2)+'px;background:#2a2a2a;">'
       +'<div style="position:absolute;top:0;bottom:0;border-radius:'+(ht/2)+'px;background:'+c+';left:'+(v>=0?50:50+p)+'%;width:'+Math.abs(p)+'%;"></div>'
       +'<div style="position:absolute;left:50%;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:#8a8a8a;"></div></div>'
@@ -415,43 +417,26 @@ export function renderDashboard(data, hcp, targetId) {
   // Handicap label
   var hcpLabel=hcpLabels[hcp]||hcp;
 
-  // ===== COACHING-STYLE TABS =====
+  // ===== STROKES GAINED BARS =====
+  // Just the bars (per round, one shared scale). Tapping one opens its detailed
+  // stats: Total -> scoring, then Off the tee, Approach, Around green, Putting.
   var html='';
-  var tabNames=['SG','Scoring','OTT','Approach','ARG','Putting'];
-  html+='<div style="display:flex;gap:0;width:100%;flex-shrink:0;border-radius:10px;overflow:hidden;margin-bottom:12px;">';
-  for(var ti=0;ti<tabNames.length;ti++){
-    var isActive=ti===0;
-    html+='<button onclick="showDashSub('+ti+')" id="dashTab_'+ti+'" style="flex:1;height:36px;font-size:10px;font-weight:700;background:'+(isActive?'#2d7abc':'#282828')+';border-radius:0;border:none;color:'+(isActive?'#ffffff':'#606060')+';max-width:none;width:auto;padding:0 2px;margin:0;cursor:pointer;">'+tabNames[ti]+'</button>';
-  }
-  html+='</div>';
-  
-  // ===== TAB 0: STROKES GAINED =====
+  var back='<button onclick="showDashSub(0)" style="height:34px;font-size:13px;font-weight:700;background:#282828;border-radius:8px;padding:0 12px;max-width:none;width:auto;color:#9a9a9a;border:1px solid #333333;margin:0 0 4px;">← Strokes gained</button>';
   html+='<div id="dsub_0" class="dsubContent">';
-  // Per-round strokes gained on one shared scale, wide enough for the biggest of them.
   var nd=nDetailed||1, sgPer={tot:sgTot/nd,ott:A.sgOTT/nd,app:A.sgAPP/nd,arg:A.sgARG/nd,putt:A.sgPutt/nd};
   var sgMax=Math.max(Math.abs(sgPer.tot),Math.abs(sgPer.ott),Math.abs(sgPer.app),Math.abs(sgPer.arg),Math.abs(sgPer.putt));
   var sgR=[3,5,10,20,40].filter(function(x){return x>=sgMax;})[0]||Math.ceil(sgMax/10)*10;
-  html+=hdr('STROKES GAINED vs '+hcpLabel+' \u00b7 per round');
-  html+=sgBar('SG: Total', sgPer.tot, sgR, true);
-  html+=sgBar('SG: Off The Tee', sgPer.ott, sgR);
-  html+=sgBar('SG: Approach', sgPer.app, sgR);
-  html+=sgBar('SG: Around Green', sgPer.arg, sgR);
-  html+=sgBar('SG: Putting', sgPer.putt, sgR);
+  html+=hdr('STROKES GAINED · per round');
+  html+=sgBar('SG: Total', sgPer.tot, sgR, true, 1);
+  html+=sgBar('SG: Off The Tee', sgPer.ott, sgR, false, 2);
+  html+=sgBar('SG: Approach', sgPer.app, sgR, false, 3);
+  html+=sgBar('SG: Around Green', sgPer.arg, sgR, false, 4);
+  html+=sgBar('SG: Putting', sgPer.putt, sgR, false, 5);
   html+=sgScale(sgR);
-  html+=hdr('TOTALS ('+n+' rounds)');
-  html+=sgRow('SG: Total', sgTot);
-  html+=sgRow('SG: Off The Tee', A.sgOTT);
-  html+=sgRow('SG: Approach', A.sgAPP);
-  html+=sgRow('SG: Around Green', A.sgARG);
-  html+=sgRow('SG: Putting', A.sgPutt);
-  html+=hdr('SG BY ROUND');
-  var sgRR=[];
-  for(var si=0;si<Math.min(A.roundSGs.length,15);si++){var sr=A.roundSGs[si];sgRR.push([sr.date,sr.course.substring(0,12),'<span style="color:'+sgC(sr.tot)+'">'+sgFmt(sr.tot)+'</span>','<span style="color:'+sgC(sr.ott)+'">'+sgFmt(sr.ott)+'</span>','<span style="color:'+sgC(sr.app)+'">'+sgFmt(sr.app)+'</span>','<span style="color:'+sgC(sr.arg)+'">'+sgFmt(sr.arg)+'</span>','<span style="color:'+sgC(sr.putt)+'">'+sgFmt(sr.putt)+'</span>']);}
-  html+=tbl(['Date','Course','Tot','OTT','APP','ARG','Putt'],sgRR);
   html+='</div>';
   
   // ===== TAB 1: SCORING =====
-  html+='<div id="dsub_1" class="dsubContent" style="display:none;">';
+  html+='<div id="dsub_1" class="dsubContent" style="display:none;">'+back;
   // Inline handicap calculation from the data we already have
   var hcpResult = calcHandicapIndex(data);
   var hcpDisplay = hcpResult.index !== null ? hcpResult.index.toFixed(1) : '--';
@@ -479,11 +464,10 @@ export function renderDashboard(data, hcp, targetId) {
   html+='</div>';
   
   // ===== TAB 2: OFF THE TEE =====
-  html+='<div id="dsub_2" class="dsubContent" style="display:none;">';
-  html+=hdr('SG: OFF THE TEE vs '+hcpLabel);
+  html+='<div id="dsub_2" class="dsubContent" style="display:none;">'+back;
+  html+=hdr('SG: OFF THE TEE');
   html+=sgBar('SG: Off The Tee \u00b7 per round',sgPer.ott,sgR);
   html+=sgScale(sgR);
-  html+=sgRow('Total',A.sgOTT,nDetailed+' rounds');
   html+=hdr('FAIRWAY ACCURACY');
   html+=row('Fairways Hit',pct(A.fwHit,A.fwOpp),A.fwHit+'/'+A.fwOpp);
   html+=row('Missed Left',A.fwLeft,pct(A.fwLeft,A.fwOpp));
@@ -498,11 +482,10 @@ export function renderDashboard(data, hcp, targetId) {
   html+='</div>';
   
   // ===== TAB 3: APPROACH =====
-  html+='<div id="dsub_3" class="dsubContent" style="display:none;">';
-  html+=hdr('SG: APPROACH vs '+hcpLabel);
+  html+='<div id="dsub_3" class="dsubContent" style="display:none;">'+back;
+  html+=hdr('SG: APPROACH');
   html+=sgBar('SG: Approach \u00b7 per round',sgPer.app,sgR);
   html+=sgScale(sgR);
-  html+=sgRow('Total',A.sgAPP,nDetailed+' rounds');
   html+=hdr('GREENS IN REGULATION');
   html+=row('GIR',pct(A.girHit,detailedHoles),A.girHit+'/'+detailedHoles);
   html+=row('Proximity when GIR',A.girHit>0?Math.round(A.girFirstPuttDist/A.girHit)+' ft':'\u2013');
@@ -527,11 +510,10 @@ export function renderDashboard(data, hcp, targetId) {
   html+='</div>';
   
   // ===== TAB 4: SHORT GAME =====
-  html+='<div id="dsub_4" class="dsubContent" style="display:none;">';
-  html+=hdr('SG: AROUND THE GREEN vs '+hcpLabel);
+  html+='<div id="dsub_4" class="dsubContent" style="display:none;">'+back;
+  html+=hdr('SG: AROUND THE GREEN');
   html+=sgBar('SG: Around Green \u00b7 per round',sgPer.arg,sgR);
   html+=sgScale(sgR);
-  html+=sgRow('Total',A.sgARG,nDetailed+' rounds');
   html+=hdr('SCRAMBLING');
   html+=row('Scrambling',pct(A.scrMade,A.scrOpp),A.scrMade+'/'+A.scrOpp);
   html+=row('Bunker Saves',pct(A.bunMade,A.bunOpp),A.bunMade+'/'+A.bunOpp);
@@ -544,11 +526,10 @@ export function renderDashboard(data, hcp, targetId) {
   html+='</div>';
   
   // ===== TAB 5: PUTTING =====
-  html+='<div id="dsub_5" class="dsubContent" style="display:none;">';
-  html+=hdr('SG: PUTTING vs '+hcpLabel);
+  html+='<div id="dsub_5" class="dsubContent" style="display:none;">'+back;
+  html+=hdr('SG: PUTTING');
   html+=sgBar('SG: Putting \u00b7 per round',sgPer.putt,sgR);
   html+=sgScale(sgR);
-  html+=sgRow('Total',A.sgPutt,nDetailed+' rounds');
   html+=hdr('PUTTING SUMMARY');
   html+=row('Total Putts',A.totPutts,detailedHoles>0?(A.totPutts/detailedHoles).toFixed(1)+'/hole':'');
   html+=row('Putts per GIR',A.girHit>0?(A.girPutts/A.girHit).toFixed(1):'\u2013');
@@ -567,13 +548,14 @@ export function renderDashboard(data, hcp, targetId) {
   
 }
 
+// Shows one part of the dashboard: 0 the SG bars, 1-5 a category's detailed stats.
 function showDashSub(idx) {
   for(var i=0;i<6;i++){
     var el=document.getElementById('dsub_'+i);
     if(el)el.style.display=i===idx?'block':'none';
-    var tab=document.getElementById('dashTab_'+i);
-    if(tab){tab.style.background=i===idx?'#2d7abc':'#282828';tab.style.color=i===idx?'#ffffff':'#606060';}
   }
+  var top=document.getElementById('dsub_'+idx);
+  if(top&&top.scrollIntoView)top.scrollIntoView({block:'nearest'});
 }
 
 
