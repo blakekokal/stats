@@ -389,6 +389,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.59.0', ['Ending and submitting a round now sends your coach a New Round notification with the course and score', 'Coaching (coach side): one page, no tabs. Notes, Assign and Messages are gone, and of the three tiles only Students is left', 'Tap Students for one list of all your students, the one with the latest round, combine or other activity first, with a search box to find a name']],
   ['0.58.3', ['Replay: the player, date and course are back at the very top, with the hole, shot and club just under them']],
   ['0.58.2', ['Replay: the hole, shot and club are across the very top, with Strokes Gained on the right below them; play / pause and 2x are stacked at the bottom right']],
   ['0.58.1', ['Replay: the controls are at the top; the club for each shot shows in the bar and on the map at the ball as it\u2019s hit; putts are shown up close on the green; no second zoom after each shot lands']],

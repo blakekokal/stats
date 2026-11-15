@@ -8,6 +8,7 @@ import { setCoachNoteType, showCoachCoachingTab } from './student-side.js';
 import { loadCoachTeams } from './teams.js';
 import { _sb } from './core.js';
 import { escapeHtml } from './core.js';
+import { studentRounds } from './gps.js';
 
 export async function loadCoachingPageCoachView() {
   loadCoachRequests(); // Show pending coach requests for admin
@@ -19,14 +20,8 @@ export async function loadCoachingPageCoachView() {
   var count = (students && !error) ? students.length : 0;
   document.getElementById('coachStatStudents').textContent = count;
 
-  var { data: notifs } = await _sb.from('notifications')
-    .select('id').eq('user_id', S.currentUser.id).eq('read', false);
-  document.getElementById('coachStatNewRounds').textContent = (notifs ? notifs.length : 0);
-
-  var { data: notes } = await _sb.from('coach_notes').select('id').eq('coach_id', S.currentUser.id);
-  document.getElementById('coachStatNotes').textContent = (notes ? notes.length : 0);
-
   renderCoachingStudentRoster(students || []);
+  if (document.getElementById('cctTabContent4')?.style.display === 'block') drawCoachStudentList(true);
   populateCoachStudentSelects(students || []);
   loadCoachActivityFeed();
   populateCoachDrillList();
@@ -155,11 +150,6 @@ async function loadCoachActivityFeed() {
         + 'style="margin-top:6px;font-size:11px;font-weight:700;background:#2d7abc;color:#ffffff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;height:auto;max-width:none;width:auto;">'
         + 'View Profile</button>';
     }
-    if (n.type === 'student_message' && n.student_id) {
-      viewBtn += ' <button onclick="openChatWithStudent(\'' + n.student_id + '\')" '
-        + 'style="margin-top:6px;font-size:11px;font-weight:700;background:#00b87a;color:#ffffff;border:none;border-radius:6px;padding:5px 12px;cursor:pointer;height:auto;max-width:none;width:auto;">'
-        + 'Open Chat</button>';
-    }
     return '<div style="' + unreadStyle + 'margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #282828;">'
       + '<div style="display:flex;align-items:flex-start;gap:8px;">'
       + '<div style="font-size:16px;flex-shrink:0;margin-top:1px;">' + icon + '</div>'
@@ -196,7 +186,6 @@ async function markCoachNotificationsRead() {
   var dot2 = document.getElementById('studentsNotifDot');
   if (dot2) dot2.style.display = 'none';
   loadCoachActivityFeed();
-  document.getElementById('coachStatNewRounds').textContent = '0';
 }
 
 async function coachAddStudentFromCoachingPage() {
@@ -259,9 +248,66 @@ async function sendCoachNote() {
   clearCoachNoteStudent();
   setCoachNoteType('lesson');
 
-  var { data: notes } = await _sb.from('coach_notes').select('id').eq('coach_id', S.currentUser.id);
-  document.getElementById('coachStatNotes').textContent = (notes ? notes.length : 0);
   setTimeout(function(){ msg.textContent = ''; }, 3000);
+}
+
+// ---- Students: one list, latest activity first, with a name search ----
+// Latest activity per student: the newest notification they sent this coach
+// (a round, combine, drill, practice, message...) or the newest round saved in
+// this app, whichever is later.
+var _studentAct = {}; // student id -> { at (ms), type }
+var _actLoading = null;
+var ACT_LABEL = { new_round: 'Round', new_combine: 'Combine', combine_completed: 'Combine', drill_completed: 'Drill', practice_session: 'Practice', student_message: 'Message', new_signup: 'Joined' };
+function noteAct(id, at, type) { if (id && at && (!_studentAct[id] || _studentAct[id].at < at)) _studentAct[id] = { at: at, type: type }; }
+function ago(ms) {
+  var m = Math.round((Date.now() - ms) / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + 'm ago';
+  var hr = Math.round(m / 60); if (hr < 24) return hr + 'h ago';
+  var d = Math.round(hr / 24); if (d < 7) return d + 'd ago';
+  return new Date(ms).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+async function loadStudentActivity() {
+  var { data } = await _sb.from('notifications').select('student_id, type, created_at')
+    .eq('user_id', S.currentUser.id).order('created_at', { ascending: false }).limit(500);
+  (data || []).forEach(function(n) { noteAct(n.student_id, Date.parse(n.created_at), n.type); });
+  drawCoachStudentList();
+  await Promise.all((S.coachRosterData || []).map(async function(s) {
+    try {
+      var rounds = await studentRounds(s.student_id);
+      rounds.forEach(function(r) { noteAct(s.student_id, (r._gps && r._gps.updated) || 0, 'new_round'); });
+    } catch (e) { /* their rounds can't be read: notifications only */ }
+  }));
+  drawCoachStudentList();
+}
+export function drawCoachStudentList(reload) {
+  var el = document.getElementById('coachStudentList');
+  if (!el) return;
+  if (reload || !_actLoading) _actLoading = loadStudentActivity().catch(function() {});
+  var q = ((document.getElementById('coachStudentSearch') || {}).value || '').toLowerCase().trim();
+  var students = (S.coachRosterData || []).filter(function(s) { return !q || (s.student_name || '').toLowerCase().indexOf(q) !== -1; });
+  students.sort(function(a, b) {
+    var x = (_studentAct[a.student_id] || {}).at || 0, y = (_studentAct[b.student_id] || {}).at || 0;
+    return y - x || (a.student_name || '').localeCompare(b.student_name || '');
+  });
+  if (!students.length) {
+    el.innerHTML = '<div style="text-align:center;color:#606060;font-size:13px;padding:20px 0;">' + ((S.coachRosterData || []).length ? 'No students match' : 'No students yet. Add one with their invite code below.') + '</div>';
+    return;
+  }
+  el.innerHTML = students.map(function(s) {
+    var act = _studentAct[s.student_id];
+    var sub = act ? (ACT_LABEL[act.type] || 'Activity') + ' · ' + ago(act.at) : 'No activity yet';
+    return '<button onclick="openStudentFromList(\'' + s.student_id + '\')" style="display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;max-width:none;height:auto;background:#222222;border:none;border-radius:10px;padding:12px 14px;margin:0 0 6px;color:#ffffff;text-align:left;">'
+      + '<div style="min-width:0;"><div style="font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(s.student_name || 'Student') + '</div>'
+      + '<div style="font-size:12px;color:#9a9a9a;margin-top:2px;">' + escapeHtml(sub) + '</div></div>'
+      + '<div style="font-size:22px;color:#606060;line-height:1;flex-shrink:0;">›</div></button>';
+  }).join('');
+}
+function openStudentFromList(id) {
+  var s = (S.coachRosterData || []).find(function(x) { return x.student_id === id; });
+  if (!s) return;
+  S.coachReturnTab = 4; // Back from their page comes back to this list
+  window.viewStudent(s.student_id, s.student_name || 'Student', s.student_email || '');
 }
 
 export function init() {
@@ -276,4 +322,4 @@ document.addEventListener('click', function(e) {
 }
 
 // Functions called from inline HTML handlers
-expose({ filterCoachNoteStudents, clearCoachNoteStudent, openChatWithStudent, markCoachNotificationsRead, coachAddStudentFromCoachingPage, sendCoachNote });
+expose({ drawCoachStudentList, openStudentFromList, filterCoachNoteStudents, clearCoachNoteStudent, openChatWithStudent, markCoachNotificationsRead, coachAddStudentFromCoachingPage, sendCoachNote });

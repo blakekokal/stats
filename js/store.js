@@ -356,6 +356,29 @@ create or replace function coach_live_rounds()
           and l.updated > (extract(epoch from now()) * 1000)::bigint - 6 * 3600 * 1000
           and exists (select 1 from coach_students cs where cs.coach_id = auth.uid() and cs.student_id = l.user_id) $$;
 grant execute on function coach_live_rounds() to authenticated;`;
+// Tell the signed-in player's coach about something new (e.g. a round they
+// just finished), as a notification in the coach's Recent Activity. Finds the
+// coach from the profile, or from coach_students. Quietly does nothing offline
+// or without a coach.
+export async function notifyCoach({ type, title, message, round_id }) {
+  const c = getClient();
+  if (!c || !sync.user) return;
+  try {
+    const uid = sync.user.id;
+    const { data: prof } = await c.from('profiles').select('coach_id, display_name').eq('id', uid).single();
+    let coachId = prof?.coach_id || null;
+    if (!coachId) {
+      const { data: link } = await c.from('coach_students').select('coach_id').eq('student_id', uid).limit(1);
+      coachId = link?.[0]?.coach_id || null;
+    }
+    if (!coachId) return;
+    const name = prof?.display_name || sync.name || 'A student';
+    const row = { user_id: coachId, type, title: title.replace('{name}', name), message: message.replace('{name}', name), student_id: uid, student_name: name, read: false, created_at: new Date().toISOString() };
+    let { error } = await c.from('notifications').insert(round_id ? { ...row, round_id } : row);
+    if (error && round_id) ({ error } = await c.from('notifications').insert(row)); // older tables have no round_id
+    if (error) console.warn('[notify] coach notification failed:', error.message);
+  } catch (e) { console.warn('[notify] coach notification failed:', e); }
+}
 // A student's rounds from this app (for their coach). Throws if they can't be read.
 export async function fetchStudentRounds(studentId) {
   const c = getClient();
