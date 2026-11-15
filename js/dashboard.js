@@ -3,10 +3,10 @@
 // app's shot-by-shot round format first, then the ported code renders them.
 
 import { h, courseById } from './app.js';
-import { sync, levelFromPref } from './store.js';
+import { store, sync, levelFromPref } from './store.js';
 import { expected } from './sg.js';
 import { yards } from './geo.js';
-import { historyRounds } from './rounds.js';
+import { historyRounds, setCurrentRound, firstHoleOf } from './rounds.js';
 
 const S = {}; // shared state for the ported dashboard code
 var hcpLabels = { 'pro': 'Tour Pro', '0': 'Scratch', '5': '5 HCP', '10': '10 HCP', '15': '15 HCP', '20': '20 HCP', '25': '25 HCP', '30': '30 HCP' };
@@ -450,6 +450,8 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+=sgBar('SG: Around Green', sgPer.arg, sgR, false, 4);
   html+=sgBar('SG: Putting', sgPer.putt, sgR, false, 5);
   html+=sgScale(sgR);
+  // One round: View round opens it on the hole screen (the shots on the map).
+  if(opts.single&&opts.index!=null)html+='<button onclick="dashViewRound('+opts.index+')" style="width:100%;max-width:none;height:46px;margin:16px 0 4px;font-size:15px;font-weight:800;background:#007a52;color:#ffffff;border:none;border-radius:12px;">\u26f3 View round</button>';
   // Past rounds: every round, newest first (scroll for these): the date, course and
   // score on top, the SG total and each category under them. Tap one to see
   // the strokes gained for just that round.
@@ -582,9 +584,22 @@ export function renderDashboard(data, hcp, targetId, opts) {
 // SG by round: one round's dashboard, and back to all of them.
 function dashOneRound(i) {
   if (!_dash || !_dash.data[i]) return;
-  renderDashboard([_dash.data[i]], _dash.hcp, _dash.targetId, { single: true });
+  renderDashboard([_dash.data[i]], _dash.hcp, _dash.targetId, { single: true, index: i });
   document.getElementById(_dash.targetId || 'dashContent')?.scrollIntoView({ block: 'start' });
 }
+// View round: a coach's student round opens as in Student View (View round);
+// your own opens like View/Edit in Round History, on the first hole played.
+function dashViewRound(i) {
+  var r = _dash && _dash.data[i];
+  if (!r) return;
+  if (r._gps) { if (window.svViewRound) window.svViewRound(r.id); return; }
+  var own = historyRounds().find(function(x) { return x.id === r.id; });
+  if (!own) return;
+  setCurrentRound(own.id); localStorage.setItem('gs:viewOnly', '1'); localStorage.removeItem('gs:editingPast'); sessionStorage.removeItem('gs:level');
+  store.set('settings', Object.assign({}, store.get('settings') || {}, { tee: own.tee }));
+  location.hash = '#/hole/' + firstHoleOf(own, courseById(own.course));
+}
+window.dashViewRound = dashViewRound;
 function dashAllRounds() { if (_dash) renderDashboard(_dash.data, _dash.hcp, _dash.targetId); }
 // Filter (beside "per round"): shows or hides the page's filters (round type, time, and the level to compare with).
 function toggleDashFilters() {
