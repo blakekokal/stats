@@ -528,3 +528,11 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .holeview.replaying .sgview { bottom: calc(262px + env(safe-area-inset-bottom)); max-height: 50vh; }
 .holeview.viewing .fab.cleanview { bottom: calc(80px + env(safe-area-inset-bottom)); }
 .holeview.viewing .sheet.viewbox { bottom: calc(80px + env(safe-area-inset-bottom)); }
+/* GPS Overview: whose bag the Club box uses, and the student search. */
+.clubbox .bagwho { display: flex; align-items: center; gap: 8px; width: 100%; min-height: 40px; padding: 0 12px; border: 0; border-radius: 10px; background: #2a2f2c; color: #fff; text-align: left; }
+.clubbox .bagwho b { flex: 1; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; } .clubbox .bagwho small { color: #8fb8ff; font-weight: 700; font-size: 12px; }
+.clubbox .bagsearch { width: 100%; height: 40px; box-sizing: border-box; font-size: 15px; text-align: left; }
+.clubbox .baglist { display: grid; gap: 6px; max-height: 46vh; overflow-y: auto; }
+.clubbox .bagrow { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 42px; padding: 0 12px; border: 0; border-radius: 10px; background: #2a2f2c; color: #fff; text-align: left; }
+.clubbox .bagrow b { font-size: 15px; } .clubbox .bagrow small { color: #9a9a9a; font-size: 12px; }
+.clubbox .bagrow.on { background: #ffb020; color: #111; } .clubbox .bagrow.on small { color: #333; }

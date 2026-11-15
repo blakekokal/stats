@@ -379,6 +379,22 @@ export async function notifyCoach({ type, title, message, round_id }) {
     if (error) console.warn('[notify] coach notification failed:', error.message);
   } catch (e) { console.warn('[notify] coach notification failed:', e); }
 }
+// The signed-in coach's students: [{ student_id, student_name }] (none for a player).
+export async function fetchCoachStudents() {
+  const c = getClient();
+  if (!c || !sync.user) return [];
+  const { data, error } = await c.from('coach_students').select('student_id, student_name').eq('coach_id', sync.user.id).order('student_name', { ascending: true });
+  if (error) throw new Error(error.message);
+  return data || [];
+}
+// Someone's My Bag clubs (a coach reading a student's): [{ name, carry, total, ... }].
+export async function fetchBagOf(userId) {
+  const c = getClient();
+  if (!c || !sync.user) throw new Error('not signed in');
+  const { data, error } = await c.from('profiles').select('bag_clubs').eq('id', userId).single();
+  if (error) throw new Error(error.message);
+  return Array.isArray(data?.bag_clubs) ? data.bag_clubs.filter(x => x && x.name) : [];
+}
 // A student's rounds from this app (for their coach). Throws if they can't be read.
 export async function fetchStudentRounds(studentId) {
   const c = getClient();

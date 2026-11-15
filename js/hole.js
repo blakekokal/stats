@@ -10,7 +10,7 @@
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast } from './app.js';
-import { store, sync } from './store.js';
+import { store, sync, fetchCoachStudents, fetchBagOf } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
@@ -642,7 +642,11 @@ export function renderHole(view, n) {
   // otherwise the bag club whose yardage is closest to the ball-to-crosshair
   // distance — unless one was picked with the Club button.
   const DEFAULT_BAG = ['Dr', '3W', '5W', '4HY', '5I', '6I', '7I', '8I', '9I', 'PW', 'GW', 'SW', 'LW'].map(name => ({ name }));
-  const bag = () => { const b = (sync.bag || []).filter(c => c && c.name); return b.length ? b : DEFAULT_BAG; };
+  // GPS Overview can use a student's bag instead (picked at the top of the Club
+  // box): { id, name, clubs }, kept until GPS Overview is left.
+  let bagFor = null;
+  if (scouting) { try { bagFor = JSON.parse(sessionStorage.getItem('gs:scoutBag') || 'null'); } catch { bagFor = null; } }
+  const bag = () => { const b = ((bagFor ? bagFor.clubs : sync.bag) || []).filter(c => c && c.name); return b.length ? b : DEFAULT_BAG; };
   const SWINGS = [['full', 'Full'], ['3/4', '¾'], ['1/2', '½'], ['punch', 'Punch'], ['recovery', 'Recovery']];
   let pickedClub = null;
   function autoClub() {
@@ -672,7 +676,7 @@ export function renderHole(view, n) {
   const compYards = name => bagYards(name) || TYPICAL_YDS[name] || TYPICAL_YDS[name.replace(/\d$/, '')] || null;
   // A club's arc width: its own from My Bag, else 15% of its yardage (10 to 80 yd).
   function clubArcW(name) {
-    const own = (store.get('clubArcs') || {})[name], yd = compYards(name);
+    const own = bagFor ? 0 : (store.get('clubArcs') || {})[name], yd = compYards(name); // arc widths set in My Bag are this device's own
     return own > 0 ? own : yd ? Math.max(10, Math.min(80, Math.round(yd * 0.15))) : arcYd;
   }
 
@@ -899,10 +903,47 @@ export function renderHole(view, n) {
     m.easeTo({ center: ll([from[0] + (dm * Math.cos(brg)) / M_PER_DEG, from[1] + (dm * Math.sin(brg)) / (M_PER_DEG * k)]), duration: 450 });
   }
   const clubPicker = h('div', { class: 'clubsheet', hidden: true, onclick: e => { if (e.target === clubPicker) clubPicker.hidden = true; } });
+  // GPS Overview: whose bag the clubs come from, at the top of the Club box.
+  // Tap it to search your students (a coach) and load one's bag; My bag goes back.
+  let coachStudents = null; // loaded once per hole screen
+  function openBagSearch() {
+    const input = h('input', { type: 'search', placeholder: '🔍 Search students', autocomplete: 'off', class: 'bagsearch', oninput: () => drawList() });
+    const list = h('div', { class: 'baglist' });
+    const choose = async (who) => {
+      if (!who) { bagFor = null; sessionStorage.removeItem('gs:scoutBag'); }
+      else {
+        list.replaceChildren(h('small', { class: 'muted' }, `Loading ${who.student_name}’s bag…`));
+        let clubs;
+        try { clubs = await fetchBagOf(who.student_id); } catch { list.replaceChildren(h('small', { class: 'muted' }, 'Couldn’t load that bag. Check your connection.')); return; }
+        if (!clubs.length) { toast(`${who.student_name} has no clubs in My Bag yet.`); drawList(); return; }
+        bagFor = { id: who.student_id, name: who.student_name || 'Student', clubs };
+        try { sessionStorage.setItem('gs:scoutBag', JSON.stringify(bagFor)); } catch { /* this hole only */ }
+      }
+      pickedClub = null; autoPick = null; update(); openClubPicker();
+    };
+    const row = (label, sub, on, fn) => h('button', { class: 'bagrow' + (on ? ' on' : ''), onclick: fn }, h('b', {}, label), sub ? h('small', {}, sub) : null);
+    function drawList() {
+      const q = input.value.trim().toLowerCase();
+      const studs = (coachStudents || []).filter(x => !q || (x.student_name || '').toLowerCase().includes(q));
+      list.replaceChildren(...[
+        !q ? row(sync.name || 'My bag', 'My bag', !bagFor, () => choose(null)) : null,
+        ...studs.map(x => row(x.student_name || 'Student', null, bagFor?.id === x.student_id, () => choose(x))),
+        coachStudents === null ? h('small', { class: 'muted' }, 'Loading students…')
+          : !coachStudents.length ? h('small', { class: 'muted' }, 'No students yet. A coach’s students show here.')
+          : q && !studs.length ? h('small', { class: 'muted' }, 'No students match') : null].filter(Boolean));
+    }
+    clubPicker.replaceChildren(h('div', { class: 'clubbox' },
+      h('div', { class: 'clubhead' }, h('button', { class: 'x', 'aria-label': 'Back', onclick: () => openClubPicker() }, '‹'), h('strong', { style: 'margin-left:8px;' }, 'Whose bag?'), h('button', { class: 'x', onclick: () => { clubPicker.hidden = true; } }, '✕')),
+      input, list));
+    drawList();
+    if (coachStudents === null) fetchCoachStudents().then(r => { coachStudents = r; }, () => { coachStudents = []; }).then(drawList);
+    input.focus();
+  }
   function openClubPicker() {
     const cur = currentClub();
     clubPicker.replaceChildren(h('div', { class: 'clubbox' },
       h('div', { class: 'clubhead' }, h('strong', {}, 'Club'), h('button', { class: 'x', onclick: () => { clubPicker.hidden = true; } }, '✕')),
+      scouting && sync.user ? h('button', { class: 'bagwho', onclick: openBagSearch }, h('span', {}, '👤'), h('b', {}, bagFor ? `${bagFor.name}’s bag` : sync.name ? `${sync.name}’s bag` : 'My bag'), h('small', {}, 'Change ›')) : null,
       h('div', { class: 'clubgrid' },
         h('button', { class: pickedClub ? '' : 'on', onclick: () => { pickedClub = null; clubPicker.hidden = true; update(); } }, h('b', {}, 'Auto'), h('small', {}, autoClub() ? clubName(autoClub()) : '–')),
         bag().map(c => h('button', { class: pickedClub === c.name ? 'on' : '', onclick: () => {

@@ -389,6 +389,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.62.0', ['GPS Overview: the Club box shows whose bag it\u2019s using (yours to start). Tap it to search your students and load one\u2019s bag, so the clubs, yardages, arcs, Comp and Auto use their numbers; it stays on until you leave GPS Overview']],
   ['0.61.3', ['Coaching Recent Activity: a student\u2019s round has Profile, View round and Strokes gained buttons, so you don\u2019t have to open their profile first. Strokes gained opens that round\u2019s SG in a pop-up']],
   ['0.61.2', ['Dashboards: a round\u2019s strokes gained page has a View round button at the bottom that opens the round on the hole screen (the shots on the map)']],
   ['0.61.1', ['Past rounds: the score is the same size as the course name, and the SG total sits on the second line with the categories']],
