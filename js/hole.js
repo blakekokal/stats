@@ -717,7 +717,7 @@ export function renderHole(view, n) {
       })),
       h('div', { class: 'compactions' },
         h('button', { class: 'off', onclick: () => { showComp = false; saveComp(); compSheet.hidden = true; update(); } }, 'Off'),
-        h('button', { class: 'record', disabled: sel.length < 2, onclick: () => { compClubs = sel; showComp = true; compAim = {}; saveComp();
+        h('button', { class: 'record', disabled: sel.length < 2, onclick: () => { compClubs = sel; showComp = true; compAim = {}; if (autoPick) { autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; } saveComp();
           if (showArc) setArcOn(false); if (showDisp) setDispOn(false); /* only the Comp arcs */ compSheet.hidden = true; update(); } }, 'Compare'))));
     draw();
     compSheet.hidden = false;
@@ -737,10 +737,12 @@ export function renderHole(view, n) {
   // scored by the average SG of 20 shots in its dispersion, keeping the dots clear
   // of hazards where it can (15 yd from OB, 10 from water, 5 from bunkers); the best is picked,
   // the crosshair moves to it and Disp shows its spread. Clubs that would fly
-  // well past the pin are skipped.
-  let autoPick = null; // { club, sg, from } while on
+  // well past the pin are skipped. While Comp is on, Auto instead swings each
+  // compared club onto its own best line (the crosshair stays where it is).
+  let autoPick = null; // { club, sg, from } while on; { comp: true, from } when it set Comp's lines
   const autoKey = h('div', { class: 'zonelegend autokey', hidden: true });
-  function findBest() {
+  // With `only` (Comp's clubs), just those clubs are tried, even ones that would fly past the pin.
+  function findBest(only) {
     const shots = planShots(), last = shots[shots.length - 1], from = last ? last.pos : tee;
     const toPinYd = yards(from, pin);
     const fromExp = last ? expectedFrom(last.lie, toPinYd) : expected('tee', toPinYd, level);
@@ -767,9 +769,9 @@ export function renderHole(view, n) {
       return near ? COST[f.t] : worst;
     }, 0);
     const results = [];
-    for (const c of bag()) {
+    for (const c of only ? only.map(name => ({ name })) : bag()) {
       const yd = compYards(c.name);
-      if (!yd || /putt/i.test(c.name) || yd > toPinYd + 15) continue;
+      if (!yd || /putt/i.test(c.name) || (!only && yd > toPinYd + 15)) continue;
       const w = clubArcW(c.name);
       let best = null;
       for (let off = -35; off <= 35; off += 2.5) {
@@ -780,14 +782,30 @@ export function renderHole(view, n) {
         // the pick skews away from them. A tiny nudge favours straighter lines on ties.
         const close = d.dots.reduce((t, x) => t + hazardCost(x.q), 0);
         const score = d.sg - close / d.dots.length - Math.abs(off) * 0.0005;
-        if (!best || score > best.score) best = { club: c.name, yd, aim, off, sg: d.sg, score, close };
+        if (!best || score > best.score) best = { club: c.name, yd, aim, off, brg: main + off, sg: d.sg, score, close };
       }
       if (best) results.push(best);
     }
     return { from, results: results.sort((a, b) => b.score - a.score) };
   }
   const autoBtn = h('button', { class: 'fab autotarget', 'aria-label': 'Auto target', title: 'Pick the best club and aiming point', onclick: () => {
-    if (autoPick) { autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; pickedClub = null; if (showDisp) setDispOn(false); update(); return; }
+    if (autoPick) {
+      if (autoPick.comp) compAim = {}; // the compared clubs go back on the one line
+      else { pickedClub = null; if (showDisp) setDispOn(false); }
+      autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; update(); return;
+    }
+    if (showComp) {
+      // Comparing: each compared club gets its own best line (the crosshair stays put).
+      const { from, results } = findBest(compClubs);
+      if (!results.length) return;
+      compAim = {}; compAimFrom = from.join(',');
+      for (const r of results) compAim[r.club] = r.brg;
+      autoPick = { comp: true, from: from.join(',') };
+      autoBtn.classList.add('on');
+      autoKey.hidden = true; // the Compare key lists each club's SG
+      update();
+      return;
+    }
     const { from, results } = findBest();
     if (!results.length) return;
     const b = results[0];
@@ -1860,8 +1878,8 @@ export function renderHole(view, n) {
 
     const arc = showArc ? arcThrough(from, target) : null;
     let arcW = arcYd;
-    if (autoPick && autoPick.from !== from.join(',')) { autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; } // a new shot
-    if (autoPick) arcW = clubArcW(autoPick.club); // Disp shows the picked club's spread
+    if (autoPick && (autoPick.from !== from.join(',') || (autoPick.comp && !showComp))) { autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; } // a new shot, or Comp turned off
+    if (autoPick && !autoPick.comp) arcW = clubArcW(autoPick.club); // Disp shows the picked club's spread
     if (arcAuto) {
       // Sized by club only, so it changes when a club is tapped, not as the
       // crosshair moves: the tapped club (or the driver off a par 4/5 tee), with

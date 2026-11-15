@@ -389,6 +389,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.64.0', ['Comp + Auto: with Comp on, tapping Auto puts each compared club on its own best line (the best average SG for that club, kept clear of hazards). Tap Auto again to put them back on one line']],
   ['0.63.1', ['Hole screen: the compass is round again, with a small gap above the wind circle']],
   ['0.63.0', ['Hole screen: live wind under the compass. The arrow shows which way the wind is blowing on the map (it turns with the map) and the number is the speed in mph, for the course\u2019s location']],
   ['0.62.1', ['Club box: a Carry | Total switch for the yardages', 'Whose bag?: students are listed most recently active first (with when), and the box stays put near the top while you search instead of jumping around']],
