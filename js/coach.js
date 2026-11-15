@@ -389,6 +389,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.58.1', ['Replay: the controls are at the top; the club for each shot shows in the bar and on the map at the ball as it\u2019s hit; putts are shown up close on the green; no second zoom after each shot lands']],
   ['0.58.0', ['Past rounds open on the first hole played (e.g. 10 for a back-nine round), with the score counting from there (+1 thru 1)', 'Replay, next to View round on a client\u2019s round: plays the round back one shot at a time, with a tracer for each shot and the view closing in on where it landed. Pause / play, 2x speed, and \u2715 to stop']],
   ['0.57.1', ['Viewing a client\u2019s round: the tag at the top shows FINAL, their name, the date and the course; Strokes Gained sits on the right just below it. The latest-shot strip only shows while a round is live', 'Tapping a shot: Shot 1 \u00b7 7 Iron, then how far and from where to where (155 yds from tee to fairway), then what was left (282 yds to hole), then strokes gained']],
   ['0.57.0', ['New Round and GPS Overview: the course list stays hidden until you start typing, then shows the top 5 matches', 'Hole screen: the two score tabs are now one long box, as wide as the hole pill, with this hole\u2019s score and where the round stands (e.g. +2 thru 5). Tap it for the scorecard and your total']],
