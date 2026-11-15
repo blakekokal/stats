@@ -389,6 +389,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.57.1', ['Viewing a client\u2019s round: the tag at the top shows FINAL, their name, the date and the course; Strokes Gained sits on the right just below it. The latest-shot strip only shows while a round is live', 'Tapping a shot: Shot 1 \u00b7 7 Iron, then how far and from where to where (155 yds from tee to fairway), then what was left (282 yds to hole), then strokes gained']],
   ['0.57.0', ['New Round and GPS Overview: the course list stays hidden until you start typing, then shows the top 5 matches', 'Hole screen: the two score tabs are now one long box, as wide as the hole pill, with this hole\u2019s score and where the round stands (e.g. +2 thru 5). Tap it for the scorecard and your total']],
   ['0.56.2', ['Hole screen: the score tabs are swapped, this hole\u2019s score first, then the round total. The hole tab now just says Score, since the hole number is on the hole pill below']],
   ['0.56.1', ['Hole screen: the buttons and hole info along the bottom sit a little lower, and the Total and Hole score tabs are shorter and closer to the hole number']],

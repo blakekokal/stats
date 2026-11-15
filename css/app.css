@@ -498,3 +498,7 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 /* The distance box starts just left of centre, clear of the Live pill on the left and Expected on the right. */
 .gpstop { position: absolute; top: calc(8px + env(safe-area-inset-top)); left: 50%; transform: translateX(-40px); z-index: 4; display: flex; gap: 6px; align-items: center; }
 .gpstop .gpsdist, .gpstop .fab.gpsshot { position: static; transform: none; }
+/* Watching a client's round: the tag across the top has their name, the date and
+   the course; Strokes Gained sits on the right just below it. */
+.holeview.watching .livetag { right: 10px; max-width: none; }
+.holeview.watching .topright { top: calc(36px + env(safe-area-inset-top)); }
