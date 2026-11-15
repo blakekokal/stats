@@ -55,7 +55,7 @@ function endLie(from, to, pin, isTeeShot) {
 export function toCoachRound(r) {
   const course = courseById(r.course);
   const allHoles = [];
-  const st = { fwHit: 0, fwOpp: 0, fwLeft: 0, fwRight: 0, girHit: 0, scrMade: 0, scrOpp: 0, bunMade: 0, bunOpp: 0, onePutts: 0, threePutts: 0 };
+  const st = { fwHit: 0, fwOpp: 0, fwLeft: 0, fwRight: 0, girHit: 0, scrMade: 0, scrOpp: 0, bunMade: 0, bunOpp: 0, onePutts: 0, threePutts: 0, totalPutts: 0 };
   let score = 0, par = 0;
   for (const ch of course.holes) {
     const hl = r.holes && r.holes[ch.n];
@@ -93,6 +93,7 @@ export function toCoachRound(r) {
     else { st.scrOpp++; if (num <= ch.par) st.scrMade++; }
     const gsb = shots.find(s => s.lie === 'GS BUNKER');
     if (gsb) { st.bunOpp++; if (num - gsb.shotNum <= 2) st.bunMade++; }
+    st.totalPutts += putts.length;
     if (putts.length === 1) st.onePutts++;
     if (putts.length >= 3) st.threePutts++;
   }

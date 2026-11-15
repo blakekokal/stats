@@ -1,15 +1,28 @@
 // What the coaching modules (ported from the coaching app) expect from that
 // app's core: shared state, the Supabase client, its page router and a few
-// helpers, mapped onto this app. Parts of the coaching app that this app
-// doesn't have (combines, practice log, Performance Analysis) are stubs here.
+// helpers, mapped onto this app.
 
 import { sync, supabaseClient } from '../store.js';
 import { toast } from '../app.js';
 
 export const S = {
-  currentStudentId: null, currentStudentHcp: 'pro', svAllRounds: null, svDashData: null, svDashAllData: null,
+  currentStudentId: null, currentStudentHcp: 'pro', combSaveForStudent: null, svAllRounds: null, svDashData: null, svDashAllData: null,
   isAdmin: undefined, activeDashTarget: 'dashContent',
   get currentUser() { return sync.user; },
+  // practice/drills
+  drillsOnPracticeHub: false,
+  // performance/rounds
+  perfCachedRounds: null, perfCombineLoaded: false,
+  // combines/table
+  combPendingType: null, combFromShortGame: false, combFromPracticeHub: false, combReturnToView: null, coachCombineOverride: undefined,
+  // coaching/assignments
+  drillDetailBackTarget: 'drillsPage', drillDetailBackCategory: null, ppReturningFromDrill: false,
+  // practice/hub
+  currentPHTab: 'combines', boInited: undefined,
+  // practice/log
+  practiceNotes: [], editingPracticeSessionId: null,
+  // bag
+  bagViewingStudentId: null, bagViewingStudentName: null, bagStudentClubs: null, bagStudentWgSessions: null, bagStudentSpeedSessions: null,
 };
 
 // The page markup uses inline handlers (onclick="fn()"), which only see globals.
@@ -19,10 +32,23 @@ export function expose(handlers) { Object.assign(window, handlers); }
 export const _sb = new Proxy({}, { get: (_, k) => (...a) => supabaseClient()[k](...a) });
 
 // ---- pages ----
+// Every screen is a <div class="page"> inside #coachroot (index.js); show(id)
+// makes one active. The Back button at the bottom goes to the page's parent.
 const enterHooks = {}, backHooks = {};
+/** Run fn whenever pageId is shown. Returning false stops the rest of show(). */
 export function onEnter(id, fn) { enterHooks[id] = fn; }
+/** Custom Back behaviour for pageId. Return false to fall through to the default target. */
 export function onBack(id, fn) { backHooks[id] = fn; }
 export const COACH_SITE = 'bkgstats.com';
+export function activePageId() {
+  const page = document.querySelector('.coachroot .page.active');
+  return page ? page.id : '';
+}
+const backTarget = {
+  drillsPage: 'practiceHubPage', drillDetailPage: 'drillsPage', studentViewPage: 'coachingCornerPage', gapVisualizerPage: 'myBagPage',
+  combinesPage: 'practiceHubPage', lineDrillPage: 'practiceHubPage', driverDrillPage: 'practiceHubPage', evalCombinePage: 'practiceHubPage',
+  guideToGolfPage: 'practiceHubPage',
+};
 export function show(id) {
   if (id === 'homePage') { location.hash = '#/'; return; }
   if (id === 'authPage') { location.hash = '#/account'; return; }
@@ -30,9 +56,18 @@ export function show(id) {
   if (!page) { toast(`That part is in the coaching app for now (${COACH_SITE}).`); return; }
   document.querySelectorAll('.coachroot .page').forEach(p => p.classList.remove('active'));
   page.classList.add('active');
-  if (enterHooks[id]) enterHooks[id]();
-  page.scrollTop = 0; window.scrollTo(0, 0);
+  if (enterHooks[id] && enterHooks[id]() === false) return;
+  page.scrollTop = 0;
+  const inner = page.querySelector('[id$="Scroll"]');
+  if (inner) inner.scrollTop = 0;
+  window.scrollTo(0, 0);
 }
+function persistentBack() {
+  const id = activePageId();
+  if (backHooks[id] && backHooks[id]() !== false) return;
+  show(backTarget[id] || 'homePage');
+}
+expose({ show, persistentBack });
 export const showAuthPage = () => show('authPage');
 
 // ---- session ----
@@ -58,12 +93,25 @@ export function sortBagClubs(clubs) {
   });
 }
 
-// ---- not in this app yet ----
-const elsewhere = what => () => toast(`${what} in the coaching app for now (${COACH_SITE}).`);
-export const combOpen = elsewhere('Combines are run');
-export const setDrillCategory = () => {};
-export const setPracticeHubTab = () => {};
-export const loadStudentCombines = () => {};
-export const loadPerfCombineData = async () => {};
-export const computePerfAnalysis = () => ({});
-export const renderPerfAnalysis = () => {};
+// Load a script once (Chart.js for the gap chart, the Excel reader for bag imports).
+const scripts = {};
+export function loadScript(src) {
+  return scripts[src] || (scripts[src] = new Promise((ok, fail) => {
+    const s = document.createElement('script');
+    s.src = src; s.onload = ok; s.onerror = () => { delete scripts[src]; fail(new Error('Could not load ' + src)); };
+    document.head.append(s);
+  }));
+}
+// Central time, as YYYY-MM-DD (what the coaching app saves).
+export function getTodayCentral() { return new Date().toLocaleDateString('en-CA', { timeZone: 'America/Chicago' }); }
+export function formatDateForDisplay(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T12:00:00');
+  return `${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`;
+}
+// Set on the profile in the coaching app; practice plans use it.
+export function hasLaunchMonitor() {
+  const m = sync.user && sync.user.user_metadata;
+  if (m && m.has_launch_monitor != null) return m.has_launch_monitor === true;
+  try { return localStorage.getItem('hasLaunchMonitor') === 'true'; } catch { return false; }
+}

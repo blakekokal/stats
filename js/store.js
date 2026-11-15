@@ -29,7 +29,14 @@ const setHooks = new Set();
 const afterSet = (key, data, prev) => setHooks.forEach(fn => { try { fn(key, data, prev); } catch { /* a hook never blocks a save */ } });
 function persist() { localStorage.setItem(DOCS_KEY, JSON.stringify(docs)); }
 function emit() { listeners.forEach(fn => fn()); }
-function clearLocal() { docs = {}; persist(); emit(); }
+// What the coaching app's pages keep on the device per account (bag, wedge gapping, speed sessions).
+const BAG_KEY = 'myBag_v1';
+const COACH_KEYS = [BAG_KEY, 'gs:bag', 'wedgeGap_v1', 'speedSessions_v1'];
+function clearLocal() {
+  docs = {}; persist();
+  try { COACH_KEYS.forEach(k => localStorage.removeItem(k)); } catch { /* ignore */ }
+  emit();
+}
 
 export const store = {
   get(key) { const d = docs[key]; return d && !d.deleted ? d.data : null; },
@@ -120,12 +127,17 @@ export const sync = {
     sync.user = data.user;
     setStatus(sync.status, sync.error);
   },
-  // My Bag, from the profile shared with the coaching app: [{ name, carry, total }]
-  get bag() { try { return JSON.parse(localStorage.getItem('gs:bag') || '[]'); } catch { return []; } },
+  // My Bag: [{ name, carry, total, ... }], kept where the My Bag page (js/bag,
+  // from the coaching app) keeps it, and saved on the profile both apps share.
+  get bag() { try { return JSON.parse(localStorage.getItem(BAG_KEY) || localStorage.getItem('gs:bag') || '[]') || []; } catch { return []; } },
+  // Fetch the saved bag: its clubs and yardages win, anything else kept on this device (imported shots) stays.
   async loadBag() {
     const c = getClient(); if (!c || !sync.user) return;
     const { data, error } = await c.from('profiles').select('bag_clubs').eq('id', sync.user.id).single();
-    if (!error && data && Array.isArray(data.bag_clubs)) { try { localStorage.setItem('gs:bag', JSON.stringify(data.bag_clubs)); } catch { /* ignore */ } }
+    if (error || !data || !Array.isArray(data.bag_clubs) || !data.bag_clubs.length) return;
+    const local = {}; for (const club of sync.bag) if (club && club.name) local[club.name] = club;
+    const merged = data.bag_clubs.filter(club => club && club.name).map(club => ({ ...(local[club.name] || {}), ...club }));
+    try { localStorage.setItem(BAG_KEY, JSON.stringify(merged)); } catch { /* ignore */ }
   },
   async setName(name) {
     const c = getClient(); if (!c || !sync.user) throw new Error('Log in first.');

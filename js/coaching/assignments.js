@@ -1,26 +1,15 @@
 import { S } from './core.js';
 import { expose } from './core.js';
-import { combOpen, setDrillCategory, setPracticeHubTab, escapeHtml, COACH_SITE } from './core.js';
+import { combOpen } from '../combines/table.js';
 import { onBack, show } from './core.js';
 import { _sb } from './core.js';
 import { drillsData } from './data-drills.js';
+import { setDrillCategory, showDrillDetail } from '../practice/drills.js';
+import { setPracticeHubTab } from '../practice/hub.js';
 
 var _drillDetailBackPracticeTab = null; // track if we came from recommended practice
  // track which drill category to restore
  // skip ppBackToLanding when returning from drill detail
-// A drill's details, in a box over the page (this app has no drill library pages).
-function showDrillDetail(drillId, cat) {
-  var drill = (drillsData[cat] || []).find(function(d) { return d.id === drillId; });
-  var modal = document.getElementById('drillInfoModal');
-  if (!drill || !modal) return;
-  var html = '<div style="font-size:18px;font-weight:800;margin-bottom:4px;text-align:center;">' + escapeHtml(drill.title) + '</div>'
-    + '<div style="font-size:11px;color:#888;text-align:center;margin-bottom:10px;">' + escapeHtml([drill.type === 'block' ? 'Block' : 'Random', drill.distance].concat(drill.subcategories || []).filter(Boolean).join(' \u00b7 ')) + '</div>';
-  if (drill.description) html += '<div style="background:#282828;border-radius:10px;padding:14px;margin-bottom:10px;font-size:13px;color:#9a9a9a;line-height:1.5;text-align:left;">' + escapeHtml(drill.description) + '</div>';
-  if (drill.image) html += '<img src="https://' + COACH_SITE + '/v6/' + drill.image + '" alt="" onerror="this.remove()" style="width:100%;border-radius:12px;display:block;margin:0 0 10px;">';
-  document.getElementById('drillInfoBody').innerHTML = html;
-  modal.style.display = 'flex';
-}
-
 export function drillDetailBack() {
   var target = S.drillDetailBackTarget;
   var practiceTab = _drillDetailBackPracticeTab;
@@ -158,7 +147,16 @@ function startCoachCombine(idx) {
   var internalType = typeMap[c.combine_type] || 'putting';
   var mode = c.combine_mode === 'custom' ? 'custom' : 'combine';
   
-  // Combines aren't part of this app yet: point to the coaching app.
+  S.coachCombineOverride = {
+    type: internalType,
+    shots: shots,
+    assignmentIdx: idx,
+    target: c.target_score,
+    note: c.note,
+    coachName: c.coach_name
+  };
+  
+  show('combinesPage');
   combOpen(internalType, mode);
 }
 

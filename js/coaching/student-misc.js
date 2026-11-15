@@ -2,7 +2,7 @@ import { S } from './core.js';
 import { expose } from './core.js';
 import { _BAG_ORDER, sortBagClubs } from './core.js';
 import { loadStudentGoalsAndHandicap } from './student-goals.js';
-import { loadStudentCombines } from './core.js';
+import { loadStudentCombines } from '../combines/history.js';
 import { _sb } from './core.js';
 import { escHtml } from './core.js';
 
