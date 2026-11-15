@@ -1086,10 +1086,11 @@ export function renderHole(view, n) {
   const sgView = h('div', { class: 'sgview', hidden: true });
   const sgViewBtn = h('button', { class: 'fab sgviewbtn', hidden: true, 'aria-label': 'Strokes gained', title: 'Strokes gained',
     onclick: () => { sgView.hidden = !sgView.hidden; sgViewBtn.classList.toggle('on', !sgView.hidden); drawSgView(); } }, h('span', {}, 'Strokes'), h('span', {}, 'Gained'));
-  // Score chips and scorecard (filled in by drawScoreChips / openScorecard below).
-  const totalChip = h('button', { class: 'scorechip total', onclick: () => openScorecard() });
-  const holeChip = h('button', { class: 'scorechip hole', onclick: () => openScorecard() });
-  const chips = h('div', { class: 'chips', hidden: true }, holeChip, totalChip);
+  // Score box and scorecard (filled in by drawScoreChips / openScorecard below):
+  // one long box, as wide as the hole pill under it, with this hole's score and
+  // where the round stands ("+2 thru 5"). Tap it for the scorecard and total.
+  const holeChip = h('button', { class: 'scorechip hole', 'aria-label': 'Score: tap for the scorecard', onclick: () => openScorecard() });
+  const chips = h('div', { class: 'chips', hidden: true }, holeChip);
   const scorecard = h('div', { class: 'scorecard', hidden: true, onclick: e => { if (e.target === scorecard) scorecard.hidden = true; } });
   const compass = h('button', { class: 'compass', 'aria-label': 'Compass: tap to straighten the view', title: 'Tap to straighten the view' });
   compass.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,16 12,16" fill="#ff4d4d"/><polygon points="16,29 20,16 12,16" fill="#fff"/><text x="16" y="11.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">N</text></svg>';
@@ -1210,6 +1211,8 @@ export function renderHole(view, n) {
       h('div', {}, pillSmall, pillStrong),
       h('a', { href: `#/hole/${nextHole}`, 'aria-label': 'Next hole' }, '›'))));
 
+  // The score box is as wide as the hole pill, whatever the pill says.
+  if (window.ResizeObserver) new ResizeObserver(() => { if (holePill.offsetWidth) chips.style.width = `${holePill.offsetWidth}px`; }).observe(holePill);
   const m = map = new maplibregl.Map({
     container: mapEl,
     style: {
@@ -1479,11 +1482,12 @@ export function renderHole(view, n) {
     chips.hidden = !show;
     holeEl()?.classList.toggle('haschips', show);
     if (!show) return;
-    totalChip.replaceChildren(h('small', {}, 'Total'), h('strong', {}, strokes ? `${strokes}` : '–', h('em', {}, strokes ? ` (${toPar(tp)})` : '')));
+    void strokes; void tp; // the total is on the scorecard
     const hh = r.holes?.[n];
-    holeChip.replaceChildren(h('small', {}, 'Score'), // the hole number is already on the hole pill
-      h('strong', {}, hh?.done ? String(strokesOf(hh)) : '–', h('em', {}, hh?.done ? ` (${toPar(strokesOf(hh) - ch.par)})` : '')),
-      h('em', {}, thru ? `${toPar(thruToPar)} thru ${thru}` : 'not started'));
+    holeChip.replaceChildren(
+      h('div', { class: 'sc' }, h('small', {}, 'Score'), // the hole number is already on the hole pill
+        h('strong', {}, hh?.done ? String(strokesOf(hh)) : '–', h('em', {}, hh?.done ? ` (${toPar(strokesOf(hh) - ch.par)})` : ''))),
+      h('div', { class: 'thru' }, thru ? h('strong', {}, toPar(thruToPar)) : null, h('small', {}, thru ? `thru ${thru}` : 'not started')));
   }
   function openScorecard() {
     const { r, strokes, toPar: tp } = roundTotals();
