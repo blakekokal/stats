@@ -389,6 +389,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.63.0', ['Hole screen: live wind under the compass. The arrow shows which way the wind is blowing on the map (it turns with the map) and the number is the speed in mph, for the course\u2019s location']],
   ['0.62.1', ['Club box: a Carry | Total switch for the yardages', 'Whose bag?: students are listed most recently active first (with when), and the box stays put near the top while you search instead of jumping around']],
   ['0.62.0', ['GPS Overview: the Club box shows whose bag it\u2019s using (yours to start). Tap it to search your students and load one\u2019s bag, so the clubs, yardages, arcs, Comp and Auto use their numbers; it stays on until you leave GPS Overview']],
   ['0.61.3', ['Coaching Recent Activity: a student\u2019s round has Profile, View round and Strokes gained buttons, so you don\u2019t have to open their profile first. Strokes gained opens that round\u2019s SG in a pop-up']],
