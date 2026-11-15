@@ -1,18 +1,22 @@
 // Coaching, brought over from the coaching app: a student's connection to
 // their coach (feedback, assigned drills, goals, messages, invite code) and a
 // coach's side (activity, notes, assignments, messages, students and teams,
-// and each student's dashboard, rounds, notes, goals, bag and schedule).
+// and each student's dashboard, rounds, notes, goals, bag and schedule), plus
+// My Bag, Performance Analysis and Practice and Learning (combines, drills,
+// practice plans and the learning tools).
 // Both apps share the same accounts and coaching tables, so what is done here
 // shows up there and the other way round.
 //
 // Student stats and rounds come from this app's GPS rounds (gps.js), and a
 // coach can watch a student's round live.
 
-import { COACHING_PAGE, STUDENT_VIEW_PAGE, MODALS } from './markup.js';
+import { root } from './root.js';
 import { expose, escapeHtml, S, show } from './core.js';
 import { goToCoaching, checkCoachingStudentNotifications } from './student-side.js';
 import { init as initCoachSide } from './coach-side.js';
 import { liveStudents, watchLive } from './gps.js';
+import { init as initProximity } from '../learn/proximity.js';
+import { init as initOptimizer } from '../learn/optimizer.js';
 // Loaded for the handlers their markup calls.
 import './roles.js';
 import './students.js';
@@ -24,20 +28,65 @@ import './teams.js';
 import './messages.js';
 import './assign.js';
 import './assignments.js';
+import '../bag/clubs.js';
+import '../bag/find-yardage.js';
+import '../bag/gap-visualizer.js';
+import '../bag/speed.js';
+import '../bag/wedge-gapping.js';
+import '../combines/driver-drill.js';
+import '../combines/eval-test.js';
+import '../combines/history.js';
+import '../combines/line-drill.js';
+import '../combines/table.js';
+import '../learn/distance-guide.js';
+import '../learn/library.js';
+import '../learn/putting-break.js';
+import '../learn/sg-calculator.js';
+import '../learn/sg-explainer.js';
+import '../performance/combines.js';
+import '../performance/rounds.js';
+import '../practice/custom-plans.js';
+import '../practice/drills.js';
+import '../practice/generator.js';
+import '../practice/hub.js';
+import '../practice/log.js';
+import '../practice/plans.js';
+import '../practice/swing-journal.js';
 
-let started = false, liveTimer = null;
+initCoachSide();
+initProximity();
+initOptimizer();
 
-export function closeCoaching() { clearInterval(liveTimer); liveTimer = null; }
+let liveTimer = null;
 
-export function renderCoaching(view) {
-  closeCoaching();
-  view.innerHTML = `<div class="cx coachroot">${COACHING_PAGE}${STUDENT_VIEW_PAGE}${MODALS}</div>`;
-  if (!started) { started = true; initCoachSide(); }
+// Leaving for another part of the app: the pages stay in the document, hidden.
+export function closeCoaching() {
+  clearInterval(liveTimer); liveTimer = null;
+  root.hidden = true;
+  const view = document.getElementById('view');
+  if (view) view.hidden = false;
+}
+
+// Home's buttons: Coaching, My Bag, Performance Analysis, Practice and Learning.
+const START = { coaching: 'coachingCornerPage', bag: 'myBagPage', performance: 'performanceAnalysisPage', practice: 'practiceHubPage' };
+export function renderCoaching(view, tab = 'coaching') {
+  clearInterval(liveTimer); liveTimer = null;
+  // The app's own view steps aside (it keeps one element, so the start-up check sees a drawn page).
+  view.replaceChildren(document.createElement('div'));
+  view.hidden = true;
+  root.hidden = false;
+  // Close anything left open over the pages last time.
+  root.querySelectorAll(':scope > div:not(.page)').forEach(el => { if (el.style.display && el.style.display !== 'none') el.style.display = 'none'; });
   S.currentStudentId = null;
-  goToCoaching().then(() => {
-    drawLive();
-    liveTimer = setInterval(() => { if (!document.hidden) drawLive(); }, 30000);
-  });
+  if (tab === 'coaching') {
+    goToCoaching().then(() => {
+      drawLive();
+      liveTimer = setInterval(() => { if (!document.hidden && !root.hidden) drawLive(); }, 30000);
+    });
+  } else {
+    if (tab === 'practice') S.currentPHTab = 'combines';
+    show(START[tab]);
+  }
 }
 
 // Coach Home: students who are playing right now, each with a Watch button.
@@ -55,7 +104,7 @@ async function drawLive() {
     + (l.thru ? ' · ' + toPar(l.toPar) + ' thru ' + l.thru : l.hole ? ' · hole ' + l.hole : '') + '</div></div>'
     + '<button onclick="coachWatchLive(\'' + l.id + '\')" style="flex-shrink:0;width:auto;max-width:none;height:34px;padding:0 14px;font-size:12px;font-weight:700;background:#c8102e;border-radius:8px;">Watch</button></div>').join('');
 }
-expose({ show, coachWatchLive: id => watchLive(String(id).replace(/[^a-z0-9]/gi, '')) });
+expose({ coachWatchLive: id => watchLive(String(id).replace(/[^a-z0-9]/gi, '')) });
 
 // Home: a dot on the Coaching button when something new is waiting (a note, a message, an assignment).
 export function checkCoachingDot() { checkCoachingStudentNotifications().catch(() => {}); }

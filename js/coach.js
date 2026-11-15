@@ -1,6 +1,6 @@
 // Home, New Round, Round History, Settings and Log in, laid out like the
-// coaching app. Only entering a round (GPS, Bridlewood), round history and the
-// account settings work for now; the other buttons are shown but disabled.
+// coaching app. My Bag, Performance Analysis, Practice and Learning and
+// Coaching are the coaching app's own pages (js/coaching).
 
 import { h, course, toast, COURSES, courseById, setActiveCourse } from './app.js';
 import { store, sync } from './store.js';
@@ -29,8 +29,6 @@ const needLogin = view => { if (sync.user) return false; renderLogin(view); retu
 // ---------- home ----------
 
 export function renderHome(view) {
-  const soon = (ic, title, bg, badge) => h('button', { class: 'homebtn', disabled: true, title: 'Coming soon', style: `background:${bg}` },
-    h('span', { class: 'ic' }, ic), h('div', { style: 'flex:1' }, h('div', { class: 't' }, title)), badge || null);
   const go = (ic, title, bg, href) => h('button', { class: 'homebtn', style: `background:${bg}`, onclick: () => { location.hash = href; } },
     h('span', { class: 'ic' }, ic), h('div', {}, h('div', { class: 't' }, title)));
   const divider = () => h('div', { style: 'height:1px;background:#282828;margin:3px 0;' });
@@ -47,6 +45,10 @@ export function renderHome(view) {
   coaching.append(h('span', { id: 'coachingNotifDot', style: 'display:none;width:10px;height:10px;border-radius:50%;background:#d4706e;margin-left:auto;flex-shrink:0;' }));
   if (sync.user) checkCoachingDot();
 
+  const practice = go('🏌️', 'Practice and Learning', '#d49a10', '#/practice');
+  practice.firstChild.nextSibling.style.flex = '1';
+  practice.append(h('span', { style: 'background:#d4706e;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 7px;flex-shrink:0;white-space:nowrap;animation:cxpulse 1.5s infinite;' }, 'NEW!'));
+
   view.replaceChildren(page('center',
     h('div', { style: 'width:100%;max-width:320px;display:flex;flex-direction:column;gap:7px;' },
       // Help on the left and search + settings on the right, level with the
@@ -61,11 +63,10 @@ export function renderHome(view) {
       go('📋', 'Round History', '#00402c', '#/history'),
       divider(),
       go('📊', 'Stats Dashboard', '#3d96ee', '#/dashboard'),
-      soon('🔍', 'Performance Analysis', '#2d7abc'),
+      go('🔍', 'Performance Analysis', '#2d7abc', '#/performance'),
       go('🎒', 'My Bag', '#1a4a8a', '#/bag'),
       divider(),
-      soon('🏌️', 'Practice and Learning', '#d49a10',
-        h('span', { style: 'background:#d4706e;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 7px;flex-shrink:0;white-space:nowrap;animation:cxpulse 1.5s infinite;' }, 'NEW!')),
+      practice,
       coaching),
     sync.user ? null : h('button', { class: 'linkbtn', style: 'margin-top:18px;', onclick: () => { location.hash = '#/account'; } }, 'Log In / Sign Up')));
 }
@@ -282,34 +283,6 @@ export function renderEditRound(view, id) {
     msg));
 }
 
-// ---------- my bag ----------
-// Clubs and yardages come from the profile shared with the coaching app (edit
-// them there). This app adds an arc width per club, used by Arc → Auto.
-
-const BAG_ORDER = ['Dr', 'Dr2', '2W', '3W', '4W', '5W', '6W', '7W', '2HY', '3HY', '4HY', '5HY', '6HY', '7HY', '2I', '3I', '4I', '5I', '6I', '7I', '8I', '9I', '48', 'PW', 'GW', 'AW', 'SW', '50', '52', '54', '56', '58', '60', '62', 'LW'];
-export function renderBag(view) {
-  if (needLogin(view)) return;
-  const clubs = (sync.bag || []).filter(c => c && c.name).sort((a, b) => BAG_ORDER.indexOf(a.name) - BAG_ORDER.indexOf(b.name));
-  const arcs = { ...(store.get('clubArcs') || {}) };
-  const msg = h('div', { class: 'msg' });
-  const row = c => {
-    const inp = h('input', { type: 'number', inputmode: 'numeric', min: 5, max: 100, placeholder: 'auto', value: arcs[c.name] || '', style: 'width:72px;height:34px;font-size:14px;border-radius:8px;',
-      onchange: () => { const v = Math.round(+inp.value); if (v > 0) arcs[c.name] = Math.min(100, v); else delete arcs[c.name]; store.set('clubArcs', { ...arcs }); msg.textContent = '✓ Saved'; msg.className = 'msg ok'; setTimeout(() => { msg.textContent = ''; }, 1500); } });
-    return h('div', { class: 'card', style: 'display:flex;align-items:center;gap:10px;margin:4px 0;' },
-      h('div', { style: 'flex:1;' }, h('div', { style: 'font-weight:800;font-size:15px;' }, clubLabel(c.name)),
-        h('div', { style: 'font-size:12px;color:#9a9a9a;' }, [c.carry ? `Carry ${c.carry}` : null, c.total ? `Total ${c.total}` : null].filter(Boolean).join(' · ') || 'No yardage yet')),
-      h('div', { style: 'text-align:right;font-size:11px;color:#9a9a9a;' }, 'Arc (yds)', inp));
-  };
-  const refresh = h('button', { class: 'linkbtn', style: 'font-size:12px;', onclick: async () => { msg.textContent = 'Loading…'; msg.className = 'msg'; await sync.loadBag().catch(() => {}); renderBag(view); } }, 'Reload from the coaching app');
-  view.replaceChildren(page('top', backBtn(),
-    h('div', { style: 'width:100%;max-width:360px;' },
-      h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:4px;' }, '🎒 My Bag'),
-      h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:8px;' }, 'Clubs and yardages come from your bag in the coaching app. Set an arc width per club for Arc → Auto; leave blank to use 15% of the club’s yardage.'),
-      clubs.length ? clubs.map(row) : h('div', { style: 'color:#9a9a9a;text-align:center;padding:16px;font-size:13px;' }, 'No clubs in your bag yet. Add them in the coaching app\'s My Bag.'),
-      msg, refresh)));
-}
-const clubLabel = n => (n === 'Dr' ? 'Driver' : /^(\d)W$/.test(n) ? `${n[0]} Wood` : /^(\d)HY$/.test(n) ? `${n[0]} Hybrid` : /^(\d)I$/.test(n) ? `${n[0]} Iron` : /^\d\d$/.test(n) ? `${n}°` : n);
-
 // ---------- settings ----------
 
 export function renderSettingsPage(view) {
@@ -407,6 +380,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.54.0', ['My Bag is the full one from the coaching app: tap a club to edit its carry, total and \u00be yardages, label and arc width; add, remove and import clubs, Find Yardages, Wedge Gapping, Speed and the Gap Visualizer', 'Performance Analysis: your focus area and strokes gained breakdown from your last 10 rounds here, plus combines', 'Practice and Learning: combines (evaluation test, putting, short game, wedges, line drill, driver), practice plans and log, drills, and the learning tools (SG calculator, putting break, distance optimizer, proximity, distance guide, Guide to Golf)', 'Coaching: assigned combines and drills now open here']],
   ['0.53.0', ['New Round and GPS Overview: the course box starts blank. Type the course name and the list narrows to the matching courses; tap one to pick it and choose its tee box']],
   ['0.52.6', ['Live view: the latest shot shows in a thin strip at the top (e.g. "Shot 1 · Driver 290 yds to fwy"); tap it to see the shot', 'Refresh is a small button in the bottom right corner']],
   ['0.52.5', ['Lost ball: a drop is +1 stroke, like water (out of bounds stays +2)']],

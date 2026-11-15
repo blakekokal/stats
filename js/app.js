@@ -7,7 +7,7 @@ import { renderSettings } from './settings.js';
 import { renderStats } from './stats.js';
 import { renderAccount } from './account.js';
 import { renderStatsDashboard } from './dashboard.js';
-import { renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin, renderWhatsNew, renderEditRound, renderBag } from './coach.js';
+import { renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin, renderWhatsNew, renderEditRound } from './coach.js';
 import { VERSION } from './version.js';
 import { currentRound, isWatching, endWatching, watchInfo, watchingId } from './rounds.js';
 import { loadWatch, watchHole } from './live.js';
@@ -194,15 +194,17 @@ async function route() {
     const res = await loadWatch(id);
     if (res !== 'ok') { document.body.classList.add('coach'); document.body.classList.remove('playing'); closeHole(); renderLiveError(res, route); return; }
   }
-  const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag', 'coaching'].includes(parts[0]) ? parts[0] : 'home';
+  const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag', 'coaching', 'performance', 'practice'].includes(parts[0]) ? parts[0] : 'home';
   // Pages laid out like the coaching app hide this app's top bar. Set before
   // waiting for the course, so the old top bar never shows while it loads.
-  document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout', 'coaching'].includes(tab));
+  document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout', 'coaching', 'performance', 'practice'].includes(tab));
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   document.body.classList.toggle('playing', tab === 'hole');
   await loadCourse(parts[0] === 'hole');
   if (tab !== 'hole') closeHole();
-  if (tab !== 'coaching') closeCoaching();
+  // Coaching, My Bag, Performance Analysis and Practice are the coaching app's pages (js/coaching).
+  const coachTab = ['coaching', 'bag', 'performance', 'practice'].includes(tab);
+  if (!coachTab) closeCoaching();
   if (tab === 'hole') renderHole(view, Math.min(18, Math.max(1, parseInt(parts[1], 10) || lastHole())));
   else if (tab === 'course') renderCourseEditor(view);
   else if (tab === 'settings') renderSettingsPage(view);
@@ -214,9 +216,8 @@ async function route() {
   else if (tab === 'whatsnew') renderWhatsNew(view);
   else if (tab === 'dashboard') renderStatsDashboard(view, renderLogin, parts[1]);
   else if (tab === 'round') renderEditRound(view, parts[1]);
-  else if (tab === 'bag') renderBag(view);
   else if (tab === 'scout') renderNewRound(view, { scout: true });
-  else if (tab === 'coaching') renderCoaching(view);
+  else if (coachTab) renderCoaching(view, tab);
   else renderHome(view);
 }
 
@@ -232,7 +233,7 @@ function renderLiveError(res, retry) {
 window.addEventListener('hashchange', route);
 // Re-render when another device's changes arrive, but not while looking at a hole
 // (that would reset the crosshair).
-store.onChange(() => { if (document.body.classList.contains('playing') || location.hash.startsWith('#/coaching')) return; route(); });
+store.onChange(() => { if (document.body.classList.contains('playing') || /^#\/(coaching|bag|performance|practice)/.test(location.hash)) return; route(); });
 let lastUser;
 // Admins (config.js) can edit course outlines; nobody else sees the tools.
 export let isAdmin = false;

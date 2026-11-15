@@ -109,12 +109,34 @@ anything done in one app shows in the other.
   dashboard and rounds **from this app's GPS rounds**, plus notes, goals, bag
   and schedule. A round opens read-only on the hole screen, and students who
   are playing right now are listed under **Live now** with a Watch button.
-- Not brought over yet (they need parts this app doesn't have): running a
-  combine, the practice log and Performance Analysis.
+- Assigned combines and drills open in **Practice and Learning** (below).
 
 A coach reads a student's rounds through two database functions that only
 answer for students on the caller's roster. Create them once by running
 `COACHING_SQL` (`js/store.js`) in the Supabase SQL editor (after `LIVE_SQL`).
+
+## My Bag, Performance Analysis, Practice and Learning
+
+These Home buttons are also the coaching app's own pages (`js/bag`,
+`js/performance`, `js/practice`, `js/learn`, `js/combines`, with their markup in
+`js/coaching/markup-more.js` and pictures in `assets/`). All of the coaching
+app's pages are built once into `#coachroot` (`js/coaching/root.js`) and shown
+one at a time; they use the coaching app's tables, so combines, practice
+sessions, plans and the bag are the same in both apps.
+
+- **My Bag**: tap a club to edit its carry, total and ¾ yardages, label and
+  arc width (the arc width is this app's, used by Arc → Auto on a hole); add,
+  remove or import clubs (CSV, or Excel when online), plus Find Yardages,
+  Wedge Gapping, Speed and the Gap Visualizer. The bag is saved on the shared
+  profile and is what the hole screen's club list uses.
+- **Performance Analysis**: built from the last 10 rounds played **in this
+  app**, compared to the handicap level on your profile; the Combines page uses
+  the shared combine scores.
+- **Practice and Learning**: combines (evaluation test, putting, short game,
+  wedges, line drill, driver), practice plans, log and swing journal, drills,
+  and the learning tools.
+- Not brought over: the coaching app's own round entry, Help page and viewing
+  the whole app as a student.
 
 ## Accounts and sync
 

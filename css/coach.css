@@ -44,3 +44,110 @@ body.coach { background: #1e1e1e; }
 .coachroot .page.active { display: flex; }
 .coachroot textarea, .coachroot select { font-family: inherit; }
 .coachroot input[type="checkbox"], .coachroot input[type="radio"] { width: auto; height: auto; }
+
+/* My Bag, Performance Analysis, Practice and Learning (js/bag, js/performance,
+   js/practice, js/learn, js/combines): the coaching app's own styles, scoped
+   to .coachroot. Its pages stay in the document; [hidden] takes them off screen. */
+#coachroot { flex: 1; height: auto; }
+#coachroot[hidden] { display: none; }
+#view[hidden] { display: none; }
+.coachroot button { padding: 1px 6px; }
+.coachroot input { padding: 1px 2px; }
+.coachroot #persistentBackBtn { position: fixed; bottom: max(12px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: auto; max-width: none; height: auto; background: #3d3d3d; color: #fff; border: none; padding: 10px 32px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; z-index: 50; touch-action: manipulation; letter-spacing: .5px; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
+.coachroot #pbvWrap input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:50%;background:#ffffff;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.6); }
+.coachroot #pbvWrap input[type=range]::-moz-range-thumb { width:26px;height:26px;border-radius:50%;background:#ffffff;cursor:pointer;border:none;box-shadow:0 1px 6px rgba(0,0,0,0.6); }
+.coachroot .big { height:52px;font-size:16px; }
+.coachroot .input-wrap { position:relative;width:100%;max-width:320px; }
+.coachroot .input-wrap span { position:absolute;right:55px;top:50%;transform:translateY(-50%);color:#9a9a9a;pointer-events:none; }
+.coachroot .back-wrap { position:fixed;bottom:10px;left:0;right:0;display:flex;justify-content:center;z-index:5; }
+.coachroot .back { background:#2e2e2e;height:36px; }
+.coachroot .stat { width:100%;max-width:360px;background:#282828;padding:8px 12px;border-radius:10px;font-size:14px;box-sizing:border-box; }
+.coachroot .stat.center { text-align:center; }
+.coachroot .stat-split { display:flex; }
+.coachroot .stat-half { flex:1;text-align:center; }
+.coachroot .stat-half.left { border-right:1px solid #333333; }
+.coachroot .num { font-weight:700; }
+.coachroot .comb-menu-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:8px; }
+.coachroot #comb-table thead th { background:#2e2e2e; color:#606060; font-size:0.62rem; text-transform:uppercase; font-weight:600; padding:7px 3px; border:1px solid #333333; white-space:nowrap; text-align:center; }
+.coachroot #comb-table tbody td { border:1px solid #333333; text-align:center; height:44px; padding:0; }
+.coachroot .comb-hnum { background:#2e2e2e; font-weight:700; color:#ffffff; width:24px; font-size:0.8rem; }
+.coachroot .comb-ro { background:rgba(255,255,255,.04); font-weight:700; font-size:0.85rem; padding:2px; }
+.coachroot .comb-tap input { width:100%; height:44px; border:none; background:transparent; color:#9a9a9a; text-align:center; font-size:1rem; font-weight:600; padding:0 2px; }
+.coachroot .comb-tap input:focus { background:#00402c; outline:2px solid #00b87a; }
+.coachroot .comb-sel-cell { width:100%; height:44px; border:none; background:transparent; color:#9a9a9a; font-size:0.88rem; text-align:center; padding:0 2px; cursor:pointer; -webkit-appearance:none; appearance:none; max-width:none; }
+.coachroot .comb-putt-grp { display:flex; gap:3px; padding:3px; align-items:center; height:44px; }
+.coachroot .comb-pbtn { flex:1; height:36px; border:1px solid #333333; border-radius:6px; background:#282828; color:#606060; font-size:1rem; font-weight:700; cursor:pointer; touch-action:manipulation; max-width:none; width:auto; }
+.coachroot .comb-pbtn:active { background:#00a06d; color:#ffffff; }
+.coachroot .comb-pbtn.comb-on { background:#00b87a; color:#ffffff; border-color:#00b87a; }
+.coachroot .comb-xbtn { background:transparent; color:#d4706e; border:none; font-size:1rem; padding:10px 7px; cursor:pointer; max-width:none; width:auto; height:auto; }
+.coachroot .comb-pos { color:#00b87a; font-weight:700; }
+.coachroot .comb-neg { color:#d4706e; font-weight:700; }
+.coachroot .comb-col-dist { width:66px; }
+.coachroot .comb-col-score { width:68px; }
+.coachroot .comb-col-lie { width:90px; }
+.coachroot .comb-hist-card { background:#222222; border:1px solid #333333; border-radius:8px; padding:10px 12px; margin-bottom:8px; font-size:13px; }
+.coachroot .comb-hist-card .ch-head { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:4px; }
+.coachroot .comb-hist-card .ch-type { font-weight:700; color:#00b87a; font-size:14px; }
+.coachroot .comb-hist-card .ch-date { font-size:11px; color:#606060; }
+.coachroot .comb-hist-card .ch-score { font-size:22px; font-weight:800; }
+.coachroot .comb-hist-card .ch-note { font-size:11px; color:#9a9a9a; margin-top:3px; font-style:italic; }
+.coachroot .comb-hist-card .ch-meta { font-size:11px; color:#2e2e2e; margin-top:2px; }
+.coachroot .comb-hist-del { background:transparent; border:none; color:#d4706e; font-size:12px; cursor:pointer; padding:0; height:auto; max-width:none; width:auto; }
+.coachroot .comb-dimmed { opacity:.35; pointer-events:none; }
+.coachroot #bagOptApp * { margin: 0; padding: 0; box-sizing: border-box; }
+.coachroot #bagOptApp { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 0; }
+.coachroot #bagOptApp .bo-header { background: #2a2a2a; padding: 12px; text-align: center; color: white; border-bottom: 2px solid #333; border-radius: 12px 12px 0 0; }
+.coachroot #bagOptApp .bo-header h2 { font-size: 1.3em; margin:0; }
+.coachroot #bagOptApp .bo-content { padding: 10px; }
+.coachroot #bagOptApp .bo-control-group { margin-bottom: 12px; }
+.coachroot #bagOptApp .bo-label { display: block; font-weight: 600; color: #e0e0e0; margin-bottom: 6px; font-size: 0.9em; }
+.coachroot #bagOptApp select, .coachroot #bagOptApp input[type="number"] { width: 100%; padding: 9px; border: 2px solid #333; border-radius: 10px; font-size: 16px; transition: all 0.3s; background: #2a2a2a; color: #ffffff; font-family: inherit; }
+.coachroot #bagOptApp select:focus, .coachroot #bagOptApp input[type="number"]:focus { outline: none; border-color: #ffffff; box-shadow: 0 0 0 3px rgba(255,255,255,0.2); }
+.coachroot #bagOptApp input[type="number"] { font-weight: 600; }
+.coachroot #bagOptApp .bo-input-hint { font-size: 0.72em; color: #888; margin-top: 2px; }
+.coachroot #bagOptApp .bo-input-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.coachroot #bagOptApp .bo-input-column { display: flex; flex-direction: column; }
+.coachroot #bagOptApp .bo-btn-group { display: grid; gap: 6px; margin-bottom: 6px; }
+.coachroot #bagOptApp .bo-mode-buttons { grid-template-columns: 1fr 1fr 1fr; }
+.coachroot #bagOptApp .bo-toggle-btn { padding: 9px; background: #2a2a2a; color: #999; border: 2px solid #333; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.3s; text-align: center; font-family: inherit; }
+.coachroot #bagOptApp .bo-toggle-btn:hover { border-color: #555; color: #ccc; }
+.coachroot #bagOptApp .bo-toggle-btn.bo-active { background: #ffffff; color: #000000; border-color: #ffffff; }
+.coachroot #bagOptApp .bo-slider-container { position: relative; padding: 5px 0; }
+.coachroot #bagOptApp .bo-current-value-display { font-weight: 700; color: #ffffff; font-size: 1.05em; text-align: center; position: absolute; left: 0; right: 0; top: 0; }
+.coachroot #bagOptApp .bo-slider-header { position: relative; margin-bottom: 8px; height: 18px; }
+.coachroot #bagOptApp .bo-slider-label { font-weight: 600; color: #e0e0e0; font-size: 0.9em; margin: 0; position: relative; z-index: 1; }
+.coachroot #bagOptApp .bo-value-display { display: flex; justify-content: space-between; margin-top: 4px; font-size: 0.8em; color: #999; }
+.coachroot #bagOptApp input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 8px; background: #333; border-radius: 5px; outline: none; padding: 0; }
+.coachroot #bagOptApp input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; background: #ffffff; border-radius: 50%; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.3); transition: transform 0.2s; }
+.coachroot #bagOptApp input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+.coachroot #bagOptApp .bo-results { background: #2a2a2a; border-radius: 12px; padding: 10px; margin-bottom: 12px; border: 1px solid #333; }
+.coachroot #bagOptApp .bo-results h3 { color: #ffffff; margin: 0 0 8px 0; font-size: 1.05em; text-align: center; text-transform: capitalize; }
+.coachroot #bagOptApp .bo-results-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+.coachroot #bagOptApp .bo-result-card { background: #1a1a1a; padding: 8px 4px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.3); text-align: center; border: 1px solid #333; }
+.coachroot #bagOptApp .bo-result-label { font-size: 0.65em; color: #999; margin-bottom: 2px; }
+.coachroot #bagOptApp .bo-result-value { font-size: 1.2em; font-weight: 700; color: #ffffff; line-height: 1; }
+.coachroot #bagOptApp .bo-result-unit { font-size: 0.55em; color: #888; margin-left: 1px; }
+.coachroot #bagOptApp .bo-distance-highlight { background: #ffffff; color: #000000; }
+.coachroot #bagOptApp .bo-distance-highlight .bo-result-label { color: #666; }
+.coachroot #bagOptApp .bo-distance-highlight .bo-result-value { color: #000000; font-size: 1.4em; }
+.coachroot #bagOptApp .bo-distance-highlight .bo-result-unit { color: #666; }
+.coachroot .dg-tab { padding:8px 4px;background:#2a2a2a;color:#999;border:2px solid #333;border-radius:10px;font-size:11px;font-weight:600;cursor:pointer;transition:all 0.3s;text-align:center;font-family:inherit; }
+.coachroot .dg-tab:hover { border-color:#555;color:#ccc; }
+.coachroot .dg-tab-active { background:#ffffff;color:#000;border-color:#ffffff; }
+.coachroot .dg-table-wrap { width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;border:1px solid #333; }
+.coachroot .dg-table { width:100%;border-collapse:collapse;font-size:12px;min-width:600px; }
+.coachroot .dg-table.dg-table-simple { min-width:0; }
+.coachroot .dg-table th { background:#2a2a2a;color:#999;font-size:10px;font-weight:600;text-transform:uppercase;padding:8px 5px;text-align:center;border-bottom:2px solid #333;white-space:nowrap;position:sticky;top:0; }
+.coachroot .dg-table th:first-child { text-align:left;position:sticky;left:0;z-index:2;background:#2a2a2a; }
+.coachroot .dg-table td { padding:7px 5px;border-bottom:1px solid #2a2a2a;color:#fff;text-align:center; }
+.coachroot .dg-table td:first-child { text-align:left;position:sticky;left:0;background:#1e1e1e;z-index:1; }
+.coachroot .dg-table tr:nth-child(even) td:first-child { background:#232323; }
+.coachroot .dg-table td:not(:first-child) { font-weight:600; }
+.coachroot .dg-table tr:nth-child(even) { background:#232323; }
+.coachroot .dg-table .dg-club-name { font-weight:600;white-space:nowrap; }
+.coachroot .dg-section-header { background:#1a4a8a !important; }
+.coachroot .dg-section-header td { color:#fff;font-weight:700;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;background:#1a4a8a !important; }
+.coachroot .dg-stat-box { background:#2a2a2a;border-radius:10px;padding:12px;margin-bottom:14px;display:flex;justify-content:space-around;text-align:center;border:1px solid #333; }
+.coachroot .dg-stat-label { font-size:10px;color:#999;text-transform:uppercase;margin-bottom:3px; }
+.coachroot .dg-stat-value { font-size:1.3rem;font-weight:700;color:#fff; }
