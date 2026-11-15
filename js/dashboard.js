@@ -450,7 +450,8 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+=sgBar('SG: Around Green', sgPer.arg, sgR, false, 4);
   html+=sgBar('SG: Putting', sgPer.putt, sgR, false, 5);
   html+=sgScale(sgR);
-  // Past rounds: every round, newest first (scroll for these). Tap one to see
+  // Past rounds: every round, newest first (scroll for these): the date, course and
+  // score on top, the SG total and each category under them. Tap one to see
   // the strokes gained for just that round.
   if(!opts.single&&A.roundSGs.length){
     html+=hdr('PAST ROUNDS');
@@ -459,8 +460,8 @@ export function renderDashboard(data, hcp, targetId, opts) {
       html+='<div role="button" onclick="dashOneRound('+sr.i+')" style="cursor:pointer;padding:8px 0;border-bottom:1px solid #282828;">'
         +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">'
         +'<span style="font-size:14px;font-weight:700;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+sr.date+' · '+escapeHtml(String(sr.course||''))+'</span>'
-        +'<span style="white-space:nowrap;font-size:13px;color:#9a9a9a;">'+sr.score+' <span style="color:'+ftpC(sr.toPar)+';">('+ftp(sr.toPar)+')</span> · <b style="color:'+sgC(sr.tot)+';">'+sgFmt(sr.tot)+'</b> ›</span></div>'
-        +'<div style="font-size:11.5px;color:#7a7a7a;margin-top:3px;">'+[cat('OTT',sr.ott),cat('APP',sr.app),cat('ARG',sr.arg),cat('Putt',sr.putt)].join(' · ')+'</div></div>';
+        +'<span style="white-space:nowrap;font-size:14px;font-weight:700;">'+sr.score+' <span style="color:'+ftpC(sr.toPar)+';">('+ftp(sr.toPar)+')</span> <span style="color:#606060;">›</span></span></div>'
+        +'<div style="font-size:11.5px;color:#7a7a7a;margin-top:3px;">'+[cat('SG',sr.tot),cat('OTT',sr.ott),cat('APP',sr.app),cat('ARG',sr.arg),cat('Putt',sr.putt)].join(' · ')+'</div></div>';
     });
   }
   html+='</div>';

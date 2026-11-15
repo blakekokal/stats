@@ -389,6 +389,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.61.1', ['Past rounds: the score is the same size as the course name, and the SG total sits on the second line with the categories']],
   ['0.61.0', ['Dashboards: the strokes gained bars are compact so all five fit on a small screen without scrolling; below them, Past rounds lists every round, newest first, with its score and SG (tap one for that round)', 'Coaching: Recent Activity shows your students\u2019 rounds from the last two weeks straight from their saved rounds, even if no notification was sent']],
   ['0.60.3', ['Viewing a past round: Strokes Gained is a taller button in the bottom-right corner (its panel opens above it), View sits just above the menu, and the Tools button is gone']],
   ['0.60.2', ['Dashboards: Filter is a small grey link on the same line as \u201cper round\u201d']],
