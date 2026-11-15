@@ -8,7 +8,7 @@ import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
 import { checkCoachingDot } from './coaching/index.js';
 import { VERSION } from './version.js';
-import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting } from './rounds.js';
+import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting, firstHoleOf } from './rounds.js';
 import { downloadRoundCsv } from './dashboard.js';
 
 const PREF_LABEL = { Pro: 'Tour Pro', Scratch: 'Scratch (0)' };
@@ -243,7 +243,7 @@ export function renderHistory(view) {
             e.stopPropagation();
             setCurrentRound(r.id); localStorage.setItem('gs:viewOnly', '1'); localStorage.removeItem('gs:editingPast'); sessionStorage.removeItem('gs:level');
             store.set('settings', { ...(store.get('settings') || {}), tee: r.tee });
-            location.hash = '#/hole/1';
+            location.hash = '#/hole/' + firstHoleOf(r, courseById(r.course)); // the first hole they played
           } }, 'View/Edit'),
           h('button', { style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#2d7abc;border-radius:6px;', onclick: e => { e.stopPropagation(); location.hash = `#/dashboard/${r.id}`; } }, 'Stats'),
           h('button', { title: 'Download scorecard (CSV)', style: 'width:50px;max-width:none;height:30px;font-size:12px;background:#00402c;border-radius:6px;', onclick: e => { e.stopPropagation(); downloadRoundCsv(r); } }, '📥'),
@@ -389,6 +389,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.58.0', ['Past rounds open on the first hole played (e.g. 10 for a back-nine round), with the score counting from there (+1 thru 1)', 'Replay, next to View round on a client\u2019s round: plays the round back one shot at a time, with a tracer for each shot and the view closing in on where it landed. Pause / play, 2x speed, and \u2715 to stop']],
   ['0.57.1', ['Viewing a client\u2019s round: the tag at the top shows FINAL, their name, the date and the course; Strokes Gained sits on the right just below it. The latest-shot strip only shows while a round is live', 'Tapping a shot: Shot 1 \u00b7 7 Iron, then how far and from where to where (155 yds from tee to fairway), then what was left (282 yds to hole), then strokes gained']],
   ['0.57.0', ['New Round and GPS Overview: the course list stays hidden until you start typing, then shows the top 5 matches', 'Hole screen: the two score tabs are now one long box, as wide as the hole pill, with this hole\u2019s score and where the round stands (e.g. +2 thru 5). Tap it for the scorecard and your total']],
   ['0.56.2', ['Hole screen: the score tabs are swapped, this hole\u2019s score first, then the round total. The hole tab now just says Score, since the hole number is on the hole pill below']],

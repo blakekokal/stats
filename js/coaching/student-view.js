@@ -6,7 +6,7 @@ import { loadStudentCombines } from '../combines/history.js';
 import { loadPerfCombineData } from '../performance/combines.js';
 import { computePerfAnalysis, renderPerfAnalysis } from '../performance/rounds.js';
 import { escapeHtml } from './core.js';
-import { studentRounds, viewRound, watchLive, liveStudents } from './gps.js';
+import { studentRounds, viewRound, replayRound, watchLive, liveStudents } from './gps.js';
 import { _sb } from './core.js';
 import { ordinalSuffix } from './core.js';
 import { renderDashboard } from '../dashboard.js';
@@ -436,6 +436,7 @@ function filterSvRounds() {
       + '<div style="display:flex;gap:6px;margin-top:8px;">'
       + (_svLive[r.id] ? '<button onclick="svWatchLive(\'' + r.id + '\')" style="flex:1;height:30px;font-size:12px;background:#c8102e;border-radius:6px;font-weight:700;">\u25cf Watch live</button>' : '')
       + '<button onclick="svViewRound(\'' + r.id + '\')" style="flex:1;height:30px;font-size:12px;background:#2d7abc;border-radius:6px;font-weight:700;">View round</button>'
+      + '<button onclick="svReplayRound(\'' + r.id + '\')" style="flex:1;height:30px;font-size:12px;background:#6b4fbb;border-radius:6px;font-weight:700;">\u25b6 Replay</button>'
       + '</div>';
     list.appendChild(card);
   });
@@ -451,7 +452,11 @@ function svViewRound(roundId) {
   var r = (S.svAllRounds || []).find(function(x) { return x.id === roundId; });
   if (r) viewRound(r._gps, document.getElementById('studentViewName').textContent);
 }
+function svReplayRound(roundId) {
+  var r = (S.svAllRounds || []).find(function(x) { return x.id === roundId; });
+  if (r) replayRound(r._gps, document.getElementById('studentViewName').textContent);
+}
 function svWatchLive(roundId) { if (_svLive[roundId]) watchLive(_svLive[roundId]); }
 
 // Functions called from inline HTML handlers
-expose({ toggleStudentHcpDropdown, showStudentTab, setSvPerfPage, toggleSvPerfTab, onSvDashHcpChange, applySvDashFilters, filterSvRounds, svViewRound, svWatchLive });
+expose({ toggleStudentHcpDropdown, showStudentTab, setSvPerfPage, toggleSvPerfTab, onSvDashHcpChange, applySvDashFilters, filterSvRounds, svViewRound, svReplayRound, svWatchLive });

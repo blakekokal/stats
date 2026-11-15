@@ -5,7 +5,7 @@
 import { fetchStudentRounds, fetchStudentsLive } from '../store.js';
 import { toCoachRound } from '../dashboard.js';
 import { courseById } from '../app.js';
-import { summarize, startWatching } from '../rounds.js';
+import { summarize, startWatching, firstHoleOf } from '../rounds.js';
 
 const cache = new Map(); // student id -> { at, rounds }
 // The student's rounds, newest first: coaching-format rounds, each with `_gps`
@@ -34,9 +34,12 @@ export async function liveStudents() {
 const backToCoaching = () => { try { sessionStorage.setItem('gs:watchBack', '#/coaching'); } catch { /* ignore */ } };
 // Watch a round that is being played (it refreshes as they play).
 export function watchLive(shareId) { backToCoaching(); location.hash = '#/live/' + shareId; }
-// Open one of a student's rounds read-only on the hole screen.
-export function viewRound(round, name) {
+// Open one of a student's rounds read-only on the hole screen, on the first
+// hole they played. Replay plays it back one shot at a time.
+export function viewRound(round, name, replay = false) {
   backToCoaching();
   startWatching('sv-' + round.id, { round, live: false, name: name || round.player || '', at: null, sent: round.updated });
-  location.hash = '#/hole/1';
+  try { replay ? sessionStorage.setItem('gs:replay', '1') : sessionStorage.removeItem('gs:replay'); } catch { /* ignore */ }
+  location.hash = '#/hole/' + firstHoleOf(round, courseById(round.course));
 }
+export const replayRound = (round, name) => viewRound(round, name, true);
