@@ -389,6 +389,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.60.2', ['Dashboards: Filter is a small grey link on the same line as \u201cper round\u201d']],
   ['0.60.1', ['Dashboards: SG by round is back at the bottom; tap a round to see its strokes gained (\u2190 All rounds goes back). A Filter button beside \u201cper round\u201d shows the round type, time and \u201cvs\u201d level filters']],
   ['0.60.0', ['Player dashboards (your Stats Dashboard and a student\u2019s dashboard for their coach): just the strokes gained bars, no filters, no \u201cvs\u201d level, no tabs and no SG totals. Tap a bar for that category\u2019s detailed stats (SG: Total opens scoring); \u2190 Strokes gained goes back']],
   ['0.59.0', ['Ending and submitting a round now sends your coach a New Round notification with the course and score', 'Coaching (coach side): one page, no tabs. Notes, Assign and Messages are gone, and of the three tiles only Students is left', 'Tap Students for one list of all your students, the one with the latest round, combine or other activity first, with a search box to find a name']],
