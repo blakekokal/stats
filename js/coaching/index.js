@@ -62,6 +62,7 @@ let liveTimer = null;
 // Leaving for another part of the app: the pages stay in the document, hidden.
 export function closeCoaching() {
   clearInterval(liveTimer); liveTimer = null;
+  const sgPop = document.getElementById('coachSgOverlay'); if (sgPop) sgPop.style.display = 'none'; // a round's SG from Recent Activity
   root.hidden = true;
   const view = document.getElementById('view');
   if (view) view.hidden = false;
