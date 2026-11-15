@@ -1958,6 +1958,11 @@ export function renderHole(view, n) {
   // Pause / play, 2x speed, and ✕ to leave the replay (the round stays open).
   const rpBar = rp ? h('div', { class: 'replaybar' }) : null;
   const rpAlive = () => map === m && replay === rp;
+  // The club for a shot ("7 Iron", "Putter"), if one was recorded.
+  const rpClub = x => (!x ? '' : x.club ? clubName(x.club) + (x.swing ? ` (${SWING_NAME[x.swing] || x.swing})` : '') : x.lie === 'green' ? 'Putter' : '');
+  // A tag on the map at the ball with the club being hit, shown while the shot flies.
+  let rpTag = null;
+  const rpTagOff = () => { rpTag?.remove(); rpTag = null; };
   const rpOrder = () => playOrder(currentRound(), course);
   function drawRpBar() {
     if (!rpBar) return;
@@ -1965,7 +1970,7 @@ export function renderHole(view, n) {
     const hl = currentRound().holes[n] || { shots: [] }, total = strokesIn(hl);
     const sh = hl.shots || [], putt = sh.slice(0, rp.step + 1).filter(x => x.lie === 'green').length;
     const label = finished ? 'Replay finished' : rp.step >= total ? `Hole ${n} done`
-      : `Hole ${n} · ${sh[rp.step]?.lie === 'green' ? `Putt ${putt}` : `Shot ${strokeNo(sh, rp.step)}`}`;
+      : `Hole ${n} · ${sh[rp.step]?.lie === 'green' ? `Putt ${putt}` : `Shot ${strokeNo(sh, rp.step)}`}${rpClub(sh[rp.step]) ? ` · ${rpClub(sh[rp.step])}` : ''}`;
     rpBar.replaceChildren(
       h('button', { class: 'rpplay', 'aria-label': finished ? 'Replay again' : rp.playing ? 'Pause' : 'Play', onclick: () => {
         if (finished) { replay = { playing: true, speed: rp.speed }; if (order[0] === n) renderHole(view, n); else location.hash = `#/hole/${order[0]}`; return; }
@@ -2006,10 +2011,12 @@ export function renderHole(view, n) {
     frame();
   });
   // Look down the shot: the landing spot on the crosshair, where it was hit from below it.
-  function rpCamera(from, to, ms) {
-    const dm = yards(from, to) / YD_PER_M, k = Math.cos((to[0] * Math.PI) / 180);
-    const mPerPx = Math.max((dm * 1.15) / (mapEl.clientHeight * (1 - CROSSHAIR_Y) - 150), 0.03);
-    m.easeTo({ center: ll(to), zoom: Math.min(20, Math.log2((78271.517 * k) / mPerPx)), bearing: bearing(from, to), duration: ms });
+  // Putts: right in close on the green, the putt filling about a third of the screen.
+  function rpCamera(from, to, ms, putt) {
+    const dm = yards(from, to) / YD_PER_M, k = Math.cos((to[0] * Math.PI) / 180), hgt = mapEl.clientHeight;
+    const mPerPx = putt ? Math.max((dm * 1.2) / (hgt * 0.32), 0.008) : Math.max((dm * 1.15) / (hgt * (1 - CROSSHAIR_Y) - 150), 0.03);
+    const zoom = Math.log2((78271.517 * k) / mPerPx);
+    m.easeTo({ center: ll(to), zoom: putt ? Math.max(19.5, Math.min(21, zoom)) : Math.min(20, zoom), bearing: bearing(from, to), duration: ms });
   }
   async function runReplay() {
     const hl = currentRound().holes[n] || { shots: [] }, shots = hl.shots || [], total = strokesIn(hl);
@@ -2017,12 +2024,14 @@ export function renderHole(view, n) {
     if (!(await rpWait(900))) return;
     while (rp.step < total) {
       const j = rp.step, sh = shots[j], to = sh.obAt || (shots[j + 1] ? shots[j + 1].pos : hl.pin || pin);
-      rpCamera(sh.pos, to, 900 / rp.speed);
-      if (!(await rpWait(1000))) return;
-      if (!(await rpTrace(sh.pos, to, sh.lie === 'green' ? 1100 : 1700))) return;
+      const putt = sh.lie === 'green';
+      rpCamera(sh.pos, to, 900 / rp.speed, putt);
+      drawRpBar();
+      if (rpClub(sh)) rpTag = new maplibregl.Marker({ element: h('div', { class: 'rpclub' }, rpClub(sh)), anchor: 'top', offset: [0, 10] }).setLngLat(ll(sh.pos)).addTo(m);
+      if (!(await rpWait(1000))) return rpTagOff();
+      if (!(await rpTrace(sh.pos, to, putt ? 1100 : 1700))) return rpTagOff();
       rp.step++;
-      rpClear(); drawShots(); update(); drawRpBar();
-      m.easeTo({ center: ll(to), zoom: Math.min(20.5, m.getZoom() + 0.8), duration: 700 / rp.speed }); // close in on where it landed
+      rpTagOff(); rpClear(); drawShots(); update(); drawRpBar();
       if (!(await rpWait(1400))) return;
     }
     rp.done = true; drawRpBar();

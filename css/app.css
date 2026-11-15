@@ -502,10 +502,11 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
    the course; Strokes Gained sits on the right just below it. */
 .holeview.watching .livetag { right: 10px; max-width: none; }
 .holeview.watching .topright { top: calc(36px + env(safe-area-inset-top)); }
-/* Replay: play / pause, where it's up to, 2x and end, just above the score box. */
-.replaybar { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(117px + env(safe-area-inset-bottom)); z-index: 4; display: flex; align-items: center; gap: 8px; padding: 5px; border-radius: 999px; background: #111d; backdrop-filter: blur(8px); color: #fff; box-shadow: 0 1px 6px #0008; white-space: nowrap; }
+/* Replay: play / pause, where it's up to (with the club), 2x and end, at the top under the round's tag. */
+.replaybar { position: absolute; left: 50%; transform: translateX(-50%); top: calc(76px + env(safe-area-inset-top)); z-index: 4; display: flex; align-items: center; gap: 8px; padding: 5px; border-radius: 999px; background: #111d; backdrop-filter: blur(8px); color: #fff; box-shadow: 0 1px 6px #0008; white-space: nowrap; }
 .replaybar button { height: 36px; min-height: 0; min-width: 36px; padding: 0 10px; border: 0; border-radius: 999px; background: #2a2f2c; color: #fff; font-size: 14px; font-weight: 800; }
 .replaybar .rpplay { width: 44px; background: #ffb020; color: #111; font-size: 15px; }
 .replaybar .rpspeed.on { background: #4dd0ff; color: #111; }
-.replaybar .rplabel { font-size: 13px; font-weight: 700; padding: 0 2px; min-width: 104px; text-align: center; }
+.replaybar .rplabel { font-size: 13px; font-weight: 700; padding: 0 2px; min-width: 104px; max-width: 52vw; overflow: hidden; text-overflow: ellipsis; text-align: center; }
+.rpclub { background: #111e; color: #fff; font: 800 13px/1 system-ui, sans-serif; padding: 5px 9px; border-radius: 999px; border: 1.5px solid #fff; white-space: nowrap; pointer-events: none; box-shadow: 0 1px 4px #000a; }
 .holeview.clean .replaybar { display: none; }
