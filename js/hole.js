@@ -2068,7 +2068,7 @@ export function renderHole(view, n) {
       m.addLayer({ id: 'replay-shadow', type: 'line', source: 'replay', filter: ['==', '$type', 'LineString'], paint: { 'line-color': '#000', 'line-width': 6, 'line-opacity': 0.35 }, layout: { 'line-cap': 'round' } });
       m.addLayer({ id: 'replay-line', type: 'line', source: 'replay', filter: ['==', '$type', 'LineString'], paint: { 'line-color': '#fff', 'line-width': 3 }, layout: { 'line-cap': 'round' } });
       m.addLayer({ id: 'replay-ball', type: 'circle', source: 'replay', filter: ['==', '$type', 'Point'], paint: { 'circle-radius': 5, 'circle-color': '#fff', 'circle-stroke-color': '#111', 'circle-stroke-width': 1.5 } });
-      holeEl().append(rpBar);
+      holeEl().append(rpBar); holeEl().classList.add('replaying');
       runReplay();
     }
   });
