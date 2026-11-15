@@ -1216,8 +1216,8 @@ export function renderHole(view, n) {
   liveUnsub = onLiveStatus(() => { if (!liveBox.hidden) openLiveBox(); });
   if (!scouting && !watching && !viewing()) shareCurrent();
 
-  view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (toolsBtn.open ? ' toolsopen' : '') + (sgBtn.open ? ' sgopen' : '') }, mapEl,
-    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, chips, h('div', { class: 'topright' }, sgViewBtn, expPill), scorecard,
+  view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (wi && !wi.id.startsWith('sv-') ? ' watchlive' : '') + (toolsBtn.open ? ' toolsopen' : '') + (sgBtn.open ? ' sgopen' : '') }, mapEl,
+    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, chips, sgViewBtn, h('div', { class: 'topright' }, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { viewBox.hidden = true; menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist, gpsShotBtn), holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
@@ -1702,6 +1702,7 @@ export function renderHole(view, n) {
     sgViewBtn.hidden = !viewing();
     // Tools and SG: hidden when there's nothing to open; closed, they show how many of their tools are on.
     drawGroup(toolsBtn, [widthBtn, arcBtn, dispBtn, apprBtn], [showWidth, showArc, showDisp, showAppr].filter(Boolean).length, '⋯', 'toolsopen');
+    if (viewing()) { toolsBtn.hidden = true; holeEl()?.classList.remove('toolsopen'); } // no aiming tools on a past round
     drawGroup(sgBtn, [compBtn, autoBtn], [showComp, !!autoPick].filter(Boolean).length, '⊙', 'sgopen');
     if (!toolsBtn.open) arcSlider.hidden = apprSlider.hidden = true;
     if (!viewBox.hidden) drawViewBox();

@@ -389,6 +389,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.60.3', ['Viewing a past round: Strokes Gained is a taller button in the bottom-right corner (its panel opens above it), View sits just above the menu, and the Tools button is gone']],
   ['0.60.2', ['Dashboards: Filter is a small grey link on the same line as \u201cper round\u201d']],
   ['0.60.1', ['Dashboards: SG by round is back at the bottom; tap a round to see its strokes gained (\u2190 All rounds goes back). A Filter button beside \u201cper round\u201d shows the round type, time and \u201cvs\u201d level filters']],
   ['0.60.0', ['Player dashboards (your Stats Dashboard and a student\u2019s dashboard for their coach): just the strokes gained bars, no filters, no \u201cvs\u201d level, no tabs and no SG totals. Tap a bar for that category\u2019s detailed stats (SG: Total opens scoring); \u2190 Strokes gained goes back']],
