@@ -443,10 +443,13 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .holeview.holedout .crosshair, .holeview.holedout .readout { display: none; }
 /* Score tiles span the hole pill's width (set in js/hole.js). */
 .chips { box-sizing: border-box; }
-.chips .scorechip { flex: 1 1 0; height: 48px; padding-top: 2px; padding-bottom: 2px; }
-.chips .scorechip small { font-size: 11.5px; }
-.chips .scorechip strong { font-size: 21px; }
-.chips .scorechip strong em, .chips .scorechip > em { font-size: 13px; }
+/* One long score box, as wide as the hole pill: this hole's score on the left, "+2 thru 5" on the right. */
+.chips .scorechip { flex: 1 1 0; height: 44px; padding: 0 18px; border-radius: 999px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.chips .scorechip > div { display: flex; align-items: baseline; gap: 6px; white-space: nowrap; }
+.chips .scorechip small { font-size: 12px; }
+.chips .scorechip strong { font-size: 20px; }
+.chips .scorechip strong em { font-size: 13px; }
+.chips .scorechip .thru strong { font-size: 16px; }
 /* Watching a live round: just the hole, the shots and the score. No aiming tools or expected strokes. */
 .holeview.watching .fab.tools, .holeview.watching .fab.sgtools, .holeview.watching .fab.cleanview, .holeview.watching .viewbox, .holeview.watching .fab.appr, .holeview.watching .fab.disp,
 .holeview.watching .fab.arc, .holeview.watching .fab.width, .holeview.watching .fab.arcadj, .holeview.watching .sliders, .holeview.watching .exppill, .holeview.watching .keys { display: none !important; }

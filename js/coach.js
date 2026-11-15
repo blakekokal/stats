@@ -135,8 +135,17 @@ export function renderNewRound(view, { scout = false } = {}) {
     search.value = c.name; results.hidden = true; err.textContent = '';
     fillTees();
   };
-  const hitsFor = () => { const q = search.value.trim().toLowerCase(); return COURSES.filter(c => !q || c.name.toLowerCase().includes(q) || c.id.includes(q)); };
+  // Nothing is listed until something is typed; then the top 5 matches, names
+  // starting with what's typed first.
+  const hitsFor = () => {
+    const q = search.value.trim().toLowerCase();
+    if (!q) return [];
+    const starts = c => c.name.toLowerCase().startsWith(q) || c.name.toLowerCase().split(/\s+/).some(w => w.startsWith(q));
+    return COURSES.filter(c => c.name.toLowerCase().includes(q) || c.id.includes(q))
+      .sort((x, y) => starts(y) - starts(x) || x.name.localeCompare(y.name)).slice(0, 5);
+  };
   const showHits = () => {
+    if (!search.value.trim()) { results.hidden = true; return; }
     const hits = hitsFor();
     results.replaceChildren(...(hits.length ? hits.map(c => h('button', { class: c.id === chosen?.id ? 'on' : '', onmousedown: e => e.preventDefault(), onclick: () => pickCourse(c) }, c.name)) : [h('div', { class: 'none' }, 'No courses match')]));
     results.hidden = false;
@@ -380,6 +389,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.57.0', ['New Round and GPS Overview: the course list stays hidden until you start typing, then shows the top 5 matches', 'Hole screen: the two score tabs are now one long box, as wide as the hole pill, with this hole\u2019s score and where the round stands (e.g. +2 thru 5). Tap it for the scorecard and your total']],
   ['0.56.2', ['Hole screen: the score tabs are swapped, this hole\u2019s score first, then the round total. The hole tab now just says Score, since the hole number is on the hole pill below']],
   ['0.56.1', ['Hole screen: the buttons and hole info along the bottom sit a little lower, and the Total and Hole score tabs are shorter and closer to the hole number']],
   ['0.56.0', ['Hole screen buttons rearranged so they fit: on the left, a new SG button opens Auto and Comp; on the right, Club sits just above +, with Tools above it for Width, Arc, Disp and Appr', 'The Arc, Disp and Appr sliders now open low on the screen, between the two button columns', 'With GPS on, the distance to the pin and the Shot button move to the very top of the screen']],
