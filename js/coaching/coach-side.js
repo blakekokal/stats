@@ -129,7 +129,36 @@ async function loadCoachActivityFeed() {
     error = resp.error;
   }
 
-  if (error || !data || data.length === 0) {
+  data = error ? [] : (data || []);
+  // Rounds straight from each student's saved rounds, so a round shows here even
+  // when no notification was sent (an older app, or a round that was never ended
+  // and submitted). Skipped when a notification for it is already in the list.
+  try {
+    var seenAt = +(localStorage.getItem('gs:coachSeenAt') || 0);
+    var since = Date.now() - 14 * 86400000;
+    var lists = await Promise.all((S.coachRosterData || []).map(function(st) {
+      return studentRounds(st.student_id).then(function(rs) { return { st: st, rs: rs }; }, function() { return { st: st, rs: [] }; });
+    }));
+    lists.forEach(function(x) {
+      x.rs.forEach(function(r) {
+        var g = r._gps || {}, at = g.updated || 0;
+        if (at < since) return;
+        var dupe = data.some(function(n) {
+          return n.type === 'new_round' && n.student_id === x.st.student_id
+            && ((n.round_id && n.round_id === g.id) || Math.abs(Date.parse(n.created_at) - at) < 6 * 3600000);
+        });
+        if (dupe) return;
+        var name = x.st.student_name || 'Student', tp = r.to_par === 0 ? 'E' : r.to_par > 0 ? '+' + r.to_par : '\u2212' + -r.to_par;
+        data.push({ type: 'new_round', student_id: x.st.student_id, student_name: name, read: at <= seenAt, created_at: new Date(at).toISOString(),
+          title: (g.submitted ? 'New round from ' : 'Round in progress: ') + name,
+          message: (r.course_name || 'A course') + (r.holes ? ' \u00b7 ' + r.score + ' (' + tp + ') over ' + r.holes + ' hole' + (r.holes === 1 ? '' : 's') : '') });
+      });
+    });
+    data.sort(function(a, b) { return Date.parse(b.created_at) - Date.parse(a.created_at); });
+    data = data.slice(0, 20);
+  } catch (e) { /* notifications only */ }
+
+  if (data.length === 0) {
     el.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:10px 0;">No recent activity.</div>';
     if (markBtn) markBtn.style.display = 'none';
     return;
@@ -172,6 +201,7 @@ function openChatWithStudent(studentId) {
 }
 
 async function markCoachNotificationsRead() {
+  try { localStorage.setItem('gs:coachSeenAt', String(Date.now())); } catch (e) { /* ignore */ } // rounds read from students' saved rounds
   // Mark all as read
   await _sb.from('notifications').update({ read: true }).eq('user_id', S.currentUser.id).eq('read', false);
   // Verify it worked — if unread still remain (RLS may silently block update), delete them
