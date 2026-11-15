@@ -124,8 +124,8 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
     h('div', { style: 'width:100%;max-width:360px;' },
       h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:6px;' }, only ? '📊 Round Stats' : '📊 Stats Dashboard'),
       only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || courseById(only.course).name} · ${only.date}${only.player ? ' · ' + only.player : ''}`) : null,
-      // The filters and the "vs" level are no longer shown: all rounds, compared with the player's own level.
-      h('div', { style: 'display:none;' }, only ? [fHcp] : [fType, fTime, fHcp]),
+      // Filters (round type, time, "vs" level): hidden until Filter (beside "per round") is tapped.
+      h('div', { id: 'dashFilters', style: 'display:none;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;' }, only ? [fHcp] : [fType, fTime, fHcp]),
       content)));
 
   function draw() {
@@ -163,8 +163,14 @@ export function downloadRoundCsv(r) {
 
 // ---------- ported from the coaching app (js/stats/dashboard.js, handicap-index.js) ----------
 
-export function renderDashboard(data, hcp, targetId) {
+// With `opts.single`, `data` is one round picked from SG by round: the page
+// shows "← All rounds" instead of the filter button and the round list.
+var escapeHtml = function(t) { return String(t).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); };
+var _dash = null; // the full set last shown: { data, hcp, targetId }
+export function renderDashboard(data, hcp, targetId, opts) {
+  opts = opts || {};
   var content = document.getElementById(targetId || 'dashContent');
+  if (!opts.single) _dash = { data: data, hcp: hcp, targetId: targetId };
   
   // ===== AGGREGATE ALL DATA =====
   var A = { n: data.length, holes: 0, totScore: 0, totPar: 0, totPutts: 0,
@@ -364,7 +370,7 @@ export function renderDashboard(data, hcp, targetId) {
     
     A.sgOTT+=rOTT; A.sgAPP+=rAPP; A.sgARG+=rARG; A.sgPutt+=rPutt;
     var d2 = new Date(r.round_date+'T12:00:00');
-    A.roundSGs.push({ date:(d2.getMonth()+1)+'/'+d2.getDate(), course:r.course_name, score:r.score, toPar:r.to_par, ott:rOTT, app:rAPP, arg:rARG, putt:rPutt, tot:rOTT+rAPP+rARG+rPutt });
+    A.roundSGs.push({ i:data.indexOf(r), date:(d2.getMonth()+1)+'/'+d2.getDate(), course:r.course_name, score:r.score, toPar:r.to_par, ott:rOTT, app:rAPP, arg:rARG, putt:rPutt, tot:rOTT+rAPP+rARG+rPutt });
     A.playByPlay.push({ date:(d2.getMonth()+1)+'/'+d2.getDate()+'/'+d2.getFullYear(), course:r.course_name, score:r.score, toPar:r.to_par, holes:roundPBP });
   });
   if (A.drives.length===0) A.shortestDrive=0;
@@ -426,13 +432,32 @@ export function renderDashboard(data, hcp, targetId) {
   var nd=nDetailed||1, sgPer={tot:sgTot/nd,ott:A.sgOTT/nd,app:A.sgAPP/nd,arg:A.sgARG/nd,putt:A.sgPutt/nd};
   var sgMax=Math.max(Math.abs(sgPer.tot),Math.abs(sgPer.ott),Math.abs(sgPer.app),Math.abs(sgPer.arg),Math.abs(sgPer.putt));
   var sgR=[3,5,10,20,40].filter(function(x){return x>=sgMax;})[0]||Math.ceil(sgMax/10)*10;
-  html+=hdr('STROKES GAINED · per round');
+  // Heading, with Filter beside "per round" (round type, time and the level to compare with),
+  // or, for one round picked from the list, which round it is and the way back.
+  var top=opts.single&&data[0]?'<div style="display:flex;align-items:center;gap:8px;margin:2px 0 6px;"><button onclick="dashAllRounds()" style="height:34px;font-size:13px;font-weight:700;background:#282828;border-radius:8px;padding:0 12px;max-width:none;width:auto;color:#9a9a9a;border:1px solid #333333;margin:0;">\u2190 All rounds</button>'
+    +'<div style="font-size:13px;color:#9a9a9a;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(data[0].course_name||'')+' \u00b7 '+data[0].round_date+'</div></div>':'';
+  html+=top+'<div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:2px;">'
+    +'<div style="font-size:14px;font-weight:800;color:#00b87a;">STROKES GAINED \u00b7 '+(opts.single?'this round':'per round')+'</div>'
+    +(opts.single?'':'<button onclick="toggleDashFilters()" style="height:28px;font-size:12px;font-weight:700;background:#282828;border-radius:8px;padding:0 10px;max-width:none;width:auto;color:#ffffff;border:1px solid #3d3d3d;margin:0 0 3px;">\u2630 Filter</button>')+'</div>';
   html+=sgBar('SG: Total', sgPer.tot, sgR, true, 1);
   html+=sgBar('SG: Off The Tee', sgPer.ott, sgR, false, 2);
   html+=sgBar('SG: Approach', sgPer.app, sgR, false, 3);
   html+=sgBar('SG: Around Green', sgPer.arg, sgR, false, 4);
   html+=sgBar('SG: Putting', sgPer.putt, sgR, false, 5);
   html+=sgScale(sgR);
+  // SG by round: tap one to see the strokes gained for just that round.
+  if(!opts.single&&A.roundSGs.length>1){
+    html+=hdr('SG BY ROUND');
+    var cell=function(v){return '<td style="padding:6px;border-bottom:1px solid #282828;color:'+sgC(v)+';font-variant-numeric:tabular-nums;">'+sgFmt(v)+'</td>';};
+    html+='<div style="overflow-x:auto;margin:4px 0;"><table style="width:100%;font-size:12px;border-collapse:collapse;"><tr>'
+      +['Date','Course','Tot','OTT','APP','ARG','Putt'].map(function(c){return '<td style="padding:4px 6px;font-weight:700;color:#9a9a9a;border-bottom:1px solid #3d3d3d;">'+c+'</td>';}).join('')+'</tr>';
+    A.roundSGs.slice(0,15).forEach(function(sr){
+      html+='<tr role="button" onclick="dashOneRound('+sr.i+')" style="cursor:pointer;"><td style="padding:6px;border-bottom:1px solid #282828;">'+sr.date+'</td>'
+        +'<td style="padding:6px;border-bottom:1px solid #282828;white-space:nowrap;">'+escapeHtml(String(sr.course||'').substring(0,12))+'</td>'
+        +cell(sr.tot)+cell(sr.ott)+cell(sr.app)+cell(sr.arg)+cell(sr.putt)+'</tr>';
+    });
+    html+='</table></div><div style="font-size:11px;color:#606060;text-align:center;margin-top:4px;">Tap a round to see its strokes gained</div>';
+  }
   html+='</div>';
   
   // ===== TAB 1: SCORING =====
@@ -547,6 +572,20 @@ export function renderDashboard(data, hcp, targetId) {
   content.innerHTML=html;
   
 }
+
+// SG by round: one round's dashboard, and back to all of them.
+function dashOneRound(i) {
+  if (!_dash || !_dash.data[i]) return;
+  renderDashboard([_dash.data[i]], _dash.hcp, _dash.targetId, { single: true });
+  document.getElementById(_dash.targetId || 'dashContent')?.scrollIntoView({ block: 'start' });
+}
+function dashAllRounds() { if (_dash) renderDashboard(_dash.data, _dash.hcp, _dash.targetId); }
+// Filter (beside "per round"): shows or hides the page's filters (round type, time, and the level to compare with).
+function toggleDashFilters() {
+  var el = document.getElementById(_dash && _dash.targetId === 'svDashContent' ? 'svDashFilters' : 'dashFilters');
+  if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+}
+window.dashOneRound = dashOneRound; window.dashAllRounds = dashAllRounds; window.toggleDashFilters = toggleDashFilters;
 
 // Shows one part of the dashboard: 0 the SG bars, 1-5 a category's detailed stats.
 function showDashSub(idx) {
