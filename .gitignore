@@ -1,0 +1,4 @@
+__pycache__/
+tools/*/tiles/
+tools/*/m1[6-9].png
+tools/*/m1[6-9].png.meta
