@@ -20,8 +20,7 @@ ponds sit on dark ground, and draws shapes that appear on several pages once.
 The older `build.py` (everything traced from the imagery) still works:
 `python3 build.py ../../data/sherrillpark1.json [check.png]`.
 
-That traced build works the same way as `../sherrillpark2` (see its README); it differs
-only where this side of the road looks different: the greens are the greenest
+That traced build reads the satellite picture by colour. On this course the greens are the greenest
 turf rather than the brightest, the fairways are drier, and most ponds are
 brown rather than dark. `holes.py` holds the hole lines, the club's scorecard
 and the pale ground that is not sand. The hole numbers come from a GPS app's
