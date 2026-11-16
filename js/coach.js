@@ -167,14 +167,15 @@ export function renderNewRound(view, { scout = false } = {}) {
     fillTees();
   };
   // Tapping the box lists every course, so one can be picked without typing (the
-  // keyboard doesn't always come up). Typing narrows it to the top 5 matches,
-  // names starting with what's typed first. With a course picked, the list shows them all again.
+  // keyboard doesn't always come up). Typing narrows it to the matches, names
+  // starting with what's typed first. The list drops down over the page, about
+  // four courses tall, and scrolls. With a course picked, the list shows them all again.
   const hitsFor = () => {
     const q = search.value.trim().toLowerCase();
     if (!q || (chosen && search.value === chosen.name)) return [...COURSES].sort((x, y) => x.name.localeCompare(y.name));
     const starts = c => c.name.toLowerCase().startsWith(q) || c.name.toLowerCase().split(/\s+/).some(w => w.startsWith(q));
     return COURSES.filter(c => c.name.toLowerCase().includes(q) || c.id.includes(q))
-      .sort((x, y) => starts(y) - starts(x) || x.name.localeCompare(y.name)).slice(0, 5);
+      .sort((x, y) => starts(y) - starts(x) || x.name.localeCompare(y.name));
   };
   const showHits = () => {
     const hits = hitsFor();
@@ -187,7 +188,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     onclick: showHits, // already focused: show the list again
     onblur: () => { results.hidden = true; },
     onkeydown: e => { if (e.key === 'Enter') { const hits = hitsFor(); if (hits.length === 1) { pickCourse(hits[0]); search.blur(); } } } });
-  const courseBox = h('div', { style: 'width:100%;max-width:320px;display:grid;gap:6px;' }, search, results);
+  const courseBox = h('div', { style: 'width:100%;max-width:320px;position:relative;z-index:10;' }, search, results);
   if (scout) {
     view.replaceChildren(page('top', backBtn(),
       h('div', { style: 'font-size:22px;font-weight:800;' }, 'GPS Overview'),
@@ -421,6 +422,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.66.1', ['New Round and GPS Overview: the course list is now a proper dropdown under the box. It shows about four courses, scrolls for the rest, and narrows as you type']],
   ['0.66.0', ['One round at a time: if the app closes, reloads or crashes mid-round, reopening it asks whether to continue the round, save and pause it for later, or delete it. A new round can\u2019t be started until you choose. Paused rounds stop being live and wait in Round History']],
   ['0.65.2', ['Fixed: the app showed a blank screen after the last update']],
   ['0.65.1', ['New Round and GPS Overview: tapping the course box lists every course again, so you can pick one without typing (handy when the keyboard doesn\u2019t come up). Typing still narrows the list']],
