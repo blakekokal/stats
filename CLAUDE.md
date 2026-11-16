@@ -27,6 +27,8 @@ of each green in the imagery); see `tools/sherrillpark2` as the model.
   never the book's circles themselves (they are far too big), and are saved as
   circles (`tools/tree_circles.py`): a wood becomes a cluster of round trees,
   not one blob, so the owner can edit trees one at a time.
+  2-5 small trees close together become one bigger tree (`merge_small`;
+  `tools/merge_trees.py` does it to a course file's existing trees).
 - Check the book's bunkers and ponds against the imagery. If they're wrong
   (Sherrill Park #2's were), take bunkers, ponds and trees from the imagery with
   `tools/hazards_from_imagery.py` and keep only greens, fairways, tee boxes and
