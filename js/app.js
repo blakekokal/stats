@@ -102,6 +102,9 @@ export function courseById(id) {
   const pub = published[b.id];
   const mine = isAdmin ? store.get('course:' + b.id) : null;
   let edited = mine && (!pub || (mine.savedAt || 0) > pub.updated) ? mine : pub;
+  // A course file rebuilt from scratch (`builtAt`) wins over outlines edited
+  // before it: those were drawn on the old map. Edits made since still apply.
+  if (edited && b.builtAt && (edited.savedAt || edited.updated || 0) < b.builtAt) edited = null;
   if (!edited) return b;
   // v0.68.1 turned every recovery area into trees. Outlines published or saved
   // before then still say recovery, so they're read as trees; recovery areas
