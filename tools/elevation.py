@@ -9,9 +9,10 @@ course-wide OB area), downloads the 3DEP 1 m bare-earth elevation for it
 
   data/elev/<course>/{z}/{x}/{y}.png  Terrarium-encoded elevation tiles (zoom
                                       13-17) for the map's hillshade layer
-  data/elev/<course>.contours.json    contour lines every 1 ft as GeoJSON
-                                      (property "ft": elevation in feet); the
+  data/elev/<course>.contours.json    contour lines every 1 yd as GeoJSON
+                                      (property "yd": height in yards); the
                                       app filters them to the interval chosen
+  data/elev/<course>.slopes.json      downslope arrows on a grid (see slopes())
   data/elev/index.json                which courses have elevation, and their
                                       extent (the app reads this)
 
@@ -27,7 +28,7 @@ import urllib.request
 
 import numpy as np
 import tifffile
-from PIL import Image
+from PIL import Image, ImageDraw
 from scipy import ndimage
 from skimage import measure
 
@@ -42,6 +43,10 @@ ZOOMS = range(13, 18)
 # slopes barely show at true height. Contours use true heights.
 SHADE_STRETCH = 5
 FT_PER_M = 3.28084
+YD_PER_M = FT_PER_M / 3
+SLOPE_STEP_M = 8  # ground metres between the closest downslope arrows
+SLOPE_PAD_M = 50  # arrows this far around the course's shapes and hole lines
+MIN_SLOPE_PCT = 1  # flatter than this: no arrow
 
 
 def merc(lat, lng):
@@ -160,18 +165,71 @@ def simplify(line, tol):
 
 
 def contours(dem, x0, y1):
-    ft = ndimage.gaussian_filter(dem, 2.0) * FT_PER_M  # smooth out lidar noise
+    """Contour lines every 1 yd (property "yd": the height in yards)."""
+    yd = ndimage.gaussian_filter(dem, 2.0) * YD_PER_M  # smooth out lidar noise
     feats = []
-    for level in range(math.ceil(ft.min()), math.floor(ft.max()) + 1):
-        for c in measure.find_contours(ft, level):
+    for level in range(math.ceil(yd.min()), math.floor(yd.max()) + 1):
+        for c in measure.find_contours(yd, level):
             if len(c) < 25:  # tiny rings: noise
                 continue
             xy = [(x0 + (col + 0.5) * RES, y1 - (row + 0.5) * RES) for row, col in c]
             xy = simplify(xy, 1.0)
             ll = [[round(lng, 5), round(lat, 5)] for lat, lng in (unmerc(x, y) for x, y in xy)]
-            feats.append({'type': 'Feature', 'properties': {'ft': level},
+            feats.append({'type': 'Feature', 'properties': {'yd': level},
                           'geometry': {'type': 'LineString', 'coordinates': ll}})
     return {'type': 'FeatureCollection', 'features': feats}
+
+
+def play_mask(course, shape, x0, y1, k):
+    """True within SLOPE_PAD_M ground metres of the course's shapes and hole lines (not OB)."""
+    img = Image.new('L', (shape[1], shape[0]), 0)
+    d = ImageDraw.Draw(img)
+    px = lambda p: ((merc(*p)[0] - x0) / RES, (y1 - merc(*p)[1]) / RES)
+    for h in course['holes']:
+        line = [p for p in [h.get('tee')] + (h.get('line') or []) + [h.get('pin')] if p]
+        d.line([px(p) for p in line], fill=255, width=max(1, round(30 * k / RES)))
+    for f in course['features']:
+        if f['t'] == 'ob':
+            continue
+        for ring in (f['p'] if isinstance(f['p'][0][0], list) else [f['p']]):
+            if len(ring) > 2:
+                d.polygon([px(p) for p in ring], fill=255)
+    near = np.array(img) > 0
+    return ndimage.distance_transform_edt(~near) * RES / k <= SLOPE_PAD_M
+
+
+def slopes(dem, mask, x0, y1, k):
+    """Downslope arrows on a grid: [lng, lat, bearing (deg), slope (% x10), level].
+    Level 0 points are SLOPE_STEP_M * 4 apart, level 1 add the points between
+    (* 2), level 2 the rest; the app shows more levels as it zooms in. Each
+    level's slope is measured over about its own spacing."""
+    step = SLOPE_STEP_M * k / RES  # grid pixels between points
+    out = []
+    for lvl, mult in enumerate([4, 2, 1]):
+        z = ndimage.gaussian_filter(dem, step * mult / 2.5)
+        gr, gc = np.gradient(z)  # per pixel: rows run south, cols east
+        per_m = k / RES  # pixels per ground metre
+        east, north = -gc * per_m, gr * per_m  # downhill direction (dz/dx is uphill)
+        rows = np.arange(step / 2, dem.shape[0], step)
+        cols = np.arange(step / 2, dem.shape[1], step)
+        for i, r in enumerate(rows):
+            for j, c in enumerate(cols):
+                if lvl == 0 and (i % 4 or j % 4):
+                    continue
+                if lvl == 1 and (i % 2 or j % 2 or (i % 4 == 0 and j % 4 == 0)):
+                    continue
+                if lvl == 2 and i % 2 == 0 and j % 2 == 0:
+                    continue
+                ri, ci = int(r), int(c)
+                if not mask[ri, ci]:
+                    continue
+                e, n = east[ri, ci], north[ri, ci]
+                pct = math.hypot(e, n) * 100
+                if pct < MIN_SLOPE_PCT:
+                    continue
+                lat, lng = unmerc(x0 + (c + 0.5) * RES, y1 - (r + 0.5) * RES)
+                out.append([round(lng, 6), round(lat, 6), round(math.degrees(math.atan2(e, n))) % 360, round(pct * 10), lvl])
+    return out
 
 
 def main():
@@ -205,6 +263,12 @@ def main():
     with open(path, 'w') as f:
         json.dump(gj, f, separators=(',', ':'))
     print(f'{len(gj["features"])} contour lines, {os.path.getsize(path) // 1024} KB')
+
+    arrows = slopes(dem, play_mask(course, dem.shape, x0, y1, k), x0, y1, k)
+    path = os.path.join(out, f'{cid}.slopes.json')
+    with open(path, 'w') as f:
+        json.dump(arrows, f, separators=(',', ':'))
+    print(f'{len(arrows)} downslope arrows, {os.path.getsize(path) // 1024} KB')
 
     s, w = unmerc(x0, y0)
     n, e = unmerc(x1, y1)

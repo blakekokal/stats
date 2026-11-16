@@ -18,7 +18,7 @@ import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js
 import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
 import { liveLink, isLiveOn, setLiveOn, liveStatus, onLiveStatus, loadWatch, watchHole, shareCurrent } from './live.js';
 import { openBoundaryEditor, resumeEditAt, editFeatures } from './holeedit.js';
-import { elevIndex, elevPrefs, drawElevation, CONTOUR_FT, SHADE } from './elev.js';
+import { elevIndex, elevPrefs, drawElevation, CONTOUR_YD, SHADE } from './elev.js';
 
 const maplibregl = window.maplibregl;
 const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR', ob: 'OB', recovery: 'REC' };
@@ -871,7 +871,7 @@ export function renderHole(view, n) {
   // Elevation (courses built with tools/elevation.py): hillshade and contour
   // lines, each with a row of choices (shading strength, contour interval).
   let styleReady = false; // the map's load event has run (sources can be added)
-  const redrawElev = () => { if (styleReady) drawElevation(m, course.id); };
+  const redrawElev = () => { if (styleReady) drawElevation(m, course.id, { line: route(), own: holeFeatures(ch) }); };
   const elevChips = (opts, get, set) => {
     const row = h('div', { class: 'viewchips' });
     row.sync = () => row.replaceChildren(...opts.map(([label, v]) => h('button', { class: get() === v ? 'on' : '',
@@ -879,9 +879,9 @@ export function renderHole(view, n) {
     return row;
   };
   const shadeChips = elevChips(Object.keys(SHADE).map(k => [k, k]), () => elevPrefs.shadeStr, v => { elevPrefs.shadeStr = v; });
-  const contourChips = elevChips(CONTOUR_FT.map(f => [`${f} ft`, f]), () => elevPrefs.contourFt, v => { elevPrefs.contourFt = v; });
+  const contourChips = elevChips(CONTOUR_YD.map(y => [`${y} yd`, y]), () => elevPrefs.contourYd, v => { elevPrefs.contourYd = v; });
   const shadeRow = viewSwitch('Hillshade', () => elevPrefs.shade, v => { elevPrefs.shade = v; redrawElev(); drawViewBox(); });
-  const contourRow = viewSwitch('Contour lines', () => elevPrefs.contours, v => { elevPrefs.contours = v; redrawElev(); drawViewBox(); });
+  const contourRow = viewSwitch('Contours & slope', () => elevPrefs.contours, v => { elevPrefs.contours = v; redrawElev(); drawViewBox(); });
   const elevBox = h('div', { class: 'viewelev', hidden: true }, shadeRow, shadeChips, contourRow, contourChips);
   elevIndex().then(ix => { elevBox.hidden = !ix[course.id]; });
   const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), sgtRow, linesRow, cleanRow, elevBox);
