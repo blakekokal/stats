@@ -6,12 +6,12 @@
 # The course dir holds a course.py with ID, NAME, LOCATION, the club's scorecard
 # (TEES, PAR, HCP) and GREENS: a point on each green in the imagery, as
 # [lat, lng] (see sherrillpark1/course.py).
-# Lining up: the book places each hole round its own pin. The pin starts on the
-# green as seen in the imagery; the hole is moved until its trees and ponds are
-# on dark ground (coarse), then until its bunkers are on sand and its green on
-# green turf (fine; tree shadows fall north-west, so trees alone pull a hole a
-# few metres north). Last, each bunker and green is moved on its own, by up to
-# 3 m, if that puts it better on sand or green turf.
+# Lining up: the book places each hole round its own pin; shapes and trees drawn on two
+# pages join the pages into one plan (or a few, where holes share nothing: each group
+# then gets its own shift, with the book's one scale and turn). The plan starts from the
+# greens seen in the imagery and is fine-tuned so bunkers sit on sand and ponds and trees
+# on dark ground. Last, each bunker and green is moved on its own, by up to 3 m, if that
+# puts it better on sand or green turf.
 import importlib.util, json, math, os, sys, cv2, numpy as np
 import yardage_book, tree_circles
 cdir, pdf, img, out = sys.argv[1:5]
@@ -71,72 +71,107 @@ def search(score, R, step):
 def inside(img_, ys, xs, dx, dy):
     yy, xx = ys + dy, xs + dx; ok = (yy >= 0) & (yy < H) & (xx >= 0) & (xx < W)
     return img_[yy[ok], xx[ok]].mean() if ok.any() else 0
-# The book is one map: a bunker or pond drawn on two pages is the same shape, so the
+# The book is one map: a bunker, pond or tree drawn on two pages is the same shape, so the
 # pages' pins can be placed on one plan (to a fraction of a yard).
 def sig(ring):
     a_ = 0.5 * sum(x1 * y2 - x2 * y1 for (x1, y1), (x2, y2) in zip(ring, ring[1:] + ring[:1]))
     return len(ring), abs(a_), complex(sum(q[0] for q in ring) / len(ring), sum(q[1] for q in ring) / len(ring))
 sigs = {n: [(k,) + sig(gg[0]) for k, gg, *_ in h['shapes'] if k in ('bunker', 'water', 'green', 'fairway') and len(gg[0]) > 5] for n, h in B.items()}
-ids = sorted(B); rows, rhs, links = [], [], 0
+ids = sorted(B); rows, rhs, links, pairs = [], [], 0, []
+TR = {n: np.array([(gg[0][0], gg[0][1], r[0]) for k, gg, *r in h['shapes'] if k == 'tree']).reshape(-1, 3) for n, h in B.items()}
+par3 = {n for n in ids if PAR[n - 1] == 3}
+def tree_link(n, m_):  # the same tree circles on two pages: exact on a hole page, near (its scale is the tee's yardage) on a par 3's
+    a, b = TR[n], TR[m_]
+    if not len(a) or not len(b): return None
+    same = np.abs(a[:, None, 2] - b[None, :, 2]) < 0.02
+    dx, dy = (a[:, None, 0] - b[None, :, 0])[same], (a[:, None, 1] - b[None, :, 1])[same]
+    if not len(dx): return None
+    from collections import Counter
+    (bx, by), _ = Counter(zip(np.round(dx).astype(int), np.round(dy).astype(int))).most_common(1)[0]
+    sel = (np.abs(dx - bx) < 1.5) & (np.abs(dy - by) < 1.5)
+    if sel.sum() < 4: return None
+    o = complex(dx[sel].mean(), dy[sel].mean()); sp = np.abs(dx[sel] + 1j * dy[sel] - o).max()
+    if sp < 0.15 or ((n in par3 or m_ in par3) and sel.sum() >= 8 and sp < 0.7): return o, int(sel.sum())
 for n in ids:
     for m_ in ids:
         if m_ <= n: continue
         offs = [z - z2 for k, c, a_, z in sigs[n] for k2, c2, a2, z2 in sigs[m_] if k == k2 and c == c2 and abs(a_ - a2) < 0.01 * a_ + 0.5]
-        if not offs: continue
-        best = max(offs, key=lambda o: sum(abs(o - q) < 1 for q in offs)); sup = [q for q in offs if abs(q - best) < 1]
-        if len(sup) < 3: continue  # one shape alike on two pages can be chance
-        r_ = np.zeros(len(ids)); r_[ids.index(m_)] = len(sup); r_[ids.index(n)] = -len(sup); rows.append(r_); rhs.append(sum(sup)); links += 1
-r_ = np.zeros(len(ids)); r_[0] = 100; rows.append(r_); rhs.append(0)
+        best = max(offs, key=lambda o: sum(abs(o - q) < 1 for q in offs)) if offs else 0; sup = [q for q in offs if abs(q - best) < 1]
+        if len(sup) >= 3: o, w = sum(sup) / len(sup), len(sup)  # one shape alike on two pages can be chance
+        else:
+            t = tree_link(n, m_)
+            if not t: continue
+            o, w = t
+        r_ = np.zeros(len(ids)); r_[ids.index(m_)] = w; r_[ids.index(n)] = -w; rows.append(r_); rhs.append(o * w); links += 1; pairs.append((n, m_, o))
+# Pages that share nothing with the rest (holes kept apart by houses, say) make separate groups:
+# the book still gives them the same scale and turn, but each group is shifted on its own.
+grp = {n: n for n in ids}
+def root(n):
+    while grp[n] != n: n = grp[n]
+    return n
+for n, m_, o in pairs: grp[root(m_)] = root(n)
+groups = {}
+for n in ids: groups.setdefault(root(n), []).append(n)
+groups = list(groups.values())
+for g_ in groups:
+    r_ = np.zeros(len(ids)); r_[ids.index(g_[0])] = 100; rows.append(r_); rhs.append(0)
 sol = np.linalg.lstsq(np.array(rows), np.array(rhs), rcond=None)[0]
-plan = {n: sol[i] for i, n in enumerate(ids)}  # each pin on the book's plan, yards east + north (as a complex number)
-worst = max(abs(plan[m_] - plan[n] - o / w) for (n, m_), o, w in [((ids[list(r_).index(-max(r_))], ids[list(r_).index(max(r_))]), q, max(r_)) for r_, q in zip(rows[:-1], rhs[:-1])])
-print(links, 'pairs of pages share shapes; they agree to %.2f yd' % worst)
+plan = {n: sol[i] for i, n in enumerate(ids)}  # each pin on its group's plan, yards east + north (as a complex number)
+worst = max(abs(plan[m_] - plan[n] - o) for n, m_, o in pairs) if pairs else 0
+print(links, 'pairs of pages share shapes or trees; they agree to %.2f yd;' % worst, len(groups), 'group(s):', groups)
 assert worst < 1, 'the pages do not make one map'
+gid = {n: i for i, g_ in enumerate(groups) for n in g_}
 
-# The plan goes on the imagery in one piece: shift, turn and scale. First from the
-# greens seen in the imagery, then fine-tuned so bunkers sit on sand and ponds and
-# trees on dark ground.
+# Each group goes on the imagery as one piece: one scale and turn for the whole book, a shift
+# per group. First from the greens seen in the imagery, then fine-tuned so bunkers sit on sand
+# and ponds and trees on dark ground.
 img_of = lambda z: complex(z.real, -z.imag) * YP  # plan yards -> image px offset (image y points south)
 Gp = {n: complex(*px(*g)) for n, g in C.GREENS.items()}
-pm = sum(img_of(plan[n]) for n in ids) / len(ids); gm = sum(Gp.values()) / len(ids)
-K = sum((Gp[n] - gm) * (img_of(plan[n]) - pm).conjugate() for n in ids) / sum(abs(img_of(plan[n]) - pm) ** 2 for n in ids)
-T = gm - K * pm
-print('from the greens: scale %.4f, turn %.2f deg; greens %.1f m apart at most' % (abs(K), math.degrees(math.atan2(K.imag, K.real)), max(abs(T + K * img_of(plan[n]) - Gp[n]) for n in ids) * M))
-pts = {'bunker': [], 'dark': []}  # sample points inside shapes, on the plan
+pmg = [sum(img_of(plan[n]) for n in g_) / len(g_) for g_ in groups]; gmg = [sum(Gp[n] for n in g_) / len(g_) for g_ in groups]
+den = sum(abs(img_of(plan[n]) - pmg[gid[n]]) ** 2 for n in ids)
+K = sum((Gp[n] - gmg[gid[n]]) * (img_of(plan[n]) - pmg[gid[n]]).conjugate() for n in ids) / den
+Ts = [gmg[i] - K * pmg[i] for i in range(len(groups))]
+fit = lambda K, Ts, n: Ts[gid[n]] + K * img_of(plan[n])
+print('from the greens: scale %.4f, turn %.2f deg; greens %.1f m apart at most' % (abs(K), math.degrees(math.atan2(K.imag, K.real)), max(abs(fit(K, Ts, n) - Gp[n]) for n in ids) * M))
+pts = [{'bunker': [], 'dark': []} for _ in groups]  # sample points inside shapes, on the plan
+land = {n: [gg[0] for k, gg, *_ in h['shapes'] if k in ('green', 'bunker', 'fairway')] for n, h in B.items()}  # drawn over a pond: an island
 for n, h in B.items():
     for k, gg, *r in h['shapes']:
-        if k == 'tree': pts['dark'].append(plan[n] + complex(*gg[0])); continue
+        if k == 'tree': pts[gid[n]]['dark'].append(plan[n] + complex(*gg[0])); continue
         key = {'bunker': 'bunker', 'water': 'dark'}.get(k)
         if not key: continue
         ring = gg[0]; xs_ = [q[0] for q in ring]; ys_ = [q[1] for q in ring]
         for yy in np.arange(min(ys_), max(ys_), 0.7):
-            for xx in np.arange(min(xs_), max(xs_), 0.7):
-                if yardage_book.inside((xx, yy), ring): pts[key].append(plan[n] + complex(xx, yy))
+            for xx in np.arange(min(xs_), max(xs_), 0.7):  # not in a hole in the shape (an island green in a pond)
+                if yardage_book.inside((xx, yy), ring) and not any(yardage_book.inside((xx, yy), q) for q in gg[1:] + (land[n] if k == 'water' else [])): pts[gid[n]][key].append(plan[n] + complex(xx, yy))
 rng = np.random.default_rng(1)  # a sample is plenty, and keeps the search quick
-for k in pts:
-    a_ = np.array(sorted(set(pts[k]), key=lambda z: (z.real, z.imag))); pts[k] = a_[rng.choice(len(a_), min(len(a_), 15000), replace=False)]
+for pg in pts:
+    for k in pg:
+        a_ = np.array(sorted(set(pg[k]), key=lambda z: (z.real, z.imag))); pg[k] = a_[rng.choice(len(a_), min(len(a_), 15000), replace=False)] if len(a_) else a_
 def look(img_, z):
     x, y = np.round(z.real).astype(int), np.round(z.imag).astype(int); ok = (x >= 0) & (x < W) & (y >= 0) & (y < H)
     return img_[y[ok], x[ok]].mean() if ok.any() else 0
-def score(Kc, Tc):
-    return 2 * look(sand, Tc + Kc * img_of_v(pts['bunker'])) + look(dark, Tc + Kc * img_of_v(pts['dark']))
 img_of_v = lambda z: (z.real - 1j * z.imag) * YP
-best = (score(K, T), K, T)
+def score(Kc, Tc, i):
+    return 2 * look(sand, Tc + Kc * img_of_v(pts[i]['bunker'])) + look(dark, Tc + Kc * img_of_v(pts[i]['dark']))
+wts = [len(g_) for g_ in groups]
+total = lambda Kc, Tcs: sum(w * score(Kc, t, i) for i, (w, t) in enumerate(zip(wts, Tcs)))
+best = (total(K, Ts), K, Ts)
 for size in (8, 2, 0.5):  # metres: search shifts, then turns and scales, finer each time
-    K0, T0 = best[1], best[2]
+    K0, T0s = best[1], best[2]
     for turn in np.linspace(-1, 1, 5) * (0.6 if size == 8 else 0.15 if size == 2 else 0.04):
         for sc_ in np.linspace(-1, 1, 3) * (0.006 if size == 8 else 0.002 if size == 2 else 0.0005):
             Kc = K0 * (1 + sc_) * complex(math.cos(math.radians(turn)), math.sin(math.radians(turn)))
-            Tc0 = T0 + (K0 - Kc) * pm  # turn and scale about the middle of the course
-            R = pxm(size); step = max(1, pxm(size / 8))
-            for dy in range(-R, R + 1, step):
-                for dx in range(-R, R + 1, step):
-                    sc = score(Kc, Tc0 + complex(dx, dy))
-                    if sc > best[0]: best = (sc, Kc, Tc0 + complex(dx, dy))
-K, T = best[1], best[2]
-print('fitted: scale %.4f, turn %.2f deg, score %.3f; greens in the imagery are %.1f m from the book at most' % (abs(K), math.degrees(math.atan2(K.imag, K.real)), best[0], max(abs(T + K * img_of(plan[n]) - Gp[n]) for n in ids) * M))
+            R = pxm(size); step = max(1, pxm(size / 8)); Tcs = []
+            for i in range(len(groups)):  # each group's best shift, turned and scaled about its middle
+                Tc0 = T0s[i] + (K0 - Kc) * pmg[i]
+                Tcs.append(max(((score(Kc, Tc0 + complex(dx, dy), i), Tc0 + complex(dx, dy)) for dy in range(-R, R + 1, step) for dx in range(-R, R + 1, step)), key=lambda q: q[0].real)[1])
+            sc = total(Kc, Tcs)
+            if sc > best[0]: best = (sc, Kc, Tcs)
+K, Ts = best[1], best[2]
+print('fitted: scale %.4f, turn %.2f deg, score %.3f; greens in the imagery are %.1f m from the book at most' % (abs(K), math.degrees(math.atan2(K.imag, K.real)), best[0] / sum(wts), max(abs(fit(K, Ts, n) - Gp[n]) for n in ids) * M))
 def to_px(n, gg):
-    z = T + K * img_of(plan[n] + complex(*gg)); return (z.real, z.imag)
+    z = Ts[gid[n]] + K * img_of(plan[n] + complex(*gg)); return (z.real, z.imag)
 for n in ids: pin[n] = to_px(n, (0, 0))
 
 # a shape on several pages is taken from the page of the hole it is nearest
@@ -183,7 +218,7 @@ for n, gm in greens.items():
     g2, dx, dy = snap(gm, sc, 0.1, 0.3); g2[bunk > 0] = 0  # only where the green clearly stands out
     if dx or dy: print('green', n, 'moved %.1f m' % (math.hypot(dx, dy) * M))
     feats.append({'t': 'green', 'px': max(rings(g2, 50, 0.3), key=lambda p: cv2.contourArea(np.array(p[0], np.float32))), 'h': n})
-water = mask['water'] > 0
+water = (mask['water'] > 0) & ~(bunk > 0) & ~(sum(greens.values(), np.zeros((H, W), np.uint8)) > 0)  # an island green is not water
 trees = canopy & (mask['treezone'] > 0) & ~(cv2.dilate(mask['water'], disk(pxm(1.5))) > 0) & ~(bunk > 0)
 fair = (mask['fairway'] > 0) & ~(bunk > 0)
 for k, mk, mn, eps in (('water', water, 100, 0.6), ('fairway', fair, 200, 0.6), ('bunker', bunk > 0, 4, 0.25)):

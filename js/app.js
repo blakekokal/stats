@@ -63,6 +63,7 @@ export const COURSES = [
   { id: 'crosstimbers', name: 'Cross Timbers Golf Course', file: 'data/crosstimbers.json' },
   { id: 'sherrillpark1', name: 'Sherrill Park Golf Course #1', file: 'data/sherrillpark1.json' },
   { id: 'sherrillpark2', name: 'Sherrill Park Golf Course #2', file: 'data/sherrillpark2.json' },
+  { id: 'tour18dallas', name: 'Tour 18 Golf Course Dallas', file: 'data/tour18dallas.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 const base = {}; // id -> the course file as shipped
