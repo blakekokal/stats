@@ -421,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.74.2', ['Sherrill Park #2: fewer, bigger trees – a wood is now a few big circles instead of dozens of little ones (about 620 trees in all, down from 2,400). Your published edits are kept']],
   ['0.74.1', ['Hole boundary editor on a computer: Delete (or Backspace) removes the selected boundary, or the selected corner; while drawing, it removes the last corner placed']],
   ['0.74.0', ['Trees are now circles: on Sherrill Park #2 every wood is a cluster of round trees instead of one big outline, so each tree can be moved, resized or deleted on its own (your published edits are kept). In the hole boundary editor, Add trees drops a round tree wherever you tap; set its size with \u2212 and +']],
   ['0.73.7', ['Hole boundary editor: Save now keeps your changes on this device and stays in the editor; the new Save & finish publishes them for everyone and closes the editor']],

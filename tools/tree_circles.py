@@ -1,14 +1,16 @@
 # Trees as circles: a wood becomes a cluster of round trees instead of one blob,
 # which is easier to edit (move, resize or delete one tree at a time).
 # circles(mask, M) packs circles into a tree mask (M: metres per pixel), biggest
-# first: each goes where the trees are thickest, no wider than MAX_R, and slightly
-# overlapping its neighbours so a wood stays covered.
+# first: each goes where the trees are thickest, 4-14 m across the middle, spaced
+# out so a wood is a few big trees (it needn't be exact); a lone tree gets one.
 #   python3 tree_circles.py course.json m19.png out.json   # a course file's trees, as circles
 import json, math, sys
 import cv2, numpy as np
 
-MAX_R, MIN_R = 10.0, 2.5  # metres
+MAX_R, MIN_R = 14.0, 4.0  # metres
 SIDES = 10
+SPACING = 1.35  # each circle clears this times its radius: a few big trees, not a crowd of little ones
+LEFT = 0.4  # stop once less than this share of a wood is uncovered (it needn't be exact)
 
 def circles(mask, M):
     mask = mask.astype(np.uint8)
@@ -17,16 +19,16 @@ def circles(mask, M):
     for i in range(1, k):
         x, y, w, h = st[i, :4]; P = 2
         sub = np.pad((lb[y:y + h, x:x + w] == i).astype(np.uint8), P)
-        total = sub.sum()
+        total = sub.sum(); first = True
         while True:
             dt = cv2.distanceTransform(sub, cv2.DIST_L2, 5)
             _, best, _, (cx, cy) = cv2.minMaxLoc(dt)
-            if best * M < MIN_R and out and sub.sum() < 0.25 * total: break
-            if best * M < MIN_R * 0.6: break
-            r = min(best, MAX_R / M)
-            out.append((x + cx - P + 0.5, y + cy - P + 0.5, max(r, MIN_R / M)))
-            cv2.circle(sub, (cx, cy), int(math.ceil(r * 0.9)), 0, -1)  # a little overlap with the next one
-            if sub.sum() < 0.15 * total: break
+            if not first and (best * M < MIN_R * 0.5 or sub.sum() < LEFT * total): break
+            if first and best * M < 1.0: break  # a speck, not a tree
+            r = max(min(best, MAX_R / M), MIN_R / M if first else best)
+            out.append((x + cx - P + 0.5, y + cy - P + 0.5, min(max(r, MIN_R / M), MAX_R / M)))
+            cv2.circle(sub, (cx, cy), int(math.ceil(r * SPACING)), 0, -1)
+            first = False
     return out  # (x, y, radius) in pixels
 
 def ring(x, y, r):  # a circle as a closed ring of pixel points
