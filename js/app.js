@@ -63,6 +63,7 @@ export const COURSES = [
   { id: 'crosstimbers', name: 'Cross Timbers Golf Course', file: 'data/crosstimbers.json' },
   { id: 'sherrillpark1', name: 'Sherrill Park Golf Course #1', file: 'data/sherrillpark1.json' },
   { id: 'sherrillpark2', name: 'Sherrill Park Golf Course #2', file: 'data/sherrillpark2.json' },
+  { id: 'grapevine-bluebonnet', name: 'Grapevine Golf Course – Bluebonnet', file: 'data/grapevine-bluebonnet.json' },
   { id: 'tour18dallas', name: 'Tour 18 Golf Course Dallas', file: 'data/tour18dallas.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
@@ -251,7 +252,7 @@ async function route() {
   // Coaching, My Bag, Performance Analysis and Practice are the coaching app's pages (js/coaching).
   const coachTab = ['coaching', 'bag', 'performance', 'practice'].includes(tab);
   if (!coachTab) closeCoaching();
-  if (tab === 'hole') renderHole(view, Math.min(18, Math.max(1, parseInt(parts[1], 10) || lastHole())));
+  if (tab === 'hole') renderHole(view, Math.min(course.holes.length, Math.max(1, parseInt(parts[1], 10) || lastHole())));
   else if (tab === 'course') renderCourseEditor(view);
   else if (tab === 'settings') renderSettingsPage(view);
   else if (tab === 'device') renderSettings(view);

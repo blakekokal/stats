@@ -221,7 +221,7 @@ export function renderHole(view, n) {
     }
     let k = roundKey();
     if (!k) {
-      const r = { ...newRound(course, teeName, today), courseName: course.name, player: sync.user ? sync.name : '', level, type: 'Casual', holeCount: 18 };
+      const r = { ...newRound(course, teeName, today), courseName: course.name, player: sync.user ? sync.name : '', level, type: 'Casual', holeCount: Math.min(18, course.holes.length) };
       k = roundKeyOf(r.id); store.set(k, r); setCurrentRound(r.id);
     }
     const r = store.get(k);
@@ -1652,7 +1652,7 @@ export function renderHole(view, n) {
   function openScorecard() {
     const { r, strokes, toPar: tp } = roundTotals();
     if (!r) return;
-    const count = holeCountOf(r), nines = count > 9 ? [[1, 9], [10, count]] : [[1, count]];
+    const count = Math.min(holeCountOf(r), course.holes.length), nines = count > 9 ? [[1, 9], [10, count]] : [[1, count]];
     const cls = (sc, par) => (sc == null ? '' : sc <= par - 2 ? 'eagle' : sc === par - 1 ? 'birdie' : sc === par ? 'par' : sc === par + 1 ? 'bogey' : 'dbl');
     const tees = course.tees.find(t => t.name === teeName) || course.tees[0];
     const table = ([a, b], label) => {

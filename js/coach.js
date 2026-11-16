@@ -133,7 +133,7 @@ export function renderNewRound(view, { scout = false } = {}) {
   const pick = (btn, n) => { b9.classList.remove('selected'); b18.classList.remove('selected'); if (btn) btn.classList.add('selected'); holes = n; if (btn) custom.value = ''; };
   const b9 = h('button', { class: 'holes9', onclick: () => pick(b9, 9) }, '9 Holes');
   const b18 = h('button', { class: 'holes18 selected', onclick: () => pick(b18, 18) }, '18 Holes');
-  const custom = h('input', { type: 'number', inputmode: 'numeric', min: 3, max: 18, placeholder: 'Custom # of Holes (3–18)', oninput: () => { const n = parseInt(custom.value, 10); if (n >= 3 && n <= 18) pick(null, n); } });
+  const custom = h('input', { type: 'number', inputmode: 'numeric', min: 3, max: 18, placeholder: 'Custom # of Holes (3–18)', oninput: () => { const n = parseInt(custom.value, 10); if (n >= 3 && n <= +custom.max) pick(null, n); } });
 
   const err = h('div', { class: 'msg err' });
   const confirm = h('button', { class: 'holes9', onclick: () => {
@@ -146,9 +146,10 @@ export function renderNewRound(view, { scout = false } = {}) {
       return;
     }
     if (askResume()) return; // one round at a time
-    if (custom.value && !(+custom.value >= 3 && +custom.value <= 18)) { err.textContent = 'Custom holes must be 3 to 18.'; return; }
+    const most = Math.min(18, chosen.holes.length);
+    if (custom.value && !(+custom.value >= 3 && +custom.value <= most)) { err.textContent = `Custom holes must be 3 to ${most}.`; return; }
     const r = { ...newRound(course, tee.value, date.value || today()), courseName: course.name, player: name.value.trim() || (sync.user ? sync.name : ''),
-      level: level.value, type: type.value, place: type.value === 'Tournament' && place.value ? +place.value : null, holeCount: holes };
+      level: level.value, type: type.value, place: type.value === 'Tournament' && place.value ? +place.value : null, holeCount: Math.min(holes, chosen.holes.length) };
     store.set(roundKeyOf(r.id), r);
     setActiveCourse(course.id);
     setCurrentRound(r.id); localStorage.removeItem('gs:viewOnly'); localStorage.removeItem('gs:editingPast');
@@ -164,6 +165,10 @@ export function renderNewRound(view, { scout = false } = {}) {
     setActiveCourse(c.id); chosen = courseById(c.id);
     search.value = c.name; results.hidden = true; err.textContent = '';
     fillTees();
+    // A nine-hole course is played as 9 holes (or fewer, as a custom round).
+    const nine = chosen.holes.length <= 9;
+    b18.hidden = nine; custom.max = nine ? 9 : 18; custom.placeholder = `Custom # of Holes (3–${nine ? 9 : 18})`;
+    if (nine && holes > 9) pick(b9, 9);
   };
   // Tapping the box lists every course, so one can be picked without typing (the
   // keyboard doesn't always come up). Typing narrows it to the matches, names
@@ -421,7 +426,8 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
-  ['0.77.0', ['New course: Tour 18 Golf Course Dallas (Flower Mound), built from its yardage book: greens, fairways, bunkers, water, tee boxes and hole lines, lined up on the satellite picture, with every bunker checked against the sand in the picture; trees from the picture as circles. No out-of-bounds line yet: draw it in the hole editor (Draw new boundary \u2192 Course boundary)']],
+  ['0.78.0', ['New course: Tour 18 Golf Course Dallas (Flower Mound), built from its yardage book: greens, fairways, bunkers, water, tee boxes and hole lines, lined up on the satellite picture, with every bunker checked against the sand in the picture; trees from the picture as circles. No out-of-bounds line yet: draw it in the hole editor (Draw new boundary \u2192 Course boundary)']],
+  ['0.77.0', ['New course: Grapevine Golf Course \u2013 Bluebonnet (the first of its three nines), built from its yardage book. Nine-hole courses start a 9-hole round (no 18-hole option); ratings and slopes to come from the club']],
   ['0.76.2', ['Fewer trees to edit: where 2\u20135 small trees stood together, one bigger tree now covers the same spot (Sherrill Park #1 and #2, Bear Creek West, Bridlewood). Your published edits are kept']],
   ['0.76.1', ['Bridlewood: trees added from the satellite picture as circles (a few big ones in each wood, one per lone tree), inside the course boundary only and off greens, fairways, tees, bunkers and water. Nothing else changed']],
   ['0.76.0', ['Recording a shot: Lost ball is now Penalty / drop, with Re-tee or Replay (+1), Drop +1, Drop +2, or Free relief with no penalty (cart path, ground under repair). While you place a drop, a dotted line follows the crosshair from where the ball finished, as the shot tracer shows afterwards']],
