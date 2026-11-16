@@ -77,8 +77,6 @@ export function renderHome(view) {
   if (sync.user) checkCoachingDot();
 
   const practice = go('🏌️', 'Practice and Learning', '#d49a10', '#/practice');
-  practice.firstChild.nextSibling.style.flex = '1';
-  practice.append(h('span', { style: 'background:#d4706e;color:#fff;font-size:10px;font-weight:800;border-radius:10px;padding:2px 7px;flex-shrink:0;white-space:nowrap;animation:cxpulse 1.5s infinite;' }, 'NEW!'));
 
   view.replaceChildren(page('center',
     h('div', { style: 'width:100%;max-width:320px;display:flex;flex-direction:column;gap:7px;' },
@@ -423,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.67.2', ['GPS: the \ud83d\udccd Shot button now sits just below the GPS button; the yardage to the hole stays at the top. Home: removed the NEW! tag from Practice and Learning']],
   ['0.67.1', ['View menu: switching Clean view on or off no longer moves the menu while it\u2019s open. Tapping the map or any other button closes the menu']],
   ['0.67.0', ['One Back button: every page now has a single Back button in the top left that takes you to wherever you were before. The Back button at the bottom of the screen and the extra \u201c\u2190 Strokes gained\u201d, \u201c\u2190 All rounds\u201d and step-back arrows are gone; the top-left button does their job']],
   ['0.66.1', ['New Round and GPS Overview: the course list is now a proper dropdown under the box. It shows about four courses, scrolls for the rest, and narrows as you type']],

@@ -468,7 +468,8 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .fab.gps[hidden], .fab.gpsshot[hidden], .gpsdist[hidden] { display: none; }
 .fab.gps.on { background: #2f7df6; color: #fff; }
 .fab.undo { right: 60px; }
-.fab.gpsshot { top: calc(66px + env(safe-area-inset-top)); bottom: auto; left: auto; right: 110px; width: 44px; height: 44px; display: grid; place-content: center; line-height: 1; font-size: 16px; background: #2f7df6; color: #fff; box-shadow: 0 1px 6px #0008; z-index: 4; }
+/* Record a shot where you stand: just below the GPS button (the yardage stays at the top). */
+.fab.gpsshot { top: calc(116px + env(safe-area-inset-top)); bottom: auto; left: auto; right: 10px; width: 44px; height: 44px; display: grid; place-content: center; line-height: 1; font-size: 16px; background: #2f7df6; color: #fff; box-shadow: 0 1px 6px #0008; z-index: 4; }
 .gpsdist { position: absolute; top: calc(66px + env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 4; display: grid; justify-items: center; gap: 1px; height: 44px; min-height: 0; padding: 0 9px; align-content: center; border: 0; border-radius: 12px; background: #111c; backdrop-filter: blur(8px); color: #fff; line-height: 1.1; white-space: nowrap; box-shadow: 0 1px 6px #0008; }
 .gpsdist b { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
 .gpsdist small { font-size: 10.5px; color: #8fb8ff; font-weight: 600; }
@@ -504,7 +505,7 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 /* GPS on: the distance to the pin and the GPS shot button sit at the very top. */
 /* The distance box starts just left of centre, clear of the Live pill on the left and Expected on the right. */
 .gpstop { position: absolute; top: calc(8px + env(safe-area-inset-top)); left: 50%; transform: translateX(-40px); z-index: 4; display: flex; gap: 6px; align-items: center; }
-.gpstop .gpsdist, .gpstop .fab.gpsshot { position: static; transform: none; }
+.gpstop .gpsdist { position: static; transform: none; }
 /* Watching a client's round: the tag across the top has their name, the date and
    the course; Strokes Gained sits on the right just below it. */
 .holeview.watching .livetag { right: 10px; max-width: none; }
