@@ -206,7 +206,8 @@ for n, h in B.items():
     holes.append({'n': n, 'par': PAR[n - 1], 'hcp': HCP[n - 1], 'line': line, 'tee': line[0], 'pin': line[-1]})
 res = {'id': C.ID, 'name': C.NAME, 'location': C.LOCATION, 'tees': TEES, 'holes': holes,
        'features': [dict({'t': f['t'], 'p': [[ll(*q) for q in r] + [ll(*r[0])] for r in f['px']]}, **({'h': f['h']} if 'h' in f else {})) for f in feats],
-       'attribution': 'Course outlines from the course yardage book, lined up on Esri World Imagery'}
+       'attribution': 'Course outlines from the course yardage book, lined up on Esri World Imagery',
+       'builtAt': int(__import__('time').time() * 1000)}  # outlines edited in the app before this are set aside
 json.dump(res, open(out, 'w'), separators=(',', ':'))
 from collections import Counter
 print(Counter(f['t'] for f in feats), sum(len(r) for f in feats for r in f['px']), 'points')
