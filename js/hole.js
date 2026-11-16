@@ -648,7 +648,7 @@ export function renderHole(view, n) {
       if (hl.pin && onGreen === 1) return saveHole({ pin: null });
       const rest = shots.slice(0, -1);
       const back = shots.at(-1).penalty || (shots.at(-1).replay ? 1 : 0); // a penalty re-hit or drop: take the penalty back too
-      if (back && rest.length) { const { pen, obAt, penKind, ...p } = rest.at(-1); rest[rest.length - 1] = { ...p, ...(pen > back ? { pen: pen - back } : {}) }; }
+      if ((back || shots.at(-1).drop) && rest.length) { const { pen, obAt, penKind, ...p } = rest.at(-1); rest[rest.length - 1] = { ...p, ...(pen > back ? { pen: pen - back } : {}) }; }
       saveHole({ shots: rest.length > 1 ? rest : [], pin: rest.some(x => x.lie === 'green') ? hl.pin : null });
       if (stage() === 'play') place();
     } }, '↶');
@@ -1044,7 +1044,7 @@ export function renderHole(view, n) {
     const here = shots[shots.length - 1];
     if (swing === 'recovery' && here.lie !== 'tee' && here.lie !== 'green') shots[shots.length - 1] = { ...here, lie: 'recovery', mapLie: here.mapLie || here.lie };
     const lie = stage() === 'putt' ? 'green' : lieOn(at, course.features);
-    if (lost) { pickedClub = null; return openPenalty(shots, 'lost', at); }
+    if (lost) { pickedClub = null; return openPenalty(shots, 'penalty', at); }
     if (lie === 'ob' || lie === 'water') { pickedClub = null; return openPenalty(shots, lie, at); }
     const shot = { pos: at, lie, ...(gps ? { gps: true } : {}) };
     if (lie === 'green' && holeNow().pin) shot.ft = Math.max(1, Math.round(yards(at, pin) * FT_PER_YD));
@@ -1054,12 +1054,14 @@ export function renderHole(view, n) {
     saveShots(shots);
     if (wasPlaying && lie === 'green') zoomToGreen();
   }
-  // Penalty: a shot into water or out of bounds, or a lost ball (Lost ball on
-  // the shot sheet, with the crosshair where it was lost), asks how the player
-  // carried on.
+  // Penalty: a shot into water or out of bounds, or Penalty / drop on the shot
+  // sheet (with the crosshair where the ball finished: lost, unplayable, on a
+  // cart path...), asks how the player carried on.
   //  Re-hit from where it was played (stroke and distance): 1 penalty stroke.
-  //  Drop: 1 penalty stroke for water or a lost ball, 2 for out of bounds (the local rule), then
-  //  the crosshair is moved to where the ball was dropped and Set drop records it.
+  //  Drop: 1 penalty stroke for water, 2 for out of bounds (the local rule); from
+  //  Penalty / drop, a drop with 1 or 2, or free relief (no penalty). Then the
+  //  crosshair is moved to where the ball was dropped (a dotted line follows it
+  //  from where the ball finished) and Set drop records it.
   // The penalty is charged to the shot that went in; the next shot carries
   // `penalty` so Undo can take it back off.
   let dropping = null; // { shots, n } while placing a drop
@@ -1072,18 +1074,22 @@ export function renderHole(view, n) {
   } }, 'Set drop');
   function openPenalty(shots, kind, at) {
     const prev = shots[shots.length - 1], water = kind === 'water';
-    const charge = n => [...shots.slice(0, -1), { ...prev, pen: (prev.pen || 0) + n, obAt: at, penKind: kind }];
+    const charge = (n, k = kind) => [...shots.slice(0, -1), { ...prev, ...(prev.pen || n ? { pen: (prev.pen || 0) + n } : {}), obAt: at, penKind: k }];
+    const startDrop = (n, k) => {
+      dropping = { shots: charge(n, k), n };
+      setDropBtn.textContent = n ? `Set drop (+${n})` : 'Set drop (free)'; setDropBtn.hidden = false; holeEl()?.classList.add('dropping');
+      update();
+    };
     const opt = (label, sub, fn) => h('button', { class: 'penopt', onclick: () => { penaltySheet.hidden = true; fn(); } }, h('b', {}, label), h('small', {}, sub));
     penaltySheet.replaceChildren(h('div', { class: 'clubbox' },
-      h('div', { class: 'clubhead' }, h('strong', {}, water ? 'In the water' : kind === 'lost' ? 'Lost ball' : 'Out of bounds'), h('button', { class: 'x', onclick: () => { penaltySheet.hidden = true; } }, '✕')),
+      h('div', { class: 'clubhead' }, h('strong', {}, water ? 'In the water' : kind === 'penalty' ? 'Penalty / drop' : 'Out of bounds'), h('button', { class: 'x', onclick: () => { penaltySheet.hidden = true; } }, '✕')),
       h('div', { class: 'penopts' },
         opt(prev.lie === 'tee' ? 'Re-tee' : 'Replay', '+1 stroke · hit again from the same spot', () => saveShots([...charge(1), { pos: prev.pos, lie: prev.lie, replay: true, penalty: 1 }])),
-        opt('Drop', `+${kind === 'ob' ? '2 strokes' : '1 stroke'} · move the crosshair to the drop, then Set drop`, () => {
-          const n = kind === 'ob' ? 2 : 1;
-          dropping = { shots: charge(n), n };
-          setDropBtn.textContent = `Set drop (+${n})`; setDropBtn.hidden = false; holeEl()?.classList.add('dropping');
-          update();
-        }))));
+        kind === 'penalty'
+          ? [opt('Drop +1', '+1 stroke · lost, unplayable or a penalty area · move the crosshair to the drop, then Set drop', () => startDrop(1, 'penalty')),
+            opt('Drop +2', '+2 strokes · out of bounds or lost, by the local rule · move the crosshair to the drop, then Set drop', () => startDrop(2, 'penalty')),
+            opt('Free relief', 'No penalty · cart path, ground under repair, a sprinkler head · move the crosshair to the drop, then Set drop', () => startDrop(0, 'relief'))]
+          : opt('Drop', `+${kind === 'ob' ? '2 strokes' : '1 stroke'} · move the crosshair to the drop, then Set drop`, () => startDrop(kind === 'ob' ? 2 : 1, kind)))));
     penaltySheet.hidden = false;
   }
   const shotConfirm = h('div', { class: 'clubsheet', hidden: true, onclick: e => { if (e.target === shotConfirm) shotConfirm.hidden = true; } });
@@ -1098,7 +1104,7 @@ export function renderHole(view, n) {
         h('b', {}, clubShort(c.name)), h('small', {}, clubYd(c) ? `${clubYd(c)}` : '')))),
       h('div', { class: 'swings' }, SWINGS.map(([k, label]) => h('button', { class: swing === k ? 'on' : '', onclick: () => { swing = k; draw(); } }, label))),
       h('div', { class: 'recordrow' },
-        h('button', { class: 'lostball', title: 'Ball lost where the crosshair is: adds the penalty', onclick: () => { shotConfirm.hidden = true; recordShot(club, swing, at, gps, true); } }, 'Lost ball'),
+        h('button', { class: 'lostball', title: 'The ball finished where the crosshair is and was re-teed, dropped (with a penalty) or given free relief', onclick: () => { shotConfirm.hidden = true; recordShot(club, swing, at, gps, true); } }, 'Penalty / drop'),
         h('button', { class: 'record', onclick: () => { shotConfirm.hidden = true; recordShot(club, swing, at, gps); } }, 'Record shot'))));
     draw();
     shotConfirm.hidden = false;
@@ -1509,7 +1515,8 @@ export function renderHole(view, n) {
     const ml = segs => ({ type: 'Feature', geometry: { type: 'MultiLineString', coordinates: segs.map(sg => sg.map(ll)) } });
     return { solid: ml(solid), dotted: ml(dotted) };
   }
-  const setTrace = (set, shots) => { const t = traceLines(shots); set('shots', t.solid); set('shotspen', t.dotted); };
+  // While placing a drop, the dotted line runs from where the ball finished to the crosshair.
+  const setTrace = (set, shots) => { const t = traceLines(dropping ? [...dropping.shots, { pos: target }] : shots); set('shots', t.solid); set('shotspen', t.dotted); };
 
   // Strokes Gained panel (viewing a past round): round total and this hole, each
   // opening to Off the tee / Approach / Around green / Putting, then this hole's
@@ -1545,7 +1552,7 @@ export function renderHole(view, n) {
     const went = isPutt ? `${Math.round(travel * FT_PER_YD)} ft` : `${Math.round(travel)} yds`;
     const club = s.club ? clubName(s.club) + (s.swing ? ` (${SWING_NAME[s.swing] || s.swing})` : '') : isPutt ? 'Putter' : 'Hit';
     if (s.obAt && next) { // into water or OB, then a drop or a re-hit
-      const into = s.penKind === 'water' ? 'into the water' : s.penKind === 'lost' ? 'lost' : 'out of bounds', pen = `+${s.pen} penalty`;
+      const into = s.penKind === 'water' ? 'into the water' : s.penKind === 'lost' ? 'lost' : s.penKind === 'penalty' ? '(penalty)' : s.penKind === 'relief' ? '(free relief)' : 'out of bounds', pen = s.pen ? `+${s.pen} penalty` : 'no penalty';
       return [`${club} ${went} ${into}`, next.drop ? `Dropped in ${lieName(next, s.obAt, hp)} (${pen}) · ${Math.round(yards(next.pos, hp))} yds to hole` : `Re-hit from the same spot (${pen})`];
     }
     const first = isPutt ? `${club} ${went}` : `${club} ${went} to ${next ? lieName(next, s.pos, hp) : 'the hole'}`;
@@ -2050,9 +2057,9 @@ export function renderHole(view, n) {
     const lieLong = (p, from) => (p.lie === 'fairway' ? 'fairway' : p.lie === 'recovery' ? 'recovery area' : lieName(p, from, hp));
     const fromTxt = i === 0 ? 'tee' : s.drop ? 'drop' : s.replay ? (s.lie === 'tee' ? 'tee' : 'the same spot') : lieLong(s, shots[i - 1].pos);
     const went = isPutt ? `${Math.round(travel * FT_PER_YD)} ft` : `${Math.round(travel)} yds`;
-    const into = s.penKind === 'water' ? 'into the water' : s.penKind === 'lost' ? '(lost ball)' : 'out of bounds';
+    const into = s.penKind === 'water' ? 'into the water' : s.penKind === 'lost' ? '(lost ball)' : s.penKind === 'penalty' ? '(penalty)' : s.penKind === 'relief' ? '(free relief)' : 'out of bounds';
     const line2 = isPutt ? `${went} putt`
-      : s.obAt ? `${Math.round(yards(s.pos, s.obAt))} yds from ${fromTxt} ${into} (+${s.pen} penalty)`
+      : s.obAt ? `${Math.round(yards(s.pos, s.obAt))} yds from ${fromTxt} ${into} (${s.pen ? `+${s.pen} penalty` : 'no penalty'})`
       : `${went} from ${fromTxt} to ${next ? lieLong(next, s.pos) : 'the hole'}`;
     const line3 = !next ? 'In the hole'
       : s.obAt && !next.drop ? 'Re-hit from the same spot'
