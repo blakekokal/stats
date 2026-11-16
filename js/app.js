@@ -170,6 +170,26 @@ export function teePosition(teeName, ch, boxes) {
   return box ? boxCentre(box) : ch.tee;
 }
 
+// ---------- back ----------
+
+// Every page has one Back button, top left, that returns to the page the user
+// was on before. The trail of pages is kept here instead of using the browser's
+// history: holes played along the way are skipped, a page is never in it twice,
+// and Home clears it.
+let trail = [];
+try { trail = JSON.parse(sessionStorage.getItem('gs:trail') || '[]'); } catch { trail = []; }
+function track() {
+  const here = location.hash || '#/';
+  if (/^#\/(hole|live)/.test(here)) return;
+  if (/^#\/?$/.test(here)) trail = [];
+  else { const i = trail.indexOf(here); if (i >= 0) trail.length = i; trail.push(here); }
+  try { sessionStorage.setItem('gs:trail', JSON.stringify(trail)); } catch { /* ignore */ }
+}
+export function goBack() {
+  const i = trail.lastIndexOf(location.hash || '#/');
+  location.hash = (i < 0 ? trail[trail.length - 1] : trail[i - 1]) || '#/';
+}
+
 // ---------- router ----------
 
 async function route() {
@@ -186,6 +206,7 @@ async function route() {
     location.replace(`${location.pathname}${location.search}#/hole/${watchHole()}`);
     return;
   }
+  track();
   if (parts[0] !== 'hole' && isWatching()) endWatching(); // leaving the holes leaves the live view
   // The page was reloaded while watching: fetch the round again first.
   if (parts[0] === 'hole' && isWatching() && !watchInfo()) {
@@ -210,7 +231,7 @@ async function route() {
   else if (tab === 'settings') renderSettingsPage(view);
   else if (tab === 'device') renderSettings(view);
   else if (tab === 'stats') renderStats(view);
-  else if (tab === 'account') { if (sync.recovering) renderAccount(view); else if (sync.user) location.hash = '#/settings'; else renderLogin(view); }
+  else if (tab === 'account') { if (sync.recovering) renderAccount(view); else if (sync.user) { trail.pop(); location.hash = '#/settings'; } /* handed on to Settings: not a page to come back to */ else renderLogin(view); }
   else if (tab === 'new') renderNewRound(view);
   else if (tab === 'history') renderHistory(view);
   else if (tab === 'whatsnew') renderWhatsNew(view);

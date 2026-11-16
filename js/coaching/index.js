@@ -11,7 +11,7 @@
 // coach can watch a student's round live.
 
 import { root } from './root.js';
-import { expose, escapeHtml, S, show } from './core.js';
+import { expose, escapeHtml, S, show, resetTrail } from './core.js';
 import { goToCoaching, checkCoachingStudentNotifications } from './student-side.js';
 import { init as initCoachSide } from './coach-side.js';
 import { liveStudents, watchLive } from './gps.js';
@@ -79,6 +79,7 @@ export function renderCoaching(view, tab = 'coaching') {
   // Close anything left open over the pages last time.
   root.querySelectorAll(':scope > div:not(.page)').forEach(el => { if (el.style.display && el.style.display !== 'none') el.style.display = 'none'; });
   S.currentStudentId = null;
+  resetTrail();
   S.coachReturnTab = 0; // coaching opens on Home
   if (tab === 'coaching') {
     goToCoaching().then(() => {

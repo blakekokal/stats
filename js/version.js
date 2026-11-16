@@ -1,2 +1,2 @@
 // Shown on the start page and the hole screen. Bump with every release.
-export const VERSION = '0.66.1';
+export const VERSION = '0.67.0';

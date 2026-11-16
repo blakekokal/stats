@@ -53,7 +53,8 @@ body.coach { background: #1e1e1e; }
 #view[hidden] { display: none; }
 .coachroot button { padding: 1px 6px; }
 .coachroot input { padding: 1px 2px; }
-.coachroot #persistentBackBtn { position: fixed; bottom: max(12px, env(safe-area-inset-bottom)); left: 50%; transform: translateX(-50%); width: auto; max-width: none; height: auto; background: #3d3d3d; color: #fff; border: none; padding: 10px 32px; border-radius: 10px; font-size: 14px; font-weight: 700; cursor: pointer; z-index: 50; touch-action: manipulation; letter-spacing: .5px; }
+/* Step-back buttons inside a page: the top-left Back button presses them (appBack in core.js). */
+.coachroot .stepback { display: none !important; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .6; } }
 .coachroot #pbvWrap input[type=range]::-webkit-slider-thumb { -webkit-appearance:none;appearance:none;width:26px;height:26px;border-radius:50%;background:#ffffff;cursor:pointer;box-shadow:0 1px 6px rgba(0,0,0,0.6); }
 .coachroot #pbvWrap input[type=range]::-moz-range-thumb { width:26px;height:26px;border-radius:50%;background:#ffffff;cursor:pointer;border:none;box-shadow:0 1px 6px rgba(0,0,0,0.6); }
