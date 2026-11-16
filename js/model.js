@@ -58,7 +58,7 @@ export function analyzeHole(hole, courseHole, level = 'Pro') {
     const water = next && isWater(next.shot) ? 1 : 0;
     const after = next ? next.exp + water : (hole.done ? 0 : null);
     if (after != null) r.sg = r.exp - after - 1 - (r.shot.pen || 0);
-    if (next && r.shot.pos && next.shot.pos && !r.shot.pen) r.len = yards(r.shot.pos, next.shot.pos);
+    if (next && r.shot.pos && next.shot.pos && !r.shot.pen) r.len = yards(r.shot.pos, r.shot.obAt || next.shot.pos); // free relief: to where it finished
   });
   const pens = shots.reduce((a, s) => a + (s.pen || 0) + (isWater(s) ? 1 : 0), 0);
   return { rows, score: hole && hole.done ? shots.length + pens : null, strokes: shots.length + pens, pens };
