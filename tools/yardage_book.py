@@ -66,7 +66,7 @@ def hole_page(page):
         for r in radii: assert abs(r / s / 50 - round(r / s / 50)) < 0.02, (r / s, 'ring not a 50-yard step')
     else:  # a par 3: no rings, but the tee's dot is "N yd to green" from the pin, straight
         dot = [ctr(d['rect']) for d in dr if d['type'] == 'f' and d.get('fill') and near(d['fill'], dark) and len(d['items']) == 4 and d['rect'].y0 > 200
-               and any(e['type'] in ('s', 'fs') and e.get('color') and near(e['color'], dark) and len(e['items']) in (4, 5) and e['rect'].contains(d['rect']) for e in dr)]
+               and any(e['type'] in ('s', 'fs') and e.get('color') and near(e['color'], dark) and e['rect'].width > 4 and e['rect'].contains(d['rect']) for e in dr)]
         yd = int(re.search(r'(\d+) yd to green', page.get_text()).group(1))
         s = math.dist(dot[0], (cx, cy)) / yd
     # north arrow: a dark circle, a line and a filled triangle at the north end
@@ -87,7 +87,9 @@ def hole_page(page):
     dots = [ctr(d['rect']) for d in dr if d['type'] == 'f' and d.get('fill') and near(d['fill'], dark) and len(d['items']) == 4 and d['rect'].width < 3]
     dots += [(q.x, q.y) for d in dr if d['type'] == 's' and d.get('color') and near(d['color'], dark) and len(d['items']) == 1
              and d['items'][0][0] == 'l' and d['rect'].y0 > 200 for q in d['items'][0][1:3]]  # label leader lines end on the boxes
-    boxes = [d for d in dr if d['type'] in ('f', 'fs') and kind(d.get('fill')) == 'fairway' and len(d['items']) <= 5]
+    small = lambda d: len(d['items']) <= 5 or max(d['rect'].width, d['rect'].height) / s < 35  # tee boxes: rectangles, or small shapes
+    boxes = [d for d in dr if d['type'] in ('f', 'fs') and kind(d.get('fill')) == 'fairway' and small(d)]
+    dots = [q for q in dots if math.dist(q, (cx, cy)) / s > 50]  # not the front/middle/back marks on the green
     def gap(r, q): return math.hypot(max(r.x0 - q[0], 0, q[0] - r.x1), max(r.y0 - q[1], 0, q[1] - r.y1))
     own = set()
     for q in dots:  # each label's dot or leader line points at the nearest box
@@ -99,7 +101,7 @@ def hole_page(page):
         k = kind(d.get('fill'))
         if not k: continue
         rs = rings_of(d)
-        if k == 'fairway' and len(d['items']) <= 5:  # a tee box; the hole's own have a labelled dot on them
+        if k == 'fairway' and small(d):  # a tee box; the hole's own have a labelled dot on them
             shapes.append(('tee' if id(d) in own else 'other tee', [[ground(p) for p in ring] for ring in rs])); continue
         if k == 'tree':
             r = d['rect']; shapes.append(('tree', [ground(((r.x0 + r.x1) / 2, (r.y0 + r.y1) / 2))], (r.x1 - r.x0) / 2 / s)); continue
