@@ -421,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.76.1', ['Bridlewood: trees added from the satellite picture as circles (a few big ones in each wood, one per lone tree), inside the course boundary only and off greens, fairways, tees, bunkers and water. Nothing else changed']],
   ['0.76.0', ['Recording a shot: Lost ball is now Penalty / drop, with Re-tee or Replay (+1), Drop +1, Drop +2, or Free relief with no penalty (cart path, ground under repair). While you place a drop, a dotted line follows the crosshair from where the ball finished, as the shot tracer shows afterwards']],
   ['0.75.2', ['Bear Creek West: trees are now taken from the satellite picture as circles (a few big ones in each wood, one per lone tree), kept out of OB and off greens, fairways, tees, bunkers and water. Nothing else changed']],
   ['0.75.1', ['Sherrill Park #1: trees are now circles too – a few big ones in each wood, one per lone tree – so each can be moved, resized or deleted on its own']],
