@@ -35,6 +35,12 @@ of each green in the imagery); see `tools/sherrillpark2` as the model.
 - Before rebuilding a course that's live, read its published edits
   (`course_edits` in Supabase, readable with the anon key) and start from them,
   so the owner's edits aren't lost; a new `builtAt` then sets the old ones aside.
+- Every course gets its OB boundary (the course-wide OB: a big area with the
+  course cut out). `tools/add_ob.py` makes it from the OpenStreetMap course
+  boundary; the owner can also trace it in the hole editor (Draw new boundary
+  → Course boundary). Sherrill Park #1, #2 and Cross Timbers have none yet:
+  the owner is drawing those.
+- No trees in OB: don't draw trees outside the course boundary.
 - Scorecard (tees, ratings, pars, handicaps) still comes from the club.
 - Check by eye on an overlay and in the app (GPS Overview), and commit the
   book PDF next to the scripts so the course can be rebuilt. The build takes

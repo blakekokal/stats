@@ -19,10 +19,15 @@ import { inPolygon } from './geo.js';
 
 const maplibregl = window.maplibregl;
 export const EDIT_TYPES = ['fairway', 'rough', 'bunker', 'water', 'recovery', 'trees', 'tee', 'green', 'ob'];
-export const EDIT_LABEL = { fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', water: 'Water', recovery: 'Recovery', trees: 'Trees', tee: 'Tee box', green: 'Green', ob: 'OB' };
+export const EDIT_LABEL = { fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', water: 'Water', recovery: 'Recovery', trees: 'Trees', tee: 'Tee box', green: 'Green', ob: 'OB', course: 'Course boundary' };
+// Course boundary: drawn only (it isn't a type a shape keeps). You trace the
+// outer edge of the course; it's saved as the course-wide OB (a big area with the
+// course cut out of it), so everything outside the line is OB.
+const DRAW_TYPES = [...EDIT_TYPES, 'course'];
+const OB_PAD = 800; // metres of OB round the traced course, as tools/add_ob.py
 // The usual rough colour is too dark to see on the imagery. (A function: app.js
 // imports this module before LIE_COLOR exists.)
-const color = t => (t === 'rough' ? '#7dbb4a' : LIE_COLOR[t] || '#fff');
+const color = t => (t === 'rough' ? '#7dbb4a' : t === 'course' ? LIE_COLOR.ob || '#fff' : LIE_COLOR[t] || '#fff');
 const ll = p => [p[1], p[0]];
 const MAX_HANDLES = 400; // corners shown at once; zoom in for more
 
@@ -251,7 +256,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   function push() { history.push({ work, sel, scoped: new Set(scoped) }); undoBtn.disabled = false; }
 
   // ---------- toolbars ----------
-  const typeChips = (cur, pick) => h('div', { class: 'btypes' }, EDIT_TYPES.map(t => h('button', {
+  const typeChips = (cur, pick, types = EDIT_TYPES) => h('div', { class: 'btypes' }, types.map(t => h('button', {
     class: 'btype' + (t === cur ? ' on' : ''), style: `--c:${color(t)}`, onclick: () => pick(t),
   }, h('i', {}), EDIT_LABEL[t])));
 
@@ -275,17 +280,18 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     drawHandles();
     if (mode === 'draw') {
       const n = draft.length;
+      if (!hint.textContent && drawType === 'course') hint.textContent = n < 3 ? 'Trace the outer edge of the course: tap corners along it, all the way round. Everything outside it will be OB.' : 'Keep going round the edge, then tap Finish (or the first corner) to close it.';
       if (!hint.textContent) hint.textContent = n === 0 ? `Tap the map to place the first corner of the new ${EDIT_LABEL[drawType].toLowerCase()}.`
         : n < 3 ? 'Keep tapping to add corners.' : 'Add more corners, or tap Finish (or the first corner).';
       panel.replaceChildren(hint,
-        typeChips(drawType, pickDrawType),
+        typeChips(drawType, pickDrawType, DRAW_TYPES),
         h('div', { class: 'brow' },
           h('button', { onclick: () => { mode = 'pick'; draft = null; refresh(); } }, 'Cancel'),
           h('button', { disabled: !n, onclick: () => { draft.pop(); refresh(); } }, 'Remove point'),
           h('button', { class: 'bgo', disabled: n < 3, onclick: finishDraw }, 'Finish')));
     } else if (mode === 'trees') {
       hint.textContent = `\u{1F333} Tap the map to drop a tree, ${treeR * 2} m across. Keep tapping to add more; Undo takes the last one off.`;
-      panel.replaceChildren(hint, typeChips('trees', pickDrawType), h('div', { class: 'brow' },
+      panel.replaceChildren(hint, typeChips('trees', pickDrawType, DRAW_TYPES), h('div', { class: 'brow' },
         h('span', { class: 'bsize' }, 'Tree size',
           h('button', { 'aria-label': 'Smaller trees', disabled: treeR <= 2, onclick: () => setTreeR(treeR - 1) }, '\u2212'),
           h('b', {}, `${treeR * 2} m`),
@@ -405,6 +411,23 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     toast(inPolygon(mid, [close(r)]) ? 'Cut in two. Tap either piece to move it.' : 'Cut in two, but the cut line runs outside the shape. Undo if it looks wrong.');
   }
 
+  // The traced course edge becomes the course-wide OB: a box OB_PAD metres round
+  // it with the course cut out. It replaces any course-wide OB already there.
+  function finishCourse() {
+    const ring = draft.map(round6);
+    const old = work.filter(isCourseOb);
+    if (old.length && !confirm('Replace the existing course boundary with this one?')) return;
+    push();
+    const lats = ring.map(p => p[0]), lngs = ring.map(p => p[1]);
+    const k = Math.cos((lats[0] * Math.PI) / 180), dLat = OB_PAD / 111320, dLng = OB_PAD / (111320 * k);
+    const s0 = Math.min(...lats) - dLat, n0 = Math.max(...lats) + dLat, w0 = Math.min(...lngs) - dLng, e0 = Math.max(...lngs) + dLng;
+    const box = [[s0, w0], [s0, e0], [n0, e0], [n0, w0]].map(round6);
+    const f = { t: 'ob', p: [close(box), close(ring)] };
+    work = [...work.filter(g => !old.includes(g)), f]; old.forEach(g => scoped.delete(g)); scoped.add(f);
+    sel = f; selVtx = null; draft = null; mode = 'pick'; dirty = true;
+    toast('Course boundary set: everything outside it is OB.');
+    refresh();
+  }
   // Drawing a new boundary: Trees are dropped as round trees with a tap (no
   // corners to place); every other type is drawn corner by corner.
   function pickDrawType(t) {
@@ -425,6 +448,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
 
   function finishDraw() {
     if (!draft || draft.length < 3) return;
+    if (drawType === 'course') return finishCourse();
     push();
     const f = tag({ t: drawType, p: [close(draft.map(round6))] });
     work = [...work, f]; scoped.add(f); sel = f; selVtx = null;
