@@ -24,12 +24,17 @@ of each green in the imagery); see `tools/sherrillpark2` as the model.
   and ponds/trees on dark ground. Don't fit hole by hole (a lone bunker can
   lock onto the wrong sand) and don't fit to trees alone (shadows fall north-west).
 - Trees are the leafy canopy in the imagery inside the book's tree circles,
-  never the circles themselves (they are far too big).
+  never the book's circles themselves (they are far too big), and are saved as
+  circles (`tools/tree_circles.py`): a wood becomes a cluster of round trees,
+  not one blob, so the owner can edit trees one at a time.
 - Check the book's bunkers and ponds against the imagery. If they're wrong
   (Sherrill Park #2's were), take bunkers, ponds and trees from the imagery with
   `tools/hazards_from_imagery.py` and keep only greens, fairways, tee boxes and
   hole lines from the book. Send the owner a picture of one hole, then the whole
   course, before putting it live.
+- Before rebuilding a course that's live, read its published edits
+  (`course_edits` in Supabase, readable with the anon key) and start from them,
+  so the owner's edits aren't lost; a new `builtAt` then sets the old ones aside.
 - Scorecard (tees, ratings, pars, handicaps) still comes from the club.
 - Check by eye on an overlay and in the app (GPS Overview), and commit the
   book PDF next to the scripts so the course can be rebuilt. The build takes

@@ -1,7 +1,7 @@
 # Builds a course file from the course's vector yardage book (yardage_book.py reads it):
 # bunkers, water, fairways, greens, tee boxes and each hole's centre line, lined up
 # on the zoom-19 Esri imagery the app shows; trees are the canopy in that imagery
-# wherever the book marks a tree.
+# wherever the book marks a tree, as circles (tree_circles.py).
 #   python3 build_from_book.py <course dir> yardage-book.pdf m19.png ../data/<id>.json [check.png]
 # The course dir holds a course.py with ID, NAME, LOCATION, the club's scorecard
 # (TEES, PAR, HCP) and GREENS: a point on each green in the imagery, as
@@ -13,7 +13,7 @@
 # few metres north). Last, each bunker and green is moved on its own, by up to
 # 3 m, if that puts it better on sand or green turf.
 import importlib.util, json, math, os, sys, cv2, numpy as np
-import yardage_book
+import yardage_book, tree_circles
 cdir, pdf, img, out = sys.argv[1:5]
 spec = importlib.util.spec_from_file_location('course', os.path.join(cdir, 'course.py')); C = importlib.util.module_from_spec(spec); spec.loader.exec_module(C)
 TEES, PAR, HCP = C.TEES, C.PAR, C.HCP
@@ -186,8 +186,10 @@ for n, gm in greens.items():
 water = mask['water'] > 0
 trees = canopy & (mask['treezone'] > 0) & ~(cv2.dilate(mask['water'], disk(pxm(1.5))) > 0) & ~(bunk > 0)
 fair = (mask['fairway'] > 0) & ~(bunk > 0)
-for k, mk, mn, eps in (('water', water, 100, 0.6), ('trees', trees, 5, 0.5), ('fairway', fair, 200, 0.6), ('bunker', bunk > 0, 4, 0.25)):
+for k, mk, mn, eps in (('water', water, 100, 0.6), ('fairway', fair, 200, 0.6), ('bunker', bunk > 0, 4, 0.25)):
     for p in rings(mk, mn, eps): feats.append({'t': k, 'px': p})
+for x, y, r in tree_circles.circles(trees, M):  # trees as circles: easier to edit one at a time
+    feats.append({'t': 'trees', 'px': [tree_circles.ring(x, y, r)]})
 
 def simplify(pts, tol):  # Douglas-Peucker, in yards
     if len(pts) < 3: return pts
