@@ -1,6 +1,6 @@
-# Sherrill Park Golf Course – Course 1: what build_from_book.py needs besides the yardage book.
+# Sherrill Park Golf Course #1: what build_from_book.py needs besides the yardage book.
 ID = 'sherrillpark1'
-NAME = 'Sherrill Park Golf Course – Course 1'
+NAME = 'Sherrill Park Golf Course #1'
 LOCATION = 'Richardson, TX'
 # The middle of each green as seen in the Esri imagery, [lat, lng]; the hole numbers come from a GPS
 # app's routing map (holes.py has the hand-traced hole lines these came from).

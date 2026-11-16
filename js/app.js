@@ -61,8 +61,8 @@ export const COURSES = [
   { id: 'tangleridge', name: 'Tangle Ridge Golf Club', file: 'data/tangleridge.json' },
   { id: 'squawcreek', name: 'Squaw Creek Golf Course', file: 'data/squawcreek.json' },
   { id: 'crosstimbers', name: 'Cross Timbers Golf Course', file: 'data/crosstimbers.json' },
-  { id: 'sherrillpark1', name: 'Sherrill Park Golf Course – Course 1', file: 'data/sherrillpark1.json' },
-  { id: 'sherrillpark2', name: 'Sherrill Park Golf Course – Course 2', file: 'data/sherrillpark2.json' },
+  { id: 'sherrillpark1', name: 'Sherrill Park Golf Course #1', file: 'data/sherrillpark1.json' },
+  { id: 'sherrillpark2', name: 'Sherrill Park Golf Course #2', file: 'data/sherrillpark2.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 const base = {}; // id -> the course file as shipped

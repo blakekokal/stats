@@ -103,7 +103,7 @@ for n in range(1, 19):
         feats.append({'t': 'tee', 'px': [box], 'h': n})
     holes.append({'n': n, 'par': PAR[n - 1], 'hcp': HCP[n - 1], 'line': [ll(*p) for p in line], 'tee': ll(*line[0]), 'pin': ll(*line[-1]), '_px': line})
     print(n, 'line', len(line), 'plays', round(yd(line[0], line[1]) + rest), PRO[n - 1], 'tee moved', round(yd(line[0], HOLES[n][0])))
-out = {'id': 'sherrillpark1', 'name': 'Sherrill Park Golf Course – Course 1', 'location': 'Richardson, TX', 'tees': TEES,
+out = {'id': 'sherrillpark1', 'name': 'Sherrill Park Golf Course #1', 'location': 'Richardson, TX', 'tees': TEES,
        'holes': [{k: v for k, v in h.items() if k != '_px'} for h in holes],
        'features': [dict({'t': f['t'], 'p': [[ll(*q) for q in r] + [ll(*r[0])] for r in f['px']]}, **({'h': f['h']} if 'h' in f else {})) for f in feats],
        'attribution': 'Course outlines traced from Esri World Imagery'}
