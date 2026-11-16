@@ -139,11 +139,13 @@ export function complexHoles() {
   return other && base[other] ? [...course.holes, ...base[other].holes] : course.holes;
 }
 
-// An admin saving outline edits: kept on this device and published for
-// everyone. Returns what happened, to show the admin.
-export async function saveCourseEdits(features) {
+// An admin saving outline edits: kept on this device, and published for
+// everyone unless `publish` is false (Save in the hole editor keeps editing;
+// Save & finish publishes). Returns what happened, to show the admin.
+export async function saveCourseEdits(features, { publish = true } = {}) {
   const savedAt = Date.now(), doc = { features, ob: true };
   store.set('course:' + course.id, { ...doc, savedAt });
+  if (!publish) { await loadCourse(true); return 'Saved on this device. Save & finish publishes it for everyone.'; }
   let msg;
   try {
     await publishCourse(course.id, doc, savedAt);
@@ -154,6 +156,11 @@ export async function saveCourseEdits(features) {
   }
   await loadCourse(true);
   return msg;
+}
+// Outline edits saved on this device but not yet published.
+export function unpublishedEdits() {
+  const mine = store.get('course:' + course.id), pub = published[course.id];
+  return mine && (!pub || (mine.savedAt || 0) > pub.updated) ? mine : null;
 }
 // Back to the course file, for everyone.
 export async function resetCourseEdits() {

@@ -421,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.73.7', ['Hole boundary editor: Save now keeps your changes on this device and stays in the editor; the new Save & finish publishes them for everyone and closes the editor']],
   ['0.73.6', ['Course lines on the hole map are now off for everyone, whatever was set before. Turn them back on under View \u2192 Course lines view']],
   ['0.73.5', ['Course lines are now off by default on the hole map. Turn them on under View \u2192 Course lines view; if you already switched them on or off, that choice is kept']],
   ['0.73.4', ['The menu on the hole screen now shows the name of the course you\u2019re playing or viewing, above the tees']],

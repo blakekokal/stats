@@ -7,13 +7,14 @@
 // with the type buttons, cut it in two between two corners (✂ Cut), or delete
 // the whole boundary. "Draw" adds a new
 // boundary: pick its type, tap the map to place its corners, then Finish (or tap
-// the first corner again). Nothing is kept until Save; Undo steps back.
+// the first corner again). Nothing is kept until Save (on this device, and keeps
+// editing) or Save & finish (publishes for everyone and closes); Undo steps back.
 // ‹ › go to another hole without saving: the edits carry over until Save or Cancel.
 //
 // Edits are stored like the Course page's: the whole feature list, out of bounds
 // included, under 'course:<id>' (with ob: true so the OB edits are used too).
 
-import { h, course, toast, LIE_COLOR, along, boxCentre, teeBoxFor, saveCourseEdits } from './app.js';
+import { h, course, toast, LIE_COLOR, along, boxCentre, teeBoxFor, saveCourseEdits, unpublishedEdits } from './app.js';
 import { inPolygon } from './geo.js';
 
 const maplibregl = window.maplibregl;
@@ -254,14 +255,15 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   }, h('i', {}), EDIT_LABEL[t])));
 
   const undoBtn = h('button', { disabled: true, onclick: undo }, '↶ Undo');
-  const saveBtn = h('button', { class: 'bsave', onclick: save }, 'Save');
+  const saveBtn = h('button', { class: 'bkeep', onclick: () => save(false) }, 'Save');
+  const finishBtn = h('button', { class: 'bsave', onclick: () => save(true) }, 'Save & finish');
   const top = h('div', { class: 'beditbar' },
     h('button', { onclick: cancel }, 'Cancel'),
     h('div', { class: 'bnav' },
       h('button', { 'aria-label': `Hole ${prev}`, onclick: () => toHole(prev) }, '\u2039'),
-      h('strong', {}, `Hole ${ch.n}`),
+      h('strong', {}, h('span', { class: 'bholeword' }, 'Hole '), `${ch.n}`),
       h('button', { 'aria-label': `Hole ${next}`, onclick: () => toHole(next) }, '\u203a')),
-    undoBtn, saveBtn);
+    undoBtn, saveBtn, finishBtn);
   const hint = h('p', { class: 'bhint' });
   const panel = h('div', { class: 'beditpanel' });
   root.append(top, panel);
@@ -456,16 +458,22 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     if (dirty) window.onbeforeunload = () => 'Unsaved boundary edits';
     go(k);
   }
-  async function save() {
+  // Save: kept on this device, still editing. Save & finish: published for
+  // everyone (with any edits saved earlier), and the editor closes.
+  async function save(finish) {
     if (mode === 'draw' && draft && draft.length >= 3) finishDraw();
-    if (!dirty) { teardown(); onClose(false); return; }
-    tagScoped();
-    const features = work.filter(f => f.p.length && f.p[0].length >= 4);
-    saveBtn.disabled = true; saveBtn.textContent = 'Saving\u2026';
-    const msg = await saveCourseEdits(features);
-    teardown();
-    toast(msg + ' Past rounds keep their lies.');
-    onClose(true);
+    if (!dirty && !finish) { toast('Nothing new to save.'); return; }
+    if (!dirty && !unpublishedEdits()) { teardown(); onClose(false); return; }
+    if (dirty) tagScoped();
+    const features = dirty ? work.filter(f => f.p.length && f.p[0].length >= 4) : unpublishedEdits().features;
+    const btn = finish ? finishBtn : saveBtn, label = btn.textContent;
+    saveBtn.disabled = finishBtn.disabled = true; btn.textContent = 'Saving\u2026';
+    const msg = await saveCourseEdits(features, { publish: finish });
+    if (finish) { teardown(); toast(msg + ' Past rounds keep their lies.'); onClose(true); return; }
+    dirty = false;
+    saveBtn.disabled = finishBtn.disabled = false; btn.textContent = label;
+    toast(msg);
+    refresh();
   }
   window.onbeforeunload = () => (dirty ? 'Unsaved boundary edits' : undefined);
 
