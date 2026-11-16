@@ -5,8 +5,8 @@ import { h, course, toast, satellite, LIE_COLOR, saveCourseEdits, resetCourseEdi
 import { boundsOf } from './geo.js';
 
 const L = window.L;
-const TYPES = ['fairway', 'rough', 'green', 'bunker', 'water', 'recovery', 'tee'];
-const LABEL = { fairway: 'Fairway', rough: 'Rough', green: 'Green', bunker: 'Bunker', water: 'Water', recovery: 'Recovery', tee: 'Tee box' };
+const TYPES = ['fairway', 'rough', 'green', 'bunker', 'water', 'recovery', 'trees', 'tee'];
+const LABEL = { fairway: 'Fairway', rough: 'Rough', green: 'Green', bunker: 'Bunker', water: 'Water', recovery: 'Recovery', trees: 'Trees', tee: 'Tee box' };
 let map = null;
 
 export function renderCourseEditor(view) {
