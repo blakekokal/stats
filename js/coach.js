@@ -421,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.73.4', ['The menu on the hole screen now shows the name of the course you\u2019re playing or viewing, above the tees']],
   ['0.73.3', ['Sherrill Park Golf Course #2: bunkers, ponds and trees are now taken from the satellite picture (the yardage book had water and bunkers that aren’t there and missed others). Greens, fairways and tee boxes still come from the book']],
   ['0.73.2', ['Sherrill Park\u2019s two courses are now called Sherrill Park Golf Course #1 and #2']],
   ['0.73.1', ['Sherrill Park Course 2: the new outlines from its yardage book now show. Outline edits made before it was rebuilt were still being used instead']],

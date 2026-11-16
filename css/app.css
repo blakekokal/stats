@@ -138,6 +138,9 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .wind b { grid-area: 1 / 1; color: #fff; font: 800 12px/1 system-ui, sans-serif; font-variant-numeric: tabular-nums; }
 .holeview.replaying .wind { top: calc(114px + env(safe-area-inset-top)); }
 .holeview.replaying .keys { top: calc(156px + env(safe-area-inset-top)); }
+.sheet .menucourse { display: grid; gap: 1px; max-width: 240px; }
+.sheet .menucourse small { color: var(--muted, #9a9a9a); font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+.sheet .menucourse strong { font-size: 15px; line-height: 1.25; }
 .sheet .credit { font-size: 11px; max-width: 220px; }
 .fab.gps, .fab.width, .fab.arc, .fab.autotarget, .fab.disp, .fab.appr, .fab.comp, .fab.cleanview, .fab.club, .fab.movetee, .fab.movepin { display: grid; place-content: center; line-height: 1; font-size: 18px; }
 .fab.width, .fab.arc { left: auto; right: 14px; }
