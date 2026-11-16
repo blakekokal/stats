@@ -421,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.73.0', ['Sherrill Park Golf Course \u2013 Course 2 is back, built from its yardage book: bunkers, ponds, fairways, greens and tee boxes from the book, lined up on the satellite picture, and trees drawn round each tree\u2019s canopy. Yardages, pars and handicaps are from the club\u2019s scorecard']],
   ['0.72.2', ['Sherrill Park Golf Course \u2013 Course 1: everything is lined up on the satellite picture (bunkers, greens, fairways and tee boxes had sat a few yards north of it), and the trees are drawn round each tree\u2019s real canopy instead of big circles']],
   ['0.72.1', ['Sherrill Park Course 2 is gone for now while it\u2019s redrawn from scratch. Rounds already played there show up under the default course']],
   ['0.72.0', ['Sherrill Park Golf Course \u2013 Course 1: trees, bunkers, water, fairways, greens and tee boxes are now taken from the course\u2019s yardage book instead of traced by eye from the satellite picture, so they match the course much more closely. Each hole\u2019s line follows the book\u2019s centre line, and every tee box is a real one']],
