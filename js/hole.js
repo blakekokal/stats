@@ -9,7 +9,7 @@
 // shot reaches the green the map zooms onto it, the player places the pin,
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
-import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast } from './app.js';
+import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast, complexHoles } from './app.js';
 import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
@@ -134,7 +134,7 @@ const overlaps = (a, b, pad) => a[0][0] <= b[1][0] + pad && a[1][0] >= b[0][0] -
 // the course boundary — is drawn, as a single line.
 const obLines = f => (f.p.length > 1 ? f.p.slice(1) : f.p);
 function holeFeatures(ch, features = course.features) {
-  const green = ownGreen(ch, features);
+  const green = ownGreen(ch, features), holes = complexHoles();
   return features.filter(f => {
     if (f.t === 'ob') return obLines(f).some(r => r.some(p => distToLine(p, ch.line) <= 150));
     if (f.t === 'bunker' || f.t === 'water' || f.t === 'recovery' || f.t === 'trees') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
@@ -142,7 +142,7 @@ function holeFeatures(ch, features = course.features) {
     if (f.t === 'green') return f === green; // not a neighbour's or a practice green
     const c = centre(f.p[0]);
     const own = distToLine(c, ch.line);
-    return own <= 120 && course.holes.every(o => o === ch || distToLine(c, o.line) >= own);
+    return own <= 120 && holes.every(o => o === ch || distToLine(c, o.line) >= own);
   });
 }
 

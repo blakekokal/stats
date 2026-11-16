@@ -421,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.69.1', ['Bear Creek West and East: each hole only uses its own course\u2019s tee boxes, even with outline edits saved before v0.47.3 (West #1 Blue, Silver and Red were teeing off from East #1)']],
   ['0.69.0', ['New course: Cross Timbers Golf Course (Azle). Fairways, greens, bunkers, the pond and trees were traced from the satellite imagery, so check the hole numbers and outlines on your first round']],
   ['0.68.1', ['Courses: every recovery area is now trees, so Auto steers around them. A ball in one counts as rough unless another lie is drawn there']],
   ['0.68.0', ['Trees: a new boundary type to draw on a course (Edit boundaries). Auto keeps its targets clear of trees, won\u2019t pick a line that has to climb over trees close in front of the ball, and avoids leaving trees between your ball and the hole']],
