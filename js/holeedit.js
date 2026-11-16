@@ -50,7 +50,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   let selVtx = null; // [ring, index] of the selected corner
   let drawType = sessionStorage.getItem('gs:drawType') || 'fairway';
   let draft = null; // corners of a boundary being drawn
-  let mode = 'pick'; // pick | draw | cut | trees (each tap drops a round tree)
+  let mode = 'pick'; // pick | draw | cut | trees (drawing Trees: each tap drops a round tree)
   let treeR = +(sessionStorage.getItem('gs:treeR') || 5); // metres
   let cutA = null; // cut: the first corner tapped, [ring, index]
   // The course-wide OB (a big area with the course cut out of it) isn't split:
@@ -278,14 +278,14 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
       if (!hint.textContent) hint.textContent = n === 0 ? `Tap the map to place the first corner of the new ${EDIT_LABEL[drawType].toLowerCase()}.`
         : n < 3 ? 'Keep tapping to add corners.' : 'Add more corners, or tap Finish (or the first corner).';
       panel.replaceChildren(hint,
-        typeChips(drawType, t => { drawType = t; sessionStorage.setItem('gs:drawType', t); refresh(); }),
+        typeChips(drawType, pickDrawType),
         h('div', { class: 'brow' },
           h('button', { onclick: () => { mode = 'pick'; draft = null; refresh(); } }, 'Cancel'),
           h('button', { disabled: !n, onclick: () => { draft.pop(); refresh(); } }, 'Remove point'),
           h('button', { class: 'bgo', disabled: n < 3, onclick: finishDraw }, 'Finish')));
     } else if (mode === 'trees') {
       hint.textContent = `\u{1F333} Tap the map to drop a tree, ${treeR * 2} m across. Keep tapping to add more; Undo takes the last one off.`;
-      panel.replaceChildren(hint, h('div', { class: 'brow' },
+      panel.replaceChildren(hint, typeChips('trees', pickDrawType), h('div', { class: 'brow' },
         h('span', { class: 'bsize' }, 'Tree size',
           h('button', { 'aria-label': 'Smaller trees', disabled: treeR <= 2, onclick: () => setTreeR(treeR - 1) }, '\u2212'),
           h('b', {}, `${treeR * 2} m`),
@@ -323,8 +323,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     } else {
       hint.textContent = 'Tap a boundary to edit it, or draw a new one.';
       panel.replaceChildren(hint, h('div', { class: 'brow' },
-        h('button', { onclick: () => { mode = 'trees'; sel = null; selVtx = null; refresh(); } }, '\u{1F333} Add trees'),
-        h('button', { class: 'bgo', onclick: () => { mode = 'draw'; draft = []; sel = null; selVtx = null; refresh(); } }, '✏️ Draw new boundary')),
+        h('button', { class: 'bgo', onclick: () => { mode = drawType === 'trees' ? 'trees' : 'draw'; draft = []; sel = null; selVtx = null; refresh(); } }, '✏️ Draw new boundary')),
         h('small', { class: 'muted' }, 'Anything outside every boundary counts as rough.'));
     }
   }
@@ -406,6 +405,13 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     toast(inPolygon(mid, [close(r)]) ? 'Cut in two. Tap either piece to move it.' : 'Cut in two, but the cut line runs outside the shape. Undo if it looks wrong.');
   }
 
+  // Drawing a new boundary: Trees are dropped as round trees with a tap (no
+  // corners to place); every other type is drawn corner by corner.
+  function pickDrawType(t) {
+    drawType = t; sessionStorage.setItem('gs:drawType', t);
+    if (t === 'trees') { mode = 'trees'; draft = null; } else if (mode === 'trees') { mode = 'draw'; draft = []; }
+    refresh();
+  }
   // Trees: a round tree dropped where tapped, `treeR` metres across the middle.
   function setTreeR(r) { treeR = r; sessionStorage.setItem('gs:treeR', String(r)); refresh(); }
   function dropTree(lat, lng) {
