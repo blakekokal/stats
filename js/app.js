@@ -7,7 +7,7 @@ import { renderSettings } from './settings.js';
 import { renderStats } from './stats.js';
 import { renderAccount } from './account.js';
 import { renderStatsDashboard } from './dashboard.js';
-import { renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin, renderWhatsNew, renderEditRound } from './coach.js';
+import { askResume, renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin, renderWhatsNew, renderEditRound } from './coach.js';
 import { VERSION } from './version.js';
 import { currentRound, isWatching, endWatching, watchInfo, watchingId } from './rounds.js';
 import { loadWatch, watchHole } from './live.js';
@@ -219,6 +219,8 @@ async function route() {
   else if (tab === 'scout') renderNewRound(view, { scout: true });
   else if (coachTab) renderCoaching(view, tab);
   else renderHome(view);
+  // A round left going is settled before anything else (see askResume).
+  if (tab === 'home' || tab === 'new') askResume(); else document.getElementById('resumeask')?.remove();
 }
 
 // A live view link that can't be opened.

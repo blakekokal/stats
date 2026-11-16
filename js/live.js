@@ -28,7 +28,7 @@ function ensureInfo(roundId) {
   return info;
 }
 export const liveLink = roundId => `${location.origin}${location.pathname}#/live/${ensureInfo(roundId).id}`;
-export const isLiveOn = r => !!r && !r.submitted && !liveInfo(r.id)?.off;
+export const isLiveOn = r => !!r && !r.submitted && !r.paused && !liveInfo(r.id)?.off;
 export function setLiveOn(roundId, on) {
   store.set(infoKey(roundId), { ...ensureInfo(roundId), off: !on });
   queue(roundId, true);

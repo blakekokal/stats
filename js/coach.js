@@ -8,7 +8,7 @@ import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
 import { checkCoachingDot } from './coaching/index.js';
 import { VERSION } from './version.js';
-import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting, firstHoleOf } from './rounds.js';
+import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting, firstHoleOf, activeRound, pauseRound, resumeRound, holeCountOf } from './rounds.js';
 import { downloadRoundCsv } from './dashboard.js';
 
 const PREF_LABEL = { Pro: 'Tour Pro', Scratch: 'Scratch (0)' };
@@ -25,6 +25,36 @@ function backBtn(href = '#/') {
 }
 const page = (cls, ...kids) => h('div', { class: 'cx ' + cls }, ...kids);
 const needLogin = view => { if (sync.user) return false; renderLogin(view); return true; };
+
+// Open an unfinished round on its first unfinished hole, as the one round being played.
+function openRound(r) {
+  setActiveCourse(r.course || 'bridlewood'); localStorage.removeItem('gs:viewOnly'); localStorage.removeItem('gs:editingPast');
+  resumeRound(r.id); store.set('settings', { ...(store.get('settings') || {}), tee: r.tee }); sessionStorage.removeItem('gs:level');
+  const open = Array.from({ length: holeCountOf(r) }, (_, i) => i + 1).find(n => !r.holes?.[n]?.done);
+  location.hash = `#/hole/${open || 1}`;
+}
+
+// A round is still going (the app was closed, reloaded or crashed mid-round):
+// it has to be continued, paused or deleted before anything else, so a second
+// round can't be started beside it. Shown on Home and New Round.
+export function askResume() {
+  document.getElementById('resumeask')?.remove();
+  const r = activeRound();
+  if (!r) return false;
+  const done = Object.values(r.holes || {}).filter(x => x?.done).length;
+  const box = h('div', { class: 'leave', id: 'resumeask', style: 'position:fixed;' },
+    h('div', { class: 'leavebox' },
+      h('strong', {}, 'You have a round going'),
+      h('div', { style: 'font-size:13px;color:#9a9a9a;margin-bottom:4px;' }, `${r.courseName} \u00b7 ${fmtDate(r.date)} \u00b7 ${done}/${holeCountOf(r)} holes`),
+      h('button', { class: 'submit', onclick: () => { box.remove(); openRound(r); } }, '\u25b6 Continue round'),
+      h('button', { class: 'pause', onclick: () => { box.remove(); pauseRound(r.id); toast('Round saved. Resume it from Round History'); askResume(); } }, 'Save and pause for later'),
+      h('button', { class: 'delete', onclick: () => {
+        if (!confirm('Delete this round? This cannot be undone.')) return;
+        box.remove(); if (localStorage.getItem('gs:currentRound') === r.id) setCurrentRound(null); store.remove(roundKeyOf(r.id)); askResume();
+      } }, 'End and delete round')));
+  document.body.append(box);
+  return true;
+}
 
 // ---------- home ----------
 
@@ -116,6 +146,7 @@ export function renderNewRound(view, { scout = false } = {}) {
       location.hash = '#/hole/1';
       return;
     }
+    if (askResume()) return; // one round at a time
     if (custom.value && !(+custom.value >= 3 && +custom.value <= 18)) { err.textContent = 'Custom holes must be 3 to 18.'; return; }
     const r = { ...newRound(course, tee.value, date.value || today()), courseName: course.name, player: name.value.trim() || (sync.user ? sync.name : ''),
       level: level.value, type: type.value, place: type.value === 'Tournament' && place.value ? +place.value : null, holeCount: holes };
@@ -226,7 +257,7 @@ export function renderHistory(view) {
       e.stopPropagation();
       if (confirm(`Delete the round from ${fmtDate(r.date)}? This removes it from every device.`)) { store.remove(roundKeyOf(r.id)); draw(); }
     } }, 'Del');
-    const resume = () => { setActiveCourse(r.course || 'bridlewood'); localStorage.removeItem('gs:viewOnly'); localStorage.removeItem('gs:editingPast'); setCurrentRound(r.id); store.set('settings', { ...(store.get('settings') || {}), tee: r.tee }); sessionStorage.removeItem('gs:level'); location.hash = `#/hole/${s.firstOpen || 1}`; };
+    const resume = () => openRound(r);
     const holesInfo = s.done < s.count ? `${s.done}/${s.count} holes` : `${s.count} holes`;
     return h('div', { class: 'card', style: s.incomplete ? 'border-left:3px solid #d4706e;cursor:pointer;' : '', onclick: s.incomplete ? resume : null },
       h('div', { style: 'display:flex;justify-content:space-between;align-items:center;' },
@@ -390,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.66.0', ['One round at a time: if the app closes, reloads or crashes mid-round, reopening it asks whether to continue the round, save and pause it for later, or delete it. A new round can\u2019t be started until you choose. Paused rounds stop being live and wait in Round History']],
   ['0.65.2', ['Fixed: the app showed a blank screen after the last update']],
   ['0.65.1', ['New Round and GPS Overview: tapping the course box lists every course again, so you can pick one without typing (handy when the keyboard doesn\u2019t come up). Typing still narrows the list']],
   ['0.65.0', ['Live rounds: when a player\u2019s round goes live, their coach gets a \u201cis live\u201d update in Recent Activity with a Watch button that opens the round live']],
