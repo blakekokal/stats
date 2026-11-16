@@ -1182,9 +1182,12 @@ export function renderHole(view, n) {
     h('div', { class: 'expopen', role: 'button', title: 'Expected scores and handicap level', onclick: openExpected }, h('small', {}, 'Expected'), expValue));
 
   const credit = h('small', { class: 'muted credit' }, 'Imagery © Esri, Maxar · Outlines © OpenStreetMap contributors');
+  // The course being played or viewed, at the top of the menu, by the tees.
+  const courseLabel = () => h('div', { class: 'menucourse' }, h('small', {}, 'Course'), h('strong', {}, round0?.courseName || course.name));
   // Viewing a past round: just Back to Round History and Home.
   const menu = scouting
     ? h('div', { class: 'sheet', hidden: true },
+      courseLabel(),
       h('label', {}, 'Tees ', h('select', { onchange: e => { const r = currentRound(); if (r) r.tee = e.target.value; store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHole(view, n); } },
         course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
       isAdmin ? h('button', { class: 'btn', onclick: () => { menu.hidden = true; editBoundaries(); } }, '✏️ Edit boundaries') : null,
@@ -1193,6 +1196,7 @@ export function renderHole(view, n) {
       credit)
     : watching
     ? h('div', { class: 'sheet', hidden: true },
+      courseLabel(),
       isWatching() && !watchInfo()?.id.startsWith('sv-') ? h('button', { class: 'btn', onclick: () => { menu.hidden = true; refreshLive(true); } }, '↻ Refresh') : null,
       h('button', { class: 'btn', onclick: () => { menu.hidden = true; openScorecard(); } }, 'Scorecard'),
       h('a', { class: 'btn', href: sessionStorage.getItem('gs:watchBack') || '#/' }, sessionStorage.getItem('gs:watchBack') ? 'Back to Coaching' : 'Leave live view'),
@@ -1200,10 +1204,12 @@ export function renderHole(view, n) {
       credit)
     : viewing()
     ? h('div', { class: 'sheet', hidden: true },
+      courseLabel(),
       h('button', { class: 'btn', onclick: () => { leaveView(); location.hash = '#/history'; } }, 'Back to Round History'),
       h('button', { class: 'btn', onclick: () => { leaveView(); location.hash = '#/'; } }, 'Home'),
       credit)
     : h('div', { class: 'sheet', hidden: true },
+      courseLabel(),
       h('label', {}, 'Tees ', h('select', { onchange: e => { store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); const r = currentRound(); if (r) store.set(roundKeyOf(r.id), { ...r, tee: e.target.value, updated: Date.now() }); renderHole(view, n); } },
         course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
       h('button', { class: 'btn', onclick: () => { menu.hidden = true; if (currentRound()) leave.hidden = false; else location.hash = '#/'; } }, 'Home'),
