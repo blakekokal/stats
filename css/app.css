@@ -501,6 +501,12 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .viewswitch { font-size: 16px; }
 .viewswitch span small { display: block; font-size: 11px; font-weight: 500; }
 .viewswitch.off { opacity: .55; cursor: default; }
+.viewelev { border-top: 1px solid rgba(255,255,255,.15); margin-top: 4px; padding-top: 4px; display: flex; flex-direction: column; gap: 4px; }
+.viewelev[hidden] { display: none; }
+.viewchips { display: flex; gap: 6px; padding: 0 2px 4px; }
+.viewchips[hidden] { display: none; }
+.viewchips button { flex: 1; min-height: 0; padding: 6px 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: transparent; color: inherit; font-size: 13px; font-weight: 600; }
+.viewchips button.on { background: #22c55e; border-color: #22c55e; color: #111; }
 .viewswitch input:checked + i { background: #22c55e; }
 /* Clean view, for screenshots: only the map, the hole pill, the menu and View
    (moved down to just above the menu once its box is closed: .viewlow), plus any box they open. */
