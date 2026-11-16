@@ -785,7 +785,7 @@ export function renderHole(view, n) {
       const e = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
       const s = Math.min(a[0], e[0]), n = Math.max(a[0], e[0]), w = Math.min(a[1], e[1]), x = Math.max(a[1], e[1]);
       return trees.some(f => !(n < f.box[0][0] || s > f.box[1][0] || x < f.box[0][1] || w > f.box[1][1])
-        && (inPolygon(e, f.p) || f.p[0].some((p, i) => cross(a, e, p, f.p[0][(i + 1) % f.p[0].length]))));
+        && (inPolygon(e, f.p) || f.p.some(r => r.some((p, i) => cross(a, e, p, r[(i + 1) % r.length])))));
     };
     // What trees cost a dot: 1 when the shot to it can't get over them, and 0.5
     // when it leaves trees close between the ball and the hole (a punch-out next).
