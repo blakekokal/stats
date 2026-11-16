@@ -30,13 +30,13 @@ export function inPolygon(p, poly) {
 // A drawn rough area beats fairway and recovery, so rough can be carved out of them.
 const PRIORITY = ['ob', 'green', 'bunker', 'water', 'tee', 'rough', 'fairway', 'recovery']; // out of bounds beats everything
 
-// Trees aren't a lie (the ground under them is whatever is drawn there, or rough):
-// they only steer Auto on the hole screen.
+// A ball in the trees plays as a recovery shot, so trees count as recovery here
+// (and, like recovery, give way to any other outline drawn over them).
 // Returns the lie at a point: ob | green | bunker | water | tee | fairway | recovery | rough.
 export function lieAt(p, features) {
   let best = PRIORITY.length;
   for (const f of features) {
-    const rank = PRIORITY.indexOf(f.t);
+    const rank = PRIORITY.indexOf(f.t === 'trees' ? 'recovery' : f.t);
     if (rank < 0 || rank >= best) continue;
     if (inPolygon(p, f.p)) best = rank;
   }
