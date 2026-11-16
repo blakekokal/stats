@@ -822,9 +822,12 @@ export function renderHole(view, n) {
     update();
   } }, h('span', {}, '✦'), h('small', {}, 'Auto'));
   // Clean view, for screenshots: just the map, the hole pill and the View and
-  // menu buttons (View drops to just above the menu).
+  // menu buttons. View drops to just above the menu, but not while its box is
+  // open: the box stays put under the finger until it's closed (placeView).
+  const placeView = () => { if (viewBox.hidden) holeEl()?.classList.toggle('viewlow', cleanView); };
+  const closeView = () => { viewBox.hidden = true; placeView(); };
   const setClean = v => {
-    cleanView = v;
+    cleanView = v; placeView();
     for (const id of ['shots', 'shots-shadow', 'shotspen', 'shotspen-shadow']) if (m.getLayer(id)) m.setLayoutProperty(id, 'visibility', v ? 'none' : 'visible');
     holeEl()?.classList.toggle('clean', v);
     viewBtn.classList.toggle('on', v);
@@ -845,7 +848,13 @@ export function renderHole(view, n) {
   const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), sgtRow, linesRow, cleanRow);
   const drawViewBox = () => { sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync(); };
   const viewBtn = h('button', { class: 'fab cleanview', 'aria-label': 'View', title: 'SG map, course lines and clean view',
-    onclick: () => { menu.hidden = true; viewBox.hidden = !viewBox.hidden; drawViewBox(); } }, h('span', {}, '◉'), h('small', {}, 'View'));
+    onclick: () => { menu.hidden = true; viewBox.hidden = !viewBox.hidden; placeView(); drawViewBox(); } }, h('span', {}, '◉'), h('small', {}, 'View'));
+  // A tap anywhere else (the map or another button) closes the View box; the tap still does its own job.
+  const viewAway = e => {
+    if (!viewBtn.isConnected) { document.removeEventListener('pointerdown', viewAway, true); return; }
+    if (!viewBox.hidden && !viewBox.contains(e.target) && !viewBtn.contains(e.target)) closeView();
+  };
+  document.addEventListener('pointerdown', viewAway, true);
   // Two buttons that open up a column of tools when tapped (each remembered on
   // this device): SG on the left (Auto and Comp), Tools on the right above Club
   // (Width, Arc, Disp and Appr).
@@ -1309,7 +1318,7 @@ export function renderHole(view, n) {
   view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (wi && !wi.id.startsWith('sv-') ? ' watchlive' : '') + (toolsBtn.open ? ' toolsopen' : '') + (sgBtn.open ? ' sgopen' : '') }, mapEl,
     watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
-    h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { viewBox.hidden = true; menu.hidden = !menu.hidden; } }, '☰'),
+    h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { closeView(); menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist, gpsShotBtn), holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
     holePill = h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),

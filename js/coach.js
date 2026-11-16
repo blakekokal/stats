@@ -423,6 +423,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.67.1', ['View menu: switching Clean view on or off no longer moves the menu while it\u2019s open. Tapping the map or any other button closes the menu']],
   ['0.67.0', ['One Back button: every page now has a single Back button in the top left that takes you to wherever you were before. The Back button at the bottom of the screen and the extra \u201c\u2190 Strokes gained\u201d, \u201c\u2190 All rounds\u201d and step-back arrows are gone; the top-left button does their job']],
   ['0.66.1', ['New Round and GPS Overview: the course list is now a proper dropdown under the box. It shows about four courses, scrolls for the rest, and narrows as you type']],
   ['0.66.0', ['One round at a time: if the app closes, reloads or crashes mid-round, reopening it asks whether to continue the round, save and pause it for later, or delete it. A new round can\u2019t be started until you choose. Paused rounds stop being live and wait in Round History']],

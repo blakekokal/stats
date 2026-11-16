@@ -497,10 +497,10 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .viewswitch.off { opacity: .55; cursor: default; }
 .viewswitch input:checked + i { background: #22c55e; }
 /* Clean view, for screenshots: only the map, the hole pill, the menu and View
-   (moved down to just above the menu), plus any box they open. */
+   (moved down to just above the menu once its box is closed: .viewlow), plus any box they open. */
 .holeview.clean > :not(#gmap):not(.holepill):not(.menu):not(.cleanview):not(.sheet):not(.leave) { display: none !important; }
-.holeview.clean .fab.cleanview { bottom: calc(70px + env(safe-area-inset-bottom)); }
-.holeview.clean .sheet.viewbox { bottom: calc(70px + env(safe-area-inset-bottom)); }
+.holeview.viewlow .fab.cleanview { bottom: calc(70px + env(safe-area-inset-bottom)); }
+.holeview.viewlow .sheet.viewbox { bottom: calc(70px + env(safe-area-inset-bottom)); }
 /* GPS on: the distance to the pin and the GPS shot button sit at the very top. */
 /* The distance box starts just left of centre, clear of the Live pill on the left and Expected on the right. */
 .gpstop { position: absolute; top: calc(8px + env(safe-area-inset-top)); left: 50%; transform: translateX(-40px); z-index: 4; display: flex; gap: 6px; align-items: center; }
