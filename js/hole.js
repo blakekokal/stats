@@ -15,7 +15,7 @@ import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.j
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js';
-import { currentRound, setCurrentRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
+import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
 import { liveLink, isLiveOn, setLiveOn, liveStatus, onLiveStatus, loadWatch, watchHole, shareCurrent } from './live.js';
 import { openBoundaryEditor, resumeEditAt, editFeatures } from './holeedit.js';
 
@@ -1203,7 +1203,7 @@ export function renderHole(view, n) {
   const leave = h('div', { class: 'leave', hidden: true, onclick: e => { if (e.target === leave) leave.hidden = true; } },
     h('div', { class: 'leavebox' },
       h('strong', {}, 'Leave this round?'),
-      h('button', { class: 'pause', onclick: leaveTo('#/', () => {}) }, 'Pause and save round'),
+      h('button', { class: 'pause', onclick: leaveTo('#/', r => pauseRound(r.id)) }, 'Pause and save round'),
       h('button', { class: 'submit', onclick: leaveTo('#/history', r => submitRound(r.id, course)) }, 'End and submit round'),
       h('button', { class: 'delete', onclick: () => {
         if (!confirm('Delete this round? This cannot be undone.')) return;

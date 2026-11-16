@@ -44,6 +44,28 @@ export function setCurrentRound(id) {
 
 export const holeCountOf = r => (r && r.holeCount) || 18;
 
+// Only one round is played at a time. The active round is the unfinished one
+// that hasn't been paused: the one open on this device, or one touched in the
+// last 12 hours (e.g. after the app crashed or the phone's storage was cleared).
+// Older unfinished rounds count as paused, as they were before pausing was recorded.
+const isOpen = r => !!r && !r.submitted && Object.values(r.holes || {}).filter(x => x?.done).length < holeCountOf(r);
+const currentKey = () => { try { return localStorage.getItem(CURRENT_KEY); } catch { return null; } };
+const isActive = r => isOpen(r) && !r.paused && (r.id === currentKey() || Date.now() - (r.updated || 0) < 12 * 3600e3);
+export const activeRound = () => historyRounds().filter(isActive).sort((a, b) => (b.updated || 0) - (a.updated || 0))[0] || null;
+// Pausing keeps the round in Round History to resume later; it also stops it being live.
+export function pauseRound(id) {
+  const r = store.get(roundKeyOf(id));
+  if (isOpen(r) && !r.paused) store.set(roundKeyOf(id), { ...r, paused: true, updated: Date.now() });
+  if (currentKey() === id) setCurrentRound(null);
+}
+// Make this the round being played; any other active round is paused.
+export function resumeRound(id) {
+  historyRounds().filter(r => r.id !== id && isActive(r)).forEach(r => pauseRound(r.id));
+  const r = store.get(roundKeyOf(id));
+  if (r?.paused) { const { paused, ...rest } = r; store.set(roundKeyOf(id), { ...rest, updated: Date.now() }); }
+  setCurrentRound(id);
+}
+
 // The hole a round started on: the finished hole with the longest run of
 // unfinished holes before it (going round the course), e.g. 10 for a round
 // played on the back nine. 1 when nothing is finished.
