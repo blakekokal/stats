@@ -43,8 +43,10 @@ for i in range(1, k):
     x, y, w, hh = st[i, :4]; sub = (lb[y:y + hh, x:x + w] == i).astype(np.uint8)
     c = cv2.findContours(sub, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0][0]
     rw, rh = cv2.minAreaRect(c)[1]; per = cv2.arcLength(c, True)
-    if min(rw, rh) * M < 3 or max(rw, rh) / max(min(rw, rh), 1) > 2.5: continue  # bits, and cart paths
-    if 4 * math.pi * st[i, 4] / per ** 2 < 0.58: continue  # bunkers are roundish
+    long_ = max(rw, rh) / max(min(rw, rh), 1)
+    wide = min(rw, rh) * M >= 5  # a cart path is never this wide: a long fairway bunker
+    if min(rw, rh) * M < 3 or long_ > (4.5 if wide else 2.5): continue  # bits, and cart paths
+    if 4 * math.pi * st[i, 4] / per ** 2 < (0.45 if wide and long_ > 2.5 else 0.58): continue  # bunkers are roundish, or long and wide
     if dist[y:y + hh, x:x + w][sub > 0].min() > 60: continue
     bunk[y:y + hh, x:x + w] |= sub > 0
 bunk = cv2.dilate(bunk.astype(np.uint8), disk(1)) > 0  # the white stops a little short of the edge

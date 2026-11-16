@@ -32,7 +32,10 @@ of each green in the imagery); see `tools/sherrillpark2` as the model.
 - Check the book's bunkers and ponds against the imagery. If they're wrong
   (Sherrill Park #2's were), take bunkers, ponds and trees from the imagery with
   `tools/hazards_from_imagery.py` and keep only greens, fairways, tee boxes and
-  hole lines from the book. Send the owner a picture of one hole, then the whole
+  hole lines from the book. Where the book is only partly wrong but the imagery
+  misses bunkers the book has right (Tour 18 Dallas), `tools/bunkers_from_imagery.py`
+  keeps the book's bunkers on sand, drops those on grass and adds the imagery's
+  missing ones. Send the owner a picture of one hole, then the whole
   course, before putting it live.
 - Before rebuilding a course that's live, read its published edits
   (`course_edits` in Supabase, readable with the anon key) and start from them,

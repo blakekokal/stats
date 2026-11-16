@@ -7,6 +7,13 @@ the Apple Maps picture) with the shared scripts in `tools/`.
 1. `python3 ../fetch_tiles.py 19 33.0445 -97.1705 33.0705 -97.1555 m19.png` — the zoom-19 imagery the app shows.
 2. From `tools/`: `python3 build_from_book.py tour18dallas tour18dallas/yardage-book.pdf tour18dallas/m19.png ../data/tour18dallas.json [check.png]`
    (needs `pymupdf` and `opencv-python`; takes several minutes).
+3. `python3 hazards_from_imagery.py ../data/tour18dallas.json tour18dallas/m19.png imagery.json`, then
+   `python3 bunkers_from_imagery.py ../data/tour18dallas.json imagery.json tour18dallas/m19.png ../data/tour18dallas.json`
+   — the book's bunkers are partly wrong: some are on grass (holes 1, 2, 6, and a long strip on 15)
+   and some sand has none (two fairway bunkers on 2, two by the green on 15, the church pews
+   on 10, the big fairway bunker on 4). The imagery alone misses big and odd-shaped bunkers
+   that the book has right, so the book's bunkers on sand are kept, those on grass dropped,
+   and the imagery's added where the book has none. Ponds and trees stay as built.
 
 How it lines up: houses keep many holes apart, so few bunkers or ponds are drawn on
 two pages. The book's tree circles are, and a tree drawn on two pages is the same
