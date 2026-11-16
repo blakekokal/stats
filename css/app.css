@@ -367,6 +367,8 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .beditbar button, .beditpanel button { min-height: 38px; padding: 0 12px; border: 0; border-radius: 10px; background: #2a2f2c; color: #fff; font: 600 14px system-ui, sans-serif; }
 .beditbar button:disabled, .beditpanel button:disabled { opacity: .4; }
 .beditbar .bsave, .beditpanel .bgo { background: #22c55e; color: #062414; }
+.beditbar .bkeep { background: #1f6f43; }
+@media (max-width: 440px) { .beditbar { gap: 4px; } .beditbar button { padding: 0 8px; font-size: 13px; } .beditbar .bnav button { width: 28px; } .beditbar .bholeword { display: none; } }
 .beditpanel .bdel { background: #7f1d1d; }
 .beditpanel { position: absolute; left: 8px; right: 8px; bottom: calc(10px + env(safe-area-inset-bottom)); z-index: 6; display: grid; gap: 8px; background: #111d; backdrop-filter: blur(8px); border-radius: 14px; padding: 10px; color: #fff; }
 .beditpanel .bhint { margin: 0; font-size: 13px; line-height: 1.3; }
