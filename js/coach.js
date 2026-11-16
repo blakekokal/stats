@@ -2,7 +2,7 @@
 // coaching app. My Bag, Performance Analysis, Practice and Learning and
 // Coaching are the coaching app's own pages (js/coaching).
 
-import { h, course, toast, COURSES, courseById, setActiveCourse } from './app.js';
+import { h, course, toast, COURSES, courseById, setActiveCourse, goBack } from './app.js';
 import { store, sync } from './store.js';
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
@@ -18,8 +18,9 @@ const profileLevel = () => (LEVELS.includes(sync.level) ? sync.level : 'Pro');
 const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD, local
 const fmtDate = d => { const [y, m, dd] = d.split('-').map(Number); return `${m}/${dd}/${y}`; };
 
-function backBtn(href = '#/') {
-  const b = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: () => { location.hash = href; } });
+// The one Back button: back to the page before this one (goBack in app.js).
+function backBtn() {
+  const b = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: goBack });
   b.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
   return b;
 }
@@ -312,7 +313,7 @@ export function renderEditRound(view, id) {
     store.set(key, { ...store.get(key), player: name.value.trim(), level: level.value, date: date.value || r.date, tee: tee.value,
       type: type.value, place: type.value === 'Tournament' && place.value ? +place.value : null, updated: Date.now() });
   };
-  view.replaceChildren(page('top', backBtn('#/history'),
+  view.replaceChildren(page('top', backBtn(),
     h('div', { style: 'font-size:22px;font-weight:800;' }, 'Edit Round'),
     h('div', { style: 'font-size:12px;color:#9a9a9a;' }, r.courseName || courseById(r.course).name),
     name, h('div', { class: 'row' }, level, date), tee, type, placeWrap,
@@ -422,6 +423,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.67.0', ['One Back button: every page now has a single Back button in the top left that takes you to wherever you were before. The Back button at the bottom of the screen and the extra \u201c\u2190 Strokes gained\u201d, \u201c\u2190 All rounds\u201d and step-back arrows are gone; the top-left button does their job']],
   ['0.66.1', ['New Round and GPS Overview: the course list is now a proper dropdown under the box. It shows about four courses, scrolls for the rest, and narrows as you type']],
   ['0.66.0', ['One round at a time: if the app closes, reloads or crashes mid-round, reopening it asks whether to continue the round, save and pause it for later, or delete it. A new round can\u2019t be started until you choose. Paused rounds stop being live and wait in Round History']],
   ['0.65.2', ['Fixed: the app showed a blank screen after the last update']],

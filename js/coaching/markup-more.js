@@ -3,7 +3,7 @@
 
 export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
 <div id="guideToGolfPage" class="page" style="justify-content:flex-start;padding-top:20px;overflow-y:auto;padding-bottom:80px;align-items:center;">
-  <button class="back-btn-top" onclick="show('practiceHubPage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div style="font-size:22px;font-weight:800;margin-bottom:4px;">Guide to Golf</div>
   <div style="font-size:13px;color:#888;margin-bottom:16px;">How to hit every shot</div>
 
@@ -116,7 +116,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
 
   <!-- Fixed header -->
   <div style="flex-shrink:0;width:100%;padding:30px 16px 0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;position:relative;">
-    <button class="back-btn-top" onclick="show('homePage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+    <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="font-size:22px;font-weight:800;margin-bottom:6px;">Practice and Learning</div>
     <div style="font-size:13px;color:#2e2e2e;margin-bottom:14px;">Combines, Drills, Practice &amp; Learn</div>
 
@@ -825,7 +825,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
 </div>`;
 
 export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" style="justify-content:flex-start;padding-top:30px;overflow-y:auto;scrollbar-gutter:stable;padding-bottom:80px;align-items:center;">
-  <button class="back-btn-top" onclick="show('homePage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
 
   <div style="width:100%;max-width:420px;padding:0 14px;box-sizing:border-box;">
     <div style="font-size:22px;font-weight:800;margin-bottom:2px;text-align:center;">Performance Analysis</div>
@@ -898,7 +898,7 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
 </div>`;
 
 export const DRILLS_PAGES = `<div id="drillsPage" class="page" style="justify-content:flex-start;padding-top:30px;overflow-y:auto;padding-bottom:80px;align-items:center;">
-  <button class="back-btn-top" onclick="show('practiceHubPage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
 
   <!-- Single stable-width container so toggling tabs never shifts layout -->
   <div style="width:320px;max-width:calc(100vw - 32px);display:flex;flex-direction:column;align-items:stretch;gap:0;">
@@ -923,12 +923,12 @@ export const DRILLS_PAGES = `<div id="drillsPage" class="page" style="justify-co
 
 <!-- DRILL DETAIL PAGE -->
 <div id="drillDetailPage" class="page" style="justify-content:flex-start;padding-top:20px;overflow-y:auto;padding-bottom:80px;">
-  <button class="back-btn-top" onclick="drillDetailBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div id="drillDetailContent" style="width:320px;max-width:100%;"></div>
 </div>`;
 
 export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;padding-bottom:80px;align-items:center;">
-  <button class="back-btn-top" onclick="show('homePage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div style="text-align:center;margin-bottom:12px;">
     <div style="font-size:22px;font-weight:800;">🎒 My Clubs</div>
   </div>
@@ -1005,7 +1005,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
     <div id="fyStep2" style="width:100%;max-width:360px;display:none;">
       <div style="background:#222222;border-radius:14px;padding:16px;margin-bottom:12px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <button onclick="fyBackToStep1()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
+          <button class="stepback" onclick="fyBackToStep1()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
           <div style="font-size:16px;font-weight:800;color:#9a9a9a;" id="fySelectedClubName"></div>
           <div style="width:32px;"></div>
         </div>
@@ -1018,7 +1018,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
     <div id="fyStep3" style="width:100%;max-width:360px;display:none;">
       <div style="background:#222222;border-radius:14px;padding:16px;">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-          <button onclick="fyBackToStep2()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
+          <button class="stepback" onclick="fyBackToStep2()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
           <div style="font-size:16px;font-weight:800;color:#9a9a9a;" id="fyStep3ClubName"></div>
           <div style="width:32px;"></div>
         </div>
@@ -1054,7 +1054,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <!-- Step 1: Club Selection -->
       <div id="wgStep1">
         <div style="display:flex;align-items:center;gap:8px;padding:12px 0 10px;">
-          <button onclick="wgCancelEntry()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
+          <button class="stepback" onclick="wgCancelEntry()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
           <div style="font-size:15px;font-weight:800;color:#9a9a9a;">Select Wedges</div>
         </div>
         <div style="font-size:11px;color:#2e2e2e;margin-bottom:12px;">Pick 1–4 wedges. Brighter = in your bag.</div>
@@ -1066,7 +1066,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <!-- Step 2: Setup -->
       <div id="wgStep2" style="display:none;">
         <div style="display:flex;align-items:center;gap:8px;padding:12px 0 10px;">
-          <button onclick="wgBackToStep1()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
+          <button class="stepback" onclick="wgBackToStep1()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
           <div style="font-size:15px;font-weight:800;color:#9a9a9a;">Session Setup</div>
         </div>
         <div style="background:#222222;border-radius:12px;padding:14px;margin-bottom:10px;">
@@ -1095,7 +1095,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <!-- Step 3: Data Entry -->
       <div id="wgStep3" style="display:none;">
         <div style="display:flex;align-items:center;gap:8px;padding:12px 0 10px;">
-          <button onclick="wgBackToStep2()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
+          <button class="stepback" onclick="wgBackToStep2()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
           <div style="font-size:15px;font-weight:800;color:#9a9a9a;">Enter Carry (yds)</div>
         </div>
         <div id="wgInputArea" style="display:flex;flex-direction:column;gap:12px;margin-bottom:14px;"></div>
@@ -1148,7 +1148,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <div id="spStep1">
         <div style="background:#222222;border-radius:14px;padding:16px;margin-bottom:12px;">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-            <button onclick="spCancelEntry()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;flex-shrink:0;">←</button>
+            <button class="stepback" onclick="spCancelEntry()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;flex-shrink:0;">←</button>
             <div style="font-size:15px;font-weight:800;color:#9a9a9a;">Select a Club</div>
           </div>
           <div id="spClubGrid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
@@ -1164,7 +1164,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <div id="spStep2" style="display:none;">
         <div style="background:#222222;border-radius:14px;padding:16px;margin-bottom:12px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <button onclick="spBackToStep1()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
+            <button class="stepback" onclick="spBackToStep1()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
             <div style="font-size:16px;font-weight:800;color:#9a9a9a;" id="spSelectedClubLabel"></div>
             <div style="width:32px;"></div>
           </div>
@@ -1177,7 +1177,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <div id="spStep3" style="display:none;">
         <div style="background:#222222;border-radius:14px;padding:16px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <button onclick="spBackToStep2()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
+            <button class="stepback" onclick="spBackToStep2()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
             <div style="font-size:15px;font-weight:800;color:#9a9a9a;" id="spStep3ClubLabel"></div>
             <div style="width:32px;"></div>
           </div>
@@ -1213,7 +1213,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
 
 <!-- GAP VISUALIZER PAGE -->
 <div id="gapVisualizerPage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;padding-bottom:80px;align-items:center;">
-  <button class="back-btn-top" onclick="show('myBagPage')"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div style="text-align:center;margin-bottom:12px;">
     <div style="font-size:22px;font-weight:800;">📊 Gap Visualizer</div>
     <div style="font-size:12px;color:#606060;margin-top:4px;">Full swing distances &amp; ¾ swing gaps</div>
@@ -1683,7 +1683,7 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
 
         <!-- Nav bar -->
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
-          <button onclick="combHeaderBack()" style="background:#333333;color:#ffffff;border:none;padding:9px 14px;border-radius:8px;font-size:0.9rem;cursor:pointer;touch-action:manipulation;max-width:none;width:auto;height:auto;">← Menu</button>
+          <div style="width:70px;"></div>
           <h2 id="comb-title" style="margin:0;color:#00b87a;font-size:1rem;font-weight:800;text-align:center;flex:1;padding:0 6px;"></h2>
           <div style="width:70px;"></div>
         </div>
@@ -1736,8 +1736,7 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
   </div><!-- /scroll -->
 </div><!-- /combinesPage -->`;
 
-export const MORE_MODALS = `<button id="persistentBackBtn" onclick="persistentBack()">← BACK</button>
-
+export const MORE_MODALS = `
 
 <!-- Drill Completion Note Modal -->
 <div id="drillCompleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:200;align-items:center;justify-content:center;">

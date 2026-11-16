@@ -2,7 +2,7 @@
 // Coaching page (student and coach views) and the coach's Student View page.
 
 export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="justify-content:flex-start;padding-top:0;overflow-y:hidden;padding-bottom:0;align-items:center;">
-  <button class="back-btn-top" onclick="show('homePage')" style="z-index:10;"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="back-btn-top" aria-label="Back" onclick="appBack()" style="z-index:10;"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
 
   <!-- HEADER -->
   <div style="width:100%;max-width:420px;padding:28px 16px 0;box-sizing:border-box;flex-shrink:0;">
@@ -364,7 +364,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
       <div id="cctTabContent4" style="display:none;">
         <!-- Students: one list, latest activity first, with a name search -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-          <button onclick="showCoachCoachingTab(0)" aria-label="Back" style="height:38px;font-size:18px;background:#282828;border-radius:8px;padding:0 12px;max-width:none;width:auto;color:#9a9a9a;border:1px solid #333333;">←</button>
+          <button class="stepback" onclick="showCoachCoachingTab(0)" aria-label="Back" style="height:38px;font-size:18px;background:#282828;border-radius:8px;padding:0 12px;max-width:none;width:auto;color:#9a9a9a;border:1px solid #333333;">←</button>
           <input id="coachStudentSearch" type="search" oninput="drawCoachStudentList()" placeholder="🔍 Search students" autocomplete="off" style="flex:1;height:38px;font-size:14px;max-width:none;text-align:left;border-radius:8px;">
         </div>
         <div id="coachStudentList" style="margin-bottom:14px;"><div style="text-align:center;color:#606060;font-size:13px;padding:20px 0;">Loading students...</div></div>
@@ -396,7 +396,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
         <!-- TEAM DETAIL VIEW (shown when a team is tapped) -->
         <div id="coachTeamDetailView" style="display:none;">
           <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;">
-            <button onclick="showCoachTeamList()" style="height:34px;font-size:18px;background:#282828;border-radius:8px;padding:0 10px;max-width:none;width:auto;color:#9a9a9a;border:1px solid #333333;">←</button>
+            <button class="stepback" onclick="showCoachTeamList()" style="height:34px;font-size:18px;background:#282828;border-radius:8px;padding:0 10px;max-width:none;width:auto;color:#9a9a9a;border:1px solid #333333;">←</button>
             <div style="flex:1;min-width:0;">
               <div id="coachTeamDetailName" style="font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"></div>
               <div id="coachTeamDetailCount" style="font-size:11px;color:#606060;"></div>
@@ -424,7 +424,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
 `;
 
 export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="justify-content:flex-start;padding-top:10px;overflow-y:hidden;padding-bottom:0;position:relative;">
-  <button class="back-btn-top" onclick="goToCoaching()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div id="studentViewHeader" style="text-align:center;margin-bottom:6px;flex-shrink:0;">
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;">
       <div id="studentViewName" style="font-size:20px;font-weight:800;"></div>

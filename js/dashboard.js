@@ -2,7 +2,7 @@
 // tables, with strokes-gained sliders). This app's GPS rounds are converted into the coaching
 // app's shot-by-shot round format first, then the ported code renders them.
 
-import { h, courseById } from './app.js';
+import { goBack, h, courseById } from './app.js';
 import { store, sync, levelFromPref } from './store.js';
 import { expected } from './sg.js';
 import { yards } from './geo.js';
@@ -118,7 +118,7 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
     try { await sync.setLevel(levelFromPref(fHcp.value)); } catch { /* keep the local choice */ }
   });
   const content = h('div', { id: 'dashContent', style: 'text-align:left;' });
-  const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: () => { location.hash = only ? '#/history' : '#/'; } });
+  const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: () => { if (!dashBack()) goBack(); } });
   back.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
   view.replaceChildren(h('div', { class: 'cx top' }, back,
     h('div', { style: 'width:100%;max-width:360px;' },
@@ -171,6 +171,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
   opts = opts || {};
   var content = document.getElementById(targetId || 'dashContent');
   if (!opts.single) _dash = { data: data, hcp: hcp, targetId: targetId };
+  _dash.single = !!opts.single;
   
   // ===== AGGREGATE ALL DATA =====
   var A = { n: data.length, holes: 0, totScore: 0, totPar: 0, totPutts: 0,
@@ -431,14 +432,14 @@ export function renderDashboard(data, hcp, targetId, opts) {
   // Just the bars (per round, one shared scale). Tapping one opens its detailed
   // stats: Total -> scoring, then Off the tee, Approach, Around green, Putting.
   var html='';
-  var back='<button onclick="showDashSub(0)" style="height:34px;font-size:13px;font-weight:700;background:#282828;border-radius:8px;padding:0 12px;max-width:none;width:auto;color:#9a9a9a;border:1px solid #333333;margin:0 0 4px;">← Strokes gained</button>';
+  var back=''; // the page's Back button returns to the bars (dashBack)
   html+='<div id="dsub_0" class="dsubContent">';
   var nd=nDetailed||1, sgPer={tot:sgTot/nd,ott:A.sgOTT/nd,app:A.sgAPP/nd,arg:A.sgARG/nd,putt:A.sgPutt/nd};
   var sgMax=Math.max(Math.abs(sgPer.tot),Math.abs(sgPer.ott),Math.abs(sgPer.app),Math.abs(sgPer.arg),Math.abs(sgPer.putt));
   var sgR=[3,5,10,20,40].filter(function(x){return x>=sgMax;})[0]||Math.ceil(sgMax/10)*10;
   // Heading, with Filter beside "per round" (round type, time and the level to compare with),
-  // or, for one round picked from the list, which round it is and the way back.
-  var top=opts.single&&data[0]?'<div style="display:flex;align-items:center;gap:8px;margin:2px 0 6px;"><button onclick="dashAllRounds()" style="height:34px;font-size:13px;font-weight:700;background:#282828;border-radius:8px;padding:0 12px;max-width:none;width:auto;color:#9a9a9a;border:1px solid #333333;margin:0;">\u2190 All rounds</button>'
+  // or, for one round picked from the list, which round it is (Back returns to all rounds).
+  var top=opts.single&&data[0]?'<div style="display:flex;align-items:center;gap:8px;margin:2px 0 6px;">'
     +'<div style="font-size:13px;color:#9a9a9a;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(data[0].course_name||'')+' \u00b7 '+data[0].round_date+'</div></div>':'';
   html+=top+'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:2px;">'
     +'<div style="font-size:14px;font-weight:800;color:#00b87a;">STROKES GAINED \u00b7 '+(opts.single?'this round':'per round')+'</div>'
@@ -685,3 +686,14 @@ export function calcHandicapIndex(rounds) {
 }
 
 window.showDashSub = showDashSub;
+// The page's Back button, while a dashboard is on screen: out of a category's
+// stats to the bars, then out of a single round to all rounds. False when
+// there's nothing to step out of, so Back leaves the page.
+export function dashBack() {
+  var t = _dash && document.getElementById(_dash.targetId || 'dashContent');
+  if (!t || !t.offsetParent) return false;
+  for (var i = 1; i < 6; i++) { var el = document.getElementById('dsub_' + i); if (el && el.style.display !== 'none') { showDashSub(0); return true; } }
+  if (_dash.single) { dashAllRounds(); return true; }
+  return false;
+}
+window.dashBack = dashBack;

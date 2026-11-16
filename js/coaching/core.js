@@ -3,7 +3,7 @@
 // helpers, mapped onto this app.
 
 import { sync, supabaseClient } from '../store.js';
-import { toast } from '../app.js';
+import { toast, goBack } from '../app.js';
 
 export const S = {
   currentStudentId: null, currentStudentHcp: 'pro', combSaveForStudent: null, svAllRounds: null, svDashData: null, svDashAllData: null,
@@ -33,7 +33,7 @@ export const _sb = new Proxy({}, { get: (_, k) => (...a) => supabaseClient()[k](
 
 // ---- pages ----
 // Every screen is a <div class="page"> inside #coachroot (index.js); show(id)
-// makes one active. The Back button at the bottom goes to the page's parent.
+// makes one active. Each has one Back button, top left (appBack below).
 const enterHooks = {}, backHooks = {};
 /** Run fn whenever pageId is shown. Returning false stops the rest of show(). */
 export function onEnter(id, fn) { enterHooks[id] = fn; }
@@ -49,11 +49,19 @@ const backTarget = {
   combinesPage: 'practiceHubPage', lineDrillPage: 'practiceHubPage', driverDrillPage: 'practiceHubPage', evalCombinePage: 'practiceHubPage',
   guideToGolfPage: 'practiceHubPage',
 };
+// The pages gone through to reach this one, oldest first, for Back. A page is
+// never in it twice: showing one that's already there goes back to it.
+let pageTrail = [], fresh = true;
+/** Coming in from the rest of the app: the first page shown has nothing behind it. */
+export function resetTrail() { pageTrail = []; fresh = true; }
 export function show(id) {
   if (id === 'homePage') { location.hash = '#/'; return; }
   if (id === 'authPage') { location.hash = '#/account'; return; }
   const page = document.getElementById(id);
   if (!page) { toast(`That part is in the coaching app for now (${COACH_SITE}).`); return; }
+  const from = activePageId(), at = pageTrail.indexOf(id);
+  if (at >= 0) pageTrail.length = at; else if (!fresh && from && from !== id) pageTrail.push(from);
+  fresh = false;
   document.querySelectorAll('.coachroot .page').forEach(p => p.classList.remove('active'));
   page.classList.add('active');
   if (enterHooks[id] && enterHooks[id]() === false) return;
@@ -62,12 +70,22 @@ export function show(id) {
   if (inner) inner.scrollTop = 0;
   window.scrollTo(0, 0);
 }
-function persistentBack() {
-  const id = activePageId();
+// The one Back button. It undoes the last step, whatever that was: a stats
+// category or single round on a dashboard, a step inside the page (its hidden
+// .stepback button), then the page before this one, then the part of the app
+// the user came from.
+function appBack() {
+  const id = activePageId(), page = document.getElementById(id);
+  if (window.dashBack && window.dashBack()) return;
+  const step = page && [...page.querySelectorAll('.stepback')].filter(b => b.parentElement.offsetParent).pop();
+  if (step) { step.click(); return; }
   if (backHooks[id] && backHooks[id]() !== false) return;
-  show(backTarget[id] || 'homePage');
+  const prev = pageTrail[pageTrail.length - 1] || backTarget[id];
+  if (prev === 'coachingCornerPage' && window.goToCoaching) window.goToCoaching(); // reloads it on the tab it was left on
+  else if (prev) show(prev);
+  else goBack();
 }
-expose({ show, persistentBack });
+expose({ show, appBack });
 export const showAuthPage = () => show('authPage');
 
 // ---- session ----
