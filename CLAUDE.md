@@ -48,7 +48,7 @@ of each green in the imagery); see `tools/sherrillpark2` as the model.
 - No trees in OB: don't draw trees outside the course boundary.
 - To redo only a course's trees (from the imagery, as circles, nothing else
   changed): `tools/trees_from_imagery.py`.
-- Elevation (View box: hillshade, contours in yards and downslope arrows) comes from USGS 3DEP lidar:
+- Elevation (View box: hillshade, contours in yards with downhill arrows on the lines) comes from USGS 3DEP lidar:
   `tools/elevation.py <course>` writes `data/elev/` (no book needed, the course
   file isn't touched). Cowboys has it so far.
 - Scorecard (tees, ratings, pars, handicaps) still comes from the club.

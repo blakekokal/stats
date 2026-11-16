@@ -97,25 +97,46 @@ function clipContours(gj, area, iv) {
   return { type: 'FeatureCollection', features: out };
 }
 
-function clipArrows(arrows, area) {
+// Downhill arrows along the contour lines shown: one every ARROW_STEP_M along
+// each line, its tail just off the line, pointing straight downhill (square to
+// the line, to the side the line's "dn" says). Each gets a level for the zoom
+// it shows from: level 0 every 4th, level 1 every other one, level 2 the rest.
+const ARROW_STEP_M = 12;
+function contourArrows(gj, area, iv) {
   const out = [];
-  for (const [lng, lat, b, s10, lvl] of arrows) {
-    const a = area.weight([lng, lat]);
-    if (a > 0.05) out.push({ type: 'Feature', properties: { b, s: s10 / 10, lvl, a: Math.round(a * 10) / 10 }, geometry: { type: 'Point', coordinates: [lng, lat] } });
+  for (const f of gj.features) {
+    if (f.properties.yd % iv) continue;
+    const c = f.geometry.coordinates, q = c.map(area.loc);
+    if (!q.some(area.inBox)) continue;
+    let next = ARROW_STEP_M / 2, along = 0, n = 0;
+    for (let i = 0; i < q.length - 1; i++) {
+      const dx = q[i + 1][0] - q[i][0], dy = q[i + 1][1] - q[i][1], L = Math.hypot(dx, dy);
+      while (L && next <= along + L) {
+        const t = (next - along) / L, ll = [c[i][0] + (c[i + 1][0] - c[i][0]) * t, c[i][1] + (c[i + 1][1] - c[i][1]) * t];
+        const a = area.weight(ll);
+        if (a > 0.05) {
+          const brg = (Math.atan2(dx, dy) * 180) / Math.PI + (f.properties.dn === 1 ? -90 : 90);
+          out.push({ type: 'Feature', properties: { b: Math.round((brg + 360) % 360), lvl: n % 4 === 0 ? 0 : n % 2 === 0 ? 1 : 2, a: Math.round(a * 10) / 10 },
+            geometry: { type: 'Point', coordinates: ll } });
+        }
+        n++; next += ARROW_STEP_M;
+      }
+      along += L;
+    }
   }
   return { type: 'FeatureCollection', features: out };
 }
 
-// A small arrow pointing up (north); the layer turns it to point downhill.
+// A thin line arrow pointing up (north), its tail at the bottom with a hair of
+// a gap; the layer anchors the tail on the contour line and turns it downhill.
 function arrowImage() {
-  const S = 40, c = document.createElement('canvas'); c.width = c.height = S;
+  const W = 24, H = 40, c = document.createElement('canvas'); c.width = W; c.height = H;
   const x = c.getContext('2d');
-  x.lineJoin = 'round';
-  x.beginPath();
-  x.moveTo(20, 4); x.lineTo(31, 18); x.lineTo(24, 18); x.lineTo(24, 36); x.lineTo(16, 36); x.lineTo(16, 18); x.lineTo(9, 18); x.closePath();
-  x.fillStyle = '#fff'; x.strokeStyle = 'rgba(0,0,0,.75)'; x.lineWidth = 3;
-  x.stroke(); x.fill();
-  return x.getImageData(0, 0, S, S);
+  x.lineCap = x.lineJoin = 'round';
+  const draw = () => { x.beginPath(); x.moveTo(12, 36); x.lineTo(12, 5); x.moveTo(5, 13); x.lineTo(12, 5); x.lineTo(19, 13); x.stroke(); };
+  x.strokeStyle = 'rgba(0,0,0,.55)'; x.lineWidth = 5.5; draw();
+  x.strokeStyle = '#fff3c4'; x.lineWidth = 2.5; draw();
+  return x.getImageData(0, 0, W, H);
 }
 const EMPTY = { type: 'FeatureCollection', features: [] };
 // Which arrows show at which zoom: the widest-spaced from the hole view, the
@@ -146,7 +167,7 @@ export async function drawElevation(m, cid, hole) {
     for (const id of ['elev-contours', 'elev-arrows']) if (m.getSource(id)) m.getSource(id).setData(EMPTY);
     return;
   }
-  const [gj, arrows] = await Promise.all([load(cid, 'contours'), load(cid, 'slopes')]);
+  const gj = await load(cid, 'contours');
   if (!m.getStyle() || !elevPrefs.contours) return;
   const area = holeArea(hole);
   if (!m.getSource('elev-contours')) {
@@ -158,14 +179,13 @@ export async function drawElevation(m, cid, hole) {
       paint: { 'line-color': '#ffe58a', 'line-width': 2, 'line-opacity': ['*', 0.9, ['get', 'a']] } }, below());
   }
   if (!m.getSource('elev-arrows')) {
-    if (!m.hasImage('elev-arrow')) m.addImage('elev-arrow', arrowImage(), { pixelRatio: 2 });
+    if (!m.hasImage('elev-arrow2')) m.addImage('elev-arrow2', arrowImage(), { pixelRatio: 2 });
     m.addSource('elev-arrows', { type: 'geojson', data: EMPTY });
     ARROW_ZOOM.forEach((z, lvl) => m.addLayer({ id: `elev-arrows-${lvl}`, type: 'symbol', source: 'elev-arrows', minzoom: z, filter: ['==', ['get', 'lvl'], lvl],
-      layout: { 'icon-image': 'elev-arrow', 'icon-rotate': ['get', 'b'], 'icon-rotation-alignment': 'map', 'icon-allow-overlap': true, 'icon-ignore-placement': true,
-        // Steeper slopes, bigger arrows.
-        'icon-size': ['interpolate', ['linear'], ['get', 's'], 1, 0.45, 4, 0.7, 10, 0.95] },
-      paint: { 'icon-opacity': ['*', 0.9, ['get', 'a']] } }, below()));
+      layout: { 'icon-image': 'elev-arrow2', 'icon-anchor': 'bottom', 'icon-rotate': ['get', 'b'], 'icon-rotation-alignment': 'map',
+        'icon-allow-overlap': true, 'icon-ignore-placement': true, 'icon-size': ['interpolate', ['linear'], ['zoom'], 16, 0.7, 19, 1] },
+      paint: { 'icon-opacity': ['*', 0.95, ['get', 'a']] } }, below()));
   }
   m.getSource('elev-contours').setData(gj ? clipContours(gj, area, elevPrefs.contourYd) : EMPTY);
-  m.getSource('elev-arrows').setData(arrows ? clipArrows(arrows, area) : EMPTY);
+  m.getSource('elev-arrows').setData(gj ? contourArrows(gj, area, elevPrefs.contourYd) : EMPTY);
 }
