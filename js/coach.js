@@ -421,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.73.5', ['Course lines are now off by default on the hole map. Turn them on under View \u2192 Course lines view; if you already switched them on or off, that choice is kept']],
   ['0.73.4', ['The menu on the hole screen now shows the name of the course you\u2019re playing or viewing, above the tees']],
   ['0.73.3', ['Sherrill Park Golf Course #2: bunkers, ponds and trees are now taken from the satellite picture (the yardage book had water and bunkers that aren’t there and missed others). Greens, fairways and tee boxes still come from the book']],
   ['0.73.2', ['Sherrill Park\u2019s two courses are now called Sherrill Park Golf Course #1 and #2']],
