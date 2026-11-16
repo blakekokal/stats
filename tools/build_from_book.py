@@ -86,10 +86,20 @@ for n in ids:
         best = max(offs, key=lambda o: sum(abs(o - q) < 1 for q in offs)); sup = [q for q in offs if abs(q - best) < 1]
         if len(sup) < 3: continue  # one shape alike on two pages can be chance
         r_ = np.zeros(len(ids)); r_[ids.index(m_)] = len(sup); r_[ids.index(n)] = -len(sup); rows.append(r_); rhs.append(sum(sup)); links += 1
+# A page that shares no shapes with the rest (a par 3 off on its own) is placed by its green in the imagery.
+joined, grow = {ids[0]}, True
+while grow:
+    grow = False
+    for r_ in rows:
+        a_, b_ = ids[list(r_).index(min(r_))], ids[list(r_).index(max(r_))]
+        if (a_ in joined) != (b_ in joined): joined |= {a_, b_}; grow = True
+alone = [n for n in ids if n not in joined]
+if alone: print('pages placed by their green, sharing no shapes with the rest:', alone)
 r_ = np.zeros(len(ids)); r_[0] = 100; rows.append(r_); rhs.append(0)
+for n in alone: r_ = np.zeros(len(ids)); r_[ids.index(n)] = 1; rows.append(r_); rhs.append(0)
 sol = np.linalg.lstsq(np.array(rows), np.array(rhs), rcond=None)[0]
 plan = {n: sol[i] for i, n in enumerate(ids)}  # each pin on the book's plan, yards east + north (as a complex number)
-worst = max(abs(plan[m_] - plan[n] - o / w) for (n, m_), o, w in [((ids[list(r_).index(-max(r_))], ids[list(r_).index(max(r_))]), q, max(r_)) for r_, q in zip(rows[:-1], rhs[:-1])])
+worst = max(abs(plan[m_] - plan[n] - o / w) for (n, m_), o, w in [((ids[list(r_).index(-max(r_))], ids[list(r_).index(max(r_))]), q, max(r_)) for r_, q in zip(rows[:links], rhs[:links])])
 print(links, 'pairs of pages share shapes; they agree to %.2f yd' % worst)
 assert worst < 1, 'the pages do not make one map'
 
@@ -98,9 +108,12 @@ assert worst < 1, 'the pages do not make one map'
 # trees on dark ground.
 img_of = lambda z: complex(z.real, -z.imag) * YP  # plan yards -> image px offset (image y points south)
 Gp = {n: complex(*px(*g)) for n, g in C.GREENS.items()}
-pm = sum(img_of(plan[n]) for n in ids) / len(ids); gm = sum(Gp.values()) / len(ids)
-K = sum((Gp[n] - gm) * (img_of(plan[n]) - pm).conjugate() for n in ids) / sum(abs(img_of(plan[n]) - pm) ** 2 for n in ids)
+J = [n for n in ids if n not in alone]
+pm = sum(img_of(plan[n]) for n in J) / len(J); gm = sum(Gp[n] for n in J) / len(J)
+K = sum((Gp[n] - gm) * (img_of(plan[n]) - pm).conjugate() for n in J) / sum(abs(img_of(plan[n]) - pm) ** 2 for n in J)
 T = gm - K * pm
+for n in alone:  # its pin on the plan where its green is in the imagery
+    z = (Gp[n] - T) / K / YP; plan[n] = complex(z.real, -z.imag)
 print('from the greens: scale %.4f, turn %.2f deg; greens %.1f m apart at most' % (abs(K), math.degrees(math.atan2(K.imag, K.real)), max(abs(T + K * img_of(plan[n]) - Gp[n]) for n in ids) * M))
 pts = {'bunker': [], 'dark': []}  # sample points inside shapes, on the plan
 for n, h in B.items():
