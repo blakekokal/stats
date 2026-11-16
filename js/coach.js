@@ -426,6 +426,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.78.0', ['New course: Tour 18 Golf Course Dallas (Flower Mound), built from its yardage book: greens, fairways, bunkers, water, tee boxes and hole lines, lined up on the satellite picture, with every bunker checked against the sand in the picture; trees from the picture as circles. No out-of-bounds line yet: draw it in the hole editor (Draw new boundary \u2192 Course boundary)']],
   ['0.77.0', ['New course: Grapevine Golf Course \u2013 Bluebonnet (the first of its three nines), built from its yardage book. Nine-hole courses start a 9-hole round (no 18-hole option); ratings and slopes to come from the club']],
   ['0.76.2', ['Fewer trees to edit: where 2\u20135 small trees stood together, one bigger tree now covers the same spot (Sherrill Park #1 and #2, Bear Creek West, Bridlewood). Your published edits are kept']],
   ['0.76.1', ['Bridlewood: trees added from the satellite picture as circles (a few big ones in each wood, one per lone tree), inside the course boundary only and off greens, fairways, tees, bunkers and water. Nothing else changed']],
