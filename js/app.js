@@ -55,8 +55,8 @@ export function satellite(map) {
 // the hole screen, otherwise the last one picked (New Round, Scouting, History).
 export const COURSES = [
   { id: 'bridlewood', name: 'Bridlewood Golf Club', file: 'data/bridlewood.json' },
-  { id: 'bearcreek-west', name: 'Bear Creek Golf Club – West', file: 'data/bearcreek-west.json' },
-  { id: 'bearcreek-east', name: 'Bear Creek Golf Club – East', file: 'data/bearcreek-east.json' },
+  { id: 'bearcreek-west', name: 'Bear Creek Golf Club – West', file: 'data/bearcreek-west.json', shares: 'bearcreek-east' },
+  { id: 'bearcreek-east', name: 'Bear Creek Golf Club – East', file: 'data/bearcreek-east.json', shares: 'bearcreek-west' },
   { id: 'cowboys', name: 'Cowboys Golf Club', file: 'data/cowboys.json' },
   { id: 'tangleridge', name: 'Tangle Ridge Golf Club', file: 'data/tangleridge.json' },
   { id: 'squawcreek', name: 'Squaw Creek Golf Course', file: 'data/squawcreek.json' },
@@ -125,6 +125,13 @@ export async function loadCourse(onHole = false) {
   return course;
 }
 export const originalFeatures = () => base[course.id].features;
+// Every hole a tee box, fairway or green could belong to: this course's, plus
+// those of a course sharing its outlines (Bear Creek West and East are one map),
+// so a box is never given to this course when it's nearer the other one's hole.
+export function complexHoles() {
+  const other = COURSES.find(c => c.id === course.id)?.shares;
+  return other && base[other] ? [...course.holes, ...base[other].holes] : course.holes;
+}
 
 // An admin saving outline edits: kept on this device and published for
 // everyone. Returns what happened, to show the admin.
