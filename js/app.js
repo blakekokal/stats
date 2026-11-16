@@ -98,8 +98,12 @@ export function courseById(id) {
   const b = base[id] || base[DEFAULT_COURSE];
   const pub = published[b.id];
   const mine = isAdmin ? store.get('course:' + b.id) : null;
-  const edited = mine && (!pub || (mine.savedAt || 0) > pub.updated) ? mine : pub;
+  let edited = mine && (!pub || (mine.savedAt || 0) > pub.updated) ? mine : pub;
   if (!edited) return b;
+  // v0.68.1 turned every recovery area into trees. Outlines published or saved
+  // before then still say recovery, so they're read as trees; recovery areas
+  // drawn since are kept.
+  if ((edited.savedAt || edited.updated || 0) < 1794796407039) edited = { ...edited, features: edited.features.map(f => (f.t === 'recovery' ? { ...f, t: 'trees' } : f)) };
   if (edited.ob) return { ...b, features: dropOldCutouts(edited.features, b.dropObRings) };
   return { ...b, features: [...edited.features.filter(f => f.t !== 'ob'), ...b.features.filter(f => f.t === 'ob')] };
 }
