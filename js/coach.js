@@ -421,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.68.0', ['Trees: a new boundary type to draw on a course (Edit boundaries). Auto keeps its targets clear of trees, won\u2019t pick a line that has to climb over trees close in front of the ball, and avoids leaving trees between your ball and the hole']],
   ['0.67.2', ['GPS: the \ud83d\udccd Shot button now sits just below the GPS button; the yardage to the hole stays at the top. Home: removed the NEW! tag from Practice and Learning']],
   ['0.67.1', ['View menu: switching Clean view on or off no longer moves the menu while it\u2019s open. Tapping the map or any other button closes the menu']],
   ['0.67.0', ['One Back button: every page now has a single Back button in the top left that takes you to wherever you were before. The Back button at the bottom of the screen and the extra \u201c\u2190 Strokes gained\u201d, \u201c\u2190 All rounds\u201d and step-back arrows are gone; the top-left button does their job']],

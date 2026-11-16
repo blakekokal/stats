@@ -137,7 +137,7 @@ function holeFeatures(ch, features = course.features) {
   const green = ownGreen(ch, features);
   return features.filter(f => {
     if (f.t === 'ob') return obLines(f).some(r => r.some(p => distToLine(p, ch.line) <= 150));
-    if (f.t === 'bunker' || f.t === 'water' || f.t === 'recovery') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
+    if (f.t === 'bunker' || f.t === 'water' || f.t === 'recovery' || f.t === 'trees') return f.p[0].some(p => distToLine(p, ch.line) <= 70);
     if (f.h != null) return f.h === ch.n; // tied to a hole in the boundary editor
     if (f.t === 'green') return f === green; // not a neighbour's or a practice green
     const c = centre(f.p[0]);
@@ -735,7 +735,9 @@ export function renderHole(view, n) {
   // Auto: finds the best club and aiming point for the next shot. Every club
   // (with a yardage) is tried along lines up to 35° either side of the pin, each
   // scored by the average SG of 20 shots in its dispersion, keeping the dots clear
-  // of hazards where it can (15 yd from OB, 10 from water, 5 from bunkers); the best is picked,
+  // of hazards where it can (15 yd from OB, 10 from water, 5 from bunkers and trees). Trees
+  // also block: a line that has to climb over trees close in front of the ball, or that
+  // leaves trees close between the ball and the hole, is marked down. The best is picked,
   // the crosshair moves to it and Disp shows its spread. Clubs that would fly
   // well past the pin are skipped. While Comp is on, Auto instead swings each
   // compared club onto its own best line (the crosshair stays where it is).
@@ -752,10 +754,10 @@ export function renderHole(view, n) {
     const main = bearing(from, pin), k = Math.cos((from[0] * Math.PI) / 180);
     // Hazards (water, OB, bunkers) and how close a dot is to one, in metres.
     // Clearance wanted from each kind of hazard (yd -> m), and what a dot inside it costs.
-    const CUSHION = { ob: 15 / YD_PER_M, water: 10 / YD_PER_M, bunker: 5 / YD_PER_M };
-    const COST = { ob: 1.2, water: 0.8, bunker: 0.4 };
+    const CUSHION = { ob: 15 / YD_PER_M, water: 10 / YD_PER_M, bunker: 5 / YD_PER_M, trees: 5 / YD_PER_M };
+    const COST = { ob: 1.2, water: 0.8, bunker: 0.4, trees: 0.5 };
     const padDeg = CUSHION.ob / M_PER_DEG * 1.5;
-    const hz = feats.filter(f => f.t === 'water' || f.t === 'ob' || f.t === 'bunker');
+    const hz = feats.filter(f => f.t === 'water' || f.t === 'ob' || f.t === 'bunker' || f.t === 'trees');
     const segDist = (q, a, b) => {
       const ax = (a[1] - q[1]) * k * M_PER_DEG, ay = (a[0] - q[0]) * M_PER_DEG, bx = (b[1] - q[1]) * k * M_PER_DEG, by = (b[0] - q[0]) * M_PER_DEG;
       const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy, t = l2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)) : 0;
@@ -768,6 +770,26 @@ export function renderHole(view, n) {
       const near = inPolygon(q, f.p) || f.p.some(r => r.some((a, i) => i && segDist(q, r[i - 1], a) < CUSHION[f.t]));
       return near ? COST[f.t] : worst;
     }, 0);
+    // Trees in the way. A ball can't climb over trees that are close in front of
+    // it, so a shot from a to b is blocked when trees cross the first part of its
+    // line: the first 30% of the shot, at least 20 yd and at most 70 (a wedge gets
+    // up quicker than a driver). Trees further down the line are flown over.
+    const trees = feats.filter(f => f.t === 'trees');
+    const cross = (a, b, c, d) => { // segments a-b and c-d intersect
+      const o = (p, q, r) => (q[1] - p[1]) * (r[0] - p[0]) - (q[0] - p[0]) * (r[1] - p[1]);
+      return o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0;
+    };
+    const blocked = (a, b) => {
+      if (!trees.length) return false;
+      const yd = yards(a, b), t = yd ? Math.min(1, Math.max(20, Math.min(70, yd * 0.3)) / yd) : 0;
+      const e = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+      const s = Math.min(a[0], e[0]), n = Math.max(a[0], e[0]), w = Math.min(a[1], e[1]), x = Math.max(a[1], e[1]);
+      return trees.some(f => !(n < f.box[0][0] || s > f.box[1][0] || x < f.box[0][1] || w > f.box[1][1])
+        && (inPolygon(e, f.p) || f.p[0].some((p, i) => cross(a, e, p, f.p[0][(i + 1) % f.p[0].length]))));
+    };
+    // What trees cost a dot: 1 when the shot to it can't get over them, and 0.5
+    // when it leaves trees close between the ball and the hole (a punch-out next).
+    const treeCost = q => (blocked(from, q) ? 1 : 0) + (yards(q, pin) > 15 && blocked(q, pin) ? 0.5 : 0);
     const results = [];
     for (const c of only ? only.map(name => ({ name })) : bag()) {
       const yd = compYards(c.name);
@@ -780,7 +802,7 @@ export function renderHole(view, n) {
         const d = dispersion(from, aim, w, fromExp, lieHere);
         // Keep every dot 5 yd clear of hazards: each one closer costs the line, so
         // the pick skews away from them. A tiny nudge favours straighter lines on ties.
-        const close = d.dots.reduce((t, x) => t + hazardCost(x.q), 0);
+        const close = d.dots.reduce((t, x) => t + hazardCost(x.q) + treeCost(x.q), 0);
         const score = d.sg - close / d.dots.length - Math.abs(off) * 0.0005;
         if (!best || score > best.score) best = { club: c.name, yd, aim, off, brg: main + off, sg: d.sg, score, close };
       }

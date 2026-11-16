@@ -16,7 +16,7 @@ import { renderCoaching, closeCoaching } from './coaching/index.js';
 const L = window.L;
 const view = document.getElementById('view');
 export const TILE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
-export const LIE_COLOR = { tee: '#f4f4f0', fairway: '#8fd14f', rough: '#4d7c3a', bunker: '#f2d58a', recovery: '#b98b5e', green: '#3ee08f', water: '#4aa8ff', ob: '#ffffff' };
+export const LIE_COLOR = { tee: '#f4f4f0', fairway: '#8fd14f', rough: '#4d7c3a', bunker: '#f2d58a', recovery: '#b98b5e', green: '#3ee08f', water: '#4aa8ff', ob: '#ffffff', trees: '#00c2a8' };
 
 // ---------- helpers ----------
 

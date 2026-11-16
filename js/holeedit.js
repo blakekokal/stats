@@ -17,8 +17,8 @@ import { h, course, toast, LIE_COLOR, along, boxCentre, teeBoxFor, saveCourseEdi
 import { inPolygon } from './geo.js';
 
 const maplibregl = window.maplibregl;
-export const EDIT_TYPES = ['fairway', 'rough', 'bunker', 'water', 'recovery', 'tee', 'green', 'ob'];
-export const EDIT_LABEL = { fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', water: 'Water', recovery: 'Recovery', tee: 'Tee box', green: 'Green', ob: 'OB' };
+export const EDIT_TYPES = ['fairway', 'rough', 'bunker', 'water', 'recovery', 'trees', 'tee', 'green', 'ob'];
+export const EDIT_LABEL = { fairway: 'Fairway', rough: 'Rough', bunker: 'Bunker', water: 'Water', recovery: 'Recovery', trees: 'Trees', tee: 'Tee box', green: 'Green', ob: 'OB' };
 // The usual rough colour is too dark to see on the imagery. (A function: app.js
 // imports this module before LIE_COLOR exists.)
 const color = t => (t === 'rough' ? '#7dbb4a' : LIE_COLOR[t] || '#fff');
