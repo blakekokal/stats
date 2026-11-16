@@ -347,10 +347,11 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .clubbox .ydmode button { min-height: 28px; padding: 0 16px; border: 0; border-radius: 999px; background: transparent; color: #fff; font-size: 13px; font-weight: 700; }
 .ydmode button.on { background: #fff !important; color: #111 !important; }
 .coursesearch, .cx .coursesearch { flex: 0 0 48px; width: 48px; max-width: 48px; min-height: 0; padding: 0; border: 1px solid #3d3d3d; border-radius: 10px; background: #222; font-size: 18px; }
-.courseresults { display: grid; gap: 4px; }
+/* A dropdown under the course box: about four courses tall (the cut-off fifth shows it scrolls). */
+.courseresults { position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 10; max-height: 190px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; background: #1e1e1e; border: 1px solid #333; border-radius: 10px; box-shadow: 0 8px 24px #000a; }
 .courseresults[hidden] { display: none; }
-.courseresults button, .cx .courseresults button { max-width: none; width: 100%; height: auto; min-height: 40px; padding: 8px 12px; border: 1px solid #333; border-radius: 10px; background: #1e1e1e; color: #fff; text-align: left; font-size: 14px; font-weight: 600; }
-.courseresults button.on, .cx .courseresults button.on { border-color: #007a52; }
+.courseresults button, .cx .courseresults button { max-width: none; width: 100%; height: auto; min-height: 42px; padding: 8px 12px; border: 0; border-bottom: 1px solid #2c2c2c; border-radius: 0; background: transparent; display: block; color: #fff; text-align: left; font-size: 14px; font-weight: 600; }
+.courseresults button.on, .cx .courseresults button.on { background: #007a5233; }
 .courseresults .none { color: #606060; font-size: 13px; text-align: center; padding: 6px; }
 
 /* boundary editor on the hole map (GPS Scouting) */
