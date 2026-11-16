@@ -452,6 +452,23 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   }
   const onMoveEnd = () => { if (sel || mode === 'draw') drawHandles(); };
   m.on('click', onClick);
+  // Delete or Backspace on a keyboard: the selected corner (if the shape keeps
+  // three), else the selected boundary; while drawing, the last corner placed.
+  function onKey(e) {
+    if (e.key !== 'Delete' && e.key !== 'Backspace') return;
+    if (e.target.closest?.('input, textarea, select, [contenteditable]')) return;
+    if (mode === 'draw') { if (draft?.length) { e.preventDefault(); draft.pop(); refresh(); } return; }
+    if (mode !== 'pick' || !sel) return;
+    e.preventDefault();
+    if (selVtx && !isCutout(sel, selVtx)) {
+      const [ri, vi] = selVtx;
+      if (open(sel.p[ri]).length <= 3) { toast('A shape needs at least three corners.'); return; }
+      push(); setRing(ri, r => r.filter((_, k) => k !== vi)); selVtx = null; refresh();
+      return;
+    }
+    push(); work = work.filter(f => f !== sel); scoped.delete(sel); sel = null; selVtx = null; section = null; dirty = true; refresh();
+  }
+  document.addEventListener('keydown', onKey);
   m.on('moveend', onMoveEnd);
 
   // ---------- save / leave ----------
@@ -459,6 +476,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     clearHandles();
     teeLabels.forEach(mk => mk.remove()); teeLabels = [];
     m.off('click', onClick); m.off('moveend', onMoveEnd);
+    document.removeEventListener('keydown', onKey);
     ['bedit-draft', 'bedit-line', 'bedit-fill'].forEach(id => m.getLayer(id) && m.removeLayer(id));
     ['bedit', 'bedit-draft'].forEach(id => m.getSource(id) && m.removeSource(id));
     hidden.forEach((id, i) => m.getLayer(id) && m.setLayoutProperty(id, 'visibility', wasVisible[i] || 'visible'));
