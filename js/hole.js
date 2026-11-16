@@ -18,6 +18,7 @@ import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js
 import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
 import { liveLink, isLiveOn, setLiveOn, liveStatus, onLiveStatus, loadWatch, watchHole, shareCurrent } from './live.js';
 import { openBoundaryEditor, resumeEditAt, editFeatures } from './holeedit.js';
+import { elevIndex, elevPrefs, drawElevation, CONTOUR_FT, SHADE } from './elev.js';
 
 const maplibregl = window.maplibregl;
 const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR', ob: 'OB', recovery: 'REC' };
@@ -867,9 +868,29 @@ export function renderHole(view, n) {
   const sgtRow = viewSwitch('SG map view', () => showSgt, setSgt, 'From the tee only');
   const linesRow = viewSwitch('Course lines view', () => showOutlines, setOutlines);
   const cleanRow = viewSwitch('Clean view', () => cleanView, setClean);
-  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), sgtRow, linesRow, cleanRow);
-  const drawViewBox = () => { sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync(); };
-  const viewBtn = h('button', { class: 'fab cleanview', 'aria-label': 'View', title: 'SG map, course lines and clean view',
+  // Elevation (courses built with tools/elevation.py): hillshade and contour
+  // lines, each with a row of choices (shading strength, contour interval).
+  let styleReady = false; // the map's load event has run (sources can be added)
+  const redrawElev = () => { if (styleReady) drawElevation(m, course.id); };
+  const elevChips = (opts, get, set) => {
+    const row = h('div', { class: 'viewchips' });
+    row.sync = () => row.replaceChildren(...opts.map(([label, v]) => h('button', { class: get() === v ? 'on' : '',
+      onclick: () => { set(v); redrawElev(); row.sync(); } }, label)));
+    return row;
+  };
+  const shadeChips = elevChips(Object.keys(SHADE).map(k => [k, k]), () => elevPrefs.shadeStr, v => { elevPrefs.shadeStr = v; });
+  const contourChips = elevChips(CONTOUR_FT.map(f => [`${f} ft`, f]), () => elevPrefs.contourFt, v => { elevPrefs.contourFt = v; });
+  const shadeRow = viewSwitch('Hillshade', () => elevPrefs.shade, v => { elevPrefs.shade = v; redrawElev(); drawViewBox(); });
+  const contourRow = viewSwitch('Contour lines', () => elevPrefs.contours, v => { elevPrefs.contours = v; redrawElev(); drawViewBox(); });
+  const elevBox = h('div', { class: 'viewelev', hidden: true }, shadeRow, shadeChips, contourRow, contourChips);
+  elevIndex().then(ix => { elevBox.hidden = !ix[course.id]; });
+  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), sgtRow, linesRow, cleanRow, elevBox);
+  const drawViewBox = () => {
+    sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync();
+    shadeRow.sync(); contourRow.sync(); shadeChips.sync(); contourChips.sync();
+    shadeChips.hidden = !elevPrefs.shade; contourChips.hidden = !elevPrefs.contours;
+  };
+  const viewBtn = h('button', { class: 'fab cleanview', 'aria-label': 'View', title: 'SG map, course lines, clean view and elevation',
     onclick: () => { menu.hidden = true; viewBox.hidden = !viewBox.hidden; placeView(); drawViewBox(); } }, h('span', {}, '◉'), h('small', {}, 'View'));
   // A tap anywhere else (the map or another button) closes the View box; the tap still does its own job.
   const viewAway = e => {
@@ -2216,6 +2237,7 @@ export function renderHole(view, n) {
     m.addSource('sgt', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     m.addLayer({ id: 'sgt-shadow', type: 'line', source: 'sgt', paint: { 'line-color': '#000', 'line-width': 4.5, 'line-opacity': 0.35 } });
     m.addLayer({ id: 'sgt', type: 'line', source: 'sgt', paint: { 'line-color': ['get', 'color'], 'line-width': 2.5, 'line-dasharray': [2, 1.2] } });
+    styleReady = true; redrawElev();
     if (keepCam) m.jumpTo(keepCam);
     else if (stage() !== 'play' && !viewing()) zoomToGreen();
     update();
