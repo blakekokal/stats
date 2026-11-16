@@ -42,7 +42,7 @@ of each green in the imagery); see `tools/sherrillpark2` as the model.
   the owner is drawing those.
 - No trees in OB: don't draw trees outside the course boundary.
 - To redo only a course's trees (from the imagery, as circles, nothing else
-  changed): .
+  changed): `tools/trees_from_imagery.py`.
 - Scorecard (tees, ratings, pars, handicaps) still comes from the club.
 - Check by eye on an overlay and in the app (GPS Overview), and commit the
   book PDF next to the scripts so the course can be rebuilt. The build takes
