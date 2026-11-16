@@ -421,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.75.2', ['Bear Creek West: trees are now taken from the satellite picture as circles (a few big ones in each wood, one per lone tree), kept out of OB and off greens, fairways, tees, bunkers and water. Nothing else changed']],
   ['0.75.1', ['Sherrill Park #1: trees are now circles too – a few big ones in each wood, one per lone tree – so each can be moved, resized or deleted on its own']],
   ['0.75.0', ['Hole boundary editor: new Course boundary type under Draw new boundary. Trace the outer edge of the course and everything outside it counts as OB (it replaces any course boundary already there)']],
   ['0.74.3', ['Hole boundary editor: adding trees is now part of Draw new boundary \u2013 pick Trees and each tap drops a round tree (size with \u2212 and +); the separate Add trees button is gone']],
