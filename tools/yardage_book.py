@@ -119,8 +119,8 @@ def hole_page(page):
     return {'scale': s, 'north': (nx, ny), 'shapes': shapes, 'path': sorted(path, key=lambda g: -math.hypot(*g))}
 
 def read(path):
-    doc = pymupdf.open(path)
-    return {n: hole_page(doc[4 + 2 * (n - 1)]) for n in range(1, 19)}
+    doc = pymupdf.open(path)  # 18 holes, or 9 for a nine-hole book
+    return {n: hole_page(doc[4 + 2 * (n - 1)]) for n in range(1, (len(doc) - 3) // 2 + 1)}
 
 if __name__ == '__main__':
     from collections import Counter

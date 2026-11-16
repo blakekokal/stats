@@ -44,7 +44,7 @@ export function renderSettings(view) {
     h('h1', {}, 'Settings'),
 
     h('div', { class: 'card' }, h('h3', {}, 'Offline imagery'),
-      h('p', { class: 'muted' }, 'Save the satellite images for all 18 holes on this device so the map works with no signal on the course. Needs the installed (https) version of the app.'),
+      h('p', { class: 'muted' }, 'Save the satellite images for every hole on this device so the map works with no signal on the course. Needs the installed (https) version of the app.'),
       h('button', { onclick: e => saveImagery(e.target) }, 'Save imagery for offline'), progress),
 
     h('div', { class: 'card' }, h('h3', {}, 'Backup'),
