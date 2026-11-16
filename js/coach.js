@@ -421,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.71.1', ['Sherrill Park Course 2 redrawn from its yardage book: tee boxes are where the book marks them, hole lines follow the doglegs, and fairways are fewer, simpler shapes that start past the tees. Its trees are gone, to be drawn by hand']],
   ['0.71.0', ['New course: Sherrill Park Golf Course \u2013 Course 1 (Richardson). Yardages, pars and handicaps are from the club\u2019s scorecard; fairways, greens, bunkers, ponds and trees were traced from the satellite imagery, so check the outlines and tee spots on your first round']],
   ['0.70.0', ['New course: Sherrill Park Golf Course \u2013 Course 2 (Richardson). Yardages, pars and handicaps are from the club\u2019s scorecard; fairways, greens, bunkers, ponds and trees were traced from the satellite imagery, so check the outlines and tee spots on your first round']],
   ['0.69.2', ['Trees: a ball in the trees now counts as a recovery lie for strokes gained, not rough']],

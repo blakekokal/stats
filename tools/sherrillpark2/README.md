@@ -1,17 +1,23 @@
 # Sherrill Park Golf Course – Course 2 (Richardson, TX)
 
-Traced from Esri World Imagery; OpenStreetMap has only the club's boundary.
-Course 2 is the eighteen south of East Lookout Drive (Course 1 is to the north).
+OpenStreetMap has only the club's boundary. Course 2 is the eighteen south of
+East Lookout Drive (Course 1 is to the north).
 
-1. `python3 ../fetch_tiles.py 18 32.9775 -96.6960 32.9967 -96.6832 m18.png` — the imagery (both courses).
-2. `python3 build.py ../../data/sherrillpark2.json [check.png]` — the course file, and a picture to check it by eye.
+1. `python3 ../fetch_tiles.py 18 32.9775 -96.6960 32.9967 -96.6832 m18.png` — the Esri imagery (both courses).
+2. `python3 parse_book.py book.pdf` — reads the yardage book (a Shot Pattern PDF; hole n is page 3+2n)
+   into `book.json`: each hole's green point, every marked tee, the scale and the north arrow, in page points.
+3. `mkdir book && pdfimages -png book.pdf book/im` — the book's own picture of each hole.
+4. `python3 build.py ../../data/sherrillpark2.json [check.png]` — the course file, and a picture to check it by eye.
 
-`holes.py` holds what was worked out by eye: each hole's line (back tee, bends,
-green) in zoom-18 mosaic pixels, and the club's scorecard
-(sherrillparkgolf.com/scorecard). The hole numbers come from a GPS app's routing
-map; the traced lines come out within a few yards of the card on most holes.
-Greens are the brightest, smoothest turf at the end of each line; fairways are
-the turf within 19 m of a line; ponds are dark and flat (tree shadow is dark but
-never flat); trees are split by nearest hole. Each tee set's box sits on the
-hole's first leg at its scorecard yardage, but never more than 15 yards behind
-the traced tee.
+What comes from where:
+
+- **Tees**: a 10 m x 7 m box at every tee the book marks, lying along the hole. The book's page is
+  turned by its north arrow and scaled by its yardage, with its green point on the middle of the
+  green traced from the imagery; the tees land on the tee pads in the imagery.
+- **Hole lines**: tee to green, with one bend on a dogleg (where the book's distance is more than
+  6 yards longer than straight), placed in the middle of the pictured strip so the line is as long as the book says.
+- **Fairways**: the green winter turf in the book's pictures, within 27 m of the hole's line,
+  25 yards past the last tee and 13 m short of the green; at most three pieces a hole, none on par 3s.
+- **Greens, ponds, bunkers**: from the Esri imagery. `holes.py` has a point on each green
+  (numbered from a GPS app's routing map), the club's scorecard and the pale ground that is not sand.
+- No trees: they are drawn in the app.
