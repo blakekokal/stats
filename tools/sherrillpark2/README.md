@@ -7,6 +7,10 @@ in `tools/`. Course 2 is the eighteen south of East Lookout Drive.
 1. `python3 ../fetch_tiles.py 19 32.9778 -96.6925 32.9859 -96.6833 m19.png` — the zoom-19 imagery the app shows.
 2. From `tools/`: `python3 build_from_book.py sherrillpark2 sherrillpark2/yardage-book.pdf sherrillpark2/m19.png ../data/sherrillpark2.json [check.png]`
    (needs `pymupdf` and `opencv-python`; takes about 7 minutes).
+3. `python3 hazards_from_imagery.py ../data/sherrillpark2.json sherrillpark2/m19.png ../data/sherrillpark2.json [check.png]`
+   — this book's bunkers and ponds are wrong (water and sand where there is none,
+   bunkers missing), so bunkers, ponds and trees come from the imagery instead;
+   greens, fairways, tee boxes and hole lines stay from the book.
 
 How it lines up: a bunker or pond drawn on two pages is the same shape, so the
 18 pages join into one plan of the course (they agree to 0.07 yd). That plan is
