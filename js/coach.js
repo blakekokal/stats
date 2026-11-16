@@ -421,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.75.0', ['Hole boundary editor: new Course boundary type under Draw new boundary. Trace the outer edge of the course and everything outside it counts as OB (it replaces any course boundary already there)']],
   ['0.74.3', ['Hole boundary editor: adding trees is now part of Draw new boundary \u2013 pick Trees and each tap drops a round tree (size with \u2212 and +); the separate Add trees button is gone']],
   ['0.74.2', ['Sherrill Park #2: fewer, bigger trees – a wood is now a few big circles instead of dozens of little ones (about 620 trees in all, down from 2,400). Your published edits are kept']],
   ['0.74.1', ['Hole boundary editor on a computer: Delete (or Backspace) removes the selected boundary, or the selected corner; while drawing, it removes the last corner placed']],
