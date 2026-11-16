@@ -3,6 +3,7 @@
 # circles(mask, M) packs circles into a tree mask (M: metres per pixel), biggest
 # first: each goes where the trees are thickest, 4-14 m across the middle, spaced
 # out so a wood is a few big trees (it needn't be exact); a lone tree gets one.
+# Then 2-5 small trees close together become one bigger tree (merge_small).
 #   python3 tree_circles.py course.json m19.png out.json   # a course file's trees, as circles
 import json, math, sys
 import cv2, numpy as np
@@ -29,7 +30,31 @@ def circles(mask, M):
             out.append((x + cx - P + 0.5, y + cy - P + 0.5, min(max(r, MIN_R / M), MAX_R / M)))
             cv2.circle(sub, (cx, cy), int(math.ceil(r * SPACING)), 0, -1)
             first = False
-    return out  # (x, y, radius) in pixels
+    return merge_small(out, M)  # (x, y, radius) in pixels
+
+SMALL, GAP, GROUP, BIG = 6.0, 2.0, 5, 12.0  # metres; up to GROUP circles
+
+def merge_small(cs, M=1.0):
+    """2-5 small trees close together become one bigger tree over the same area:
+    fewer circles to edit. cs: (x, y, r) in pixels (M metres per pixel). A group
+    only merges if the circle round it stays under BIG metres across the middle."""
+    cs = list(cs); small = [i for i, c in enumerate(cs) if c[2] * M <= SMALL]
+    near = {i: [j for j in small if j != i and math.dist(cs[i][:2], cs[j][:2]) * M <= (cs[i][2] + cs[j][2]) * M + GAP] for i in small}
+    def cover(g):  # a circle round the group: from the middle of its area out to the farthest edge
+        w = sum(cs[i][2] ** 2 for i in g); x = sum(cs[i][0] * cs[i][2] ** 2 for i in g) / w; y = sum(cs[i][1] * cs[i][2] ** 2 for i in g) / w
+        return x, y, max(math.dist((x, y), cs[i][:2]) + cs[i][2] for i in g)
+    used, out = set(), []
+    for i in sorted(small, key=lambda i: -cs[i][2]):  # biggest first
+        if i in used: continue
+        g = [i]
+        while len(g) < GROUP:
+            cand = {j for k in g for j in near[k] if j not in used and j not in g}
+            if not cand: break
+            x, y, _ = cover(g); j = min(cand, key=lambda j: math.dist((x, y), cs[j][:2]))
+            if cover(g + [j])[2] * M > BIG: break
+            g.append(j)
+        if len(g) > 1: used.update(g); out.append(cover(g))
+    return out + [c for i, c in enumerate(cs) if i not in used]
 
 def ring(x, y, r):  # a circle as a closed ring of pixel points
     return [(x + r * math.cos(2 * math.pi * k / SIDES), y + r * math.sin(2 * math.pi * k / SIDES)) for k in range(SIDES)]
