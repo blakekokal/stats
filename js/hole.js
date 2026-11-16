@@ -182,7 +182,7 @@ export function renderHole(view, n) {
   let showWidth = flag('gs:fairwayWidth', '0');
   let showArc = flag('gs:arc', '0');
   let arcYd = Math.min(80, Math.max(10, +localStorage.getItem('gs:arcYd') || 40));
-  let showOutlines = !watching && flag('gs:outlines', '0'); // off until switched on; never when watching a live round
+  let showOutlines = !watching && flag('gs:lines', '0'); // off until switched on; never when watching a live round (a new key: everyone started off again in 0.73.6)
   // Strokes-gained baseline: the round's "compare to" choice (which defaults to
   // the profile's handicap), unless it was changed on this screen this visit.
   const pick = l => (LEVELS.includes(l) ? l : null);
@@ -272,7 +272,7 @@ export function renderHole(view, n) {
   const widthBtn = toggle('width', 'Width', '↔', 'Fairway width at the crosshair', () => showWidth, v => { showWidth = v; localStorage.setItem('gs:fairwayWidth', v ? '1' : '0'); });
   // Course lines (bunker, fairway, water and green outlines): a switch in the View box.
   const setOutlines = v => {
-    showOutlines = v; localStorage.setItem('gs:outlines', v ? '1' : '0');
+    showOutlines = v; localStorage.setItem('gs:lines', v ? '1' : '0'); localStorage.removeItem('gs:outlines');
     if (m.getLayer('outlines')) m.setLayoutProperty('outlines', 'visibility', v ? 'visible' : 'none');
   };
   // Arc turns the arc on or off; while it's on, a small Adj button beside it
