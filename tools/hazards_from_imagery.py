@@ -3,8 +3,10 @@
 # yardage book). Use it when a book's hazards are wrong (Sherrill Park #2's are).
 #   python3 hazards_from_imagery.py ../data/<id>.json m19.png out.json [check.png]
 # Bunkers: bright, pale, warm and roundish (cart paths are long and thin).
-# Ponds: dark and flat, darker than any shade. Only inside the course's outline. Trees: dark or darker than round about, and leafy.
+# Ponds: dark and flat, darker than any shade. Only inside the course's outline.
+# Trees come out as circles (tree_circles.py). Trees: dark or darker than round about, and leafy.
 import json, math, sys, cv2, numpy as np
+import tree_circles
 src, img, out = sys.argv[1:4]
 d = json.load(open(src))
 im = cv2.imread(img); H, W = im.shape[:2]
@@ -72,8 +74,10 @@ def rings(mask, min_m2, eps_m, hole_m2=40):
     return res
 keep = [f for f in d['features'] if f['t'] not in ('bunker', 'water', 'trees')]
 new = []
-for t, mk, mn, eps in (('water', water, 200, 0.6), ('trees', can, 6, 0.5), ('bunker', bunk, 10, 0.25)):
+for t, mk, mn, eps in (('water', water, 200, 0.6), ('bunker', bunk, 10, 0.25)):
     for p in rings(mk, mn, eps): new.append({'t': t, 'p': [[ll(*q) for q in r] + [ll(*r[0])] for r in p]})
+for x, y, r in tree_circles.circles(can, M):  # trees as circles: easier to edit one at a time
+    rg = tree_circles.ring(x, y, r); new.append({'t': 'trees', 'p': [[ll(*q) for q in rg] + [ll(*rg[0])]]})
 d['features'] = keep + new
 d['attribution'] = 'Greens, fairways and tee boxes from the course yardage book; bunkers, ponds and trees from Esri World Imagery'
 json.dump(d, open(out, 'w'), separators=(',', ':'))

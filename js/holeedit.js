@@ -50,7 +50,8 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   let selVtx = null; // [ring, index] of the selected corner
   let drawType = sessionStorage.getItem('gs:drawType') || 'fairway';
   let draft = null; // corners of a boundary being drawn
-  let mode = 'pick'; // pick | draw | cut
+  let mode = 'pick'; // pick | draw | cut | trees (each tap drops a round tree)
+  let treeR = +(sessionStorage.getItem('gs:treeR') || 5); // metres
   let cutA = null; // cut: the first corner tapped, [ring, index]
   // The course-wide OB (a big area with the course cut out of it) isn't split:
   // Cut picks out a stretch of its boundary line instead, to drag as one unit.
@@ -282,6 +283,14 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
           h('button', { onclick: () => { mode = 'pick'; draft = null; refresh(); } }, 'Cancel'),
           h('button', { disabled: !n, onclick: () => { draft.pop(); refresh(); } }, 'Remove point'),
           h('button', { class: 'bgo', disabled: n < 3, onclick: finishDraw }, 'Finish')));
+    } else if (mode === 'trees') {
+      hint.textContent = `\u{1F333} Tap the map to drop a tree, ${treeR * 2} m across. Keep tapping to add more; Undo takes the last one off.`;
+      panel.replaceChildren(hint, h('div', { class: 'brow' },
+        h('span', { class: 'bsize' }, 'Tree size',
+          h('button', { 'aria-label': 'Smaller trees', disabled: treeR <= 2, onclick: () => setTreeR(treeR - 1) }, '\u2212'),
+          h('b', {}, `${treeR * 2} m`),
+          h('button', { 'aria-label': 'Bigger trees', disabled: treeR >= 15, onclick: () => setTreeR(treeR + 1) }, '+')),
+        h('button', { class: 'bgo', onclick: () => { mode = 'pick'; refresh(); } }, 'Done')));
     } else if (mode === 'cut') {
       if (!hint.textContent) hint.textContent = isCourseOb(sel)
         ? (cutA == null ? '\u2702 Tap a corner on the boundary line where the cut starts.' : '\u2702 Now tap the corner where it ends. If the straight line between them runs through OB, the OB beyond it is cut off as its own shape; if it runs across the course, that stretch of line can be dragged instead.')
@@ -314,6 +323,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     } else {
       hint.textContent = 'Tap a boundary to edit it, or draw a new one.';
       panel.replaceChildren(hint, h('div', { class: 'brow' },
+        h('button', { onclick: () => { mode = 'trees'; sel = null; selVtx = null; refresh(); } }, '\u{1F333} Add trees'),
         h('button', { class: 'bgo', onclick: () => { mode = 'draw'; draft = []; sel = null; selVtx = null; refresh(); } }, '✏️ Draw new boundary')),
         h('small', { class: 'muted' }, 'Anything outside every boundary counts as rough.'));
     }
@@ -396,6 +406,17 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     toast(inPolygon(mid, [close(r)]) ? 'Cut in two. Tap either piece to move it.' : 'Cut in two, but the cut line runs outside the shape. Undo if it looks wrong.');
   }
 
+  // Trees: a round tree dropped where tapped, `treeR` metres across the middle.
+  function setTreeR(r) { treeR = r; sessionStorage.setItem('gs:treeR', String(r)); refresh(); }
+  function dropTree(lat, lng) {
+    push();
+    const k = Math.cos((lat * Math.PI) / 180), ring = [];
+    for (let i = 0; i < 10; i++) { const a = (2 * Math.PI * i) / 10; ring.push(round6([lat + (treeR * Math.sin(a)) / 111320, lng + (treeR * Math.cos(a)) / (111320 * k)])); }
+    const f = { t: 'trees', p: [close(ring)] };
+    work = [...work, f]; scoped.add(f); dirty = true;
+    refresh();
+  }
+
   function finishDraw() {
     if (!draft || draft.length < 3) return;
     push();
@@ -421,6 +442,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     if (e.originalEvent?.target?.closest?.('.bvtx, .bmid, .bmove, .bscale') || justDragged()) return;
     if (mode === 'cut') return; // only the corners count while cutting
     if (mode === 'draw') { draft.push([e.lngLat.lat, e.lngLat.lng]); refresh(); return; }
+    if (mode === 'trees') { dropTree(e.lngLat.lat, e.lngLat.lng); return; }
     // The smallest boundary under the tap (a bunker in a fairway, not the fairway).
     const hits = m.queryRenderedFeatures(e.point, { layers: ['bedit-fill'] }).map(x => work[x.properties.k]).filter(Boolean);
     const area = f => { const r = f.p[0]; let a = 0; for (let i = 1; i < r.length; i++) a += r[i - 1][1] * r[i][0] - r[i][1] * r[i - 1][0]; return Math.abs(a); };
@@ -452,6 +474,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   function toHole(k) {
     if (mode === 'draw' && draft && draft.length >= 3) finishDraw();
     if (mode === 'cut') { mode = 'pick'; cutA = null; }
+    if (mode === 'trees') mode = 'pick';
     if (dirty) tagScoped();
     pending = { course: course.id, work, dirty, goto: k };
     teardown();
