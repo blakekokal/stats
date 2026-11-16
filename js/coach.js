@@ -421,6 +421,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.72.0', ['Sherrill Park Golf Course \u2013 Course 1: trees, bunkers, water, fairways, greens and tee boxes are now taken from the course\u2019s yardage book instead of traced by eye from the satellite picture, so they match the course much more closely. Each hole\u2019s line follows the book\u2019s centre line, and every tee box is a real one']],
   ['0.71.0', ['New course: Sherrill Park Golf Course \u2013 Course 1 (Richardson). Yardages, pars and handicaps are from the club\u2019s scorecard; fairways, greens, bunkers, ponds and trees were traced from the satellite imagery, so check the outlines and tee spots on your first round']],
   ['0.70.0', ['New course: Sherrill Park Golf Course \u2013 Course 2 (Richardson). Yardages, pars and handicaps are from the club\u2019s scorecard; fairways, greens, bunkers, ponds and trees were traced from the satellite imagery, so check the outlines and tee spots on your first round']],
   ['0.69.2', ['Trees: a ball in the trees now counts as a recovery lie for strokes gained, not rough']],
