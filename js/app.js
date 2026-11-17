@@ -63,11 +63,20 @@ export const COURSES = [
   { id: 'crosstimbers', name: 'Cross Timbers Golf Course', file: 'data/crosstimbers.json' },
   { id: 'sherrillpark1', name: 'Sherrill Park Golf Course #1', file: 'data/sherrillpark1.json' },
   { id: 'sherrillpark2', name: 'Sherrill Park Golf Course #2', file: 'data/sherrillpark2.json' },
-  { id: 'grapevine-bluebonnet', name: 'Grapevine Golf Course – Bluebonnet', file: 'data/grapevine-bluebonnet.json' },
-  { id: 'grapevine-mockingbird', name: 'Grapevine Golf Course – Mockingbird', file: 'data/grapevine-mockingbird.json' },
+  { id: 'grapevine-bluebonnet', name: 'Grapevine Golf Course – Bluebonnet', file: 'data/grapevine-bluebonnet.json', nines: 'grapevine' },
+  { id: 'grapevine-mockingbird', name: 'Grapevine Golf Course – Mockingbird', file: 'data/grapevine-mockingbird.json', nines: 'grapevine' },
   { id: 'tour18dallas', name: 'Tour 18 Golf Course Dallas', file: 'data/tour18dallas.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
+// Nine-hole courses at one club (the same `nines` tag) can be played together
+// as 18: the course id is the two joined by '+', front nine first (e.g.
+// 'grapevine-bluebonnet+grapevine-mockingbird'). ninesWith(id) lists the other
+// nines a nine can be joined to.
+export const ninesWith = id => {
+  const c = COURSES.find(x => x.id === id);
+  return c?.nines ? COURSES.filter(x => x.nines === c.nines && x.id !== id) : [];
+};
+export const comboId = (front, back) => `${front}+${back}`;
 const base = {}; // id -> the course file as shipped
 export let course = null;
 
@@ -101,6 +110,7 @@ function refreshPublished() {
 // The outlines in use: the published ones, or for an admin, this device's own
 // edits when they're newer (saved but not yet published, say).
 export function courseById(id) {
+  if (typeof id === 'string' && id.includes('+')) return joinedNines(id);
   const b = base[id] || base[DEFAULT_COURSE];
   const pub = published[b.id];
   const mine = isAdmin ? store.get('course:' + b.id) : null;
@@ -116,6 +126,32 @@ export function courseById(id) {
   if (edited.ob) return { ...b, features: dropOldCutouts(edited.features, b.dropObRings) };
   return { ...b, features: [...edited.features.filter(f => f.t !== 'ob'), ...b.features.filter(f => f.t === 'ob')] };
 }
+// Two nines as one 18-hole course: the back nine's holes become 10-18 (and the
+// shapes tied to its holes move with them), each tee box gets both nines'
+// yardages (only tee boxes both nines have), and the 18-hole rating is the two
+// nines' ratings added up, the slope their average. `parts` says which nine a
+// hole is on (for elevation and anything else kept per nine). Shapes are edited
+// on each nine, not here. Only one nine's course-wide OB is kept: two would each
+// put the other nine out of bounds.
+function joinedNines(id) {
+  const [a, b] = id.split('+');
+  if (!base[a] || !base[b]) return courseById(base[a] ? a : b);
+  const f = courseById(a), k = courseById(b);
+  const nameOf = c => COURSES.find(x => x.id === c.id)?.name || c.name;
+  const [fa, ...fr] = nameOf(f).split(' – '), [ka, ...kr] = nameOf(k).split(' – ');
+  const name = fa === ka && fr.length && kr.length ? `${fa} – ${fr.join(' – ')} / ${kr.join(' – ')}` : `${nameOf(f)} / ${nameOf(k)}`;
+  const tees = f.tees.flatMap(t => {
+    const u = k.tees.find(x => x.name === t.name);
+    if (!u) return [];
+    const both = t.rating && u.rating && t.slope && u.slope;
+    return [{ ...t, yards: [...t.yards, ...u.yards], rating: both ? Math.round((t.rating + u.rating) * 10) / 10 : undefined, slope: both ? Math.round((t.slope + u.slope) / 2) : undefined }];
+  });
+  const fOb = f.features.filter(x => x.t === 'ob');
+  const features = [...f.features, ...k.features.filter(x => x.t !== 'ob' || !fOb.length).map(x => (x.h != null ? { ...x, h: x.h + 9 } : x))];
+  return { ...f, id, name, tees, holes: [...f.holes, ...k.holes.map(x => ({ ...x, n: x.n + 9 }))], features, parts: [a, b], builtAt: undefined, dropObRings: undefined };
+}
+// The real course (a nine) hole n of the course in use is on.
+export const partOf = (c, n) => (c.parts ? c.parts[n > 9 ? 1 : 0] : c.id);
 const pickedCourse = () => { try { return localStorage.getItem('gs:course'); } catch { return null; } };
 export function setActiveCourse(id) {
   try { localStorage.setItem('gs:course', id); } catch { /* ignore */ }

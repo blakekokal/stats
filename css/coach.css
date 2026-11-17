@@ -156,3 +156,11 @@ body.coach { background: #1e1e1e; }
 
 /* Student View: the "vs" level badge isn't shown. */
 #studentViewHcpBadge { display: none !important; }
+
+/* New Round / GPS Overview: a nine at a club with other nines asks 9 or 18. */
+.cx .ninesbox { width: 100%; max-width: 320px; display: grid; gap: 6px; }
+.cx .ninesbox[hidden] { display: none; }
+.cx .ninesbox .ninesq { font-size: 13px; color: #bdbdbd; text-align: center; line-height: 1.35; }
+.cx .ninesbox button { max-width: none; width: 100%; height: auto; min-height: 0; padding: 9px 12px; border-radius: 10px; border: 1px solid #3a3a3a; background: #222; color: #fff; text-align: center; display: grid; justify-items: center; gap: 2px; }
+.cx .ninesbox button b { font-size: 15px; } .cx .ninesbox button small { font-size: 12px; color: #9a9a9a; }
+.cx .ninesbox button.on { border-color: #007a52; background: #0d3a29; }

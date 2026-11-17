@@ -9,7 +9,7 @@
 // shot reaches the green the map zooms onto it, the player places the pin,
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
-import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast, complexHoles } from './app.js';
+import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast, complexHoles, partOf } from './app.js';
 import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, drawnRing, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
@@ -871,7 +871,8 @@ export function renderHole(view, n) {
   // Elevation (courses built with tools/elevation.py): contour lines with a
   // row of intervals, and plays-like yardages by the crosshair.
   let styleReady = false; // the map's load event has run (sources can be added)
-  const redrawElev = () => { if (styleReady) drawElevation(m, course.id, { line: route(), own: holeFeatures(ch) }); };
+  const elevId = partOf(course, n); // two nines played as 18: the elevation of the nine this hole is on
+  const redrawElev = () => { if (styleReady) drawElevation(m, elevId, { line: route(), own: holeFeatures(ch) }); };
   let elevInfo = null; // this course's entry in data/elev/index.json, once fetched
   const elevChips = (opts, get, set) => {
     const row = h('div', { class: 'viewchips' });
@@ -904,7 +905,7 @@ export function renderHole(view, n) {
     } }, 'Plays', h('br'), 'like');
   const playsWrap = h('div', { class: 'playswrap', hidden: true }, playsBtn, playsOpts);
   const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips);
-  elevIndex().then(ix => { elevInfo = ix[course.id] || null; elevBox.hidden = playsWrap.hidden = !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
+  elevIndex().then(ix => { elevInfo = ix[elevId] || null; elevBox.hidden = playsWrap.hidden = !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
   const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), sgtRow, linesRow, cleanRow, elevBox);
   const drawViewBox = () => {
     sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync();
@@ -1238,7 +1239,7 @@ export function renderHole(view, n) {
       courseLabel(),
       h('label', {}, 'Tees ', h('select', { onchange: e => { const r = currentRound(); if (r) r.tee = e.target.value; store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHole(view, n); } },
         course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
-      isAdmin ? h('button', { class: 'btn', onclick: () => { menu.hidden = true; editBoundaries(); } }, '✏️ Edit boundaries') : null,
+      isAdmin && !course.parts ? h('button', { class: 'btn', onclick: () => { menu.hidden = true; editBoundaries(); } }, '✏️ Edit boundaries') : null, // two nines as 18: edit each nine on its own
       h('button', { class: 'btn', onclick: () => { endScouting(); location.hash = '#/'; } }, 'Home'),
       h('small', { class: 'muted' }, 'GPS Overview · shots are not saved'),
       credit)
@@ -2007,8 +2008,8 @@ export function renderHole(view, n) {
       if (!elevPrefs.playsLike || !elevInfo) return plain;
       let dz = null;
       if (elevPrefs.playsElev) {
-        const ha = heightAt(course.id, elevInfo, a, () => { if (map === m) update(); });
-        const hb = heightAt(course.id, elevInfo, b, () => { if (map === m) update(); });
+        const ha = heightAt(elevId, elevInfo, a, () => { if (map === m) update(); });
+        const hb = heightAt(elevId, elevInfo, b, () => { if (map === m) update(); });
         if (ha != null && hb != null) dz = Math.round((hb - ha) * YD_PER_M);
       }
       let wind = null;
