@@ -226,7 +226,7 @@ export function renderNewRound(view, { scout = false } = {}) {
   if (scout) {
     view.replaceChildren(page('top', backBtn(),
       h('div', { style: 'font-size:22px;font-weight:800;' }, 'GPS Overview'),
-      h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:-4px;' }, 'Plan shots on any hole · nothing is saved'),
+      h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:-4px;' }, `${COURSES.length} courses added`),
       courseBox, ninesBox, tee, teeInfo, typeRow, typeNote, confirm, err));
     return;
   }
@@ -452,6 +452,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.5.0', ['GPS Overview: under the title it now shows how many courses have been added, in place of “Plan shots on any hole · nothing is saved”']],
   ['1.4.0', ['Tournament mode: Contours is back in the View box as its own switch, off at the start of every tournament round. On, it shows the contour lines and downhill arrows everywhere except on and within 15 yards of any green (the Rules only allow green maps at a tiny scale). Plays-like yardages stay off']],
   ['1.3.1', ['Tournament mode: the Tools button (Width, Arc, Disp, Appr) is gone completely']],
   ['1.3.0', ['New courses: Fields Ranch – East and West (PGA Frisco), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines for both courses from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundaries, and elevation (contours and plays-like yardages)']],
