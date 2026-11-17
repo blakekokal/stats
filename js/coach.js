@@ -442,6 +442,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.95.1', ['Contour lines are a little stronger for everyone: 60% opacity (was 45%), same colour and width. You can still change them in the menu’s Settings']],
   ['0.95.0', ['New Settings button in the hole menu (☰): set the contour lines’ colour, opacity and width. It changes on the map as you move the sliders, is kept on this device, and Reset puts the standard look back']],
   ['0.94.3', ['Contour lines (and their downhill arrows) are a slightly darker colour, at the same opacity']],
   ['0.94.2', ['Auto picks the club with the highest SG again: avoiding bunkers, hazards and trees (and preferring the fairway) now only decides each club’s line, never which club. The Auto list no longer shows shots on the fairway']],
