@@ -1280,7 +1280,7 @@ export function renderHole(view, n) {
   compass.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,16 12,16" fill="#ff4d4d"/><polygon points="16,29 20,16 12,16" fill="#fff"/><text x="16" y="11.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">N</text></svg>';
   // Wind, under the compass: an arrow showing which way the wind is blowing on
   // this view of the map (it turns with the map), and the speed in mph.
-  const wind = h('div', { class: 'wind', hidden: true, role: 'img', 'aria-label': 'Wind' });
+  const wind = h('button', { class: 'wind', hidden: true, 'aria-label': 'Wind' });
   wind.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,1.5 21,8.5 11,8.5" fill="#4dd0ff"/><rect x="14.6" y="24" width="2.8" height="6" rx="1.4" fill="#4dd0ff"/></svg><b></b>';
 
   // Leaving a round from the menu's Home button.
@@ -1424,24 +1424,63 @@ export function renderHole(view, n) {
   const windArrow = wind.querySelector('svg');
   const turnWind = () => { if (windNow) windArrow.style.transform = `rotate(${windNow.dir + 180 - m.getBearing()}deg)`; };
   m.on('rotate', turnWind);
-  const showWind = w => {
-    if (map !== m || !w) return;
-    windNow = w;
-    playsWindNow = w; if (elevPrefs.playsLike && elevPrefs.playsWind) update();
+  // The wind shown and used: the live wind, or one set by hand in the Wind box
+  // (tap the wind arrow) to try out different conditions. A hand-set wind is
+  // kept for this visit (across holes) until "Use live wind".
+  let liveWind = null;
+  const manualWind = () => { try { return JSON.parse(sessionStorage.getItem('gs:windManual') || 'null'); } catch { return null; } };
+  const showWind = () => {
+    if (map !== m) return;
+    const man = manualWind(), w = man || liveWind;
     wind.hidden = false;
+    wind.classList.toggle('manual', !!man);
+    windNow = w; playsWindNow = w;
+    if (elevPrefs.playsLike && elevPrefs.playsWind) update();
+    if (!w) { wind.querySelector('b').textContent = '–'; wind.title = 'Wind: tap to set'; turnWind(); return; }
     wind.querySelector('b').textContent = Math.round(w.speed);
-    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-    const from = dirs[Math.round(w.dir / 45) % 8];
-    wind.setAttribute('aria-label', `Wind ${Math.round(w.speed)} mph from the ${from}`);
-    wind.title = `Wind ${Math.round(w.speed)} mph from the ${from}`;
+    const from = compassName(w.dir);
+    wind.setAttribute('aria-label', `Wind ${Math.round(w.speed)} mph from the ${from}${man ? ' (set by hand)' : ''}`);
+    wind.title = `Wind ${Math.round(w.speed)} mph from the ${from}${man ? ' (set by hand)' : ''}`;
     turnWind();
+    if (!windBox.hidden) drawWindBox();
   };
+  const compassName = d => ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'][Math.round((((d % 360) + 360) % 360) / 22.5) % 16];
+  const setManual = w => { try { if (w) sessionStorage.setItem('gs:windManual', JSON.stringify(w)); else sessionStorage.removeItem('gs:windManual'); } catch { /* not kept */ } showWind(); };
+  // The Wind box: quick picks relative to the screen (the way the map faces),
+  // then a direction and a speed slider, and back to the live wind.
+  const windDirIn = h('input', { type: 'range', min: 0, max: 355, step: 5, oninput: e => setManual({ speed: (manualWind() || liveWind || { speed: 10 }).speed, dir: +e.target.value }) });
+  const windSpeedIn = h('input', { type: 'range', min: 0, max: 40, step: 1, oninput: e => setManual({ dir: (manualWind() || liveWind || { dir: m.getBearing() }).dir, speed: +e.target.value }) });
+  const windDirLabel = h('b'), windSpeedLabel = h('b');
+  const relPick = (label, off) => h('button', { onclick: () => setManual({ speed: (manualWind() || liveWind || { speed: 10 }).speed, dir: Math.round((((m.getBearing() + off) % 360) + 360) % 360) }) }, label);
+  const liveBtnW = h('button', { class: 'windlive', onclick: () => setManual(null) }, 'Use live wind');
+  const windBox = h('div', { class: 'sheet windbox', hidden: true }, h('strong', {}, 'Wind'),
+    h('div', { class: 'windpicks' }, relPick('Into', 0), relPick('Helping', 180), relPick('From left', -90), relPick('From right', 90)),
+    h('label', { class: 'windrow' }, h('span', {}, 'From ', windDirLabel), windDirIn),
+    h('label', { class: 'windrow' }, h('span', {}, 'Speed ', windSpeedLabel), windSpeedIn),
+    liveBtnW);
+  function drawWindBox() {
+    const man = manualWind(), w = man || liveWind;
+    windDirIn.value = w ? Math.round(w.dir / 5) * 5 % 360 : 0;
+    windSpeedIn.value = w ? Math.round(w.speed) : 0;
+    windDirLabel.textContent = w ? `${compassName(w.dir)} (${Math.round(w.dir)}°)` : '–';
+    windSpeedLabel.textContent = w ? `${Math.round(w.speed)} mph` : '–';
+    liveBtnW.textContent = liveWind ? `Use live wind (${Math.round(liveWind.speed)} mph ${compassName(liveWind.dir)})` : 'Use live wind';
+    liveBtnW.hidden = !man;
+  }
+  wind.onclick = () => { windBox.hidden = !windBox.hidden; if (!windBox.hidden) drawWindBox(); };
+  const windAway = e => {
+    if (!wind.isConnected) { document.removeEventListener('pointerdown', windAway, true); return; }
+    if (!windBox.hidden && !windBox.contains(e.target) && !wind.contains(e.target)) windBox.hidden = true;
+  };
+  document.addEventListener('pointerdown', windAway, true);
+  holeEl().append(windBox);
+  const gotWind = w => { if (w) liveWind = w; showWind(); };
   const windAt = pin || tee;
   if (windAt) {
-    fetchWind(course.id, windAt).then(showWind);
+    fetchWind(course.id, windAt).then(gotWind);
     clearInterval(windTimer);
-    windTimer = setInterval(() => { if (!document.hidden) fetchWind(course.id, windAt).then(showWind); }, 600000);
-  }
+    windTimer = setInterval(() => { if (!document.hidden) fetchWind(course.id, windAt).then(gotWind); }, 600000);
+  } else showWind();
   compass.onclick = () => { if (stage() === 'play') place(); else zoomToGreen(); };
   window.holeMap = m; // handy for debugging from the console
 
