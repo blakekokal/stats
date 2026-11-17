@@ -69,6 +69,7 @@ export const COURSES = [
   { id: 'tour18dallas', name: 'Tour 18 Golf Course Dallas', file: 'data/tour18dallas.json' },
   { id: 'lantana', name: 'Lantana Golf Club', file: 'data/lantana.json' },
   { id: 'lakepark', name: 'Lake Park Golf Course – Championship', file: 'data/lakepark.json' },
+  { id: 'coyoteridge', name: 'Coyote Ridge Golf Club', file: 'data/coyoteridge.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 // Nine-hole courses at one club (the same `nines` tag) can be played together

@@ -223,5 +223,20 @@
    561
   ],
   "source": "USGS 3DEP"
+ },
+ "coyoteridge": {
+  "bounds": [
+   -96.946444,
+   33.022201,
+   -96.930348,
+   33.039401
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   442,
+   525
+  ],
+  "source": "USGS 3DEP"
  }
 }
