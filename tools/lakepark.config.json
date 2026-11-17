@@ -1,0 +1,17 @@
+{
+  "id": "lakepark",
+  "name": "Lake Park Golf Course – Championship",
+  "location": "Lewisville, TX",
+  "par": [4,5,3,4,3,4,3,4,5, 4,4,4,4,5,3,4,3,4],
+  "hcp": [4,16,12,14,2,6,10,8,18, 13,11,7,1,17,3,15,9,5],
+  "_comment_tees": "Scorecard from GolfPass (pars and handicaps match OpenStreetMap's hole tags). Red has only a women's rating.",
+  "tees": [
+    {"name": "Blue",  "rating": 68.3, "slope": 108, "yards": [405,500,160,340,180,395,150,350,505, 360,360,410,430,510,185,330,155,410]},
+    {"name": "White", "rating": 66.5, "slope": 102, "yards": [380,475,140,320,165,375,130,320,475, 340,345,395,390,490,165,310,140,385]},
+    {"name": "Red",   "rating": 68.6, "slope": 111, "yards": [345,430,110,280,115,310,115,270,430, 300,325,300,355,410,110,290,115,350]}
+  ],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 0},
+  "_comment_drop": "Polygons containing these points are not part of the course (the practice putting green by the clubhouse).",
+  "drop": [[33.071748, -96.999853]]
+}
