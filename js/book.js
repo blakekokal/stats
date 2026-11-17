@@ -752,6 +752,38 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   return svg;
 }
 
+// ---------- making a PDF ----------
+
+const abs = p => new URL(p, location.href).href;
+const loadScript = src => new Promise((ok, no) => {
+  if (window.jspdf) { ok(); return; }
+  const sc = document.createElement('script');
+  sc.src = abs(src); sc.onload = ok; sc.onerror = () => no(new Error('the PDF maker didn’t load (offline?)'));
+  document.head.append(sc);
+});
+// The book's font, built into each page so it looks the same in the PDF.
+let fontCssP = null;
+const bookFontCss = () => (fontCssP ||= Promise.all([400, 700, 900].map(async w => {
+  const r = await fetch(abs(`vendor/fonts/barlow-condensed-latin-${w}-normal.woff2`));
+  if (!r.ok) return '';
+  const b = new Uint8Array(await r.arrayBuffer());
+  let str = '';
+  for (let i = 0; i < b.length; i += 0x4000) str += String.fromCharCode.apply(null, b.subarray(i, i + 0x4000));
+  return `@font-face{font-family:'Barlow Condensed';font-weight:${w};src:url(data:font/woff2;base64,${btoa(str)}) format('woff2');}`;
+})).then(a => a.join('')).catch(() => ''));
+// One page (an SVG) drawn into a canvas at x, y, w, h (pixels).
+async function drawSvg(ctx, svg, x, y, w, hgt, css) {
+  const c = svg.cloneNode(true);
+  c.setAttribute('xmlns', SVGNS); c.setAttribute('width', Math.round(w)); c.setAttribute('height', Math.round(hgt));
+  if (css) c.insertBefore(el('style', {}, css), c.firstChild);
+  const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(c)], { type: 'image/svg+xml' }));
+  try {
+    const img = new Image();
+    await new Promise((ok, no) => { img.onload = ok; img.onerror = () => no(new Error('a page didn’t draw')); img.src = url; });
+    ctx.drawImage(img, x, y, w, hgt);
+  } finally { URL.revokeObjectURL(url); }
+}
+
 // ---------- the screen ----------
 
 // Opens the yardage book over the hole screen on hole n.
@@ -819,53 +851,124 @@ export function openBook(n, opts) {
     course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} tees`)));
   const go = d => { hole = ((hole - 1 + d + course.holes.length) % course.holes.length) + 1; draw(); };
   const close = () => { ov.remove(); document.body.classList.remove('bookopen'); if (hole !== n) opts.onHole?.(hole); };
-  // Print: phones (Safari above all, and the app added to the home screen)
-  // ignore a print that isn't asked for the moment the button is tapped, and
-  // drawing the pages takes a while. So the tap opens a new tab at once, the
-  // pages are drawn into it, and it prints from there (or Share > Print / Save
-  // to Files). If the tab is blocked, it prints from this page instead.
-  async function printAll(all) {
+  // Print: the book is made into a PDF here on the device (phones, and the app
+  // added to the home screen, won't print a page straight from the app), then
+  // shared, opened or saved from the bar that comes up. Layouts:
+  //  legal  - a flip book: two 4 1/4 x 14 strips on 8 1/2 x 14 paper, each a
+  //           green page over a hole page; cut down the middle, fold each strip
+  //           in half (printing outside) and stack them, folds at the top
+  //  letter - the same on 8 1/2 x 11, at 79%
+  //  single - one 4 1/4 x 7 page per sheet
+  let layout = (() => { try { return localStorage.getItem('gs:bookLayout') || 'legal'; } catch { return 'legal'; } })();
+  if (!['legal', 'letter', 'single'].includes(layout)) layout = 'legal';
+  const layoutSel = h('select', { 'aria-label': 'Print layout', onchange: e => { layout = e.target.value; try { localStorage.setItem('gs:bookLayout', layout); } catch { /* not kept */ } } },
+    [['legal', 'Flip book · legal'], ['letter', 'Flip book · letter'], ['single', 'Single pages']].map(([v, t]) => h('option', { value: v, selected: v === layout }, t)));
+  const pdfBar = h('div', { class: 'bookpdf', hidden: true });
+  let pdfUrl = null;
+  async function makePdf(all) {
+    pdfBar.hidden = true;
+    if (pdfUrl) { URL.revokeObjectURL(pdfUrl); pdfUrl = null; }
     const holes = all ? course.holes.map(c => c.n) : [hole];
-    let win = null;
-    try { win = window.open('', '_blank'); } catch { win = null; }
-    if (win) {
-      try { win.document.title = 'Yardage book'; win.document.body.innerHTML = '<p style="font:16px system-ui;padding:24px">Drawing the yardage book…</p>'; } catch { /* filled in below */ }
+    try {
+      status.textContent = 'Getting the PDF maker…';
+      await loadScript('vendor/jspdf/jspdf.umd.min.js');
+      const css = await bookFontCss();
+      const pagesFor = async k => {
+        try { return await drawHoleParts(k, prefs); } catch (e) { console.error('yardage book', e); return drawHoleParts(k, { ...prefs, contours: false, greenContours: false, slopes: false, deltas: false, playsLike: false }); }
+      };
+      const parts = {};
+      for (const k of holes) { status.textContent = `Drawing hole ${k}${all ? ` of ${holes.length}` : ''}…`; parts[k] = await pagesFor(k); }
+      // Leaves (flip book): a top page over a bottom page. In a book the
+      // spread for hole k is the back of leaf k-1 (its top page) over the
+      // front of leaf k (its bottom page), so each leaf carries hole k's hole
+      // page and hole k+1's green; the first leaf is the cover.
+      const blank = () => blankPage();
+      let leaves;
+      if (!all) leaves = [[parts[hole].green || blank(), parts[hole].hole]];
+      else {
+        leaves = [[parts[holes[0]].green || blank(), coverPage(teeName)]];
+        holes.forEach((k, i) => leaves.push([i + 1 < holes.length ? parts[holes[i + 1]].green || blank() : notesPage(), parts[k].hole]));
+      }
+      status.textContent = 'Making the PDF…';
+      const { jsPDF } = window.jspdf;
+      const DPI = 200;
+      let doc = null;
+      const sheet = async (wIn, hIn, place) => {
+        const cv = document.createElement('canvas'); cv.width = Math.round(wIn * DPI); cv.height = Math.round(hIn * DPI);
+        const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+        await place(ctx);
+        if (!doc) doc = new jsPDF({ unit: 'in', format: [wIn, hIn], orientation: wIn > hIn ? 'landscape' : 'portrait' });
+        else doc.addPage([wIn, hIn], wIn > hIn ? 'landscape' : 'portrait');
+        doc.addImage(cv.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, wIn, hIn, undefined, 'FAST');
+      };
+      if (layout === 'single') {
+        const flat = all ? holes.flatMap(k => [parts[k].green, parts[k].hole].filter(Boolean)) : [parts[hole].green, parts[hole].hole].filter(Boolean);
+        for (const [i, svg] of flat.entries()) { status.textContent = `Making page ${i + 1} of ${flat.length}…`; await sheet(4.25, 7, ctx => drawSvg(ctx, svg, 0, 0, 4.25 * DPI, 7 * DPI, css)); }
+      } else {
+        const legal = layout === 'legal', sw = 8.5, sh = legal ? 14 : 11, k = sh / 14; // strips are 4 1/4 x 14 at k
+        const stripW = 4.25 * k * DPI, stripH = 14 * k * DPI, x0 = ((sw * DPI) - 2 * stripW) / 2;
+        for (let i = 0; i < leaves.length; i += 2) {
+          status.textContent = `Making sheet ${i / 2 + 1} of ${Math.ceil(leaves.length / 2)}…`;
+          await sheet(sw, sh, async ctx => {
+            for (let j = 0; j < 2 && i + j < leaves.length; j++) {
+              const [top, bottom] = leaves[i + j], x = x0 + j * stripW;
+              await drawSvg(ctx, top, x, 0, stripW, stripH / 2, css);
+              await drawSvg(ctx, bottom, x, stripH / 2, stripW, stripH / 2, css);
+              // Fold marks at the strip's edges, half way down.
+              ctx.strokeStyle = '#999'; ctx.lineWidth = 2; ctx.setLineDash([]);
+              ctx.beginPath(); ctx.moveTo(x, stripH / 2); ctx.lineTo(x + 0.12 * DPI, stripH / 2); ctx.moveTo(x + stripW, stripH / 2); ctx.lineTo(x + stripW - 0.12 * DPI, stripH / 2); ctx.stroke();
+            }
+            // Cut lines: down the middle (and the outer edges on letter).
+            ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2; ctx.setLineDash([18, 12]);
+            const cuts = legal ? [x0 + stripW] : [x0, x0 + stripW, x0 + 2 * stripW];
+            ctx.beginPath(); for (const cx of cuts) { ctx.moveTo(cx, 0); ctx.lineTo(cx, stripH); } ctx.stroke();
+          });
+        }
+      }
+      const blob = doc.output('blob');
+      pdfUrl = URL.createObjectURL(blob);
+      const name = `${course.name.replace(/[^\w\s-]/g, '').trim()} ${all ? 'yardage book' : `hole ${hole}`}.pdf`;
+      const file = (() => { try { return new File([blob], name, { type: 'application/pdf' }); } catch { return null; } })();
+      const canShare = file && navigator.canShare?.({ files: [file] });
+      pdfBar.replaceChildren(...[
+        h('b', {}, `PDF ready · ${layout === 'single' ? '4¼ × 7 pages' : layout === 'legal' ? 'legal paper, 2 per sheet' : 'letter paper, 2 per sheet'}`),
+        canShare ? h('button', { class: 'bookbtn primary', onclick: () => navigator.share({ files: [file], title: name }).catch(() => {}) }, 'Share / Print') : null,
+        h('a', { class: 'bookbtn', href: pdfUrl, target: '_blank', download: name }, 'Open PDF'),
+        h('small', {}, layout === 'single' ? 'Print at 100% (actual size).'
+          : `Print at 100% on ${layout === 'legal' ? 'legal (8½ × 14)' : 'letter'} paper. Cut along the dashed lines, fold each strip in half at the marks with the printing outside, and stack them in order with the folds at the top${all ? ' (cover on top)' : ''}.`)].filter(Boolean));
+      pdfBar.hidden = false;
+      status.textContent = '';
+    } catch (e) {
+      console.error('yardage book pdf', e);
+      status.textContent = `Couldn’t make the PDF: ${e.message || e}`;
     }
-    status.textContent = all ? 'Drawing every hole…' : 'Getting ready…';
-    const got = [];
-    for (const k of holes) {
-      try { got.push(...await drawHole(k, prefs)); } catch (e) { console.error('yardage book', e); got.push(...await drawHole(k, { ...prefs, contours: false, greenContours: false, slopes: false, deltas: false, playsLike: false })); }
-      if (all) status.textContent = `Drawing hole ${k} of ${holes.length}…`;
-    }
-    status.textContent = '';
-    const name = `${course.name} – ${all ? 'yardage book' : `hole ${hole}`}`;
-    if (win && !win.closed) {
-      const css = `@page { size: 4.25in 7in; margin: 0; }
-        html, body { margin: 0; background: #e9ece9; }
-        .bar { font: 15px system-ui, sans-serif; padding: 12px 16px; background: #fff; border-bottom: 1px solid #ccc; position: sticky; top: 0; }
-        .bar button { font: 600 15px system-ui; padding: 8px 14px; margin-right: 8px; border-radius: 8px; border: 1px solid #aaa; background: #fff; }
-        svg { display: block; width: min(420px, 100%); height: auto; margin: 12px auto; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
-        @media print { .bar { display: none; } html, body { background: #fff; }
-          svg { width: 4.25in; height: 7in; margin: 0; box-shadow: none; page-break-after: always; break-after: page; } }`;
-      const doc = win.document;
-      doc.open();
-      doc.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${name.replace(/</g, '')}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet"><style>${css}</style></head>
-        <body><div class="bar"><button onclick="print()">Print / Save PDF</button><small>Print at 100% (actual size): 4¼ × 7 in pages, the green within the USGA's scale limit.</small></div>
-        ${got.map(svg => svg.outerHTML).join('\n')}</body></html>`);
-      doc.close();
-      // Let the font load, then offer the print sheet (some phones ignore this; the button stays).
-      setTimeout(() => { try { win.focus(); win.print(); } catch { /* the button's there */ } }, 900);
-      return;
-    }
-    const sheet = h('div', { class: 'bookprint' }, ...got);
-    document.body.append(sheet);
-    document.body.classList.add('bookprinting');
-    const done = () => { sheet.remove(); document.body.classList.remove('bookprinting'); window.removeEventListener('afterprint', done); };
-    window.addEventListener('afterprint', done);
-    try { window.print(); } catch { done(); }
-    status.textContent = 'If nothing opened, allow pop-ups for this site and try again';
   }
+  async function drawHoleParts(k, p) {
+    const hp = await holePage(k, teeName, p, helpers, opts);
+    const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, opts) : null;
+    return { hole: hp, green: gp };
+  }
+  const coverPage = tn => {
+    const t = course.tees.find(x => x.name === tn) || course.tees[0];
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS, 'font-family': FONT });
+    const yds = t ? t.yards.slice(0, course.holes.length).reduce((a, b) => a + b, 0) : '';
+    const par = course.holes.reduce((a, c) => a + c.par, 0);
+    svg.append(el('rect', { width: W, height: H, fill: '#fff' }),
+      txt(W / 2, 200, course.name.toUpperCase(), { 'font-size': 26, 'font-weight': 900, 'text-anchor': 'middle', fill: INK }),
+      course.location ? txt(W / 2, 226, course.location.toUpperCase(), { 'font-size': 12, 'text-anchor': 'middle', fill: SOFT, 'letter-spacing': 1 }) : null,
+      txt(W / 2, 300, 'YARDAGE BOOK', { 'font-size': 34, 'font-weight': 700, 'text-anchor': 'middle', fill: INK, 'letter-spacing': 3 }),
+      txt(W / 2, 336, `${(t?.name || tn).toUpperCase()} TEES · ${yds} YDS · PAR ${par}`, { 'font-size': 13, 'text-anchor': 'middle', fill: SOFT, 'letter-spacing': 1 }),
+      txt(W / 2, 600, 'Red: yards to the front of the green · Black: yards from the tee', { 'font-size': 10, 'text-anchor': 'middle', fill: SOFT }),
+      txt(W / 2, 616, 'Blue: yards uphill (+) or downhill (−)', { 'font-size': 10, 'text-anchor': 'middle', fill: SOFT }));
+    return svg;
+  };
+  const blankPage = () => el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS }, el('rect', { width: W, height: H, fill: '#fff' }));
+  const notesPage = () => {
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS, 'font-family': FONT }, el('rect', { width: W, height: H, fill: '#fff' }),
+      txt(16, 40, 'NOTES', { 'font-size': 14, 'font-weight': 700, fill: INK, 'letter-spacing': 1.5 }));
+    for (let y = 80; y < H - 30; y += 26) svg.append(el('line', { x1: 16, x2: W - 16, y1: y, y2: y, stroke: '#d6dcd8', 'stroke-width': 0.8 }));
+    return svg;
+  };
   const ov = h('div', { class: 'bookov' },
     h('div', { class: 'booktop' },
       h('button', { class: 'bookbtn', 'aria-label': 'Close', onclick: close }, '✕'),
@@ -873,10 +976,11 @@ export function openBook(n, opts) {
       h('button', { class: 'bookbtn', 'aria-label': 'Next hole', onclick: () => go(1) }, '›'),
       teeSel,
       h('button', { class: 'bookbtn', onclick: () => { opts_.hidden = !opts_.hidden; } }, '☰ Show'),
-      h('button', { class: 'bookbtn', onclick: () => printAll(false) }, '⎙ Hole'),
-      h('button', { class: 'bookbtn', onclick: () => printAll(true) }, '⎙ Book'),
+      layoutSel,
+      h('button', { class: 'bookbtn', onclick: () => makePdf(false) }, '⎙ Hole'),
+      h('button', { class: 'bookbtn', onclick: () => makePdf(true) }, '⎙ Book'),
       status),
-    opts_, pages);
+    pdfBar, opts_, pages);
   document.body.append(ov);
   document.body.classList.add('bookopen');
   draw();
