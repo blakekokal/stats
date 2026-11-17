@@ -505,10 +505,16 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .viewelev[hidden] { display: none; }
 .viewchips { display: flex; gap: 6px; padding: 0 2px 4px; }
 .viewchips.off { opacity: .45; }
+.readout b.playslike { position: relative; }
+/* Rise/drop just right of the yardage (which stays centred); plays-like under it. */
+.readout b.playslike .dz { position: absolute; left: 100%; top: 10px; padding-left: 5px; font-size: 17px; font-weight: 700; color: #fff; }
+.readout b.playslike .dz.up { color: #ff6b6b; } .readout b.playslike .dz.down { color: #4ade80; }
 .readout b.playslike .pl { display: block; font-size: 22px; color: #9fdcff; }
-.readout b.playslike .pl small { font-size: 16px; font-weight: 700; margin-right: 3px; color: #fff; }
-.readout b.playslike .pl small.up { color: #ff6b6b; }
-.readout b.playslike .pl small.down { color: #4ade80; }
+/* Plays like switch: top right, under Expected and left of the GPS button. */
+.playsbtn { position: absolute; top: calc(66px + env(safe-area-inset-top)); right: 62px; z-index: 4; height: 44px; min-height: 0; padding: 0 12px; border: 0; border-radius: 14px; background: #111c; backdrop-filter: blur(8px); color: #fff; font-size: 13px; font-weight: 700; box-shadow: 0 1px 6px #0008; }
+.playsbtn.on { background: #9fdcff; color: #111; }
+.playsbtn[hidden] { display: none; }
+.holeview.watching .playsbtn, .holeview.clean .playsbtn { display: none; }
 .viewchips button { flex: 1; min-height: 0; padding: 6px 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: transparent; color: inherit; font-size: 13px; font-weight: 600; }
 .viewchips button.on { background: #22c55e; border-color: #22c55e; color: #111; }
 .viewswitch input:checked + i { background: #22c55e; }
