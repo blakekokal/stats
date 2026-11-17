@@ -208,5 +208,20 @@
    699
   ],
   "source": "USGS 3DEP"
+ },
+ "lakepark-exec": {
+  "bounds": [
+   -97.013684,
+   33.065261,
+   -97.005221,
+   33.07264
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   533,
+   568
+  ],
+  "source": "USGS 3DEP"
  }
 }
