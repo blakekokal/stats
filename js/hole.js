@@ -796,16 +796,25 @@ export function renderHole(view, n) {
     }, 0);
     // Trees in the way. A ball can't climb over trees that are close in front of
     // it, so a shot from a to b is blocked when trees cross the first part of its
-    // line: the first 30% of the shot, at least 20 yd and at most 70 (a wedge gets
-    // up quicker than a driver). Trees further down the line are flown over.
-    const trees = feats.filter(f => f.t === 'trees');
+    // line, while the ball is still below the treetops. Taking the flight as an
+    // arc peaking at APEX_FT halfway and trees TREE_FT tall, that's the first 16%
+    // of the shot (at least 15 yd): about 50 yd for a 310-yd drive, 36 for a
+    // 225-yd iron, 22 for a wedge. Trees further down the line are flown over.
+    // Each tree's core: its outline drawn 70% of the way in from its middle. The
+    // circles are drawn to the edge of the canopy, which a ball clips through;
+    // only the core really stops one.
+    const trees = feats.filter(f => f.t === 'trees').map(f => {
+      const ring = f.p[0], cy = ring.reduce((t, q) => t + q[0], 0) / ring.length, cx = ring.reduce((t, q) => t + q[1], 0) / ring.length;
+      return { ...f, p: [ring.map(q => [cy + (q[0] - cy) * 0.7, cx + (q[1] - cx) * 0.7])] };
+    });
     const cross = (a, b, c, d) => { // segments a-b and c-d intersect
       const o = (p, q, r) => (q[1] - p[1]) * (r[0] - p[0]) - (q[0] - p[0]) * (r[1] - p[1]);
       return o(a, b, c) * o(a, b, d) < 0 && o(c, d, a) * o(c, d, b) < 0;
     };
+    const APEX_FT = 84, TREE_FT = 45, CLIMB = (1 - Math.sqrt(1 - TREE_FT / APEX_FT)) / 2; // the share of the shot spent below the treetops
     const blocked = (a, b) => {
       if (!trees.length) return false;
-      const yd = yards(a, b), t = yd ? Math.min(1, Math.max(20, Math.min(70, yd * 0.3)) / yd) : 0;
+      const yd = yards(a, b), t = yd ? Math.min(1, Math.max(15, yd * CLIMB) / yd) : 0;
       const e = [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
       const s = Math.min(a[0], e[0]), n = Math.max(a[0], e[0]), w = Math.min(a[1], e[1]), x = Math.max(a[1], e[1]);
       return trees.some(f => !(n < f.box[0][0] || s > f.box[1][0] || x < f.box[0][1] || w > f.box[1][1])
