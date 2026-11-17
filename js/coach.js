@@ -452,6 +452,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.0.0', ['Version 1.0']],
   ['0.102.0', ['New course: Texas Star Golf Course (Euless), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the sand in the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['0.101.0', ['New course: Firewheel Golf Park – Lakes (Garland), built from its yardage book: greens, fairways, bunkers, water, tee boxes and hole lines lined up on the satellite picture, bunkers checked against the sand in the picture, trees as circles, out-of-bounds line from the park boundary, and elevation (contours and plays-like yardages)']],
   ['0.100.0', ['New course: Coyote Ridge Golf Club (Carrollton), built from its yardage book: greens, fairways, bunkers, water, tee boxes and hole lines lined up on the satellite picture, every bunker checked against the sand in the picture, trees as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
