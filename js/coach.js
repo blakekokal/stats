@@ -452,6 +452,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.97.0', ['New course: Lantana Golf Club (Lantana), built without a yardage book: greens, fairways, bunkers, water and tee boxes from OpenStreetMap lined up on the satellite picture, hole lines worked out from the scorecard, out-of-bounds line from the course boundary, trees from the picture as circles, and elevation (contours and plays-like yardages)']],
   ['0.96.4', ['GPS Overview: the Score box above the hole pill is gone (nothing is scored there)']],
   ['0.96.3', ['New Round: the Entry Mode GPS button above START is gone (it did nothing)']],
   ['0.96.2', ['New Round and GPS Overview start with Casual picked; tap Tournament to change it']],

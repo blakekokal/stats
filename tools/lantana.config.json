@@ -1,0 +1,19 @@
+{
+  "id": "lantana",
+  "name": "Lantana Golf Club",
+  "location": "Lantana, TX",
+  "par": [4,4,5,3,4,4,5,3,4, 4,3,4,5,4,3,5,4,4],
+  "hcp": [13,11,3,17,7,1,5,15,9, 18,10,4,2,16,6,14,8,12],
+  "_comment_tees": "Scorecard from GolfPass. Lantana and Member are combination tees; Players has no published rating, so it is left out.",
+  "tees": [
+    {"name": "Black",   "rating": 74.0, "slope": 135, "yards": [389,425,583,227,421,448,553,184,342, 395,181,414,529,436,162,580,442,436]},
+    {"name": "Lantana", "rating": 73.1, "slope": 133, "yards": [389,425,550,204,421,419,553,153,342, 395,181,414,529,404,162,580,392,436]},
+    {"name": "Blue",    "rating": 71.0, "slope": 129, "yards": [362,382,550,204,391,419,519,153,306, 359,151,386,500,404,137,534,392,403]},
+    {"name": "Member",  "rating": 69.9, "slope": 123, "yards": [362,382,506,182,391,384,519,153,271, 359,151,364,500,367,137,503,344,375]},
+    {"name": "White",   "rating": 68.7, "slope": 119, "yards": [328,322,506,182,344,384,478,119,271, 319,122,364,468,367,111,503,344,375]},
+    {"name": "Red",     "rating": 64.6, "slope": 111, "yards": [292,288,427,117,307,351,434,89,250, 284,87,313,407,268,77,431,301,326]}
+  ],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting all bunkers to the sand); every point is moved by it.",
+  "shift": {"east": 0.5, "north": 2.0},
+  "drop": []
+}
