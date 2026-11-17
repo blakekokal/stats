@@ -238,10 +238,6 @@ export function renderNewRound(view, { scout = false } = {}) {
     tee, teeInfo, typeRow, typeNote, placeWrap,
     h('div', { class: 'row' }, b9, b18),
     custom,
-    h('div', { style: 'width:100%;max-width:320px;margin-top:4px;' },
-      h('div', { style: 'font-size:11px;color:#606060;text-align:center;margin-bottom:6px;letter-spacing:0.5px;text-transform:uppercase;' }, 'Entry Mode'),
-      h('div', { style: 'display:flex;background:#222;border-radius:10px;overflow:hidden;border:1px solid #333;' },
-        h('button', { style: 'flex:1;height:40px;border-radius:0;font-size:13px;font-weight:700;background:#007a52;color:#fff;max-width:none;' }, 'GPS'))),
     confirm, err,
     h('div', { style: 'margin-top:6px;display:flex;gap:8px;justify-content:center;width:100%;max-width:320px;' },
       h('button', { disabled: true, title: 'Coming soon', style: 'background:transparent;border:1px solid #3d3d3d;color:#606060;font-size:12px;height:auto;padding:8px 12px;width:auto;' }, '+ Create Custom Course'),
@@ -456,6 +452,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.96.3', ['New Round: the Entry Mode GPS button above START is gone (it did nothing)']],
   ['0.96.2', ['New Round and GPS Overview start with Casual picked; tap Tournament to change it']],
   ['0.96.1', ['Tournament mode also drops Course lines view (the bunker, fairway, water and green outlines): the switch is gone from the View box and the lines stay off']],
   ['0.96.0', ['Tournament mode: New Round and GPS Overview now ask whether the round is Casual or Tournament. Casual has every tool. Tournament keeps to the Rules of Golf (4.3): plain yardages, compass, fairway width, arc, approach circle, scorecard and shot tracking stay; plays-like yardages, wind, contours and slope, strokes gained (crosshair SG, Disp, Appr SG, SG map, Expected) and club picks (Auto, Comp, the Club box’s Auto) are gone. The tag at the top left turns gold in a tournament round. A finished tournament round viewed from Round History shows everything again']],
