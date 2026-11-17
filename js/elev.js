@@ -11,7 +11,7 @@ export const CONTOUR_YD = [1, 3, 5];
 const get = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
 const put = (k, v) => { try { localStorage.setItem(k, v); } catch { /* not kept */ } };
 // The contour lines' look for everyone, until changed on a device.
-export const CONTOUR_LOOK = { color: '#bcd6c4', opacity: 0.45, width: 1 };
+export const CONTOUR_LOOK = { color: '#bcd6c4', opacity: 0.6, width: 1 };
 export function resetContourLook() { for (const k of ['gs:contourColor', 'gs:contourOpacity', 'gs:contourWidth']) { try { localStorage.removeItem(k); } catch { /* nothing kept */ } } }
 export const elevPrefs = {
   get contours() { return get('gs:contours', '0') === '1'; }, set contours(v) { put('gs:contours', v ? '1' : '0'); },
