@@ -262,6 +262,16 @@ const RELIEF_ARROW = { fill: 'none', stroke: '#2b2f2c', 'stroke-width': 0.55, 's
 
 // Everything the pages need about hole n from the tee set `teeName`.
 // helpers: { holeFeatures(ch), ownGreen(ch) } from the hole screen.
+// The front of a tee box: where a line from its middle toward `toward` (the
+// hole's first bend or the green) leaves the box.
+function boxFront(box, toward) {
+  const c = boxCentre(box), f = frame(c, 0);
+  const r = closeRing(ringOf(box)).map(f.fwd), t = f.fwd(toward), L = Math.hypot(t[0], t[1]) || 1;
+  const far = [(t[0] / L) * 400, (t[1] / L) * 400];
+  const k = firstCross([0, 0], far, r);
+  return k == null ? c : f.back([far[0] * k, far[1] * k]);
+}
+
 function holeFacts(n, teeName, helpers) {
   const ch = course.holes[n - 1];
   const own = helpers.holeFeatures(ch);
@@ -269,7 +279,10 @@ function holeFacts(n, teeName, helpers) {
   const greenF = helpers.ownGreen(ch);
   const boxes = own.filter(f => f.t === 'tee');
   const teeBox = teeBoxFor(teeName, ch, boxes);
-  const tee = teePosition(teeName, ch, boxes);
+  if (teeBox && !boxes.includes(teeBox)) boxes.push(teeBox); // tied to this hole by the course file
+  // Every number is measured from the front of the tee box (the edge nearest
+  // the green), not its middle.
+  const tee = teeBox ? boxFront(teeBox, ch.line[1]) : teePosition(teeName, ch, boxes);
   const line = [tee, ...ch.line.slice(1)];
   const pin = ch.pin;
   const greenRing = greenF ? closeRing(ringOf(greenF)) : null;
@@ -498,7 +511,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     if (!chosen && !prefs.allTees) continue;
     const c = P(centroid(r));
     const names = course.tees.filter(t => teeBoxFor(t.name, ch, F.boxes) === b).map(t => t.name);
-    const v = Math.round(toFront(f.fwd(boxCentre(b))));
+    const v = Math.round(toFront(f.fwd(boxFront(b, ch.line[1]))));
     const label = chosen ? `${names.length ? names.join('/') : teeName} ${v}` : `${names.join('/') || 'Tee'} ${v}`;
     const size = chosen ? 10 : 8.5;
     const spot = lab.place([[c[0] + 9, c[1] + 3, 'start'], [c[0] - 9, c[1] + 3, 'end'], [c[0] + 9, c[1] + 12, 'start'], [c[0] - 9, c[1] + 12, 'end']], textW(label, size), size, bounds);
@@ -768,22 +781,52 @@ export function openBook(n, opts) {
     course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} tees`)));
   const go = d => { hole = ((hole - 1 + d + course.holes.length) % course.holes.length) + 1; draw(); };
   const close = () => { ov.remove(); document.body.classList.remove('bookopen'); if (hole !== n) opts.onHole?.(hole); };
+  // Print: phones (Safari above all, and the app added to the home screen)
+  // ignore a print that isn't asked for the moment the button is tapped, and
+  // drawing the pages takes a while. So the tap opens a new tab at once, the
+  // pages are drawn into it, and it prints from there (or Share > Print / Save
+  // to Files). If the tab is blocked, it prints from this page instead.
   async function printAll(all) {
     const holes = all ? course.holes.map(c => c.n) : [hole];
+    let win = null;
+    try { win = window.open('', '_blank'); } catch { win = null; }
+    if (win) {
+      try { win.document.title = 'Yardage book'; win.document.body.innerHTML = '<p style="font:16px system-ui;padding:24px">Drawing the yardage book…</p>'; } catch { /* filled in below */ }
+    }
     status.textContent = all ? 'Drawing every hole…' : 'Getting ready…';
-    const sheet = h('div', { class: 'bookprint' });
+    const got = [];
     for (const k of holes) {
-      let got;
-      try { got = await drawHole(k, prefs); } catch (e) { console.error('yardage book', e); got = await drawHole(k, { ...prefs, contours: false, greenContours: false, slopes: false, deltas: false, playsLike: false }); }
-      sheet.append(...got);
+      try { got.push(...await drawHole(k, prefs)); } catch (e) { console.error('yardage book', e); got.push(...await drawHole(k, { ...prefs, contours: false, greenContours: false, slopes: false, deltas: false, playsLike: false })); }
       if (all) status.textContent = `Drawing hole ${k} of ${holes.length}…`;
     }
     status.textContent = '';
+    const name = `${course.name} – ${all ? 'yardage book' : `hole ${hole}`}`;
+    if (win && !win.closed) {
+      const css = `@page { size: 4.25in 7in; margin: 0; }
+        html, body { margin: 0; background: #e9ece9; }
+        .bar { font: 15px system-ui, sans-serif; padding: 12px 16px; background: #fff; border-bottom: 1px solid #ccc; position: sticky; top: 0; }
+        .bar button { font: 600 15px system-ui; padding: 8px 14px; margin-right: 8px; border-radius: 8px; border: 1px solid #aaa; background: #fff; }
+        svg { display: block; width: min(420px, 100%); height: auto; margin: 12px auto; background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        @media print { .bar { display: none; } html, body { background: #fff; }
+          svg { width: 4.25in; height: 7in; margin: 0; box-shadow: none; page-break-after: always; break-after: page; } }`;
+      const doc = win.document;
+      doc.open();
+      doc.write(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>${name.replace(/</g, '')}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;700;900&display=swap" rel="stylesheet"><style>${css}</style></head>
+        <body><div class="bar"><button onclick="print()">Print / Save PDF</button><small>Print at 100% (actual size): 4¼ × 7 in pages, the green within the USGA's scale limit.</small></div>
+        ${got.map(svg => svg.outerHTML).join('\n')}</body></html>`);
+      doc.close();
+      // Let the font load, then offer the print sheet (some phones ignore this; the button stays).
+      setTimeout(() => { try { win.focus(); win.print(); } catch { /* the button's there */ } }, 900);
+      return;
+    }
+    const sheet = h('div', { class: 'bookprint' }, ...got);
     document.body.append(sheet);
     document.body.classList.add('bookprinting');
     const done = () => { sheet.remove(); document.body.classList.remove('bookprinting'); window.removeEventListener('afterprint', done); };
     window.addEventListener('afterprint', done);
-    setTimeout(() => window.print(), 50);
+    try { window.print(); } catch { done(); }
+    status.textContent = 'If nothing opened, allow pop-ups for this site and try again';
   }
   const ov = h('div', { class: 'bookov' },
     h('div', { class: 'booktop' },

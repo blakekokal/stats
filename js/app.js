@@ -1,4 +1,4 @@
-import { yards } from './geo.js';
+import { yards, inPolygon } from './geo.js';
 import { ADMIN_EMAIL_SHA256 } from '../config.js';
 import { store, sync, init as initSync, fetchPublishedCourses, publishCourse, unpublishCourse } from './store.js';
 import { renderHole, closeHole, lastHole } from './hole.js';
@@ -234,6 +234,14 @@ export function boxCentre(f) {
 // whose yardage is closest to the scorecard's for this hole. No box is tied to
 // a colour; it's worked out from the yardage every time.
 export function teeBoxFor(teeName, ch, boxes) {
+  // The course file can say where each set plays from (tools/assign_tees.py):
+  // the box at that spot, if it's still there (it may have been redrawn).
+  const at = ch.teeAt?.[teeName];
+  if (at) {
+    const all = boxes.length ? [...boxes, ...course.features.filter(f => f.t === 'tee' && !boxes.includes(f))] : course.features.filter(f => f.t === 'tee');
+    const hit = all.find(f => inPolygon(at, f.p)) || all.find(f => yards(boxCentre(f), at) < 12);
+    if (hit) return hit;
+  }
   const want = course.tees.find(t => t.name === teeName)?.yards[ch.n - 1];
   if (!want || !boxes.length) return null;
   return boxes.reduce((best, f) => (Math.abs(along(ch, boxCentre(f)) - want) < Math.abs(along(ch, boxCentre(best)) - want) ? f : best));
