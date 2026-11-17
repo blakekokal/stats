@@ -442,6 +442,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.95.2', ['Contour lines are black for everyone now (same 60% opacity and width). You can still change them in the menu’s Settings']],
   ['0.95.1', ['Contour lines are a little stronger for everyone: 60% opacity (was 45%), same colour and width. You can still change them in the menu’s Settings']],
   ['0.95.0', ['New Settings button in the hole menu (☰): set the contour lines’ colour, opacity and width. It changes on the map as you move the sliders, is kept on this device, and Reset puts the standard look back']],
   ['0.94.3', ['Contour lines (and their downhill arrows) are a slightly darker colour, at the same opacity']],
