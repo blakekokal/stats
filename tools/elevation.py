@@ -164,7 +164,7 @@ def simplify(line, tol):
 
 def contours(dem, x0, y1):
     """Contour lines every 1 yd (property "yd": the height in yards)."""
-    yd = ndimage.gaussian_filter(dem, 2.0) * YD_PER_M  # smooth out lidar noise
+    yd = ndimage.gaussian_filter(dem, 3.0) * YD_PER_M  # smooth out lidar noise (and jaggy lines)
     feats = []
     for level in range(math.ceil(yd.min()), math.floor(yd.max()) + 1):
         for c in measure.find_contours(yd, level):
@@ -179,7 +179,7 @@ def contours(dem, x0, y1):
             right = ndimage.map_coordinates(yd, (mid - 2 * nrm).T, order=1, mode='nearest')
             dn = 1 if np.mean(left < right) > 0.5 else -1
             xy = [(x0 + (col + 0.5) * RES, y1 - (row + 0.5) * RES) for row, col in c]
-            xy = simplify(xy, 1.0)
+            xy = simplify(xy, 0.5)  # the app rounds the corners (Chaikin)
             ll = [[round(lng, 5), round(lat, 5)] for lat, lng in (unmerc(x, y) for x, y in xy)]
             feats.append({'type': 'Feature', 'properties': {'yd': level, 'dn': dn},
                           'geometry': {'type': 'LineString', 'coordinates': ll}})

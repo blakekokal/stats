@@ -426,6 +426,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.80.2', ['Contours & slope: smooth, rounded contour lines in a thin light green, all the same weight, like a yardage book’s green pages, with smaller, finer downhill arrows']],
   ['0.80.1', ['Contours & slope: the downhill arrows now sit on the contour lines (thin line arrows, tail on the line, pointing straight downhill) instead of scattered over the ground']],
   ['0.80.0', ['Contours & slope (View box, Cowboys): contour lines now every 1, 3 or 5 yards, and only around the hole you’re on, fading out at the edges. Little arrows point downhill, bigger where it’s steeper; zoom in for more of them']],
   ['0.79.0', ['Elevation on the hole map (Cowboys Golf Club for now): the View box has Hillshade, to see the slopes (Soft, Medium or Strong), and Contour lines every 1, 2, 5 or 10 ft, with every fifth line bolder. Heights come from USGS lidar']],

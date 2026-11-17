@@ -22,6 +22,25 @@ export const elevPrefs = {
 const loaded = {};
 const load = (cid, what) => (loaded[cid + what] ||= fetch(abs(`data/elev/${cid}.${what}.json`)).then(r => (r.ok ? r.json() : null)).catch(() => null));
 
+// Rounds a line's corners (Chaikin: each pass cuts every corner at 1/4 and
+// 3/4), so the contours read as smooth curves. Closed rings stay closed.
+function smooth(c, passes = 3) {
+  for (let k = 0; k < passes && c.length > 2; k++) {
+    const closed = c[0][0] === c[c.length - 1][0] && c[0][1] === c[c.length - 1][1];
+    const out = closed ? [] : [c[0]];
+    for (let i = 0; i < c.length - 1; i++) {
+      const [ax, ay] = c[i], [bx, by] = c[i + 1];
+      out.push([ax * 0.75 + bx * 0.25, ay * 0.75 + by * 0.25], [ax * 0.25 + bx * 0.75, ay * 0.25 + by * 0.75]);
+    }
+    if (closed) out.push(out[0]); else out.push(c[c.length - 1]);
+    c = out;
+  }
+  return c;
+}
+const smoothed = {};
+const loadContours = cid => (smoothed[cid] ||= load(cid, 'contours').then(gj => gj && {
+  ...gj, features: gj.features.map(f => ({ ...f, geometry: { ...f.geometry, coordinates: smooth(f.geometry.coordinates) } })) }));
+
 // The hole's area, like the live view's spotlight but roomier: everything
 // within LINE_YD of the hole's line or SHAPE_YD of its own fairways, green and
 // tee boxes, fading out over the next FEATHER_YD. weight(p) is 1 inside, 0 outside.
@@ -64,10 +83,10 @@ function holeArea({ line, own }) {
 }
 
 // The contour lines at every `iv` yards, cut to the hole's area in short
-// pieces, each with its fade (a) and whether it's an index line (every fifth).
+// pieces, each with its fade (a).
 function clipContours(gj, area, iv) {
   const out = [];
-  const piece = (pts, a, yd) => out.push({ type: 'Feature', properties: { a: Math.round(a * 10) / 10, idx: yd % (iv * 5) === 0 }, geometry: { type: 'LineString', coordinates: pts } });
+  const piece = (pts, a, yd) => out.push({ type: 'Feature', properties: { a: Math.round(a * 10) / 10 }, geometry: { type: 'LineString', coordinates: pts } });
   for (const f of gj.features) {
     const yd = f.properties.yd;
     if (yd % iv) continue;
@@ -130,12 +149,12 @@ function contourArrows(gj, area, iv) {
 // A thin line arrow pointing up (north), its tail at the bottom with a hair of
 // a gap; the layer anchors the tail on the contour line and turns it downhill.
 function arrowImage() {
-  const W = 24, H = 40, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const W = 16, H = 28, c = document.createElement('canvas'); c.width = W; c.height = H;
   const x = c.getContext('2d');
   x.lineCap = x.lineJoin = 'round';
-  const draw = () => { x.beginPath(); x.moveTo(12, 36); x.lineTo(12, 5); x.moveTo(5, 13); x.lineTo(12, 5); x.lineTo(19, 13); x.stroke(); };
-  x.strokeStyle = 'rgba(0,0,0,.55)'; x.lineWidth = 5.5; draw();
-  x.strokeStyle = '#fff3c4'; x.lineWidth = 2.5; draw();
+  const draw = () => { x.beginPath(); x.moveTo(8, 25); x.lineTo(8, 4); x.moveTo(4, 9); x.lineTo(8, 4); x.lineTo(12, 9); x.stroke(); };
+  x.strokeStyle = 'rgba(0,0,0,.35)'; x.lineWidth = 4; draw();
+  x.strokeStyle = '#c6f5cf'; x.lineWidth = 2; draw();
   return x.getImageData(0, 0, W, H);
 }
 const EMPTY = { type: 'FeatureCollection', features: [] };
@@ -167,24 +186,22 @@ export async function drawElevation(m, cid, hole) {
     for (const id of ['elev-contours', 'elev-arrows']) if (m.getSource(id)) m.getSource(id).setData(EMPTY);
     return;
   }
-  const gj = await load(cid, 'contours');
+  const gj = await loadContours(cid);
   if (!m.getStyle() || !elevPrefs.contours) return;
   const area = holeArea(hole);
   if (!m.getSource('elev-contours')) {
     m.addSource('elev-contours', { type: 'geojson', data: EMPTY });
-    m.addLayer({ id: 'elev-contour', type: 'line', source: 'elev-contours', filter: ['!', ['get', 'idx']],
-      paint: { 'line-color': '#fff3c4', 'line-width': 1, 'line-opacity': ['*', 0.6, ['get', 'a']] } }, below());
-    // Every fifth line (the index contour) is bolder, to count by.
-    m.addLayer({ id: 'elev-contour-index', type: 'line', source: 'elev-contours', filter: ['get', 'idx'],
-      paint: { 'line-color': '#ffe58a', 'line-width': 2, 'line-opacity': ['*', 0.9, ['get', 'a']] } }, below());
+    // Thin, even green lines, like a yardage book's green pages.
+    m.addLayer({ id: 'elev-contour', type: 'line', source: 'elev-contours', layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: { 'line-color': '#b4efc0', 'line-width': ['interpolate', ['linear'], ['zoom'], 16, 0.8, 19, 1.3], 'line-opacity': ['*', 0.75, ['get', 'a']] } }, below());
   }
   if (!m.getSource('elev-arrows')) {
-    if (!m.hasImage('elev-arrow2')) m.addImage('elev-arrow2', arrowImage(), { pixelRatio: 2 });
+    if (!m.hasImage('elev-arrow3')) m.addImage('elev-arrow3', arrowImage(), { pixelRatio: 2 });
     m.addSource('elev-arrows', { type: 'geojson', data: EMPTY });
     ARROW_ZOOM.forEach((z, lvl) => m.addLayer({ id: `elev-arrows-${lvl}`, type: 'symbol', source: 'elev-arrows', minzoom: z, filter: ['==', ['get', 'lvl'], lvl],
-      layout: { 'icon-image': 'elev-arrow2', 'icon-anchor': 'bottom', 'icon-rotate': ['get', 'b'], 'icon-rotation-alignment': 'map',
-        'icon-allow-overlap': true, 'icon-ignore-placement': true, 'icon-size': ['interpolate', ['linear'], ['zoom'], 16, 0.7, 19, 1] },
-      paint: { 'icon-opacity': ['*', 0.95, ['get', 'a']] } }, below()));
+      layout: { 'icon-image': 'elev-arrow3', 'icon-anchor': 'bottom', 'icon-rotate': ['get', 'b'], 'icon-rotation-alignment': 'map',
+        'icon-allow-overlap': true, 'icon-ignore-placement': true, 'icon-size': ['interpolate', ['linear'], ['zoom'], 16, 0.75, 19, 1] },
+      paint: { 'icon-opacity': ['*', 0.9, ['get', 'a']] } }, below()));
   }
   m.getSource('elev-contours').setData(gj ? clipContours(gj, area, elevPrefs.contourYd) : EMPTY);
   m.getSource('elev-arrows').setData(gj ? contourArrows(gj, area, elevPrefs.contourYd) : EMPTY);
