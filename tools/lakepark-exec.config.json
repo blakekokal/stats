@@ -1,0 +1,15 @@
+{
+  "id": "lakepark-exec",
+  "name": "Lake Park Golf Course – Executive",
+  "location": "Lewisville, TX",
+  "par": [3,3,3,4,3,3,3,3,3],
+  "hcp": [11,17,5,1,3,7,13,15,9],
+  "_comment_tees": "Scorecard from GolfPass and Offcourse (they agree on the yardages; par 28, handicaps from GolfPass). No rating or slope is published for these tees.",
+  "tees": [
+    {"name": "Blue",  "rating": null, "slope": null, "yards": [160,118,152,350,183,154,146,130,144]},
+    {"name": "White", "rating": null, "slope": null, "yards": [130,97,137,326,179,133,136,117,133]},
+    {"name": "Red",   "rating": null, "slope": null, "yards": [120,87,125,264,173,118,126,108,128]}
+  ],
+  "shift": {"east": 0, "north": 0},
+  "drop": []
+}

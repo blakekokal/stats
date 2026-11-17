@@ -452,6 +452,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.99.0', ['New course: Lake Park Golf Course – Executive (Lewisville), the 9-hole par-28 course, built without a yardage book: greens, fairways, water, tee boxes and hole lines from OpenStreetMap, Blue/White/Red yardages from the scorecard (no rating or slope is published), out-of-bounds line from the course boundary, trees from the satellite picture as circles, and elevation (contours and plays-like yardages)']],
   ['0.98.0', ['New course: Lake Park Golf Course – Championship (Lewisville), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap, out-of-bounds line from the course boundary, trees from the satellite picture as circles, and elevation (contours and plays-like yardages)']],
   ['0.97.0', ['New course: Lantana Golf Club (Lantana), built without a yardage book: greens, fairways, bunkers, water and tee boxes from OpenStreetMap lined up on the satellite picture, hole lines worked out from the scorecard, out-of-bounds line from the course boundary, trees from the picture as circles, and elevation (contours and plays-like yardages)']],
   ['0.96.4', ['GPS Overview: the Score box above the hole pill is gone (nothing is scored there)']],
