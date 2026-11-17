@@ -880,8 +880,8 @@ export function renderHole(view, n) {
     return row;
   };
   const contourChips = elevChips(CONTOUR_YD.map(y => [`${y} yd`, y]), () => elevPrefs.contourYd, v => { elevPrefs.contourYd = v; });
-  // Switching contours closes the box (its intervals stay in place either way, so nothing jumps).
-  const contourRow = viewSwitch('Contours & slope', () => elevPrefs.contours, v => { elevPrefs.contours = v; redrawElev(); closeView(); });
+  // The intervals stay in place whether contours are on or off, so the box doesn't jump.
+  const contourRow = viewSwitch('Contours & slope', () => elevPrefs.contours, v => { elevPrefs.contours = v; redrawElev(); drawViewBox(); });
   const playsRow = viewSwitch('Plays like', () => elevPrefs.playsLike, v => { elevPrefs.playsLike = v; update(); });
   const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips, playsRow);
   elevIndex().then(ix => { elevInfo = ix[course.id] || null; elevBox.hidden = !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
@@ -1945,8 +1945,8 @@ export function renderHole(view, n) {
       const hb = elevPrefs.playsLike && heightAt(course.id, elevInfo, b, () => { if (map === m) update(); });
       if (ha == null || hb == null || ha === false || hb === false) return [h('b', {}, `${yd} yd`)];
       const dz = Math.round((hb - ha) * YD_PER_M);
-      // The yardage stays centred as usual; the rise/drop (red uphill, green
-      // downhill) and the plays-like number hang off its right side.
+      // The yardage as usual, and just under it the rise/drop (red uphill,
+      // green downhill) and the plays-like number.
       return [h('b', { class: 'playslike' }, `${yd} yd`, h('span', { class: 'pl' },
         h('small', { class: dz > 0 ? 'up' : dz < 0 ? 'down' : '' }, `(${dz > 0 ? '+' : dz < 0 ? '−' : ''}${Math.abs(dz)})`), ` ${yd + dz}`))];
     };
