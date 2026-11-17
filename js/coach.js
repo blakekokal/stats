@@ -426,6 +426,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.85.3', ['Fixed: the app opened to a blank screen after 0.85.2']],
   ['0.85.2', ['Text you couldn’t read is readable now: dark grey words on the dark background (subtitles, empty messages, small labels and delete buttons in My Bag, Practice, Coaching and Performance Analysis) are a lighter grey', 'Combine buttons (Short Game Combines, Evaluation Test): the name and its description sit on two lines again instead of running together off the screen']],
   ['0.85.1', ['Plays like: the plays-like number lines up right under the yardage. The Wind box is smaller and sits lower, with just the direction and speed sliders (the Into / Helping / From left / From right buttons are gone); tap Live to go back to the live wind']],
   ['0.85.0', ['Wind: tap the wind arrow under the compass to set the wind by hand and try things out: Into, Helping, From left or From right (as the map faces), or slide the direction and speed. Plays like (with Wnd on) uses it straight away. A hand-set wind has a yellow ring and stays until you tap Use live wind']],
