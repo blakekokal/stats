@@ -262,6 +262,16 @@ const RELIEF_ARROW = { fill: 'none', stroke: '#2b2f2c', 'stroke-width': 0.55, 's
 
 // Everything the pages need about hole n from the tee set `teeName`.
 // helpers: { holeFeatures(ch), ownGreen(ch) } from the hole screen.
+// The front of a tee box: where a line from its middle toward `toward` (the
+// hole's first bend or the green) leaves the box.
+function boxFront(box, toward) {
+  const c = boxCentre(box), f = frame(c, 0);
+  const r = closeRing(ringOf(box)).map(f.fwd), t = f.fwd(toward), L = Math.hypot(t[0], t[1]) || 1;
+  const far = [(t[0] / L) * 400, (t[1] / L) * 400];
+  const k = firstCross([0, 0], far, r);
+  return k == null ? c : f.back([far[0] * k, far[1] * k]);
+}
+
 function holeFacts(n, teeName, helpers) {
   const ch = course.holes[n - 1];
   const own = helpers.holeFeatures(ch);
@@ -269,7 +279,10 @@ function holeFacts(n, teeName, helpers) {
   const greenF = helpers.ownGreen(ch);
   const boxes = own.filter(f => f.t === 'tee');
   const teeBox = teeBoxFor(teeName, ch, boxes);
-  const tee = teePosition(teeName, ch, boxes);
+  if (teeBox && !boxes.includes(teeBox)) boxes.push(teeBox); // tied to this hole by the course file
+  // Every number is measured from the front of the tee box (the edge nearest
+  // the green), not its middle.
+  const tee = teeBox ? boxFront(teeBox, ch.line[1]) : teePosition(teeName, ch, boxes);
   const line = [tee, ...ch.line.slice(1)];
   const pin = ch.pin;
   const greenRing = greenF ? closeRing(ringOf(greenF)) : null;
@@ -498,7 +511,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     if (!chosen && !prefs.allTees) continue;
     const c = P(centroid(r));
     const names = course.tees.filter(t => teeBoxFor(t.name, ch, F.boxes) === b).map(t => t.name);
-    const v = Math.round(toFront(f.fwd(boxCentre(b))));
+    const v = Math.round(toFront(f.fwd(boxFront(b, ch.line[1]))));
     const label = chosen ? `${names.length ? names.join('/') : teeName} ${v}` : `${names.join('/') || 'Tee'} ${v}`;
     const size = chosen ? 10 : 8.5;
     const spot = lab.place([[c[0] + 9, c[1] + 3, 'start'], [c[0] - 9, c[1] + 3, 'end'], [c[0] + 9, c[1] + 12, 'start'], [c[0] - 9, c[1] + 12, 'end']], textW(label, size), size, bounds);
