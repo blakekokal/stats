@@ -756,10 +756,11 @@ export function renderHole(view, n) {
   // For that score a shot within 5 yd of water or OB counts as in it, and one
   // within 3 yd of a bunker as in the bunker, so the pick keeps that far clear.
   // Shots in trees or recovery areas score as recovery shots, and a line aimed
-  // at a hazard, bunker or trees is never picked while another is open. The
-  // highest SG wins, except that an option within 0.05 of it with fewer shots in
-  // trouble (hazards, bunkers, trees) or, level on those, more on the fairway
-  // (or green) is preferred. Trees in the way of the shot aren't
+  // at a hazard, bunker or trees is never picked while another is open. A club's
+  // line is its highest-scoring one, except that a line within 0.05 of it with
+  // fewer shots in trouble (hazards, bunkers, trees) or, level on those, more on
+  // the fairway (or green) is preferred. The club is then simply the one with
+  // the highest SG on its line. Trees in the way of the shot aren't
   // looked at. The crosshair moves to the pick and Disp shows its spread. Clubs
   // that would fly well past the pin are skipped. While Comp is on, Auto instead
   // swings each compared club onto its own best line (the crosshair stays put).
@@ -819,9 +820,8 @@ export function renderHole(view, n) {
       }
       results.push(choose(lines));
     }
-    // The pick first, then the other clubs by score.
-    const best = results.length ? choose(results) : null;
-    return { from, results: best ? [best, ...results.filter(r => r !== best).sort((a, b) => b.score - a.score)] : [] };
+    // Each club is on its best line; the club with the highest SG there is the pick.
+    return { from, results: results.sort((a, b) => b.sg - a.sg) };
   }
   // Auto stays on from hole to hole (for this visit): each new hole opens with
   // its pick made, or with Comp on, each compared club on its own best line.
@@ -850,8 +850,7 @@ export function renderHole(view, n) {
     if (!showDisp) { setDispOn(true); onlyOne('disp'); }
     autoKey.replaceChildren(h('small', {}, 'Auto · best clubs (avg SG)'), ...results.slice(0, 4).map((r, i) => h('span', { class: i ? '' : 'best' },
       `${clubShort(r.club)} ${r.yd}y · ${Math.abs(r.off) < 1 ? 'at pin' : `${Math.round(Math.abs(r.off))}° ${r.off < 0 ? 'L' : 'R'}`} · `,
-      h('b', { class: r.sg >= 0 ? 'pos' : 'neg' }, `${r.sg >= 0 ? '+' : '−'}${Math.abs(r.sg).toFixed(2)}`),
-      h('small', { class: 'why' }, ` · ${r.fw}/20 fwy`))));
+      h('b', { class: r.sg >= 0 ? 'pos' : 'neg' }, `${r.sg >= 0 ? '+' : '−'}${Math.abs(r.sg).toFixed(2)}`))));
     autoKey.hidden = false;
     m.easeTo({ center: ll(b.aim), duration: 500 });
     update();
