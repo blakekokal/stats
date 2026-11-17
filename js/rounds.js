@@ -14,8 +14,14 @@ export const roundKeyOf = id => 'round:' + id;
 let scoutRound = null;
 export const isScouting = () => { try { return sessionStorage.getItem('gs:scouting') === '1'; } catch { return false; } };
 const newScout = (tee, course) => ({ id: 'scout', scouting: true, holeCount: 18, holes: {}, updated: Date.now(), ...(tee ? { tee } : {}), ...(course ? { course } : {}) });
-export function startScouting(tee, course) { endWatching(); try { sessionStorage.setItem('gs:scouting', '1'); } catch { /* ignore */ } scoutRound = newScout(tee, course); }
-export function endScouting() { try { sessionStorage.removeItem('gs:scouting'); sessionStorage.removeItem('gs:scoutBag'); } catch { /* ignore */ } scoutRound = null; }
+export function startScouting(tee, course, type = 'Casual') {
+  endWatching();
+  try { sessionStorage.setItem('gs:scouting', '1'); sessionStorage.setItem('gs:scoutType', type); } catch { /* ignore */ }
+  scoutRound = newScout(tee, course);
+}
+// GPS Overview in Tournament mode: the hole screen keeps to what the rules allow.
+export const isTourneyScout = () => { try { return sessionStorage.getItem('gs:scoutType') === 'Tournament'; } catch { return false; } };
+export function endScouting() { try { sessionStorage.removeItem('gs:scouting'); sessionStorage.removeItem('gs:scoutBag'); sessionStorage.removeItem('gs:scoutType'); } catch { /* ignore */ } scoutRound = null; }
 
 // Live view: someone else's round, opened from a share link. Held in memory
 // only and never saved here; `watch` is what was fetched:
