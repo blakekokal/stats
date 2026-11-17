@@ -132,7 +132,18 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .exppill select { min-height: 36px; padding: 4px 8px; border-radius: 10px; background: #2a2f2c; border-color: #444; }
 .compass { position: absolute; top: calc(34px + env(safe-area-inset-top)); left: 10px; z-index: 3; width: 34px; height: 34px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); display: grid; place-items: center; box-shadow: 0 1px 4px #0008; }
 .compass svg { width: 26px; height: 26px; transition: transform .1s linear; }
-.wind { position: absolute; top: calc(74px + env(safe-area-inset-top)); left: 10px; z-index: 3; width: 34px; height: 34px; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); display: grid; place-items: center; box-shadow: 0 1px 4px #0008; pointer-events: none; }
+.wind { position: absolute; top: calc(74px + env(safe-area-inset-top)); left: 10px; z-index: 3; width: 34px; height: 34px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); display: grid; place-items: center; box-shadow: 0 1px 4px #0008; cursor: pointer; }
+.wind.manual { box-shadow: 0 0 0 2px #ffe14d, 0 1px 4px #0008; }
+/* Wind box: set the wind by hand to try things out. */
+/* Low on the left (where the View box opens), clear of the yardages so they can be watched as the wind changes. */
+.sheet.windbox { left: 70px; bottom: calc(186px + env(safe-area-inset-bottom)); width: min(230px, calc(100vw - 84px)); gap: 6px; padding: 10px; }
+.windbox > strong { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
+.windpicks { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.windpicks button, .windbox .windlive { min-height: 0; padding: 5px 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: transparent; color: inherit; font-size: 13px; font-weight: 600; }
+.windbox .windlive[hidden] { display: none; }
+.windrow { display: grid; gap: 0; font-size: 13px; }
+.windrow input { min-height: 0; height: 22px; padding: 0; margin: 0; border: 0; background: none; }
+.windrow input { width: 100%; }
 .wind[hidden] { display: none; }
 .wind svg { grid-area: 1 / 1; width: 34px; height: 34px; transition: transform .1s linear; }
 .wind b { grid-area: 1 / 1; color: #fff; font: 800 12px/1 system-ui, sans-serif; font-variant-numeric: tabular-nums; }
