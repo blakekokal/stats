@@ -452,6 +452,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.3.1', ['Tournament mode: the Tools button (Width, Arc, Disp, Appr) is gone completely']],
   ['1.3.0', ['New courses: Fields Ranch – East and West (PGA Frisco), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines for both courses from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundaries, and elevation (contours and plays-like yardages)']],
   ['1.2.0', ['New course: Iron Horse Golf Course (North Richland Hills), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the sand in the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.1.0', ['New courses: Indian Creek Golf Club – Creek and Lakes (Carrollton), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap, scorecards with Black/Blue/White/Red ratings and yardages, out-of-bounds line from the course boundary, trees from the satellite picture as circles, and elevation (contours and plays-like yardages)']],
