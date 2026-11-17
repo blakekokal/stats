@@ -81,7 +81,7 @@ function renderCombinePutt(sessions) {
   if (!focusEl) return;
 
   if (sessions.length === 0) {
-    focusEl.innerHTML = '<div style="background:#141817;border:1px solid #1c2120;border-radius:10px;padding:10px 11px;font-size:11px;color:#232a27;text-align:center;">No putting combines yet</div>';
+    focusEl.innerHTML = '<div style="background:#141817;border:1px solid #1c2120;border-radius:10px;padding:10px 11px;font-size:11px;color:#8a9a8e;text-align:center;">No putting combines yet</div>';
     overviewEl.innerHTML = '';
     detailEl.innerHTML = '';
     return;
@@ -170,9 +170,9 @@ function renderCombinePutt(sessions) {
     '<div style="font-size:15px;font-weight:800;line-height:1;color:#e8ede9;">' + (avgPuttsPerHole !== null ? avgPuttsPerHole : '\u2014') + '</div>' +
     '<div style="font-size:7px;color:#5a6b60;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">Putts / Hole</div></div></div>' +
     '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
-    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#e8ede9;">' + sessions.length + '</span><span style="font-size:8px;color:#232a27;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">combines</span></div>' +
-    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#e8ede9;">' + totalHolesAll + '</span><span style="font-size:8px;color:#232a27;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">holes</span></div></div>' +
-    '<div style="font-size:9px;color:#232a27;text-align:right;" id="perfCombinePuttCaret">View detail \u2192</div></div>';
+    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#e8ede9;">' + sessions.length + '</span><span style="font-size:8px;color:#8a9a8e;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">combines</span></div>' +
+    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#e8ede9;">' + totalHolesAll + '</span><span style="font-size:8px;color:#8a9a8e;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">holes</span></div></div>' +
+    '<div style="font-size:9px;color:#8a9a8e;text-align:right;" id="perfCombinePuttCaret">View detail \u2192</div></div>';
 
   // Build bucket detail (hidden)
   var dHtml = '';
@@ -205,7 +205,7 @@ function renderCombineWedge(sessions) {
   if (!focusEl) return;
 
   if (sessions.length === 0) {
-    focusEl.innerHTML = '<div style="background:#141817;border:1px solid #1c2120;border-radius:10px;padding:10px 11px;font-size:11px;color:#232a27;text-align:center;">No wedge combines yet</div>';
+    focusEl.innerHTML = '<div style="background:#141817;border:1px solid #1c2120;border-radius:10px;padding:10px 11px;font-size:11px;color:#8a9a8e;text-align:center;">No wedge combines yet</div>';
     overviewEl.innerHTML = '';
     detailEl.innerHTML = '';
     return;
@@ -296,9 +296,9 @@ function renderCombineWedge(sessions) {
     '<div style="font-size:15px;font-weight:800;line-height:1;color:#e8ede9;">' + (avgScore !== null ? avgScore : '\u2014') + '</div>' +
     '<div style="font-size:7px;color:#5a6b60;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">Avg Score</div></div></div>' +
     '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
-    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#e8ede9;">' + sessions.length + '</span><span style="font-size:8px;color:#232a27;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">combines</span></div>' +
-    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#e8ede9;">' + totalShotsAll + '</span><span style="font-size:8px;color:#232a27;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">shots hit</span></div></div>' +
-    '<div style="font-size:9px;color:#232a27;text-align:right;" id="perfCombineWedgeCaret">View detail \u2192</div></div>';
+    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#e8ede9;">' + sessions.length + '</span><span style="font-size:8px;color:#8a9a8e;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">combines</span></div>' +
+    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#e8ede9;">' + totalShotsAll + '</span><span style="font-size:8px;color:#8a9a8e;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">shots hit</span></div></div>' +
+    '<div style="font-size:9px;color:#8a9a8e;text-align:right;" id="perfCombineWedgeCaret">View detail \u2192</div></div>';
 
   var dHtml = '';
   wedgeBucketDefs.forEach(function(bk) {

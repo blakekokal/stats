@@ -60,7 +60,7 @@ export function renderWgTab() {
   // Use only the latest session (single session model)
   var s = sessions.length > 0 ? sessions[sessions.length - 1] : null;
   if (!s) {
-    list.innerHTML = '<div style="background:#222222;border-radius:12px;padding:24px;text-align:center;color:#2e2e2e;font-size:13px;">No session yet. Tap + New Session to start.</div>';
+    list.innerHTML = '<div style="background:#222222;border-radius:12px;padding:24px;text-align:center;color:#9a9a9a;font-size:13px;">No session yet. Tap + New Session to start.</div>';
     if (newBtn) newBtn.textContent = '+ New Session';
     return;
   }
@@ -72,9 +72,9 @@ export function renderWgTab() {
   var gridCols = '52px ' + swingLabels.map(function(){ return '1fr'; }).join(' ');
   var cells = '';
   // Header row
-  cells += '<div style="font-size:9px;font-weight:700;color:#2e2e2e;padding:3px 2px;">Club</div>';
+  cells += '<div style="font-size:9px;font-weight:700;color:#9a9a9a;padding:3px 2px;">Club</div>';
   swingLabels.forEach(function(l) {
-    cells += '<div style="font-size:9px;font-weight:700;color:#2e2e2e;text-align:center;padding:3px 2px;">' + l + '</div>';
+    cells += '<div style="font-size:9px;font-weight:700;color:#9a9a9a;text-align:center;padding:3px 2px;">' + l + '</div>';
   });
   // Editable rows
   s.clubs.forEach(function(club) {
@@ -237,9 +237,9 @@ function wgRenderClubGrid() {
   }
   grid.innerHTML =
     '<div style="width:100%;">' +
-      '<div style="font-size:9px;color:#2e2e2e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Named</div>' +
+      '<div style="font-size:9px;color:#9a9a9a;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Named</div>' +
       '<div style="display:flex;gap:6px;margin-bottom:10px;">' + WG_WEDGE_NAMED.map(btn).join('') + '</div>' +
-      '<div style="font-size:9px;color:#2e2e2e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Degree</div>' +
+      '<div style="font-size:9px;color:#9a9a9a;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px;">Degree</div>' +
       '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;">' + WG_WEDGE_DEGREE.map(btn).join('') + '</div>' +
     '</div>';
 }

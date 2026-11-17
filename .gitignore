@@ -5,3 +5,6 @@ tools/*/z1[57]*.png*
 tools/*/tiles/
 tools/*/check.png
 tools/*/*-check.jpg
+tools/*/m1[6-9].png
+tools/*/m1[6-9].png.meta
+tools/*.dem.npy

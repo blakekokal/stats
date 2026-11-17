@@ -37,7 +37,7 @@ export function sgCalcReset() {
   document.getElementById('sgCalcStatRemain').textContent = '–';
   document.getElementById('sgCalcStatRemain').style.color = '#44b8f0';
   document.getElementById('sgCalcStatSg').textContent = '–';
-  document.getElementById('sgCalcStatSg').style.color = '#2e2e2e';
+  document.getElementById('sgCalcStatSg').style.color = '#9a9a9a';
   sgCalcDrawHole();
   sgCalcLoadCanvas();
 }

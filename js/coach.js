@@ -67,9 +67,9 @@ export function renderHome(view) {
   search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 
   const brand = h('div', { style: 'text-align:center;margin-bottom:6px;' });
-  brand.innerHTML = `<div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:1px;line-height:1.0;color:#ffffff;">Blake Kokal<br><span style="display:inline-flex;align-items:baseline;justify-content:center;"><span style="font-size:10px;visibility:hidden;font-weight:600;">What's new</span><span style="font-size:13px;visibility:hidden;font-weight:700;margin-right:5px;">v${VERSION}</span>Golf<span class="wn" style="font-size:13px;color:#2e2e2e;font-weight:700;margin-left:6px;cursor:pointer;">v${VERSION}</span><span class="wn" style="font-size:10px;color:#44b8f0;font-weight:600;margin-left:5px;cursor:pointer;">&#x2190; What's new</span></span></div>`;
+  brand.innerHTML = `<div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:1px;line-height:1.0;color:#ffffff;">Blake Kokal<br><span style="display:inline-flex;align-items:baseline;justify-content:center;"><span style="font-size:10px;visibility:hidden;font-weight:600;">What's new</span><span style="font-size:13px;visibility:hidden;font-weight:700;margin-right:5px;">v${VERSION}</span>Golf<span class="wn" style="font-size:13px;color:#606060;font-weight:700;margin-left:6px;cursor:pointer;">v${VERSION}</span><span class="wn" style="font-size:10px;color:#44b8f0;font-weight:600;margin-left:5px;cursor:pointer;">&#x2190; What's new</span></span></div>`;
   brand.querySelectorAll('.wn').forEach(el => el.addEventListener('click', () => { location.hash = '#/whatsnew'; }));
-  brand.append(h('div', { style: 'font-size:11px;color:#2e2e2e;margin-top:3px;' }, sync.user ? '👤 ' + sync.name : ''));
+  brand.append(h('div', { style: 'font-size:11px;color:#606060;margin-top:3px;' }, sync.user ? '👤 ' + sync.name : ''));
 
   // Coaching, with a dot when a note, message or assignment is waiting.
   const coaching = go('🎓', 'Coaching', '#00402c', '#/coaching');
@@ -426,7 +426,24 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
-  ['0.78.0', ['New course: Grapevine Golf Course \u2013 Mockingbird, the second of its three nines, built from its yardage book. Ratings and slopes to come from the club']],
+  ['0.86.0', ['New course: Grapevine Golf Course \u2013 Mockingbird, the second of its three nines, built from its yardage book']],
+  ['0.85.3', ['Fixed: the app opened to a blank screen after 0.85.2']],
+  ['0.85.2', ['Text you couldn’t read is readable now: dark grey words on the dark background (subtitles, empty messages, small labels and delete buttons in My Bag, Practice, Coaching and Performance Analysis) are a lighter grey', 'Combine buttons (Short Game Combines, Evaluation Test): the name and its description sit on two lines again instead of running together off the screen']],
+  ['0.85.1', ['Plays like: the plays-like number lines up right under the yardage. The Wind box is smaller and sits lower, with just the direction and speed sliders (the Into / Helping / From left / From right buttons are gone); tap Live to go back to the live wind']],
+  ['0.85.0', ['Wind: tap the wind arrow under the compass to set the wind by hand and try things out: Into, Helping, From left or From right (as the map faces), or slide the direction and speed. Plays like (with Wnd on) uses it straight away. A hand-set wind has a yellow ring and stays until you tap Use live wind']],
+  ['0.84.1', ['Plays like: the main yardage always stays centred over the crosshair; the rise or drop beside it is smaller and centred on the line']],
+  ['0.84.0', ['Plays like sits left of Expected. Tap it and two round switches show under it: Elv (the height change, on to start) and Wnd (the wind, off to start: into the wind adds 1% a mph, downwind takes off 0.5% a mph). The rise or drop now sits right by the number, e.g. 161(+1) yd, with what it plays under it']],
+  ['0.83.0', ['Plays like has its own button at the top right, under Expected (Cowboys for now). With it on, each yardage by the crosshair shows the rise or drop right beside it (red uphill, green downhill) and what it plays just under it, a little smaller in blue', 'Switching Contours & slope leaves the View box open, and the box no longer jumps']],
+  ['0.82.0', ['Course lines are smooth and rounded now: fairways, greens, bunkers, water, tee boxes and trees are drawn as curves instead of jagged straight edges, on the hole map and in the hole editor. OB and the course boundary keep their hard corners']],
+  ['0.81.0', ['Plays like (View box, Cowboys): the yardages by the crosshair show how many yards the ground rises or drops and what the shot plays, e.g. 250(−5) 245 yd from the tee to the crosshair and 125(+2) 127 yd from there to the pin', 'Hillshade is gone; switching Contours & slope now closes the View box, and the box no longer jumps around']],
+  ['0.80.5', ['Contours & slope: contour lines and arrows are see-through now, so the course shows through them']],
+  ['0.80.4', ['Contours & slope: lighter, near-white contour lines and arrows with a faint dark edge, at full strength across the hole (fading only at the very edge), so they stand out on the grass']],
+  ['0.80.3', ['Contours & slope: contour lines and arrows are a little thinner and fully opaque, so they stand out more']],
+  ['0.80.2', ['Contours & slope: smooth, rounded contour lines in a thin light green, all the same weight, like a yardage book’s green pages, with smaller, finer downhill arrows']],
+  ['0.80.1', ['Contours & slope: the downhill arrows now sit on the contour lines (thin line arrows, tail on the line, pointing straight downhill) instead of scattered over the ground']],
+  ['0.80.0', ['Contours & slope (View box, Cowboys): contour lines now every 1, 3 or 5 yards, and only around the hole you’re on, fading out at the edges. Little arrows point downhill, bigger where it’s steeper; zoom in for more of them']],
+  ['0.79.0', ['Elevation on the hole map (Cowboys Golf Club for now): the View box has Hillshade, to see the slopes (Soft, Medium or Strong), and Contour lines every 1, 2, 5 or 10 ft, with every fifth line bolder. Heights come from USGS lidar']],
+  ['0.78.0', ['New course: Tour 18 Golf Course Dallas (Flower Mound), built from its yardage book: greens, fairways, bunkers, water, tee boxes and hole lines, lined up on the satellite picture, with every bunker checked against the sand in the picture; trees from the picture as circles. No out-of-bounds line yet: draw it in the hole editor (Draw new boundary \u2192 Course boundary)']],
   ['0.77.0', ['New course: Grapevine Golf Course \u2013 Bluebonnet (the first of its three nines), built from its yardage book. Nine-hole courses start a 9-hole round (no 18-hole option); ratings and slopes to come from the club']],
   ['0.76.2', ['Fewer trees to edit: where 2\u20135 small trees stood together, one bigger tree now covers the same spot (Sherrill Park #1 and #2, Bear Creek West, Bridlewood). Your published edits are kept']],
   ['0.76.1', ['Bridlewood: trees added from the satellite picture as circles (a few big ones in each wood, one per lone tree), inside the course boundary only and off greens, fairways, tees, bunkers and water. Nothing else changed']],

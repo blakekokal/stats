@@ -15,7 +15,7 @@
 // included, under 'course:<id>' (with ob: true so the OB edits are used too).
 
 import { h, course, toast, LIE_COLOR, along, boxCentre, teeBoxFor, saveCourseEdits, unpublishedEdits } from './app.js';
-import { inPolygon } from './geo.js';
+import { inPolygon, drawnRing } from './geo.js';
 
 const maplibregl = window.maplibregl;
 export const EDIT_TYPES = ['fairway', 'rough', 'bunker', 'water', 'recovery', 'trees', 'tee', 'green', 'ob'];
@@ -78,7 +78,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   m.addSource('bedit', { type: 'geojson', data: fc([]) });
   m.addSource('bedit-draft', { type: 'geojson', data: fc([]) });
   m.addLayer({ id: 'bedit-fill', type: 'fill', source: 'bedit', paint: { 'fill-color': ['get', 'color'], 'fill-opacity': ['case', ['get', 'sel'], 0.35, 0.12] } });
-  m.addLayer({ id: 'bedit-line', type: 'line', source: 'bedit', paint: { 'line-color': ['get', 'color'], 'line-width': ['case', ['get', 'sel'], 3.5, 1.75], 'line-opacity': 0.95 } });
+  m.addLayer({ id: 'bedit-line', type: 'line', source: 'bedit', layout: { 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': ['case', ['get', 'sel'], 3.5, 1.75], 'line-opacity': 0.95 } });
   m.addLayer({ id: 'bedit-draft', type: 'line', source: 'bedit-draft', layout: { 'line-cap': 'round', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 3, 'line-dasharray': ['literal', [2, 1.2]] } });
   const hidden = ['outlines', 'sgt', 'sgt-shadow', 'shots', 'shots-shadow', 'shotspen', 'shotspen-shadow'].filter(id => m.getLayer(id));
   const wasVisible = hidden.map(id => m.getLayoutProperty(id, 'visibility'));
@@ -88,12 +88,12 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
   function drawLayers() {
     const feats = work.filter(inScope).map((f, i) => ({
       type: 'Feature', id: i, properties: { k: work.indexOf(f), color: color(f.t), sel: f === sel },
-      geometry: { type: 'Polygon', coordinates: f.p.map(r => r.map(ll)) },
+      geometry: { type: 'Polygon', coordinates: f.p.map(r => drawnRing(r, f.t).map(ll)) }, // rounded, as the hole map draws it; the corner dots stay on the real corners
     }));
     // The selected one last, so its outline is drawn on top.
     feats.sort((a, b) => a.properties.sel - b.properties.sel);
     m.getSource('bedit').setData(fc(feats));
-    const d = draft && draft.length ? [{ type: 'Feature', properties: { color: color(drawType) }, geometry: { type: 'LineString', coordinates: (draft.length > 2 ? close(draft) : draft).map(ll) } }] : [];
+    const d = draft && draft.length ? [{ type: 'Feature', properties: { color: color(drawType) }, geometry: { type: 'LineString', coordinates: (draft.length > 2 ? drawnRing(close(draft), drawType) : draft).map(ll) } }] : [];
     m.getSource('bedit-draft').setData(fc(d));
     drawTeeLabels();
   }

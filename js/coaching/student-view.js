@@ -125,8 +125,8 @@ function setSvPerfPage(page) {
   document.getElementById('svPerfPageCombines').style.display = isRounds ? 'none' : '';
   var btnR = document.getElementById('svPerfBtnRounds');
   var btnC = document.getElementById('svPerfBtnCombines');
-  if (btnR) { btnR.style.background = isRounds ? '#2d7abc' : 'transparent'; btnR.style.color = isRounds ? '#ffffff' : '#2e2e2e'; }
-  if (btnC) { btnC.style.background = isRounds ? 'transparent' : '#2d7abc'; btnC.style.color = isRounds ? '#2e2e2e' : '#ffffff'; }
+  if (btnR) { btnR.style.background = isRounds ? '#2d7abc' : 'transparent'; btnR.style.color = isRounds ? '#ffffff' : '#9a9a9a'; }
+  if (btnC) { btnC.style.background = isRounds ? 'transparent' : '#2d7abc'; btnC.style.color = isRounds ? '#9a9a9a' : '#ffffff'; }
   if (!isRounds && !_svPerfCombineLoaded) {
     _svPerfCombineLoaded = true;
     loadSvPerfCombineData();
