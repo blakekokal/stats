@@ -163,5 +163,20 @@
    717
   ],
   "source": "USGS 3DEP"
+ },
+ "grapevine-mockingbird": {
+  "bounds": [
+   -97.053965,
+   32.976172,
+   -97.038206,
+   32.985736
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   458,
+   553
+  ],
+  "source": "USGS 3DEP"
  }
 }
