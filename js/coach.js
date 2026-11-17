@@ -426,6 +426,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.84.1', ['Plays like: the main yardage always stays centred over the crosshair; the rise or drop beside it is smaller and centred on the line']],
   ['0.84.0', ['Plays like sits left of Expected. Tap it and two round switches show under it: Elv (the height change, on to start) and Wnd (the wind, off to start: into the wind adds 1% a mph, downwind takes off 0.5% a mph). The rise or drop now sits right by the number, e.g. 161(+1) yd, with what it plays under it']],
   ['0.83.0', ['Plays like has its own button at the top right, under Expected (Cowboys for now). With it on, each yardage by the crosshair shows the rise or drop right beside it (red uphill, green downhill) and what it plays just under it, a little smaller in blue', 'Switching Contours & slope leaves the View box open, and the box no longer jumps']],
   ['0.82.0', ['Course lines are smooth and rounded now: fairways, greens, bunkers, water, tee boxes and trees are drawn as curves instead of jagged straight edges, on the hole map and in the hole editor. OB and the course boundary keep their hard corners']],

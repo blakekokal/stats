@@ -505,8 +505,10 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .viewelev[hidden] { display: none; }
 .viewchips { display: flex; gap: 6px; padding: 0 2px 4px; }
 .viewchips.off { opacity: .45; }
-/* Rise/drop right by the number: "161(+1) yd". */
-.readout b.playslike .dz { font-size: 17px; font-weight: 700; color: #fff; margin-left: 2px; vertical-align: .55em; }
+/* The number stays centred; the rise/drop (small, centred on the line) and "yd" sit to its right: "161(+1) yd". */
+.readout b.playslike .num { position: relative; }
+.readout b.playslike .tail { position: absolute; left: 100%; top: 0; bottom: 0; display: flex; align-items: center; gap: 4px; padding-left: 4px; white-space: nowrap; }
+.readout b.playslike .dz { font-size: 13px; font-weight: 700; color: #fff; }
 .readout b.playslike .up { color: #ff6b6b; } .readout b.playslike .down { color: #4ade80; }
 .readout b.playslike .pl { display: block; font-size: 22px; color: #9fdcff; }
 .readout b.playslike .pl .wnd { font-size: 14px; font-weight: 700; }

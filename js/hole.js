@@ -1962,9 +1962,9 @@ export function renderHole(view, n) {
     // for a yard: "250(−5) 245".
     // Plays like: the yardage, and what it plays counting the height change
     // (a yard for a yard) and, if Wnd is on, the wind: into it adds 1% a mph,
-    // downwind takes off 0.5% a mph (crosswind not counted). The rise/drop
-    // sits right by the number (red uphill, green downhill), "161(+1) yd",
-    // and the plays-like number under it.
+    // downwind takes off 0.5% a mph (crosswind not counted). The number stays
+    // centred, the rise/drop right by it (small, red uphill, green downhill),
+    // "161(+1) yd", and the plays-like number under it.
     const yardage = (a, b, d) => {
       const yd = Math.round(d);
       const plain = [h('b', {}, `${yd} yd`)];
@@ -1982,10 +1982,11 @@ export function renderHole(view, n) {
       }
       if (dz == null && wind == null) return plain;
       const sign = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v)}`;
-      return [h('b', { class: 'playslike' }, h('span', { class: 'num' }, `${yd}`,
-          dz != null ? h('small', { class: 'dz' + (dz > 0 ? ' up' : dz < 0 ? ' down' : '') }, `(${sign(dz)})`) : null), ' yd',
-        h('span', { class: 'pl' }, `${yd + (dz || 0) + (wind || 0)} yd`,
-          wind != null ? h('small', { class: 'wnd' + (wind > 0 ? ' up' : wind < 0 ? ' down' : '') }, ` wind ${sign(wind)}`) : null))];
+      // The number stays centred; the rise/drop and "yd" hang off its right.
+      return [h('b', { class: 'playslike' }, h('span', { class: 'num' }, `${yd}`, h('span', { class: 'tail' },
+          dz != null ? h('small', { class: 'dz' + (dz > 0 ? ' up' : dz < 0 ? ' down' : '') }, `(${sign(dz)})`) : null, 'yd')),
+        h('span', { class: 'pl' }, h('span', { class: 'num' }, `${yd + (dz || 0) + (wind || 0)} yd`,
+          wind != null ? h('span', { class: 'tail' }, h('small', { class: 'wnd' + (wind > 0 ? ' up' : wind < 0 ? ' down' : '') }, `wind ${sign(wind)}`)) : null)))];
     };
     toPinEl.replaceChildren(...yardage(target, pin, toPin));
     fromTeeEl.replaceChildren(...yardage(from, target, fromTee),
