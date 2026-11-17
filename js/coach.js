@@ -67,9 +67,9 @@ export function renderHome(view) {
   search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 
   const brand = h('div', { style: 'text-align:center;margin-bottom:6px;' });
-  brand.innerHTML = `<div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:1px;line-height:1.0;color:#ffffff;">Blake Kokal<br><span style="display:inline-flex;align-items:baseline;justify-content:center;"><span style="font-size:10px;visibility:hidden;font-weight:600;">What's new</span><span style="font-size:13px;visibility:hidden;font-weight:700;margin-right:5px;">v${VERSION}</span>Golf<span class="wn" style="font-size:13px;color:#2e2e2e;font-weight:700;margin-left:6px;cursor:pointer;">v${VERSION}</span><span class="wn" style="font-size:10px;color:#44b8f0;font-weight:600;margin-left:5px;cursor:pointer;">&#x2190; What's new</span></span></div>`;
+  brand.innerHTML = `<div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:1px;line-height:1.0;color:#ffffff;">Blake Kokal<br><span style="display:inline-flex;align-items:baseline;justify-content:center;"><span style="font-size:10px;visibility:hidden;font-weight:600;">What's new</span><span style="font-size:13px;visibility:hidden;font-weight:700;margin-right:5px;">v${VERSION}</span>Golf<span class="wn" style="font-size:13px;color:#606060;font-weight:700;margin-left:6px;cursor:pointer;">v${VERSION}</span><span class="wn" style="font-size:10px;color:#44b8f0;font-weight:600;margin-left:5px;cursor:pointer;">&#x2190; What's new</span></span></div>`;
   brand.querySelectorAll('.wn').forEach(el => el.addEventListener('click', () => { location.hash = '#/whatsnew'; }));
-  brand.append(h('div', { style: 'font-size:11px;color:#2e2e2e;margin-top:3px;' }, sync.user ? '👤 ' + sync.name : ''));
+  brand.append(h('div', { style: 'font-size:11px;color:#606060;margin-top:3px;' }, sync.user ? '👤 ' + sync.name : ''));
 
   // Coaching, with a dot when a note, message or assignment is waiting.
   const coaching = go('🎓', 'Coaching', '#00402c', '#/coaching');
@@ -426,6 +426,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.83.1', ['Text you couldn’t read is readable now: dark grey words on the dark background (subtitles, empty messages, small labels and delete buttons in My Bag, Practice, Coaching and Performance Analysis) are a lighter grey', 'Combine buttons (Short Game Combines, Evaluation Test): the name and its description sit on two lines again instead of running together off the screen']],
   ['0.83.0', ['Plays like has its own button at the top right, under Expected (Cowboys for now). With it on, each yardage by the crosshair shows the rise or drop right beside it (red uphill, green downhill) and what it plays just under it, a little smaller in blue', 'Switching Contours & slope leaves the View box open, and the box no longer jumps']],
   ['0.82.0', ['Course lines are smooth and rounded now: fairways, greens, bunkers, water, tee boxes and trees are drawn as curves instead of jagged straight edges, on the hole map and in the hole editor. OB and the course boundary keep their hard corners']],
   ['0.81.0', ['Plays like (View box, Cowboys): the yardages by the crosshair show how many yards the ground rises or drops and what the shot plays, e.g. 250(−5) 245 yd from the tee to the crosshair and 125(+2) 127 yd from there to the pin', 'Hillshade is gone; switching Contours & slope now closes the View box, and the box no longer jumps around']],

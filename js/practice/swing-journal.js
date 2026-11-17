@@ -109,7 +109,7 @@ async function renderSwingJournal() {
       html += '<li style="display:flex;align-items:flex-start;gap:8px;">';
       html += '<span style="flex:1;">' + escHtml(e.text) + '</span>';
       if (canDelete) {
-        html += '<button onclick="deleteSwingJournalEntry(\'' + e.id + '\')" style="background:transparent;border:none;color:#2e2e2e;font-size:11px;cursor:pointer;padding:0 4px;height:auto;max-width:none;width:auto;flex-shrink:0;">×</button>';
+        html += '<button onclick="deleteSwingJournalEntry(\'' + e.id + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:11px;cursor:pointer;padding:0 4px;height:auto;max-width:none;width:auto;flex-shrink:0;">×</button>';
       }
       html += '</li>';
     });

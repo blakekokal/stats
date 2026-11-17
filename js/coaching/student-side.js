@@ -139,12 +139,12 @@ async function loadCoachingPageStudentView() {
         + '<div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:2px;"><span style="font-weight:700;font-size:15px;">' + escapeHtml(coach.display_name || 'Coach') + '</span>'
         + emailPart + '</div></div>';
     } else {
-      coachContent.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:10px 0;">Coach profile unavailable.</div>';
+      coachContent.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:10px 0;">Coach profile unavailable.</div>';
     }
   } else {
     coachContent.innerHTML = '<div style="text-align:center;padding:10px 0;">'
       + '<div style="font-size:28px;margin-bottom:8px;">👤</div>'
-      + '<div style="color:#2e2e2e;font-size:13px;">No coach connected yet.<br>Share your invite code on the Info tab!</div></div>';
+      + '<div style="color:#9a9a9a;font-size:13px;">No coach connected yet.<br>Share your invite code on the Info tab!</div></div>';
   }
 
   loadStudentCoachNotes();
@@ -154,7 +154,7 @@ async function loadCoachingPageStudentView() {
 
 async function loadStudentCoachNotes() {
   var list = document.getElementById('coachingNotesList');
-  list.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">Loading...</div>';
+  list.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">Loading...</div>';
 
   var [notesRes, drillsRes, combinesRes] = await Promise.all([
     _sb.from('coach_notes').select('note_text, created_at, coach_name, lesson_date, note_type').eq('student_id', S.currentUser.id).order('created_at', { ascending: false }).limit(100),
@@ -170,7 +170,7 @@ async function loadStudentCoachNotes() {
   all.sort(function(a, b) { return new Date(b.created_at) - new Date(a.created_at); });
 
   if (all.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">No feedback from your coach yet.</div>';
+    list.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No feedback from your coach yet.</div>';
     S.allCoachNotes = [];
     return;
   }
@@ -221,7 +221,7 @@ function filterStudentFeedback() {
 function renderFeedbackNotes(data) {
   var list = document.getElementById('coachingNotesList');
   if (!data || data.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">No notes match your filters.</div>';
+    list.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No notes match your filters.</div>';
     return;
   }
 
@@ -263,14 +263,14 @@ function renderFeedbackNotes(data) {
       return '<div onclick="showStudentCoachingTab(1)" style="' + doneStyle + 'border-bottom:1px solid #282828;padding:12px 0;cursor:pointer;">'
         + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;flex-wrap:wrap;gap:4px;">'
         + '<div style="display:flex;align-items:center;"><div style="font-size:11px;font-weight:700;color:#44b8f0;">' + escapeHtml(n.coach_name || 'Coach') + '</div>' + assignBadge + '</div>'
-        + '<div style="font-size:10px;color:#2e2e2e;">' + sentDate + '</div></div>'
+        + '<div style="font-size:10px;color:#9a9a9a;">' + sentDate + '</div></div>'
         + '<div style="font-size:13px;color:#44b8f0;line-height:1.6;">' + assignText + dueLine + (n.completed ? ' <span style="font-size:11px;color:#00b87a;">\u2713</span>' : '') + '</div></div>';
     }
 
     return '<div style="border-bottom:1px solid #282828;padding:12px 0;">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;flex-wrap:wrap;gap:4px;">'
       + '<div style="display:flex;align-items:center;"><div style="font-size:11px;font-weight:700;color:#44b8f0;">' + escapeHtml(n.coach_name || 'Coach') + '</div>' + typeBadge + '</div>'
-      + '<div style="font-size:10px;color:#2e2e2e;">' + sentDate + '</div></div>'
+      + '<div style="font-size:10px;color:#9a9a9a;">' + sentDate + '</div></div>'
       + lessonLine
       + '<div style="font-size:13px;color:#9a9a9a;line-height:1.6;">' + noteText + '</div></div>';
   }).join('');
@@ -285,7 +285,7 @@ async function loadStudentAssignedDrills() {
     .limit(20);
 
   if (error || !data || data.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:10px 0;">No drills assigned yet.</div>';
+    list.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:10px 0;">No drills assigned yet.</div>';
     return;
   }
 
@@ -299,12 +299,12 @@ async function loadStudentAssignedDrills() {
       + '<div style="font-size:10px;color:' + catColor + ';font-weight:700;text-transform:uppercase;">' + escapeHtml(d.drill_category || '') + '</div></div>'
       + (d.note ? '<div style="font-size:12px;color:#9a9a9a;font-style:italic;margin-bottom:6px;">"' + escapeHtml(d.note) + '"</div>' : '')
       + '<div style="display:flex;align-items:center;justify-content:space-between;">'
-      + '<div style="font-size:10px;color:#2e2e2e;">From ' + escapeHtml(d.coach_name || 'Coach') + ' · ' + dateStr + '</div>'
+      + '<div style="font-size:10px;color:#9a9a9a;">From ' + escapeHtml(d.coach_name || 'Coach') + ' · ' + dateStr + '</div>'
       + '<button data-idx="' + idx + '" onclick="toggleDrillComplete(this,' + idx + ')" '
       + 'style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:' + (d.completed ? '#007a52' : '#007a52') + ';'
       + 'color:' + (d.completed ? '#00b87a' : '#ffffff') + ';border:none;cursor:pointer;height:auto;max-width:none;width:auto;">'
       + (d.completed ? '✓ Done' : 'Mark Done') + '</button></div>'
-      + (d.completion_note ? '<div style="font-size:11px;color:#2e2e2e;margin-top:6px;padding-top:6px;border-top:1px solid #282828;">📝 ' + escapeHtml(d.completion_note) + '</div>' : '')
+      + (d.completion_note ? '<div style="font-size:11px;color:#9a9a9a;margin-top:6px;padding-top:6px;border-top:1px solid #282828;">📝 ' + escapeHtml(d.completion_note) + '</div>' : '')
       + '</div>';
   }).join('');
 }
@@ -319,7 +319,7 @@ async function loadStudentAssignedCombines() {
     .limit(20);
 
   if (error || !data || data.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:10px 0;">No combines assigned yet.</div>';
+    list.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:10px 0;">No combines assigned yet.</div>';
     return;
   }
 
@@ -342,7 +342,7 @@ async function loadStudentAssignedCombines() {
       + shotInfo
       + (c.note ? '<div style="font-size:12px;color:#9a9a9a;font-style:italic;margin-bottom:6px;">"' + escapeHtml(c.note) + '"</div>' : '')
       + '<div style="display:flex;align-items:center;justify-content:space-between;">'
-      + '<div style="font-size:10px;color:#2e2e2e;">From ' + escapeHtml(c.coach_name || 'Coach') + ' · ' + assignedDate + dueStr + '</div>'
+      + '<div style="font-size:10px;color:#9a9a9a;">From ' + escapeHtml(c.coach_name || 'Coach') + ' · ' + assignedDate + dueStr + '</div>'
       + '<div style="display:flex;align-items:center;">' + startBtn
       + '<button data-idx="' + idx + '" onclick="toggleCombineComplete(this,' + idx + ')" '
       + 'style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:' + (c.completed ? '#007a52' : '#333333') + ';'

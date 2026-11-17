@@ -8,7 +8,7 @@ import { escapeHtml } from './core.js';
 export async function loadSvNotes() {
   var list = document.getElementById('svNotesList');
   if (!list) return;
-  list.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">Loading...</div>';
+  list.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">Loading...</div>';
 
   var { data, error } = await _sb.from('coach_notes')
     .select('id, note_text, created_at, lesson_date, note_type')
@@ -18,7 +18,7 @@ export async function loadSvNotes() {
     .limit(100);
 
   if (error || !data || data.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">No notes for this student yet.</div>';
+    list.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No notes for this student yet.</div>';
     S.svAllNotes = [];
     document.getElementById('svNotesCount').textContent = '';
     return;
@@ -66,7 +66,7 @@ function renderSvNotes(data) {
   if (!list) return;
 
   if (!data || data.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">No notes match your filters.</div>';
+    list.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No notes match your filters.</div>';
     return;
   }
 
@@ -97,7 +97,7 @@ function renderSvNotes(data) {
     // Preserve newlines that aren't already bullet divs
     noteText = noteText.replace(/\n/g, '<br>');
 
-    var editBtn = n.id ? '<button onclick="editSvNote(\'' + n.id + '\')" style="background:transparent;border:none;color:#2e2e2e;font-size:14px;cursor:pointer;padding:2px 4px;height:auto;width:auto;max-width:none;" title="Edit note">✏️</button>' : '';
+    var editBtn = n.id ? '<button onclick="editSvNote(\'' + n.id + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:14px;cursor:pointer;padding:2px 4px;height:auto;width:auto;max-width:none;" title="Edit note">✏️</button>' : '';
 
     return '<div id="svNote_' + (n.id || idx) + '" style="border-bottom:1px solid #282828;padding:12px 0;">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;flex-wrap:wrap;gap:4px;">'
@@ -105,9 +105,9 @@ function renderSvNotes(data) {
       + escapeHtml(document.getElementById('studentViewName').textContent || 'Student')
       + '</div>' + typeBadge + '</div>'
       + '<div style="display:flex;align-items:center;gap:8px;">'
-      + '<div style="font-size:10px;color:#2e2e2e;">' + sentDate + '</div>'
+      + '<div style="font-size:10px;color:#9a9a9a;">' + sentDate + '</div>'
       + editBtn
-      + (n.id ? '<button onclick="deleteSvNote(\'' + n.id + '\')" style="background:transparent;border:none;color:#2e2e2e;font-size:14px;cursor:pointer;padding:2px 4px;height:auto;width:auto;max-width:none;" title="Delete note">🗑</button>' : '')
+      + (n.id ? '<button onclick="deleteSvNote(\'' + n.id + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:14px;cursor:pointer;padding:2px 4px;height:auto;width:auto;max-width:none;" title="Delete note">🗑</button>' : '')
       + '</div></div>'
       + lessonLine
       + '<div style="font-size:13px;color:#9a9a9a;line-height:1.6;">' + noteText + '</div></div>';

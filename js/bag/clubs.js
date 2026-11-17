@@ -339,10 +339,10 @@ export function renderBagClubs() {
     return '<div onclick="openClubDetail(\'' + safe + '\')" style="background:#222222;border-radius:10px;padding:10px 6px;cursor:pointer;border:1px solid #282828;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:68px;">' +
       '<div style="font-size:14px;font-weight:800;color:#9a9a9a;line-height:1.2;">' + dName + '</div>' + labelHtml +
       '<div style="display:flex;gap:4px;margin-top:6px;align-items:baseline;">' +
-        '<div style="text-align:center;"><div style="font-size:8px;color:#2e2e2e;font-weight:600;line-height:1;">CARRY</div><div style="font-size:13px;font-weight:700;color:#3d96ee;line-height:1.3;">' + (displayCarry !== '' ? displayCarry : '—') + '</div></div>' +
-        '<div style="color:#2e2e2e;font-size:10px;">|</div>' +
-        '<div style="text-align:center;"><div style="font-size:8px;color:#2e2e2e;font-weight:600;line-height:1;">TOTAL</div><div style="font-size:13px;font-weight:700;color:#ffffff;line-height:1.3;">' + (total !== '' ? total : '—') + '</div></div>' +
-        '<div style="color:#2e2e2e;font-size:10px;">|</div>' +
+        '<div style="text-align:center;"><div style="font-size:8px;color:#9a9a9a;font-weight:600;line-height:1;">CARRY</div><div style="font-size:13px;font-weight:700;color:#3d96ee;line-height:1.3;">' + (displayCarry !== '' ? displayCarry : '—') + '</div></div>' +
+        '<div style="color:#9a9a9a;font-size:10px;">|</div>' +
+        '<div style="text-align:center;"><div style="font-size:8px;color:#9a9a9a;font-weight:600;line-height:1;">TOTAL</div><div style="font-size:13px;font-weight:700;color:#ffffff;line-height:1.3;">' + (total !== '' ? total : '—') + '</div></div>' +
+        '<div style="color:#9a9a9a;font-size:10px;">|</div>' +
         '<div style="text-align:center;"><div style="font-size:12px;color:#606060;font-weight:700;line-height:1;">¾</div><div style="font-size:13px;font-weight:700;color:#ffffff;line-height:1.3;">' + (carry34 !== '' ? carry34 : '—') + '</div></div>' +
       '</div>' +
     '</div>';
@@ -380,14 +380,14 @@ function openClubDetail(name) {
   html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">';
   if (isWedge && wgSess) {
     // Wedge with gapping data: editable carry (from wg full avg) and total
-    html += '<div style="text-align:center;"><div style="font-size:10px;color:#2e2e2e;font-weight:600;margin-bottom:4px;">CARRY</div><input type="number" inputmode="numeric" value="' + (displayCarry !== '' ? displayCarry : '') + '" placeholder="—" min="0" max="400" onchange="updateWgAvg(\'' + safe + '\',0,this.value);updateBagClub(\'' + safe + '\',\'carry\',this.value);openClubDetail(\'' + safe + '\')" style="' + inStyle + '"></div>';
-    html += '<div style="text-align:center;"><div style="font-size:10px;color:#2e2e2e;font-weight:600;margin-bottom:4px;">TOTAL</div><input type="number" inputmode="numeric" value="' + total + '" placeholder="—" min="0" max="450" onchange="updateBagClub(\'' + safe + '\',\'total\',this.value);openClubDetail(\'' + safe + '\')" style="' + inStyle + '"></div>';
+    html += '<div style="text-align:center;"><div style="font-size:10px;color:#9a9a9a;font-weight:600;margin-bottom:4px;">CARRY</div><input type="number" inputmode="numeric" value="' + (displayCarry !== '' ? displayCarry : '') + '" placeholder="—" min="0" max="400" onchange="updateWgAvg(\'' + safe + '\',0,this.value);updateBagClub(\'' + safe + '\',\'carry\',this.value);openClubDetail(\'' + safe + '\')" style="' + inStyle + '"></div>';
+    html += '<div style="text-align:center;"><div style="font-size:10px;color:#9a9a9a;font-weight:600;margin-bottom:4px;">TOTAL</div><input type="number" inputmode="numeric" value="' + total + '" placeholder="—" min="0" max="450" onchange="updateBagClub(\'' + safe + '\',\'total\',this.value);openClubDetail(\'' + safe + '\')" style="' + inStyle + '"></div>';
   } else if (hasShots) {
-    html += '<div style="text-align:center;background:#282828;border-radius:8px;padding:10px;"><div style="font-size:10px;color:#2e2e2e;font-weight:600;margin-bottom:4px;">CARRY</div><div style="font-size:18px;font-weight:700;color:#ffffff;">' + (displayCarry !== '' ? displayCarry : '—') + '</div></div>';
-    html += '<div style="text-align:center;background:#282828;border-radius:8px;padding:10px;"><div style="font-size:10px;color:#2e2e2e;font-weight:600;margin-bottom:4px;">TOTAL</div><div style="font-size:18px;font-weight:700;color:#ffffff;">' + (total !== '' ? total : '—') + '</div></div>';
+    html += '<div style="text-align:center;background:#282828;border-radius:8px;padding:10px;"><div style="font-size:10px;color:#9a9a9a;font-weight:600;margin-bottom:4px;">CARRY</div><div style="font-size:18px;font-weight:700;color:#ffffff;">' + (displayCarry !== '' ? displayCarry : '—') + '</div></div>';
+    html += '<div style="text-align:center;background:#282828;border-radius:8px;padding:10px;"><div style="font-size:10px;color:#9a9a9a;font-weight:600;margin-bottom:4px;">TOTAL</div><div style="font-size:18px;font-weight:700;color:#ffffff;">' + (total !== '' ? total : '—') + '</div></div>';
   } else {
-    html += '<div style="text-align:center;"><div style="font-size:10px;color:#2e2e2e;font-weight:600;margin-bottom:4px;">CARRY</div><input type="number" inputmode="numeric" value="' + displayCarry + '" placeholder="—" min="0" max="400" onchange="updateBagClub(\'' + safe + '\',\'carry\',this.value);openClubDetail(\'' + safe + '\')" style="' + inStyle + '"></div>';
-    html += '<div style="text-align:center;"><div style="font-size:10px;color:#2e2e2e;font-weight:600;margin-bottom:4px;">TOTAL</div><input type="number" inputmode="numeric" value="' + total + '" placeholder="—" min="0" max="450" onchange="updateBagClub(\'' + safe + '\',\'total\',this.value);openClubDetail(\'' + safe + '\')" style="' + inStyle + '"></div>';
+    html += '<div style="text-align:center;"><div style="font-size:10px;color:#9a9a9a;font-weight:600;margin-bottom:4px;">CARRY</div><input type="number" inputmode="numeric" value="' + displayCarry + '" placeholder="—" min="0" max="400" onchange="updateBagClub(\'' + safe + '\',\'carry\',this.value);openClubDetail(\'' + safe + '\')" style="' + inStyle + '"></div>';
+    html += '<div style="text-align:center;"><div style="font-size:10px;color:#9a9a9a;font-weight:600;margin-bottom:4px;">TOTAL</div><input type="number" inputmode="numeric" value="' + total + '" placeholder="—" min="0" max="450" onchange="updateBagClub(\'' + safe + '\',\'total\',this.value);openClubDetail(\'' + safe + '\')" style="' + inStyle + '"></div>';
   }
   html += '</div>';
 
@@ -395,7 +395,7 @@ function openClubDetail(name) {
   if (!isWedge) {
     var carry34 = (club.carry34 !== null && club.carry34 !== undefined) ? club.carry34 : '';
     html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">';
-    html += '<div style="font-size:11px;color:#2e2e2e;font-weight:700;">¾ CARRY</div>';
+    html += '<div style="font-size:11px;color:#9a9a9a;font-weight:700;">¾ CARRY</div>';
     html += '<input type="number" inputmode="numeric" value="' + carry34 + '" placeholder="—" min="0" max="400" onchange="updateBagClub(\'' + safe + '\',\'carry34\',this.value)" style="width:80px;height:32px;font-size:13px;font-weight:700;text-align:center;background:#282828;border:1px solid #3d3d3d;border-radius:8px;color:#ffffff;">';
     html += '</div>';
   }
@@ -404,7 +404,7 @@ function openClubDetail(name) {
   if (isWedge && wgSess) {
     var wgSwings = WG_SWINGS[wgSess.swingType] || [];
     var wgClubData = wgSess.results[club.name] || {};
-    html += '<div style="margin-bottom:12px;"><div style="font-size:10px;color:#2e2e2e;font-weight:600;margin-bottom:6px;">PARTIAL SHOTS</div>';
+    html += '<div style="margin-bottom:12px;"><div style="font-size:10px;color:#9a9a9a;font-weight:600;margin-bottom:6px;">PARTIAL SHOTS</div>';
     html += '<div style="display:grid;grid-template-columns:repeat(' + wgSwings.length + ',1fr);gap:6px;">';
     wgSwings.forEach(function(label, si) {
       var entry = wgClubData['sw' + si];
@@ -420,7 +420,7 @@ function openClubDetail(name) {
   if (!S.bagViewingStudentId) {
     var arcW = (store.get('clubArcs') || {})[club.name] || '';
     html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">';
-    html += '<div style="font-size:11px;color:#2e2e2e;font-weight:700;">ARC WIDTH</div>';
+    html += '<div style="font-size:11px;color:#9a9a9a;font-weight:700;">ARC WIDTH</div>';
     html += '<input type="number" inputmode="numeric" value="' + arcW + '" placeholder="auto" min="5" max="100" onchange="setBagClubArc(\'' + safe + '\',this.value)" style="width:80px;height:32px;font-size:13px;font-weight:700;text-align:center;background:#282828;border:1px solid #3d3d3d;border-radius:8px;color:#ffffff;">';
     html += '<div style="font-size:10px;color:#606060;text-align:left;line-height:1.3;">yds on the hole map. Blank = 15% of its yardage.</div>';
     html += '</div>';

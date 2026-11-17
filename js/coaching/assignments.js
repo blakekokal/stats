@@ -85,7 +85,7 @@ async function _finalizeDrillToggle(btn, idx, newVal, completionNote) {
       if (!noteEl) {
         noteEl = document.createElement('div');
         noteEl.className = 'completion-note-row';
-        noteEl.style.cssText = 'font-size:11px;color:#2e2e2e;margin-top:6px;padding-top:6px;border-top:1px solid #282828;';
+        noteEl.style.cssText = 'font-size:11px;color:#9a9a9a;margin-top:6px;padding-top:6px;border-top:1px solid #282828;';
         card.appendChild(noteEl);
       }
       noteEl.textContent = '\uD83D\uDCDD ' + completionNote;

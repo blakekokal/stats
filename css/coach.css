@@ -51,7 +51,8 @@ body.coach { background: #1e1e1e; }
 #coachroot { flex: 1; height: auto; }
 #coachroot[hidden] { display: none; }
 #view[hidden] { display: none; }
-.coachroot button { padding: 1px 6px; }
+/* The app's own buttons are flex rows (css/app.css); here a button's lines stack, as the pages were written. */
+.coachroot button { padding: 1px 6px; display: inline-block; }
 .coachroot input { padding: 1px 2px; }
 /* Step-back buttons inside a page: the top-left Back button presses them (appBack in core.js). */
 .coachroot .stepback { display: none !important; }
@@ -93,7 +94,7 @@ body.coach { background: #1e1e1e; }
 .coachroot .comb-hist-card .ch-date { font-size:11px; color:#606060; }
 .coachroot .comb-hist-card .ch-score { font-size:22px; font-weight:800; }
 .coachroot .comb-hist-card .ch-note { font-size:11px; color:#9a9a9a; margin-top:3px; font-style:italic; }
-.coachroot .comb-hist-card .ch-meta { font-size:11px; color:#2e2e2e; margin-top:2px; }
+.coachroot .comb-hist-card .ch-meta { font-size:11px; color:#9a9a9a; margin-top:2px; }
 .coachroot .comb-hist-del { background:transparent; border:none; color:#d4706e; font-size:12px; cursor:pointer; padding:0; height:auto; max-width:none; width:auto; }
 .coachroot .comb-dimmed { opacity:.35; pointer-events:none; }
 .coachroot #bagOptApp * { margin: 0; padding: 0; box-sizing: border-box; }

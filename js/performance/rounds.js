@@ -47,8 +47,8 @@ export function setPerfPage(page) {
   document.getElementById('perfPageCombines').style.display = isRounds ? 'none' : '';
   var btnR = document.getElementById('perfTabBtnRounds');
   var btnC = document.getElementById('perfTabBtnCombines');
-  if (btnR) { btnR.style.background = isRounds ? '#2b3d50' : 'transparent'; btnR.style.color = isRounds ? '#e8ede9' : '#232a27'; }
-  if (btnC) { btnC.style.background = isRounds ? 'transparent' : '#2b3d50'; btnC.style.color = isRounds ? '#232a27' : '#e8ede9'; }
+  if (btnR) { btnR.style.background = isRounds ? '#2b3d50' : 'transparent'; btnR.style.color = isRounds ? '#e8ede9' : '#8a9a8e'; }
+  if (btnC) { btnC.style.background = isRounds ? 'transparent' : '#2b3d50'; btnC.style.color = isRounds ? '#8a9a8e' : '#e8ede9'; }
   if (!isRounds && !S.perfCombineLoaded) {
     S.perfCombineLoaded = true;
     loadPerfCombineData();
@@ -495,7 +495,7 @@ export function renderPerfAnalysis(a) {
       '<div style="font-size:10px;text-align:center;color:#9aab9e;">' + stat1 + stat2Html + '</div>' +
       '<div style="height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:8px;">' +
       '<div style="width:' + Math.max(5, Math.min(100, (val + 2) / 4 * 100)) + '%;height:3px;background:' + color + ';border-radius:2px;"></div></div>' +
-      '<div style="font-size:9px;color:#232a27;margin-top:6px;text-align:right;">' + (active ? 'Close ▲' : 'View detail →') + '</div>';
+      '<div style="font-size:9px;color:#8a9a8e;margin-top:6px;text-align:right;">' + (active ? 'Close ▲' : 'View detail →') + '</div>';
   }
 
   var ottCard  = document.getElementById('perfCardOtt');
@@ -646,7 +646,7 @@ export function renderPerfAnalysis(a) {
 function perfTabHeader(key, title, color) {
   return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
     '<div style="font-size:14px;font-weight:800;color:' + color + ';">' + title + '</div>' +
-    '<button onclick="togglePerfTab(\'' + key + '\')" style="background:transparent;border:none;color:#232a27;font-size:12px;cursor:pointer;height:auto;max-width:none;width:auto;padding:0;">✕ Close</button>' +
+    '<button onclick="togglePerfTab(\'' + key + '\')" style="background:transparent;border:none;color:#8a9a8e;font-size:12px;cursor:pointer;height:auto;max-width:none;width:auto;padding:0;">✕ Close</button>' +
     '</div>';
 }
 

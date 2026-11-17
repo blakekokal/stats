@@ -94,7 +94,7 @@ export function renderPracticeNotes() {
   var totalEl = document.getElementById('ppTotalTime');
   if (!list) return;
   if (S.practiceNotes.length === 0) {
-    list.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:12px;padding:8px 0;">No notes yet. Add what you practiced above.</div>';
+    list.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:12px;padding:8px 0;">No notes yet. Add what you practiced above.</div>';
     if (totalEl) totalEl.textContent = '0 min';
     return;
   }
@@ -239,7 +239,7 @@ export async function loadPracticeHistory() {
 
     html += '<div style="display:flex;justify-content:flex-end;gap:12px;margin-top:6px;">';
     html += '<button onclick="editPracticeSession(\'' + s.id + '\')" style="background:transparent;border:none;color:#44b8f0;font-size:11px;font-weight:700;cursor:pointer;padding:0;height:auto;max-width:none;width:auto;">Edit</button>';
-    html += '<button onclick="deletePracticeSession(\'' + s.id + '\')" style="background:transparent;border:none;color:#2e2e2e;font-size:11px;cursor:pointer;padding:0;height:auto;max-width:none;width:auto;">Delete</button>';
+    html += '<button onclick="deletePracticeSession(\'' + s.id + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:11px;cursor:pointer;padding:0;height:auto;max-width:none;width:auto;">Delete</button>';
     html += '</div>';
     html += '</div>';
   });

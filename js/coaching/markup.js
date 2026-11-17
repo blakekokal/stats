@@ -7,7 +7,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
   <!-- HEADER -->
   <div style="width:100%;max-width:420px;padding:28px 16px 0;box-sizing:border-box;flex-shrink:0;">
     <div style="font-size:22px;font-weight:800;margin-bottom:2px;text-align:center;">🎓 Coaching</div>
-    <div id="coachingSubtitle" style="font-size:12px;color:#2e2e2e;text-align:center;margin-bottom:10px;">Loading...</div>
+    <div id="coachingSubtitle" style="font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:10px;">Loading...</div>
   </div>
 
   <!-- LOGIN GATE -->
@@ -57,12 +57,12 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
               <option value="12">Last Year</option>
             </select>
           </div>
-          <div id="feedbackFilterCount" style="font-size:11px;color:#2e2e2e;text-align:right;min-height:14px;margin-top:4px;"></div>
+          <div id="feedbackFilterCount" style="font-size:11px;color:#9a9a9a;text-align:right;min-height:14px;margin-top:4px;"></div>
         </div>
 
         <!-- Scrollable notes only -->
         <div id="coachingNotesList" style="flex:1;overflow-y:auto;padding:0 16px 80px;">
-          <div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">No feedback from your coach yet.</div>
+          <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No feedback from your coach yet.</div>
         </div>
       </div>
 
@@ -70,11 +70,11 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
       <div id="cstTabContent1" style="display:none;height:100%;overflow-y:auto;padding:14px 0 80px;">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:10px;">🎯 Assigned Drills</div>
         <div id="coachingAssignedDrillsList">
-          <div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">No drills assigned yet.</div>
+          <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No drills assigned yet.</div>
         </div>
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin:18px 0 10px;">🏌️ Assigned Combines</div>
         <div id="coachingAssignedCombinesList">
-          <div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">No combines assigned yet.</div>
+          <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No combines assigned yet.</div>
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
         <div style="background:#222222;border-radius:14px;padding:16px 18px;margin-bottom:14px;text-align:center;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:6px;">My Handicap Index</div>
           <div id="cstHandicapDisplay" style="font-size:32px;font-weight:800;color:#00b87a;padding:2px 0;">--</div>
-          <div id="cstHandicapInfo" style="font-size:11px;color:#2e2e2e;line-height:1.4;"></div>
+          <div id="cstHandicapInfo" style="font-size:11px;color:#9a9a9a;line-height:1.4;"></div>
           <div id="cstHandicapTrend" style="display:flex;align-items:flex-end;gap:2px;height:50px;justify-content:center;margin-top:8px;"></div>
         </div>
         <!-- My Goals -->
@@ -121,7 +121,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
       <!-- TAB 3: Messages -->
       <div id="cstTabContent3" style="display:none;height:100%;display:flex;flex-direction:column;margin:-14px -16px -40px;">
         <div id="cstMessagesList" style="flex:1;overflow-y:auto;padding:14px 16px 10px;">
-          <div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">No messages yet.</div>
+          <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No messages yet.</div>
         </div>
         <div style="flex-shrink:0;padding:8px 16px 20px;background:#1e1e1e;border-top:1px solid #282828;">
           <div id="cstMsgStatus" style="font-size:11px;min-height:14px;text-align:center;margin-bottom:4px;"></div>
@@ -148,7 +148,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
         <div style="background:#222222;border-radius:14px;padding:18px 20px;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:10px;">My Coach</div>
           <div id="coachingMyCoachContent">
-            <div style="text-align:center;color:#2e2e2e;font-size:13px;padding:10px 0;"><div style="font-size:28px;margin-bottom:8px;">👤</div>No coach connected yet.<br>Share your invite code above!</div>
+            <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:10px 0;"><div style="font-size:28px;margin-bottom:8px;">👤</div>No coach connected yet.<br>Share your invite code above!</div>
           </div>
         </div>
         <div style="text-align:center;margin-top:14px;">
@@ -192,7 +192,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
         <!-- Admin: Pending Coach Requests (only visible to admin) -->
         <div id="coachRequestsSection" style="display:none;background:#222222;border-radius:14px;padding:16px 18px;margin-bottom:14px;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#f0c830;margin-bottom:10px;">⏳ Pending Coach Requests</div>
-          <div id="coachRequestsList"><div style="color:#2e2e2e;font-size:13px;">Loading...</div></div>
+          <div id="coachRequestsList"><div style="color:#9a9a9a;font-size:13px;">Loading...</div></div>
         </div>
 
         <!-- Recent activity -->
@@ -201,7 +201,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;">🔔 Recent Activity</div>
             <button onclick="markCoachNotificationsRead()" id="markReadBtn" style="display:none;background:transparent;border:none;color:#44b8f0;font-size:11px;font-weight:700;cursor:pointer;height:auto;width:auto;max-width:none;padding:0;">Mark all read</button>
           </div>
-          <div id="coachActivityList"><div style="text-align:center;color:#2e2e2e;font-size:13px;padding:10px 0;">No recent activity.</div></div>
+          <div id="coachActivityList"><div style="text-align:center;color:#9a9a9a;font-size:13px;padding:10px 0;">No recent activity.</div></div>
         </div>
       </div>
 
@@ -260,7 +260,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
               <button id="coachCombModeBtn_combine" onclick="coachCombSetMode('combine')" style="flex:1;height:36px;font-size:12px;font-weight:700;background:#1a4a8a;border:2px solid #2d7abc;border-radius:8px;color:#ffffff;cursor:pointer;max-width:none;">Combine</button>
               <button id="coachCombModeBtn_custom" onclick="coachCombSetMode('custom')" style="flex:1;height:36px;font-size:12px;font-weight:700;background:#282828;border:2px solid #3d3d3d;border-radius:8px;color:#606060;cursor:pointer;max-width:none;">Custom</button>
             </div>
-            <div id="coachCombModeDesc" style="font-size:10px;color:#2e2e2e;margin-top:4px;text-align:center;">Fixed set of yardages, scrambled randomly</div>
+            <div id="coachCombModeDesc" style="font-size:10px;color:#9a9a9a;margin-top:4px;text-align:center;">Fixed set of yardages, scrambled randomly</div>
           </div>
 
           <!-- Combine mode options -->
@@ -292,9 +292,9 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
               <div style="display:flex;gap:6px;align-items:center;">
                 <div style="font-size:11px;color:#606060;">Range:</div>
                 <input id="coachCombCustomMin" type="number" value="50" style="width:55px;height:36px;font-size:13px;text-align:center;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;padding:0;">
-                <div style="font-size:11px;color:#2e2e2e;">to</div>
+                <div style="font-size:11px;color:#9a9a9a;">to</div>
                 <input id="coachCombCustomMax" type="number" value="120" style="width:55px;height:36px;font-size:13px;text-align:center;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;padding:0;">
-                <div style="font-size:10px;color:#2e2e2e;" id="coachCombRangeUnit">yds</div>
+                <div style="font-size:10px;color:#9a9a9a;" id="coachCombRangeUnit">yds</div>
               </div>
             </div>
             <button onclick="coachCombBuildCustom()" style="width:100%;height:34px;margin-top:6px;font-size:12px;font-weight:700;background:#00b87a;border:none;border-radius:8px;color:#ffffff;cursor:pointer;max-width:none;">Generate Shots</button>
@@ -302,7 +302,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
 
           <!-- Shot preview -->
           <div id="coachCombShotsBuilder" style="display:none;margin-bottom:8px;">
-            <div style="font-size:11px;font-weight:700;color:#44b8f0;margin-bottom:6px;">Shot Setup <span style="font-weight:400;color:#2e2e2e;">(edit distances below)</span></div>
+            <div style="font-size:11px;font-weight:700;color:#44b8f0;margin-bottom:6px;">Shot Setup <span style="font-weight:400;color:#9a9a9a;">(edit distances below)</span></div>
             <div id="coachCombShotsList" style="max-height:220px;overflow-y:auto;background:#1e1e1e;border-radius:10px;padding:8px;"></div>
           </div>
 
@@ -351,7 +351,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
           </select>
         </div>
         <div id="cctMessagesList" style="min-height:100px;max-height:400px;overflow-y:auto;margin-bottom:10px;">
-          <div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">Select a student to view messages.</div>
+          <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">Select a student to view messages.</div>
         </div>
         <div id="cctMsgStatus" style="font-size:11px;min-height:14px;text-align:center;margin-bottom:4px;"></div>
         <div id="cctMsgInputWrap" style="display:none;gap:8px;">
@@ -389,7 +389,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
           <div id="coachCreateTeamMsg" style="font-size:12px;min-height:14px;text-align:center;margin-bottom:8px;"></div>
           <!-- Team cards rendered here -->
           <div id="coachTeamCards">
-            <div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">Loading teams...</div>
+            <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">Loading teams...</div>
           </div>
         </div>
 
@@ -406,12 +406,12 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
           </div>
           <!-- Search within team -->
           <div style="display:flex;align-items:center;background:#222222;border:1px solid #333333;border-radius:8px;padding:6px 10px;margin-bottom:8px;gap:6px;">
-            <span style="color:#2e2e2e;font-size:13px;">🔍</span>
+            <span style="color:#9a9a9a;font-size:13px;">🔍</span>
             <input id="coachTeamPlayerSearch" type="text" placeholder="Search players..." oninput="filterTeamPlayers()" style="background:transparent;border:none;color:#ffffff;font-size:12px;width:100%;outline:none;height:auto;max-width:none;text-align:left;padding:0;">
           </div>
           <!-- Player list for this team -->
           <div id="coachTeamPlayerList">
-            <div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">No players.</div>
+            <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No players.</div>
           </div>
         </div>
         </div><!-- end hidden teams -->
@@ -431,7 +431,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
       <div id="studentViewHcpBadge" onclick="toggleStudentHcpDropdown(event)" style="display:none;position:relative;background:#1a4a8a;border:1px solid #2d7abc;border-radius:20px;padding:3px 9px;font-size:11px;font-weight:700;color:#44b8f0;white-space:nowrap;cursor:pointer;user-select:none;">
         <span id="studentViewHcpLabel"></span><span style="opacity:0.5;margin-left:4px;font-size:9px;">▼</span>
         <div id="studentHcpDropdown" style="display:none;position:absolute;top:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#222222;border:1px solid #333333;border-radius:10px;padding:6px;z-index:100;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,0.6);">
-          <div style="font-size:10px;color:#2e2e2e;text-align:center;padding:2px 0 6px;border-bottom:1px solid #282828;margin-bottom:4px;">Compare stats to</div>
+          <div style="font-size:10px;color:#9a9a9a;text-align:center;padding:2px 0 6px;border-bottom:1px solid #282828;margin-bottom:4px;">Compare stats to</div>
         </div>
       </div>
     </div>
@@ -482,12 +482,12 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
     <div id="svPerfTab" style="width:100%;max-width:360px;display:none;">
       <div style="display:flex;gap:0;border-radius:9px;overflow:hidden;margin-bottom:10px;">
         <button id="svPerfBtnRounds" onclick="setSvPerfPage('rounds')" style="flex:1;height:36px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:#2d7abc;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">Past Rounds</button>
-        <button id="svPerfBtnCombines" onclick="setSvPerfPage('combines')" style="flex:1;height:36px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:#2e2e2e;max-width:none;width:auto;padding:0;margin:0;">Combines</button>
+        <button id="svPerfBtnCombines" onclick="setSvPerfPage('combines')" style="flex:1;height:36px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:#9a9a9a;max-width:none;width:auto;padding:0;margin:0;">Combines</button>
       </div>
       <!-- Rounds sub-page -->
       <div id="svPerfPageRounds">
         <div id="svPerfSubtitle" style="font-size:12px;color:#606060;text-align:center;margin-bottom:6px;">Loading...</div>
-        <div id="svPerfNoRounds" style="display:none;background:#222222;border-radius:12px;padding:20px;text-align:center;color:#2e2e2e;font-size:13px;line-height:1.6;margin-bottom:12px;"></div>
+        <div id="svPerfNoRounds" style="display:none;background:#222222;border-radius:12px;padding:20px;text-align:center;color:#9a9a9a;font-size:13px;line-height:1.6;margin-bottom:12px;"></div>
         <div id="svPerfContent" style="display:none;">
           <div id="svPerfPriorityCard" style="border-radius:14px;padding:16px;margin-bottom:14px;"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
@@ -504,7 +504,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
       </div>
       <!-- Combines sub-page -->
       <div id="svPerfPageCombines" style="display:none;">
-        <div id="svPerfCombineLoading" style="background:#222222;border-radius:12px;padding:18px;text-align:center;color:#2e2e2e;font-size:13px;margin-bottom:10px;">Loading combine data…</div>
+        <div id="svPerfCombineLoading" style="background:#222222;border-radius:12px;padding:18px;text-align:center;color:#9a9a9a;font-size:13px;margin-bottom:10px;">Loading combine data…</div>
         <div id="svPerfCombineGrid" style="display:none;grid-template-columns:1fr 1fr;gap:10px;align-items:start;width:100%;">
           <div style="grid-column:1/-1;">
             <div id="svPerfCombinePuttFocus"></div>
@@ -517,7 +517,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
             <div id="svPerfCombineWedgeDetail" style="display:none;"></div>
           </div>
         </div>
-        <div id="svPerfCombineFooter" style="display:none;text-align:center;font-size:10px;color:#2e2e2e;margin-top:14px;">All stats vs scratch · combines only</div>
+        <div id="svPerfCombineFooter" style="display:none;text-align:center;font-size:10px;color:#9a9a9a;margin-top:14px;">All stats vs scratch · combines only</div>
       </div>
     </div>
 
@@ -600,7 +600,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
         <div style="background:#222222;border-radius:12px;padding:14px;margin-bottom:10px;">
           <div style="font-size:14px;font-weight:800;text-align:center;margin-bottom:4px;">Handicap Index</div>
           <div id="svHandicapDisplay" style="font-size:28px;font-weight:800;color:#00b87a;text-align:center;padding:4px 0;">--</div>
-          <div id="svHandicapInfo" style="font-size:11px;color:#2e2e2e;text-align:center;line-height:1.4;"></div>
+          <div id="svHandicapInfo" style="font-size:11px;color:#9a9a9a;text-align:center;line-height:1.4;"></div>
         </div>
         <div style="font-size:14px;font-weight:800;text-align:center;margin-bottom:8px;">Student Goals</div>
         <div id="svGoalsList" style="width:100%;"></div>
@@ -629,17 +629,17 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
         </div>
 
         <!-- Club List -->
-        <div id="svBagEmptyMsg" style="background:#222222;border-radius:12px;padding:24px;text-align:center;color:#2e2e2e;font-size:13px;line-height:1.7;">
+        <div id="svBagEmptyMsg" style="background:#222222;border-radius:12px;padding:24px;text-align:center;color:#9a9a9a;font-size:13px;line-height:1.7;">
           No clubs in this student's bag yet.
         </div>
-        <div id="svBagClubHeaders" style="display:none;grid-template-columns:1fr 80px 80px 36px;gap:6px;padding:0 6px 6px;font-size:11px;color:#2e2e2e;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">
+        <div id="svBagClubHeaders" style="display:none;grid-template-columns:1fr 80px 80px 36px;gap:6px;padding:0 6px 6px;font-size:11px;color:#9a9a9a;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">
           <div>Club</div>
           <div style="text-align:center;">Carry</div>
           <div style="text-align:center;">Total</div>
           <div></div>
         </div>
         <div id="svBagClubList" style="display:flex;flex-direction:column;gap:6px;"></div>
-        <div id="svBagSaveStatus" style="font-size:11px;min-height:14px;text-align:center;margin-top:8px;color:#2e2e2e;"></div>
+        <div id="svBagSaveStatus" style="font-size:11px;min-height:14px;text-align:center;margin-top:8px;color:#9a9a9a;"></div>
       </div>
 
       <!-- Schedule sub-tab -->
@@ -653,7 +653,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
           <div id="svSchedAddMsg" style="font-size:12px;min-height:16px;text-align:center;margin-top:6px;color:#00b87a;"></div>
         </div>
         <div style="font-size:16px;font-weight:800;text-align:center;margin-bottom:8px;">📅 Upcoming Rounds</div>
-        <div id="svSchedEmptyMsg" style="background:#222222;border-radius:12px;padding:24px;text-align:center;color:#2e2e2e;font-size:13px;line-height:1.7;">
+        <div id="svSchedEmptyMsg" style="background:#222222;border-radius:12px;padding:24px;text-align:center;color:#9a9a9a;font-size:13px;line-height:1.7;">
           No upcoming rounds scheduled.
         </div>
         <div id="svSchedList" style="display:flex;flex-direction:column;gap:6px;"></div>
@@ -698,12 +698,12 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
             <option value="12">Last Year</option>
           </select>
         </div>
-        <div id="svNotesCount" style="font-size:11px;color:#2e2e2e;text-align:right;min-height:14px;margin-top:4px;"></div>
+        <div id="svNotesCount" style="font-size:11px;color:#9a9a9a;text-align:right;min-height:14px;margin-top:4px;"></div>
       </div>
 
       <!-- Notes list -->
       <div id="svNotesList">
-        <div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">Loading notes...</div>
+        <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">Loading notes...</div>
       </div>
     </div>
 

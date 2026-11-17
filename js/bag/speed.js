@@ -104,7 +104,7 @@ export function renderSpeedTab() {
     if (grid) grid.innerHTML = metrics.map(function(m) {
       var val = spAvg(filtered, m.key);
       return '<div style="text-align:center;background:#282828;border-radius:8px;padding:8px 4px;">' +
-        '<div style="font-size:9px;color:#2e2e2e;font-weight:600;margin-bottom:3px;">' + m.label + '</div>' +
+        '<div style="font-size:9px;color:#9a9a9a;font-weight:600;margin-bottom:3px;">' + m.label + '</div>' +
         '<div style="font-size:16px;font-weight:800;color:' + m.color + ';">' + (val !== null ? val : '—') + '</div>' +
         spTrend(filtered, m.key) +
         '</div>';
@@ -115,7 +115,7 @@ export function renderSpeedTab() {
   var list = document.getElementById('spSessionList');
   if (!list) return;
   if (filtered.length === 0) {
-    list.innerHTML = '<div style="background:#222222;border-radius:12px;padding:24px;text-align:center;color:#2e2e2e;font-size:13px;">' +
+    list.innerHTML = '<div style="background:#222222;border-radius:12px;padding:24px;text-align:center;color:#9a9a9a;font-size:13px;">' +
       (getSpeedSessions().length === 0 ? 'No sessions yet. Tap + New Speed Session to start.' : 'No sessions match your filters.') + '</div>';
     return;
   }
@@ -126,7 +126,7 @@ export function renderSpeedTab() {
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
         '<div style="font-size:14px;font-weight:800;color:#9a9a9a;">' + s.club + '</div>' +
         '<div style="display:flex;align-items:center;gap:8px;">' +
-          '<div style="font-size:11px;color:#2e2e2e;">' + dateStr + ' · ' + s.shots.length + ' swings</div>' +
+          '<div style="font-size:11px;color:#9a9a9a;">' + dateStr + ' · ' + s.shots.length + ' swings</div>' +
           '<button onclick="spDeleteSession(\'' + s.id + '\')" style="background:#2a1a1a;border:1px solid #351a1a;border-radius:6px;color:#d4706e;font-size:13px;cursor:pointer;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;">×</button>' +
         '</div>' +
       '</div>' +
@@ -143,7 +143,7 @@ export function renderSpeedTab() {
 
 function spStatCell(label, val, color) {
   return '<div style="text-align:center;background:#282828;border-radius:8px;padding:6px 4px;">' +
-    '<div style="font-size:9px;color:#2e2e2e;font-weight:600;margin-bottom:2px;">' + label + '</div>' +
+    '<div style="font-size:9px;color:#9a9a9a;font-weight:600;margin-bottom:2px;">' + label + '</div>' +
     '<div style="font-size:15px;font-weight:800;color:' + color + ';">' + (val != null ? val : '—') + '</div>' +
     '</div>';
 }
@@ -181,7 +181,7 @@ function spPopulateClubGrid() {
   var grid = document.getElementById('spClubGrid');
   if (!grid) return;
   if (clubs.length === 0) {
-    grid.innerHTML = '<div style="color:#2e2e2e;font-size:13px;width:100%;text-align:center;padding:8px 0;">No clubs in bag yet.</div>';
+    grid.innerHTML = '<div style="color:#9a9a9a;font-size:13px;width:100%;text-align:center;padding:8px 0;">No clubs in bag yet.</div>';
     return;
   }
   grid.innerHTML = clubs.map(function(c) {
@@ -261,7 +261,7 @@ function spRenderShotInputs() {
   var html = '';
   for (var i = 0; i < _spShotCount; i++) {
     html += '<div style="display:grid;grid-template-columns:20px 1fr 1fr 1fr 1fr;gap:4px;align-items:center;">' +
-      '<div style="font-size:10px;color:#2e2e2e;font-weight:700;text-align:center;">' + (i + 1) + '</div>' +
+      '<div style="font-size:10px;color:#9a9a9a;font-weight:700;text-align:center;">' + (i + 1) + '</div>' +
       '<input type="number" id="spClubSpd_' + i + '" placeholder="—" min="0" max="200" style="' + s2 + 'color:#f0c830;">' +
       '<input type="number" id="spBallSpd_' + i + '" placeholder="—" min="0" max="250" style="' + s2 + 'color:#44b8f0;">' +
       '<input type="number" id="spCarry_'   + i + '" placeholder="—" min="0" max="400" style="' + s1 + '">' +
