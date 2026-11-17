@@ -1945,7 +1945,10 @@ export function renderHole(view, n) {
       const hb = elevPrefs.playsLike && heightAt(course.id, elevInfo, b, () => { if (map === m) update(); });
       if (ha == null || hb == null || ha === false || hb === false) return [h('b', {}, `${yd} yd`)];
       const dz = Math.round((hb - ha) * YD_PER_M);
-      return [h('b', { class: 'playslike' }, `${yd}`, h('small', {}, `(${dz > 0 ? '+' : dz < 0 ? '−' : ''}${Math.abs(dz)})`), ` ${yd + dz} yd`)];
+      // The yardage stays centred as usual; the rise/drop (red uphill, green
+      // downhill) and the plays-like number hang off its right side.
+      return [h('b', { class: 'playslike' }, `${yd} yd`, h('span', { class: 'pl' },
+        h('small', { class: dz > 0 ? 'up' : dz < 0 ? 'down' : '' }, `(${dz > 0 ? '+' : dz < 0 ? '−' : ''}${Math.abs(dz)})`), ` ${yd + dz}`))];
     };
     toPinEl.replaceChildren(...yardage(target, pin, toPin));
     fromTeeEl.replaceChildren(...yardage(from, target, fromTee),
