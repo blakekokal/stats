@@ -195,11 +195,11 @@ export async function drawElevation(m, cid, hole) {
     // Full strength until close to the edge of the hole's area, then fading.
     const fade = ['min', 1, ['*', 2, ['get', 'a']]];
     const lineLayout = { 'line-join': 'round', 'line-cap': 'round' };
-    // A faint dark edge under each line so it shows on light and dark ground alike.
+    // A very faint dark edge under each line so it still shows on light ground.
     m.addLayer({ id: 'elev-contour-edge', type: 'line', source: 'elev-contours', layout: lineLayout,
-      paint: { 'line-color': '#000', 'line-width': ['interpolate', ['linear'], ['zoom'], 16, 1.8, 19, 2.4], 'line-opacity': ['*', 0.3, fade] } }, below());
+      paint: { 'line-color': '#000', 'line-width': ['interpolate', ['linear'], ['zoom'], 16, 1.8, 19, 2.4], 'line-opacity': ['*', 0.12, fade] } }, below());
     m.addLayer({ id: 'elev-contour', type: 'line', source: 'elev-contours', layout: lineLayout,
-      paint: { 'line-color': '#eafff0', 'line-width': ['interpolate', ['linear'], ['zoom'], 16, 0.6, 19, 1], 'line-opacity': fade } }, below());
+      paint: { 'line-color': '#eafff0', 'line-width': ['interpolate', ['linear'], ['zoom'], 16, 0.6, 19, 1], 'line-opacity': ['*', 0.45, fade] } }, below());
   }
   if (!m.getSource('elev-arrows')) {
     if (!m.hasImage('elev-arrow5')) m.addImage('elev-arrow5', arrowImage(), { pixelRatio: 2 });
@@ -207,7 +207,7 @@ export async function drawElevation(m, cid, hole) {
     ARROW_ZOOM.forEach((z, lvl) => m.addLayer({ id: `elev-arrows-${lvl}`, type: 'symbol', source: 'elev-arrows', minzoom: z, filter: ['==', ['get', 'lvl'], lvl],
       layout: { 'icon-image': 'elev-arrow5', 'icon-anchor': 'bottom', 'icon-rotate': ['get', 'b'], 'icon-rotation-alignment': 'map',
         'icon-allow-overlap': true, 'icon-ignore-placement': true, 'icon-size': ['interpolate', ['linear'], ['zoom'], 16, 0.75, 19, 1] },
-      paint: { 'icon-opacity': ['min', 1, ['*', 2, ['get', 'a']]] } }, below()));
+      paint: { 'icon-opacity': ['*', 0.55, ['min', 1, ['*', 2, ['get', 'a']]]] } }, below()));
   }
   m.getSource('elev-contours').setData(gj ? clipContours(gj, area, elevPrefs.contourYd) : EMPTY);
   m.getSource('elev-arrows').setData(gj ? contourArrows(gj, area, elevPrefs.contourYd) : EMPTY);
