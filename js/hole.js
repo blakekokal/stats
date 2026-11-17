@@ -9,6 +9,7 @@
 // shot reaches the green the map zooms onto it, the player places the pin,
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
+import { openBook } from './book.js';
 import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast, complexHoles, partOf } from './app.js';
 import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, drawnRing, YD_PER_M } from './geo.js';
@@ -943,7 +944,12 @@ export function renderHole(view, n) {
   const playsWrap = h('div', { class: 'playswrap', hidden: true }, playsBtn, playsOpts);
   const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips);
   elevIndex().then(ix => { elevInfo = ix[elevId] || null; elevBox.hidden = !elevInfo; playsWrap.hidden = tourney || !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
-  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), tourney ? null : sgtRow, tourney ? null : linesRow, cleanRow, elevBox);
+  // GPS Overview: a printable yardage book of this hole (and the course).
+  const bookBtn = scouting ? h('button', { class: 'btn bookopen', onclick: () => {
+    closeView();
+    openBook(n, { teeName, tourney, holeFeatures, ownGreen, onHole: k => { location.hash = '#/hole/' + k; } });
+  } }, '📖 Yardage book') : null;
+  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), tourney ? null : sgtRow, tourney ? null : linesRow, cleanRow, elevBox, bookBtn);
   const drawViewBox = () => {
     sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync();
     contourRow.sync(); contourChips.sync();
