@@ -29,6 +29,7 @@ export const BOOK_OPTIONS = [
   ['water', 'Water', 'Hole page', true],
   ['trees', 'Trees', 'Hole page', true],
   ['ob', 'Out of bounds', 'Hole page', true],
+  ['onlyHole', 'Only this hole (saves ink)', 'Hole page', true],
   ['otherHoles', 'Neighbouring holes', 'Hole page', true],
   ['allTees', 'Every tee box', 'Hole page', true],
   ['centre', 'Centre line', 'Hole page', true],
@@ -240,12 +241,22 @@ const levelsOf = (lo, hi, iv) => { const out = []; for (let v = Math.ceil(lo / i
 // keep(x, y) says so, longer where it's steeper. Returns an SVG path.
 function slopeArrows(R, [x0, y0, x1, y1], gap, P, keep, scale = 1) {
   let d = '';
-  const b = Math.max(1, gap / 2);
+  const b = Math.max(1.5, gap / 2);
   for (let y = y0 + gap / 2; y < y1; y += gap) for (let x = x0 + gap / 2; x < x1; x += gap) {
     if (!keep(x, y)) continue;
-    const e = R.at(x + b, y), w = R.at(x - b, y), nn = R.at(x, y + b), ss = R.at(x, y - b);
-    if ([e, w, nn, ss].some(v => v == null)) continue;
-    const gx = (e - w) / (2 * b) / 36, gy = (nn - ss) / (2 * b) / 36; // rise per yard
+    // The slope over 1.5b yards each way and over twice that: where a small bump
+    // or bank tilts against the ground around it, no arrow (it would look
+    // uphill); otherwise the two together, so every arrow points down the
+    // way the ground falls.
+    const grad = d => {
+      const e = R.at(x + d, y), w = R.at(x - d, y), nn = R.at(x, y + d), ss = R.at(x, y - d);
+      return [e, w, nn, ss].some(v => v == null) ? null : [(e - w) / (2 * d) / 36, (nn - ss) / (2 * d) / 36]; // rise per yard
+    };
+    const g1 = grad(1.5 * b), g2 = grad(3 * b);
+    if (!g1 || !g2) continue;
+    const m1 = Math.hypot(...g1), m2 = Math.hypot(...g2);
+    if (!m1 || !m2 || (g1[0] * g2[0] + g1[1] * g2[1]) / (m1 * m2) < 0.5) continue;
+    const gx = (g1[0] + g2[0]) / 2, gy = (g1[1] + g2[1]) / 2;
     const pct = Math.hypot(gx, gy) * 100;
     if (pct < 0.5) continue;
     const dx = -gx / Math.hypot(gx, gy), dy = -gy / Math.hypot(gx, gy);
@@ -311,6 +322,24 @@ function frontPointFn(f, greenRing, pin) {
     const t = firstCross(p, c, g) ?? 1;
     return [p[0] + (c[0] - p[0]) * t, p[1] + (c[1] - p[1]) * t];
   };
+}
+
+// "Only this hole", like the live view's spotlight: everything on the map is
+// drawn only within LINE_YD of the hole's line of play or SHAPE_YD of its own
+// fairways, green and tee boxes, fading out at the edge. A mask: white strokes
+// along the line and round the shapes, softened. Labels sit outside it.
+const LINE_YD = 46, SHAPE_YD = 23;
+function onlyHole(svg, mapG, id, P, s, line, shapes) {
+  const mid = `${id}-only`;
+  const soft = el('filter', { id: `${mid}-soft`, filterUnits: 'userSpaceOnUse', x: 0, y: 0, width: W, height: H }, el('feGaussianBlur', { stdDeviation: (5 * s).toFixed(1) }));
+  const mask = el('mask', { id: mid, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: W, height: H },
+    el('g', { filter: `url(#${mid}-soft)`, fill: '#fff', stroke: '#fff', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+      el('path', { d: pathD(line.map(P)), fill: 'none', 'stroke-width': (2 * LINE_YD * s).toFixed(1) }),
+      ...shapes.map(r => el('path', { d: pathD(r.map(P), true), 'stroke-width': (2 * SHAPE_YD * s).toFixed(1) }))));
+  svg.append(el('defs', {}, soft, mask));
+  const g = el('g', { mask: `url(#${mid})` });
+  g.append(...mapG.childNodes);
+  mapG.append(g);
 }
 
 // ---------- the hole page ----------
@@ -555,6 +584,10 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     reliefNote ? txt(16, bottom + 44, reliefNote, { 'font-size': 9, fill: SOFT }) : null,
     txt(16, H - 12, course.name.toUpperCase(), { 'font-size': 9, fill: '#9aa59e', 'letter-spacing': 1 }),
     txt(W - 16, H - 12, `HOLE ${n} OF ${course.holes.length}`, { 'font-size': 9, fill: '#9aa59e', 'text-anchor': 'end', 'letter-spacing': 1 }));
+  if (prefs.onlyHole) {
+    const tail = greenL ? centroid(greenL) : L.at(-1);
+    onlyHole(svg, mapG, id, P, s, [...L.slice(0, -1), tail], [...ownFair, ...(greenL ? [greenL] : []), ...teeBoxesL.map(t => t.r)]);
+  }
   return svg;
 }
 
@@ -711,6 +744,10 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   if (prefs.notes) {
     svg.append(txt(16, bottom + 64, 'NOTES', { 'font-size': 10, 'font-weight': 700, fill: INK, 'letter-spacing': 1.2 }));
     for (let y = bottom + 84; y < H - 28; y += 22) svg.append(el('line', { x1: 16, x2: W - 16, y1: y, y2: y, stroke: '#d6dcd8', 'stroke-width': 0.8 }));
+  }
+  if (prefs.onlyHole) {
+    const own = F.own.filter(x => x.t === 'fairway' || x.t === 'tee').map(x => closeRing(ringOf(x)).map(f.fwd));
+    onlyHole(svg, mapG, id, P, s, line.map(f.fwd), [g, ...own]);
   }
   return svg;
 }
