@@ -883,14 +883,28 @@ export function renderHole(view, n) {
   // The intervals stay in place whether contours are on or off, so the box doesn't jump.
   const contourRow = viewSwitch('Contours & slope', () => elevPrefs.contours, v => { elevPrefs.contours = v; redrawElev(); drawViewBox(); });
   // Plays like: a switch at the top right, under Expected.
-  const playsBtn = h('button', { class: 'playsbtn' + (elevPrefs.playsLike ? ' on' : ''), hidden: true, 'aria-pressed': String(elevPrefs.playsLike),
-    title: 'Plays-like yardages (height change)', onclick: () => {
+  // Plays like: a button left of Expected. On, it shows two round switches
+  // under it: Elv (the height change, on to start) and Wnd (the wind, off to start).
+  let playsWindNow = null; // the latest wind ({ speed mph, dir it comes from }), for plays like
+  const playsCircle = (label, get, set) => {
+    const b = h('button', { class: 'playscircle', title: label === 'Elv' ? 'Count the height change' : 'Count the wind', onclick: () => { set(!get()); sync(); update(); } }, label);
+    const sync = () => { b.classList.toggle('on', get()); b.setAttribute('aria-pressed', String(get())); };
+    b.sync = sync; sync();
+    return b;
+  };
+  const elvCircle = playsCircle('Elv', () => elevPrefs.playsElev, v => { elevPrefs.playsElev = v; });
+  const wndCircle = playsCircle('Wnd', () => elevPrefs.playsWind, v => { elevPrefs.playsWind = v; });
+  const playsOpts = h('div', { class: 'playsopts', hidden: !elevPrefs.playsLike }, elvCircle, wndCircle);
+  const playsBtn = h('button', { class: 'playsbtn' + (elevPrefs.playsLike ? ' on' : ''), 'aria-pressed': String(elevPrefs.playsLike),
+    title: 'Plays-like yardages (height change and wind)', onclick: () => {
       elevPrefs.playsLike = !elevPrefs.playsLike;
       playsBtn.classList.toggle('on', elevPrefs.playsLike); playsBtn.setAttribute('aria-pressed', String(elevPrefs.playsLike));
+      playsOpts.hidden = !elevPrefs.playsLike;
       update();
-    } }, 'Plays like');
+    } }, 'Plays', h('br'), 'like');
+  const playsWrap = h('div', { class: 'playswrap', hidden: true }, playsBtn, playsOpts);
   const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips);
-  elevIndex().then(ix => { elevInfo = ix[course.id] || null; elevBox.hidden = playsBtn.hidden = !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
+  elevIndex().then(ix => { elevInfo = ix[course.id] || null; elevBox.hidden = playsWrap.hidden = !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
   const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), sgtRow, linesRow, cleanRow, elevBox);
   const drawViewBox = () => {
     sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync();
@@ -1266,7 +1280,7 @@ export function renderHole(view, n) {
   compass.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,3 20,16 12,16" fill="#ff4d4d"/><polygon points="16,29 20,16 12,16" fill="#fff"/><text x="16" y="11.5" text-anchor="middle" font-size="6.5" font-weight="700" fill="#fff" font-family="system-ui,sans-serif">N</text></svg>';
   // Wind, under the compass: an arrow showing which way the wind is blowing on
   // this view of the map (it turns with the map), and the speed in mph.
-  const wind = h('div', { class: 'wind', hidden: true, role: 'img', 'aria-label': 'Wind' });
+  const wind = h('button', { class: 'wind', hidden: true, 'aria-label': 'Wind' });
   wind.innerHTML = '<svg viewBox="0 0 32 32" aria-hidden="true"><polygon points="16,1.5 21,8.5 11,8.5" fill="#4dd0ff"/><rect x="14.6" y="24" width="2.8" height="6" rx="1.4" fill="#4dd0ff"/></svg><b></b>';
 
   // Leaving a round from the menu's Home button.
@@ -1378,7 +1392,7 @@ export function renderHole(view, n) {
   if (!scouting && !watching && !viewing()) shareCurrent();
 
   view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (wi && !wi.id.startsWith('sv-') ? ' watchlive' : '') + (toolsBtn.open ? ' toolsopen' : '') + (sgBtn.open ? ' sgopen' : '') }, mapEl,
-    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, expPill), playsBtn, scorecard,
+    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, playsWrap, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { closeView(); menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist), gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
@@ -1410,23 +1424,60 @@ export function renderHole(view, n) {
   const windArrow = wind.querySelector('svg');
   const turnWind = () => { if (windNow) windArrow.style.transform = `rotate(${windNow.dir + 180 - m.getBearing()}deg)`; };
   m.on('rotate', turnWind);
-  const showWind = w => {
-    if (map !== m || !w) return;
-    windNow = w;
+  // The wind shown and used: the live wind, or one set by hand in the Wind box
+  // (tap the wind arrow) to try out different conditions. A hand-set wind is
+  // kept for this visit (across holes) until "Use live wind".
+  let liveWind = null;
+  const manualWind = () => { try { return JSON.parse(sessionStorage.getItem('gs:windManual') || 'null'); } catch { return null; } };
+  const showWind = () => {
+    if (map !== m) return;
+    const man = manualWind(), w = man || liveWind;
     wind.hidden = false;
+    wind.classList.toggle('manual', !!man);
+    windNow = w; playsWindNow = w;
+    if (elevPrefs.playsLike && elevPrefs.playsWind) update();
+    if (!w) { wind.querySelector('b').textContent = '–'; wind.title = 'Wind: tap to set'; turnWind(); return; }
     wind.querySelector('b').textContent = Math.round(w.speed);
-    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
-    const from = dirs[Math.round(w.dir / 45) % 8];
-    wind.setAttribute('aria-label', `Wind ${Math.round(w.speed)} mph from the ${from}`);
-    wind.title = `Wind ${Math.round(w.speed)} mph from the ${from}`;
+    const from = compassName(w.dir);
+    wind.setAttribute('aria-label', `Wind ${Math.round(w.speed)} mph from the ${from}${man ? ' (set by hand)' : ''}`);
+    wind.title = `Wind ${Math.round(w.speed)} mph from the ${from}${man ? ' (set by hand)' : ''}`;
     turnWind();
+    if (!windBox.hidden) drawWindBox();
   };
+  const compassName = d => ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'][Math.round((((d % 360) + 360) % 360) / 22.5) % 16];
+  const setManual = w => { try { if (w) sessionStorage.setItem('gs:windManual', JSON.stringify(w)); else sessionStorage.removeItem('gs:windManual'); } catch { /* not kept */ } showWind(); };
+  // The Wind box: a direction and a speed slider, and back to the live wind.
+  const windDirIn = h('input', { type: 'range', min: 0, max: 355, step: 5, oninput: e => setManual({ speed: (manualWind() || liveWind || { speed: 10 }).speed, dir: +e.target.value }) });
+  const windSpeedIn = h('input', { type: 'range', min: 0, max: 40, step: 1, oninput: e => setManual({ dir: (manualWind() || liveWind || { dir: m.getBearing() }).dir, speed: +e.target.value }) });
+  const windDirLabel = h('b'), windSpeedLabel = h('b');
+  const liveBtnW = h('button', { class: 'windlive', title: 'Go back to the live wind', onclick: () => setManual(null) }, 'Use live wind');
+  const windBox = h('div', { class: 'sheet windbox', hidden: true }, h('strong', {}, 'Wind'),
+    h('label', { class: 'windrow' }, h('span', {}, 'From ', windDirLabel), windDirIn),
+    h('label', { class: 'windrow' }, h('span', {}, 'Speed ', windSpeedLabel), windSpeedIn),
+    liveBtnW);
+  function drawWindBox() {
+    const man = manualWind(), w = man || liveWind;
+    windDirIn.value = w ? Math.round(w.dir / 5) * 5 % 360 : 0;
+    windSpeedIn.value = w ? Math.round(w.speed) : 0;
+    windDirLabel.textContent = w ? `${compassName(w.dir)} (${Math.round(w.dir)}°)` : '–';
+    windSpeedLabel.textContent = w ? `${Math.round(w.speed)} mph` : '–';
+    liveBtnW.textContent = liveWind ? `Live: ${Math.round(liveWind.speed)} mph ${compassName(liveWind.dir)}` : 'Use live wind';
+    liveBtnW.hidden = !man;
+  }
+  wind.onclick = () => { windBox.hidden = !windBox.hidden; if (!windBox.hidden) drawWindBox(); };
+  const windAway = e => {
+    if (!wind.isConnected) { document.removeEventListener('pointerdown', windAway, true); return; }
+    if (!windBox.hidden && !windBox.contains(e.target) && !wind.contains(e.target)) windBox.hidden = true;
+  };
+  document.addEventListener('pointerdown', windAway, true);
+  holeEl().append(windBox);
+  const gotWind = w => { if (w) liveWind = w; showWind(); };
   const windAt = pin || tee;
   if (windAt) {
-    fetchWind(course.id, windAt).then(showWind);
+    fetchWind(course.id, windAt).then(gotWind);
     clearInterval(windTimer);
-    windTimer = setInterval(() => { if (!document.hidden) fetchWind(course.id, windAt).then(showWind); }, 600000);
-  }
+    windTimer = setInterval(() => { if (!document.hidden) fetchWind(course.id, windAt).then(gotWind); }, 600000);
+  } else showWind();
   compass.onclick = () => { if (stage() === 'play') place(); else zoomToGreen(); };
   window.holeMap = m; // handy for debugging from the console
 
@@ -1945,17 +1996,34 @@ export function renderHole(view, n) {
     // Plays like: the yardage, how many yards the ground rises (+) or drops (−)
     // from where the shot starts to where it ends, and what it plays, at a yard
     // for a yard: "250(−5) 245".
+    // Plays like: the yardage, and what it plays counting the height change
+    // (a yard for a yard) and, if Wnd is on, the wind: into it adds 1% a mph,
+    // downwind takes off 0.5% a mph (crosswind not counted). The number stays
+    // centred, the rise/drop right by it (small, red uphill, green downhill),
+    // "161(+1) yd", and the plays-like number under it.
     const yardage = (a, b, d) => {
       const yd = Math.round(d);
-      const ha = elevPrefs.playsLike && heightAt(course.id, elevInfo, a, () => { if (map === m) update(); });
-      const hb = elevPrefs.playsLike && heightAt(course.id, elevInfo, b, () => { if (map === m) update(); });
-      if (ha == null || hb == null || ha === false || hb === false) return [h('b', {}, `${yd} yd`)];
-      const dz = Math.round((hb - ha) * YD_PER_M);
-      // The yardage stays centred with the rise/drop (red uphill, green
-      // downhill) just to its right, and the plays-like number under it.
-      return [h('b', { class: 'playslike' }, `${yd} yd`,
-        h('small', { class: 'dz' + (dz > 0 ? ' up' : dz < 0 ? ' down' : '') }, `(${dz > 0 ? '+' : dz < 0 ? '−' : ''}${Math.abs(dz)})`),
-        h('span', { class: 'pl' }, `${yd + dz}`))];
+      const plain = [h('b', {}, `${yd} yd`)];
+      if (!elevPrefs.playsLike || !elevInfo) return plain;
+      let dz = null;
+      if (elevPrefs.playsElev) {
+        const ha = heightAt(course.id, elevInfo, a, () => { if (map === m) update(); });
+        const hb = heightAt(course.id, elevInfo, b, () => { if (map === m) update(); });
+        if (ha != null && hb != null) dz = Math.round((hb - ha) * YD_PER_M);
+      }
+      let wind = null;
+      if (elevPrefs.playsWind && playsWindNow && yd > 5) {
+        const into = playsWindNow.speed * Math.cos(((playsWindNow.dir - bearing(a, b)) * Math.PI) / 180); // + into the wind
+        wind = Math.round(yd * (into > 0 ? 0.01 : 0.005) * into);
+      }
+      if (dz == null && wind == null) return plain;
+      const sign = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v)}`;
+      // The number stays centred; the rise/drop and "yd" hang off its right.
+      return [h('b', { class: 'playslike' }, h('span', { class: 'num' }, `${yd}`, h('span', { class: 'tail' },
+          dz != null ? h('small', { class: 'dz' + (dz > 0 ? ' up' : dz < 0 ? ' down' : '') }, `(${sign(dz)})`) : null, 'yd')),
+        // The plays-like number lines up under the yardage: both numbers centred, "yd" and the wind to the right.
+        h('span', { class: 'pl' }, h('span', { class: 'num' }, `${yd + (dz || 0) + (wind || 0)}`, h('span', { class: 'tail' }, 'yd',
+          wind != null ? h('small', { class: 'wnd' + (wind > 0 ? ' up' : wind < 0 ? ' down' : '') }, `wind ${sign(wind)}`) : null))))];
     };
     toPinEl.replaceChildren(...yardage(target, pin, toPin));
     fromTeeEl.replaceChildren(...yardage(from, target, fromTee),

@@ -132,7 +132,17 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .exppill select { min-height: 36px; padding: 4px 8px; border-radius: 10px; background: #2a2f2c; border-color: #444; }
 .compass { position: absolute; top: calc(34px + env(safe-area-inset-top)); left: 10px; z-index: 3; width: 34px; height: 34px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); display: grid; place-items: center; box-shadow: 0 1px 4px #0008; }
 .compass svg { width: 26px; height: 26px; transition: transform .1s linear; }
-.wind { position: absolute; top: calc(74px + env(safe-area-inset-top)); left: 10px; z-index: 3; width: 34px; height: 34px; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); display: grid; place-items: center; box-shadow: 0 1px 4px #0008; pointer-events: none; }
+.wind { position: absolute; top: calc(74px + env(safe-area-inset-top)); left: 10px; z-index: 3; width: 34px; height: 34px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); display: grid; place-items: center; box-shadow: 0 1px 4px #0008; cursor: pointer; }
+.wind.manual { box-shadow: 0 0 0 2px #ffe14d, 0 1px 4px #0008; }
+/* Wind box: set the wind by hand to try things out. */
+/* Small, low on the left, clear of the yardages so they can be watched as the wind changes. */
+.sheet.windbox { left: 70px; bottom: calc(122px + env(safe-area-inset-bottom)); width: min(190px, calc(100vw - 84px)); gap: 4px; padding: 8px 10px; }
+.windbox > strong { font-size: 13px; text-transform: uppercase; letter-spacing: .06em; opacity: .7; }
+.windbox .windlive { min-height: 0; padding: 5px 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: transparent; color: inherit; font-size: 13px; font-weight: 600; }
+.windbox .windlive[hidden] { display: none; }
+.windrow { display: grid; gap: 0; font-size: 12px; }
+.windrow input { min-height: 0; height: 22px; padding: 0; margin: 0; border: 0; background: none; }
+.windrow input { width: 100%; }
 .wind[hidden] { display: none; }
 .wind svg { grid-area: 1 / 1; width: 34px; height: 34px; transition: transform .1s linear; }
 .wind b { grid-area: 1 / 1; color: #fff; font: 800 12px/1 system-ui, sans-serif; font-variant-numeric: tabular-nums; }
@@ -505,16 +515,23 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .viewelev[hidden] { display: none; }
 .viewchips { display: flex; gap: 6px; padding: 0 2px 4px; }
 .viewchips.off { opacity: .45; }
-.readout b.playslike { position: relative; }
-/* Rise/drop just right of the yardage (which stays centred); plays-like under it. */
-.readout b.playslike .dz { position: absolute; left: 100%; top: 10px; padding-left: 5px; font-size: 17px; font-weight: 700; color: #fff; }
-.readout b.playslike .dz.up { color: #ff6b6b; } .readout b.playslike .dz.down { color: #4ade80; }
+/* The number stays centred; the rise/drop (small, centred on the line) and "yd" sit to its right: "161(+1) yd". */
+.readout b.playslike .num { position: relative; }
+.readout b.playslike .tail { position: absolute; left: 100%; top: 0; bottom: 0; display: flex; align-items: center; gap: 4px; padding-left: 4px; white-space: nowrap; }
+.readout b.playslike .dz { font-size: 13px; font-weight: 700; color: #fff; }
+.readout b.playslike .up { color: #ff6b6b; } .readout b.playslike .down { color: #4ade80; }
 .readout b.playslike .pl { display: block; font-size: 22px; color: #9fdcff; }
-/* Plays like switch: top right, under Expected and left of the GPS button. */
-.playsbtn { position: absolute; top: calc(66px + env(safe-area-inset-top)); right: 62px; z-index: 4; height: 44px; min-height: 0; padding: 0 12px; border: 0; border-radius: 14px; background: #111c; backdrop-filter: blur(8px); color: #fff; font-size: 13px; font-weight: 700; box-shadow: 0 1px 6px #0008; }
+.readout b.playslike .pl .wnd { font-size: 14px; font-weight: 700; }
+/* Plays like: left of Expected, with its Elv and Wnd switches under it. */
+.playswrap { position: relative; display: flex; }
+.playswrap[hidden] { display: none; }
+.playsbtn { min-height: 0; padding: 0 10px; border: 0; border-radius: 14px; background: #111c; backdrop-filter: blur(8px); color: #fff; font-size: 12.5px; font-weight: 700; line-height: 1.1; box-shadow: 0 1px 6px #0008; }
 .playsbtn.on { background: #9fdcff; color: #111; }
-.playsbtn[hidden] { display: none; }
-.holeview.watching .playsbtn, .holeview.clean .playsbtn { display: none; }
+.playsopts { position: absolute; top: calc(100% + 6px); left: 50%; transform: translateX(-50%); display: flex; gap: 6px; }
+.playsopts[hidden] { display: none; }
+.playscircle { width: 40px; height: 40px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: #111c; backdrop-filter: blur(8px); color: #fff; font-size: 12px; font-weight: 700; box-shadow: 0 1px 6px #0008; }
+.playscircle.on { background: #9fdcff; color: #111; }
+.holeview.watching .playswrap, .holeview.clean .playswrap { display: none; }
 .viewchips button { flex: 1; min-height: 0; padding: 6px 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: transparent; color: inherit; font-size: 13px; font-weight: 600; }
 .viewchips button.on { background: #22c55e; border-color: #22c55e; color: #111; }
 .viewswitch input:checked + i { background: #22c55e; }

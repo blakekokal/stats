@@ -14,6 +14,9 @@ export const elevPrefs = {
   get contours() { return get('gs:contours', '0') === '1'; }, set contours(v) { put('gs:contours', v ? '1' : '0'); },
   get contourYd() { const n = +get('gs:contourYd', '1'); return CONTOUR_YD.includes(n) ? n : 1; }, set contourYd(v) { put('gs:contourYd', String(v)); },
   get playsLike() { return get('gs:playsLike', '0') === '1'; }, set playsLike(v) { put('gs:playsLike', v ? '1' : '0'); },
+  // What plays like counts: the height change (on unless turned off) and the wind (off unless turned on).
+  get playsElev() { return get('gs:playsElev', '1') === '1'; }, set playsElev(v) { put('gs:playsElev', v ? '1' : '0'); },
+  get playsWind() { return get('gs:playsWind', '0') === '1'; }, set playsWind(v) { put('gs:playsWind', v ? '1' : '0'); },
 };
 
 // Height in metres at [lat, lng] from the course's height tiles (Terrarium PNGs),
