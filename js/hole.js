@@ -882,16 +882,22 @@ export function renderHole(view, n) {
   const contourChips = elevChips(CONTOUR_YD.map(y => [`${y} yd`, y]), () => elevPrefs.contourYd, v => { elevPrefs.contourYd = v; });
   // The intervals stay in place whether contours are on or off, so the box doesn't jump.
   const contourRow = viewSwitch('Contours & slope', () => elevPrefs.contours, v => { elevPrefs.contours = v; redrawElev(); drawViewBox(); });
-  const playsRow = viewSwitch('Plays like', () => elevPrefs.playsLike, v => { elevPrefs.playsLike = v; update(); });
-  const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips, playsRow);
-  elevIndex().then(ix => { elevInfo = ix[course.id] || null; elevBox.hidden = !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
+  // Plays like: a switch at the top right, under Expected.
+  const playsBtn = h('button', { class: 'playsbtn' + (elevPrefs.playsLike ? ' on' : ''), hidden: true, 'aria-pressed': String(elevPrefs.playsLike),
+    title: 'Plays-like yardages (height change)', onclick: () => {
+      elevPrefs.playsLike = !elevPrefs.playsLike;
+      playsBtn.classList.toggle('on', elevPrefs.playsLike); playsBtn.setAttribute('aria-pressed', String(elevPrefs.playsLike));
+      update();
+    } }, 'Plays like');
+  const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips);
+  elevIndex().then(ix => { elevInfo = ix[course.id] || null; elevBox.hidden = playsBtn.hidden = !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
   const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), sgtRow, linesRow, cleanRow, elevBox);
   const drawViewBox = () => {
     sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync();
-    contourRow.sync(); contourChips.sync(); playsRow.sync();
+    contourRow.sync(); contourChips.sync();
     contourChips.classList.toggle('off', !elevPrefs.contours);
   };
-  const viewBtn = h('button', { class: 'fab cleanview', 'aria-label': 'View', title: 'SG map, course lines, clean view, contours and plays like',
+  const viewBtn = h('button', { class: 'fab cleanview', 'aria-label': 'View', title: 'SG map, course lines, clean view and contours',
     onclick: () => { menu.hidden = true; viewBox.hidden = !viewBox.hidden; placeView(); drawViewBox(); } }, h('span', {}, '◉'), h('small', {}, 'View'));
   // A tap anywhere else (the map or another button) closes the View box; the tap still does its own job.
   const viewAway = e => {
@@ -1372,7 +1378,7 @@ export function renderHole(view, n) {
   if (!scouting && !watching && !viewing()) shareCurrent();
 
   view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (wi && !wi.id.startsWith('sv-') ? ' watchlive' : '') + (toolsBtn.open ? ' toolsopen' : '') + (sgBtn.open ? ' sgopen' : '') }, mapEl,
-    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, expPill), scorecard,
+    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, expPill), playsBtn, scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { closeView(); menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist), gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
@@ -1945,10 +1951,11 @@ export function renderHole(view, n) {
       const hb = elevPrefs.playsLike && heightAt(course.id, elevInfo, b, () => { if (map === m) update(); });
       if (ha == null || hb == null || ha === false || hb === false) return [h('b', {}, `${yd} yd`)];
       const dz = Math.round((hb - ha) * YD_PER_M);
-      // The yardage as usual, and just under it the rise/drop (red uphill,
-      // green downhill) and the plays-like number.
-      return [h('b', { class: 'playslike' }, `${yd} yd`, h('span', { class: 'pl' },
-        h('small', { class: dz > 0 ? 'up' : dz < 0 ? 'down' : '' }, `(${dz > 0 ? '+' : dz < 0 ? '−' : ''}${Math.abs(dz)})`), ` ${yd + dz}`))];
+      // The yardage stays centred with the rise/drop (red uphill, green
+      // downhill) just to its right, and the plays-like number under it.
+      return [h('b', { class: 'playslike' }, `${yd} yd`,
+        h('small', { class: 'dz' + (dz > 0 ? ' up' : dz < 0 ? ' down' : '') }, `(${dz > 0 ? '+' : dz < 0 ? '−' : ''}${Math.abs(dz)})`),
+        h('span', { class: 'pl' }, `${yd + dz}`))];
     };
     toPinEl.replaceChildren(...yardage(target, pin, toPin));
     fromTeeEl.replaceChildren(...yardage(from, target, fromTee),
