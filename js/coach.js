@@ -426,6 +426,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.87.0', ['Elevation on every course: contour lines with downhill arrows (View box) and plays-like yardages now work at Bear Creek East and West, Bridlewood, Cross Timbers, Grapevine Bluebonnet, Sherrill Park #1 and #2, Squaw Creek, Tangle Ridge, Tour 18 Dallas and Grapevine Mockingbird, as well as Cowboys']],
   ['0.86.0', ['New course: Grapevine Golf Course \u2013 Mockingbird, the second of its three nines, built from its yardage book']],
   ['0.85.3', ['Fixed: the app opened to a blank screen after 0.85.2']],
   ['0.85.2', ['Text you couldn’t read is readable now: dark grey words on the dark background (subtitles, empty messages, small labels and delete buttons in My Bag, Practice, Coaching and Performance Analysis) are a lighter grey', 'Combine buttons (Short Game Combines, Evaluation Test): the name and its description sit on two lines again instead of running together off the screen']],

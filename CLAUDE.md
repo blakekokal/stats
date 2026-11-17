@@ -50,7 +50,8 @@ of each green in the imagery); see `tools/sherrillpark2` as the model.
   changed): `tools/trees_from_imagery.py`.
 - Elevation (View box: contours in yards with downhill arrows on the lines, and plays-like yardages) comes from USGS 3DEP lidar:
   `tools/elevation.py <course>` writes `data/elev/` (no book needed, the course
-  file isn't touched). Cowboys has it so far.
+  file isn't touched). Every course has it; run it for each new course. The
+  USGS server throws the odd 502: just run it again.
 - Scorecard (tees, ratings, pars, handicaps) still comes from the club.
 - Check by eye on an overlay and in the app (GPS Overview), and commit the
   book PDF next to the scripts so the course can be rebuilt. The build takes
