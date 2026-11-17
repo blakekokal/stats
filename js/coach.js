@@ -442,6 +442,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.91.0', ['Comp just turns on and off now. While it’s on, a ⚙ above it lets you change the compared clubs and pick arcs or dispersion dots (the first time, Comp opens the club picker)', 'Auto stays on from hole to hole: each new hole opens with the best club and line picked and shown, or with Comp on, each compared club on its own best line, and Comp stays on']],
   ['0.90.0', ['Grapevine – Pecan has elevation now: contour lines with downhill arrows and plays-like yardages, on its own or as either nine of an 18 with Bluebonnet or Mockingbird']],
   ['0.89.0', ['New course: Grapevine Golf Course \u2013 Pecan, the last of its three nines, built from its yardage book. Play it as 9, or with Bluebonnet or Mockingbird to make 18']],
   ['0.88.0', ['Nine-hole courses: picking one in New Round or GPS Overview asks whether to play just those 9 or add another nine at the same club to make 18 (e.g. Bluebonnet front 9, Mockingbird back 9). The back nine is holes 10–18, with the tee boxes’ yardages added up, and each hole keeps its own contours and plays-like heights']],
