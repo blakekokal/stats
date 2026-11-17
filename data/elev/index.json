@@ -313,5 +313,20 @@
    477
   ],
   "source": "USGS 3DEP"
+ },
+ "ironhorse": {
+  "bounds": [
+   -97.263834,
+   32.830288,
+   -97.245195,
+   32.849777
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   517,
+   635
+  ],
+  "source": "USGS 3DEP"
  }
 }

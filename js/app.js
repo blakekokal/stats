@@ -75,6 +75,7 @@ export const COURSES = [
   { id: 'texasstar', name: 'Texas Star Golf Course', file: 'data/texasstar.json' },
   { id: 'indiancreek-creek', name: 'Indian Creek Golf Club – Creek', file: 'data/indiancreek-creek.json', shares: 'indiancreek-lakes' },
   { id: 'indiancreek-lakes', name: 'Indian Creek Golf Club – Lakes', file: 'data/indiancreek-lakes.json', shares: 'indiancreek-creek' },
+  { id: 'ironhorse', name: 'Iron Horse Golf Course', file: 'data/ironhorse.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 // Nine-hole courses at one club (the same `nines` tag) can be played together
