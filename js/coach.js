@@ -126,8 +126,20 @@ export function renderNewRound(view, { scout = false } = {}) {
   fillTees();
   const place = h('input', { type: 'number', inputmode: 'numeric', min: 1, placeholder: 'Place (e.g. 1, 2, 3...)' });
   const placeWrap = h('div', { style: 'width:100%;max-width:320px;', hidden: true }, place);
-  const type = h('select', { class: 'bigsel', 'aria-label': 'Round type', onchange: () => { placeWrap.hidden = type.value !== 'Tournament'; } },
-    h('option', { value: 'Casual' }, 'Round Type: Casual'), h('option', { value: 'Tournament' }, 'Round Type: Tournament'));
+  // Round type, asked every time: Casual has every tool; Tournament keeps to what
+  // the Rules of Golf allow (distances only: no plays-like, wind, contours,
+  // strokes gained or club advice on the hole screen).
+  const type = { value: '' };
+  const typeNote = h('div', { style: 'width:100%;max-width:320px;text-align:center;font-size:12px;color:#606060;margin-top:-4px;' });
+  const typeBtn = (v, label, sub) => h('button', { class: 'roundtype', 'aria-pressed': 'false', onclick: () => {
+    type.value = v; err.textContent = '';
+    typeRow.querySelectorAll('button').forEach(b => { const on = b === typeRow.querySelector(`[data-v="${v}"]`); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    placeWrap.hidden = scout || v !== 'Tournament';
+    typeNote.textContent = v === 'Tournament' ? 'Tournament: plain yardages only. No plays-like, wind, contours, strokes gained or club picks.' : 'Casual: every tool.';
+  }, 'data-v': v }, h('b', {}, label), h('small', {}, sub));
+  const typeRow = h('div', { class: 'roundtypes', role: 'group', 'aria-label': 'Round type' },
+    h('div', { class: 'ninesq' }, 'What type of round is this?'),
+    typeBtn('Casual', 'Casual', 'Every tool'), typeBtn('Tournament', 'Tournament', 'Rules-legal only'));
 
   let holes = 18;
   const pick = (btn, n) => { b9.classList.remove('selected'); b18.classList.remove('selected'); if (btn) btn.classList.add('selected'); holes = n; if (btn) custom.value = ''; };
@@ -139,9 +151,10 @@ export function renderNewRound(view, { scout = false } = {}) {
   const confirm = h('button', { class: 'holes9', onclick: () => {
     if (!chosen) { err.textContent = 'Select a course.'; return; }
     if (!tee.value) { err.textContent = 'Select a tee box.'; return; }
+    if (!type.value) { err.textContent = 'Pick Casual or Tournament.'; return; }
     if (scout) {
       store.set('settings', { ...(store.get('settings') || {}), tee: tee.value });
-      startScouting(tee.value, course.id); sessionStorage.removeItem('gs:level');
+      startScouting(tee.value, course.id, type.value); sessionStorage.removeItem('gs:level');
       location.hash = '#/hole/1';
       return;
     }
@@ -213,7 +226,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     view.replaceChildren(page('top', backBtn(),
       h('div', { style: 'font-size:22px;font-weight:800;' }, 'GPS Overview'),
       h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:-4px;' }, 'Plan shots on any hole · nothing is saved'),
-      courseBox, ninesBox, tee, teeInfo, confirm, err));
+      courseBox, ninesBox, tee, teeInfo, typeRow, typeNote, confirm, err));
     return;
   }
   view.replaceChildren(page('top', backBtn(),
@@ -221,7 +234,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     name,
     h('div', { class: 'row' }, level, date),
     courseBox, ninesBox,
-    tee, teeInfo, type, placeWrap,
+    tee, teeInfo, typeRow, typeNote, placeWrap,
     h('div', { class: 'row' }, b9, b18),
     custom,
     h('div', { style: 'width:100%;max-width:320px;margin-top:4px;' },
@@ -442,6 +455,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.96.0', ['Tournament mode: New Round and GPS Overview now ask whether the round is Casual or Tournament. Casual has every tool. Tournament keeps to the Rules of Golf (4.3): plain yardages, compass, fairway width, arc, approach circle, scorecard and shot tracking stay; plays-like yardages, wind, contours and slope, strokes gained (crosshair SG, Disp, Appr SG, SG map, Expected) and club picks (Auto, Comp, the Club box’s Auto) are gone. The tag at the top left turns gold in a tournament round. A finished tournament round viewed from Round History shows everything again']],
   ['0.95.2', ['Contour lines are black for everyone now (same 60% opacity and width). You can still change them in the menu’s Settings']],
   ['0.95.1', ['Contour lines are a little stronger for everyone: 60% opacity (was 45%), same colour and width. You can still change them in the menu’s Settings']],
   ['0.95.0', ['New Settings button in the hole menu (☰): set the contour lines’ colour, opacity and width. It changes on the map as you move the sliders, is kept on this device, and Reset puts the standard look back']],

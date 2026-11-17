@@ -304,6 +304,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 .fab.club span { font-size: 15px; font-weight: 800; }
 .fab.club.on { background: #ffb020; color: #111; }
 .vertag.scouting { background: #1a4a8a; }
+.vertag.tourney { background: #8a6d00; } /* Tournament mode: gold */
 .clubsheet { position: absolute; inset: 0; z-index: 25; background: #000a; display: grid; place-items: end center; padding: 12px; }
 .clubsheet[hidden] { display: none; }
 .clubbox { width: min(420px, 100%); background: #1e1e1e; color: #fff; border-radius: 16px; padding: 12px; display: grid; gap: 10px; margin-bottom: calc(70px + env(safe-area-inset-bottom)); box-shadow: 0 8px 30px #000a; }

@@ -15,7 +15,7 @@ import { lieAt, yards, inPolygon, boundsOf, distToLine, drawnRing, YD_PER_M } fr
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js';
-import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
+import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, submitRound, isScouting, isTourneyScout, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
 import { liveLink, isLiveOn, setLiveOn, liveStatus, onLiveStatus, loadWatch, watchHole, shareCurrent } from './live.js';
 import { openBoundaryEditor, resumeEditAt, editFeatures } from './holeedit.js';
 import { elevIndex, elevPrefs, drawElevation, styleElevation, resetContourLook, heightAt, CONTOUR_YD } from './elev.js';
@@ -195,6 +195,14 @@ export function renderHole(view, n) {
   const today = new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD
   const roundKey = () => { const r = currentRound(); return r ? roundKeyOf(r.id) : null; };
   const scouting = isScouting(); // GPS Scouting: a round held in memory only, never saved
+  // Tournament mode (picked on New Round / GPS Overview): only what the Rules of
+  // Golf (4.3a) allow while playing: plain distances, compass, scorecard, shot
+  // tracking. No plays-like (height or wind), wind, contours and slope, club or
+  // line advice (Auto, Comp, the Club box's Auto pick) and no strokes gained
+  // (crosshair SG, Disp, Appr SG, SG map, Expected). A finished round viewed
+  // afterwards shows everything again.
+  const tourney = !watching && (scouting ? isTourneyScout()
+    : round0?.type === 'Tournament' && !round0.submitted && localStorage.getItem('gs:viewOnly') !== '1');
   // Replay (a client's past round, played back shot by shot): this hole shows
   // only the strokes played so far.
   const rp = watching && sessionStorage.getItem('gs:replay') === '1' ? (replay ||= { playing: true, speed: 1 }) : null;
@@ -284,7 +292,7 @@ export function renderHole(view, n) {
   const setApprOn = v => { showAppr = v; localStorage.setItem('gs:appr', v ? '1' : '0'); if (!v) apprAdjOpen = false; apprBtn?.classList.toggle('on', v); apprBtn?.setAttribute('aria-pressed', String(v)); };
   // Disp: a dispersion oval at the crosshair (as wide as the arc) with 20 evenly
   // spread shots in it, scored for SG. Arc, Disp and Appr are never on together.
-  let showDisp = flag('gs:disp', '0');
+  let showDisp = !tourney && flag('gs:disp', '0');
   const setDispOn = v => { showDisp = v; localStorage.setItem('gs:disp', v ? '1' : '0'); if (!v) arcAdjOpen = false; dispBtn?.classList.toggle('on', v); dispBtn?.setAttribute('aria-pressed', String(v)); };
   const onlyOne = keep => { if (keep !== 'arc' && showArc) setArcOn(false); if (keep !== 'disp' && showDisp) setDispOn(false); if (keep !== 'appr' && showAppr) setApprOn(false); };
   const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { setArcOn(v); if (v) onlyOne('arc'); });
@@ -300,7 +308,7 @@ export function renderHole(view, n) {
   //             (-1 to +1, default 0) for an approach from where the ball is now
   let showAppr = flag('gs:appr', '0');
   let apprFt = Math.min(80, Math.max(10, +localStorage.getItem('gs:apprFt') || 40));
-  let apprMode = localStorage.getItem('gs:apprMode') === 'sg' ? 'sg' : 'ft';
+  let apprMode = !tourney && localStorage.getItem('gs:apprMode') === 'sg' ? 'sg' : 'ft';
   const apprSlider = h('div', { class: 'arcslider appr', hidden: true });
   function drawApprSlider() {
     const isSg = apprMode === 'sg';
@@ -322,7 +330,7 @@ export function renderHole(view, n) {
     const mode = (m, label) => h('button', { class: apprMode === m ? 'on' : '', onclick: () => { apprMode = m; localStorage.setItem('gs:apprMode', m); drawApprSlider(); update(); } }, label);
     apprSlider.classList.toggle('sgmode', isSg);
     apprSlider.replaceChildren(
-      h('div', { class: 'modes' }, mode('ft', 'Distance'), mode('sg', 'SG')),
+      tourney ? null : h('div', { class: 'modes' }, mode('ft', 'Distance'), mode('sg', 'SG')),
       h('div', { class: 'presets' }, presets),
       h('div', { class: 'slide' }, h('span', {}, 'Appr'), range, value));
   }
@@ -337,7 +345,7 @@ export function renderHole(view, n) {
   // SG target: a ring around the pin at the distance from which a ball on the
   // green gains 0 strokes for the selected handicap, for an approach from where
   // the ball is now (the last recorded shot, or the tee). Labelled on the map.
-  let showSgt = flag('gs:sgTarget', '0');
+  let showSgt = !tourney && flag('gs:sgTarget', '0');
   // SG map view (a switch in the View box): the strokes-gained heat map for the drive.
   const setSgt = v => { showSgt = v; localStorage.setItem('gs:sgTarget', v ? '1' : '0'); update(); };
   // The Appr pill's SG value (kept on this device).
@@ -673,7 +681,7 @@ export function renderHole(view, n) {
     for (const c of bag()) { const y = clubYd(c); if (y && (!best || Math.abs(y - d) < Math.abs(best.y - d))) best = { name: c.name, y }; }
     return best ? best.name : null;
   }
-  const currentClub = () => pickedClub || autoClub();
+  const currentClub = () => pickedClub || (tourney ? null : autoClub()); // no club advice in a tournament
   // A club's yardage from My Bag (total, else carry), or null.
   // Club yardages: carry by default (where the ball lands, which is what the arcs,
   // dispersion, Comp and Auto plot), or total with roll; either falls back to the other.
@@ -702,7 +710,7 @@ export function renderHole(view, n) {
   const COMP_COLORS = ['#f472b6', '#4dd0ff', '#a3e635'];
   let compClubs = [];
   try { compClubs = JSON.parse(localStorage.getItem('gs:compClubs') || '[]').filter(x => typeof x === 'string').slice(0, 3); } catch { /* none */ }
-  let showComp = flag('gs:comp', '0') && compClubs.length >= 2;
+  let showComp = !tourney && flag('gs:comp', '0') && compClubs.length >= 2;
   const compSheet = h('div', { class: 'clubsheet', hidden: true, onclick: e => { if (e.target === compSheet) compSheet.hidden = true; } });
   const saveComp = () => { localStorage.setItem('gs:comp', showComp ? '1' : '0'); localStorage.setItem('gs:compClubs', JSON.stringify(compClubs)); };
   // Comp's settings (the ⚙ above Comp, or Comp itself the first time, before
@@ -738,7 +746,7 @@ export function renderHole(view, n) {
     showComp = on; compAim = {}; saveComp();
     if (on) { if (showArc) setArcOn(false); if (showDisp) setDispOn(false); }
     update();
-    if (autoWanted()) runAuto();
+    if (autoWanted() && !tourney) runAuto();
   }
   const compBtn = h('button', { class: 'fab comp', 'aria-label': 'Compare clubs', title: 'Compare 2-3 clubs on one line (on / off)', onclick: () => {
     if (!showComp && compClubs.filter(c => compYards(c)).length < 2) { openCompPicker(); return; } // first time: pick the clubs
@@ -892,7 +900,7 @@ export function renderHole(view, n) {
   // row of intervals, and plays-like yardages by the crosshair.
   let styleReady = false; // the map's load event has run (sources can be added)
   const elevId = partOf(course, n); // two nines played as 18: the elevation of the nine this hole is on
-  const redrawElev = () => { if (styleReady) drawElevation(m, elevId, { line: route(), own: holeFeatures(ch) }); };
+  const redrawElev = () => { if (styleReady && !tourney) drawElevation(m, elevId, { line: route(), own: holeFeatures(ch) }); };
   let elevInfo = null; // this course's entry in data/elev/index.json, once fetched
   const elevChips = (opts, get, set) => {
     const row = h('div', { class: 'viewchips' });
@@ -925,8 +933,8 @@ export function renderHole(view, n) {
     } }, 'Plays', h('br'), 'like');
   const playsWrap = h('div', { class: 'playswrap', hidden: true }, playsBtn, playsOpts);
   const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips);
-  elevIndex().then(ix => { elevInfo = ix[elevId] || null; elevBox.hidden = playsWrap.hidden = !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
-  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), sgtRow, linesRow, cleanRow, elevBox);
+  elevIndex().then(ix => { elevInfo = ix[elevId] || null; elevBox.hidden = playsWrap.hidden = tourney || !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
+  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), tourney ? null : sgtRow, linesRow, cleanRow, elevBox);
   const drawViewBox = () => {
     sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync();
     contourRow.sync(); contourChips.sync();
@@ -1084,7 +1092,7 @@ export function renderHole(view, n) {
       h('div', { class: 'clubhead' }, h('strong', {}, 'Club'), ydToggle(() => openClubPicker()), h('button', { class: 'x', style: 'margin-left:10px;', onclick: () => { clubPicker.hidden = true; } }, '✕')),
       scouting && sync.user ? h('button', { class: 'bagwho', onclick: openBagSearch }, h('span', {}, '👤'), h('b', {}, bagFor ? `${bagFor.name}’s bag` : sync.name ? `${sync.name}’s bag` : 'My bag'), h('small', {}, 'Change ›')) : null,
       h('div', { class: 'clubgrid' },
-        h('button', { class: pickedClub ? '' : 'on', onclick: () => { pickedClub = null; clubPicker.hidden = true; update(); } }, h('b', {}, 'Auto'), h('small', {}, autoClub() ? clubName(autoClub()) : '–')),
+        h('button', { class: pickedClub ? '' : 'on', onclick: () => { pickedClub = null; clubPicker.hidden = true; update(); } }, h('b', {}, tourney ? 'None' : 'Auto'), h('small', {}, tourney ? '–' : autoClub() ? clubName(autoClub()) : '–')),
         bag().map(c => h('button', { class: pickedClub === c.name ? 'on' : '', onclick: () => {
           pickedClub = c.name; clubPicker.hidden = true;
           const y = bagYards(c.name); if (y) snapTo(y); // the crosshair jumps to that club's distance
@@ -1247,7 +1255,7 @@ export function renderHole(view, n) {
   const expValue = h('strong', {});
   // Tapping the expected strokes opens the scorecard filled in with what the
   // chosen handicap level is expected to shoot on each hole (opened below).
-  const expPill = h('div', { class: 'exppill' },
+  const expPill = h('div', { class: 'exppill', hidden: tourney },
     h('div', { class: 'expopen', role: 'button', title: 'Expected scores and handicap level', onclick: openExpected }, h('small', {}, 'Expected'), expValue));
 
   const credit = h('small', { class: 'muted credit' }, 'Imagery © Esri, Maxar · Outlines © OpenStreetMap contributors');
@@ -1430,7 +1438,7 @@ export function renderHole(view, n) {
   if (!scouting && !watching && !viewing()) shareCurrent();
 
   view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (wi && !wi.id.startsWith('sv-') ? ' watchlive' : '') + (toolsBtn.open ? ' toolsopen' : '') + (sgBtn.open ? ' sgopen' : '') }, mapEl,
-    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, playsWrap, expPill), scorecard,
+    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') + (tourney ? ' tourney' : '') }, scouting ? `GPS Overview${tourney ? ' · Tournament' : ''}` : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, playsWrap, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { closeView(); menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist), gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compSetBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, setSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
@@ -1511,7 +1519,7 @@ export function renderHole(view, n) {
   holeEl().append(windBox);
   const gotWind = w => { if (w) liveWind = w; showWind(); };
   const windAt = pin || tee;
-  if (windAt) {
+  if (tourney) { /* no wind in a tournament: it stays hidden */ } else if (windAt) {
     fetchWind(course.id, windAt).then(gotWind);
     clearInterval(windTimer);
     windTimer = setInterval(() => { if (!document.hidden) fetchWind(course.id, windAt).then(gotWind); }, 600000);
@@ -1952,14 +1960,14 @@ export function renderHole(view, n) {
     widthBtn.hidden = arcBtn.hidden = apprBtn.hidden = onGreen;
     clubBtn.hidden = onGreen || viewing();
     if (!clubBtn.hidden) { const c = currentClub(); clubBtn.firstChild.textContent = c ? clubShort(c) : '–'; clubBtn.classList.toggle('on', !!pickedClub); }
-    compBtn.hidden = onGreen || viewing();
-    autoBtn.hidden = onGreen || viewing();
+    compBtn.hidden = onGreen || viewing() || tourney;
+    autoBtn.hidden = onGreen || viewing() || tourney;
     if (autoBtn.hidden) autoKey.hidden = true;
     compBtn.classList.toggle('on', showComp);
     compSetBtn.hidden = compBtn.hidden || !showComp;
     if (compBtn.hidden) compLegend.hidden = true;
     arcSlider.hidden = !(showArc || showDisp) || onGreen || !arcAdjOpen;
-    dispBtn.hidden = onGreen;
+    dispBtn.hidden = onGreen || tourney;
     dispAdjBtn.hidden = !showDisp || onGreen;
     dispAdjBtn.classList.toggle('on', arcAdjOpen);
     arcAdjBtn.hidden = !showArc || onGreen;
@@ -2041,7 +2049,7 @@ export function renderHole(view, n) {
     const yardage = (a, b, d) => {
       const yd = Math.round(d);
       const plain = [h('b', {}, `${yd} yd`)];
-      if (!elevPrefs.playsLike || !elevInfo) return plain;
+      if (tourney || !elevPrefs.playsLike || !elevInfo) return plain;
       let dz = null;
       if (elevPrefs.playsElev) {
         const ha = heightAt(elevId, elevInfo, a, () => { if (map === m) update(); });
@@ -2064,7 +2072,7 @@ export function renderHole(view, n) {
     };
     toPinEl.replaceChildren(...yardage(target, pin, toPin));
     fromTeeEl.replaceChildren(...yardage(from, target, fromTee),
-      h('span', { class: 'sg ' + (sg >= 0 ? 'gain' : 'loss') }, `${sg >= 0 ? '+' : '−'}${Math.abs(sg).toFixed(2)} (${LIE_TAG[lie]})`),
+      tourney ? h('span', { class: 'sg' }, LIE_TAG[lie]) : h('span', { class: 'sg ' + (sg >= 0 ? 'gain' : 'loss') }, `${sg >= 0 ? '+' : '−'}${Math.abs(sg).toFixed(2)} (${LIE_TAG[lie]})`),
       h('span', { class: 'wide', hidden: !showWidth }, w ? `${Math.round(w.yards)} yd wide` : 'No fairway here'));
     }
 
@@ -2369,7 +2377,7 @@ export function renderHole(view, n) {
     else if (stage() !== 'play' && !viewing()) zoomToGreen();
     update();
     // Auto on: this hole opens with its pick made (and shown).
-    if (autoWanted() && stage() === 'play' && !viewing() && !watching && !rp) runAuto();
+    if (autoWanted() && !tourney && stage() === 'play' && !viewing() && !watching && !rp) runAuto();
     if (scouting && isAdmin && resumeEditAt(n)) editBoundaries(); // moved here with ‹ › while editing boundaries
     if (rp) {
       m.addSource('replay', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
