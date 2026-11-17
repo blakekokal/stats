@@ -12,7 +12,13 @@ import { elevIndex, heightAt } from './elev.js';
 
 const M_PER_DEG = 111320, M_PER_YD = 0.9144, FT_PER_M = 3.28084, IN_PER_M = 39.3701;
 const SVGNS = 'http://www.w3.org/2000/svg';
-const W = 400, H = 700; // one page, in SVG units (a 4 x 7 pocket book)
+// One page, in SVG units: 4 1/4 x 7 inches at 100% (the USGA's size limit for
+// a yardage book, Rule 4.3 / Interpretation 4.3a(1)/1).
+const W = 400, H = 658;
+// The USGA's scale limit for any picture of a putting green: 3/8 inch to 5
+// yards (1:480). At W units = 4.25 in that's 400 / 4.25 * 0.075 = 7.06 units a
+// yard; every page stays under it.
+const MAX_UNITS_PER_YD = 7;
 
 // ---------- the switches ----------
 
@@ -26,7 +32,7 @@ export const BOOK_OPTIONS = [
   ['otherHoles', 'Neighbouring holes', 'Hole page', true],
   ['allTees', 'Every tee box', 'Hole page', true],
   ['centre', 'Centre line', 'Hole page', true],
-  ['layup', 'Layup lines (100 · 150 · 200 · 250)', 'Hole page', true],
+  ['layup', 'Yardage dots (100 · 150 · 200 · 250 · 300) & key', 'Hole page', true],
   ['edges', 'Fairway edge numbers', 'Hole page', true],
   ['hazards', 'Bunker & water numbers (start and end)', 'Hole page', true],
   ['contours', 'Contours & slope arrows', 'Hole page', true, true],
@@ -232,7 +238,7 @@ function slopeArrows(R, [x0, y0, x1, y1], gap, P, keep, scale = 1) {
     const dx = -gx / Math.hypot(gx, gy), dy = -gy / Math.hypot(gx, gy);
     const len = Math.min(gap * 0.8, gap * (0.25 + pct * 0.09)) * scale;
     const A = P([x - (dx * len) / 2, y - (dy * len) / 2]), B = P([x + (dx * len) / 2, y + (dy * len) / 2]);
-    const hx = B[0] - A[0], hy = B[1] - A[1], hl = Math.hypot(hx, hy) || 1, ux = hx / hl, uy = hy / hl, k = Math.min(2.6, hl * 0.4);
+    const hx = B[0] - A[0], hy = B[1] - A[1], hl = Math.hypot(hx, hy) || 1, ux = hx / hl, uy = hy / hl, k = Math.min(1.8, hl * 0.35);
     d += `M${A[0].toFixed(1)},${A[1].toFixed(1)}L${B[0].toFixed(1)},${B[1].toFixed(1)}M${(B[0] - ux * k - uy * k * 0.55).toFixed(1)},${(B[1] - uy * k + ux * k * 0.55).toFixed(1)}L${B[0].toFixed(1)},${B[1].toFixed(1)}L${(B[0] - ux * k + uy * k * 0.55).toFixed(1)},${(B[1] - uy * k - ux * k * 0.55).toFixed(1)}`;
   }
   return d;
@@ -291,7 +297,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   let [minY, maxY] = [Math.min(...keep.map(p => p[1])), Math.max(...keep.map(p => p[1]))];
   minX = Math.min(minX - 32, -45); maxX = Math.max(maxX + 32, 45); minY -= 14; maxY += 18;
   const top = 86, bottom = H - 72, left = 14, right = W - 14;
-  const s = Math.min((right - left) / (maxX - minX), (bottom - top) / (maxY - minY), 4.2);
+  const s = Math.min((right - left) / (maxX - minX), (bottom - top) / (maxY - minY), 4.2, MAX_UNITS_PER_YD);
   const cx = (left + right) / 2 - ((minX + maxX) / 2) * s, cy = (top + bottom) / 2 + ((minY + maxY) / 2) * s;
   const P = ([x, y]) => [cx + x * s, cy - y * s];
   const viewYd = [(left - cx) / s, (cx - right) / -s, (cy - bottom) / s, (cy - top) / s]; // minX, maxX, minY, maxY in yards
@@ -347,7 +353,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       const no = feats.filter(o => ['water', 'bunker'].includes(o.x.t) || (o.x.t === 'green' && own(o))).map(o => o.r);
       const reliefG = el('g', {});
       reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => pathD(sg.map(P))).join(''), ...RELIEF_LINE, 'stroke-opacity': 0.5 }));
-      reliefG.append(el('path', { d: slopeArrows(R, area, 9, P, (x, y) => !no.some(r => inside([x, y], r)), 1), ...RELIEF_ARROW, 'stroke-opacity': 0.55 }));
+      reliefG.append(el('path', { d: slopeArrows(R, area, 10.8, P, (x, y) => !no.some(r => inside([x, y], r)), 0.6), ...RELIEF_ARROW, 'stroke-opacity': 0.55 }));
       mapG.append(reliefG);
       reliefNote = `Contours every ${iv >= 12 ? `${iv / 12} ft` : `${iv}"`} · arrows point downhill`;
     }
@@ -380,24 +386,28 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     return { perp, l: [w.p[0] + perp[0] * l, w.p[1] + perp[1] * l], r: [w.p[0] + perp[0] * r, w.p[1] + perp[1] * r], width: r - l };
   };
 
-  // Layup lines across the fairway, to the front of the green.
+  // Yardage dots down the middle at 100, 150, 200, 250 and 300 to the front
+  // of the green, coloured like a course's yardage markers, with a key at the
+  // bottom right.
   const layupYds = [100, 150, 200, 250, 300];
+  const DOT = { 100: '#d93a3a', 150: '#ffffff', 200: '#2e6fd0', 250: '#f2c40f', 300: '#222222' };
+  const dotsShown = [];
   if (prefs.layup) {
     for (const yd of layupYds) {
       const w = spotAt(yd);
       if (!w || w.fromTee < 40) continue;
-      const e = edgesAt(w);
-      const perp = [w.d[1], -w.d[0]];
-      const a = e ? [e.l[0] - perp[0] * 4, e.l[1] - perp[1] * 4] : [w.p[0] - perp[0] * 18, w.p[1] - perp[1] * 18];
-      const b = e ? [e.r[0] + perp[0] * 4, e.r[1] + perp[1] * 4] : [w.p[0] + perp[0] * 18, w.p[1] + perp[1] * 18];
-      const [A, B] = [P(a), P(b)];
-      labG.append(el('path', { d: pathD([A, B]), stroke: INK, 'stroke-width': 0.9, 'stroke-dasharray': '4 2' }));
-      const spot = lab.place([[B[0] + 3, B[1] + 3.5, 'start'], [A[0] - 3, A[1] + 3.5, 'end']], textW(yd, 11) + 6, 11, bounds);
-      if (spot) {
-        const [x, y, anc] = spot, wdt = textW(yd, 11) + 6, x0 = anc === 'start' ? x - 1 : x - wdt + 1;
-        labG.append(el('rect', { x: x0, y: y - 9.5, width: wdt, height: 12.5, rx: 6, fill: INK }),
-          txt(x0 + wdt / 2, y, yd, { 'font-size': 11, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle', stroke: 'none' }));
-      }
+      const [x, y] = P(w.p);
+      labG.append(el('circle', { cx: x, cy: y, r: 4.2, fill: DOT[yd], stroke: '#222', 'stroke-width': 0.9, 'paint-order': 'normal' }));
+      lab.block([x - 5, y - 5, x + 5, y + 5]);
+      dotsShown.push(yd);
+    }
+    if (dotsShown.length) {
+      const kw = 62, kh = 14 + dotsShown.length * 12, kx = right - kw - 4, ky = bottom - kh - 4;
+      lab.block([kx, ky, kx + kw, ky + kh]);
+      svg.append(el('rect', { x: kx, y: ky, width: kw, height: kh, rx: 3, fill: '#fff', 'fill-opacity': 0.95, stroke: '#c9d0cb', 'stroke-width': 0.8 }),
+        txt(kx + 6, ky + 10, 'TO FRONT', { 'font-size': 7.5, 'font-weight': 700, fill: SOFT, 'letter-spacing': 0.6 }),
+        ...dotsShown.flatMap((yd, i) => [el('circle', { cx: kx + 10, cy: ky + 19 + i * 12, r: 3.6, fill: DOT[yd], stroke: '#222', 'stroke-width': 0.8 }),
+          txt(kx + 19, ky + 22.5 + i * 12, `${yd} yds`, { 'font-size': 9, fill: INK })]));
     }
   }
 
@@ -438,7 +448,6 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   // yards to the front (the left and right edge read a little differently).
   if (prefs.edges) {
     for (let yd = 40; yd <= 340; yd += 20) {
-      if (prefs.layup && layupYds.includes(yd)) continue;
       const w = spotAt(yd);
       if (!w || w.fromTee < 60) continue;
       const e = edgesAt(w);
@@ -527,14 +536,14 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   const widthYd = width.length >= 2 ? Math.round(width.at(-1) - width[0]) : Math.round(maxX - minX);
   const frontY = depth.length ? depth[0] : minY;
 
-  const top = 86, bottom = prefs.notes ? 470 : H - 62, left = 30, right = W - 30;
+  const top = 86, bottom = prefs.notes ? 450 : H - 70, left = 30, right = W - 30;
   // The map takes in the fairway leading up to the green as well (up to 40
   // yards short of it), not just the ground around it.
   const approach = F.own.filter(x => x.t === 'fairway').flatMap(x => ringOf(x).map(f.fwd)).filter(([x, y]) => y < frontY0(g) && y > frontY0(g) - 40 && Math.abs(x) < 40);
   const vx0 = Math.min(minX, ...approach.map(p => p[0])), vx1 = Math.max(maxX, ...approach.map(p => p[0]));
   const vy0 = Math.min(minY, ...approach.map(p => p[1])), vy1 = maxY;
   const pad = 7;
-  const s = Math.min((right - left) / (vx1 - vx0 + pad * 2), (bottom - top) / (vy1 - vy0 + pad * 2));
+  const s = Math.min((right - left) / (vx1 - vx0 + pad * 2), (bottom - top) / (vy1 - vy0 + pad * 2), MAX_UNITS_PER_YD);
   const cx = (left + right) / 2 - ((vx0 + vx1) / 2) * s, cy = (top + bottom) / 2 + ((vy0 + vy1) / 2) * s;
   const P = ([x, y]) => [cx + x * s, cy - y * s];
   const view = [(left - cx) / s, (right - cx) / s, (cy - bottom) / s, (cy - top) / s];
@@ -606,7 +615,7 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
       }
       if (prefs.slopes) {
         const no = course.features.filter(x => x.t === 'water' || x.t === 'bunker').map(x => ringOf(x).map(f.fwd)).filter(inView);
-        reliefG.append(el('path', { d: slopeArrows(R, area, 3, P, (x, y) => !no.some(r => inside([x, y], r)), 1.1), ...RELIEF_ARROW, 'stroke-width': 0.6 }));
+        reliefG.append(el('path', { d: slopeArrows(R, area, 3.6, P, (x, y) => !no.some(r => inside([x, y], r)), 0.7), ...RELIEF_ARROW, 'stroke-width': 0.6 }));
         slopeNote += `${slopeNote ? ' · ' : ''}arrows point downhill, longer = steeper`;
       }
     }
@@ -651,12 +660,13 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
     relief != null ? txt(W - 16, 68, `${(relief / 12).toFixed(1)} FT FROM HIGH TO LOW`, { 'font-size': 10, fill: SOFT, 'text-anchor': 'end', 'letter-spacing': 0.6 }) : null,
     el('line', { x1: 14, x2: W - 14, y1: top - 4, y2: top - 4, stroke: '#d6dcd8', 'stroke-width': 0.8 }),
     txt(16, bottom + 18, `${prefs.grid ? `${prefs.gridYd}-YD GRID · ` : ''}EDGE NUMBERS ARE YARDS FROM THE FRONT`, { 'font-size': 8.5, fill: SOFT, 'letter-spacing': 0.6 }),
+    txt(16, bottom + 42, `USGA Rule 4.3: green at 3/8" to 5 yd or smaller, page 4¼ × 7" when printed at 100%`, { 'font-size': 8, fill: SOFT }),
     slopeNote ? txt(16, bottom + 30, `${slopeNote} · USGS lidar`, { 'font-size': 8.5, fill: SOFT }) : null,
     txt(16, H - 12, course.name.toUpperCase(), { 'font-size': 9, fill: '#9aa59e', 'letter-spacing': 1 }),
     txt(W - 16, H - 12, `HOLE ${n} · GREEN`, { 'font-size': 9, fill: '#9aa59e', 'text-anchor': 'end', 'letter-spacing': 1 }));
   if (prefs.notes) {
-    svg.append(txt(16, bottom + 52, 'NOTES', { 'font-size': 10, 'font-weight': 700, fill: INK, 'letter-spacing': 1.2 }));
-    for (let y = bottom + 74; y < H - 30; y += 22) svg.append(el('line', { x1: 16, x2: W - 16, y1: y, y2: y, stroke: '#d6dcd8', 'stroke-width': 0.8 }));
+    svg.append(txt(16, bottom + 64, 'NOTES', { 'font-size': 10, 'font-weight': 700, fill: INK, 'letter-spacing': 1.2 }));
+    for (let y = bottom + 84; y < H - 28; y += 22) svg.append(el('line', { x1: 16, x2: W - 16, y1: y, y2: y, stroke: '#d6dcd8', 'stroke-width': 0.8 }));
   }
   return svg;
 }
