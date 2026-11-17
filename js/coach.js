@@ -10,6 +10,8 @@ import { checkCoachingDot } from './coaching/index.js';
 import { VERSION } from './version.js';
 import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting, firstHoleOf, activeRound, pauseRound, resumeRound, holeCountOf } from './rounds.js';
 import { downloadRoundCsv } from './dashboard.js';
+import { openBook } from './book.js';
+import { holeFeatures, ownGreen } from './hole.js';
 
 const PREF_LABEL = { Pro: 'Tour Pro', Scratch: 'Scratch (0)' };
 const levelOpt = (l, sel, short) => h('option', { value: l, selected: l === sel },
@@ -171,6 +173,14 @@ export function renderNewRound(view, { scout = false } = {}) {
     sessionStorage.removeItem('gs:level');
     location.hash = '#/hole/1';
   } }, 'START');
+  // GPS Overview: a printable yardage book of the course from the tee box
+  // picked (it opens on hole 1; ‹ › go round the holes, Print does the lot).
+  const genBook = h('button', { class: 'holes9 genbook', onclick: () => {
+    if (!chosen) { err.textContent = 'Select a course.'; return; }
+    if (!tee.value) { err.textContent = 'Select a tee box.'; return; }
+    err.textContent = '';
+    openBook(1, { teeName: tee.value, tourney: type.value === 'Tournament', holeFeatures, ownGreen });
+  } }, 'GEN BOOK');
 
   // Course: a blank box to type in; the courses matching what's typed are listed
   // below it to tap. Picking one fills in its tee boxes.
@@ -227,7 +237,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     view.replaceChildren(page('top', backBtn(),
       h('div', { style: 'font-size:22px;font-weight:800;' }, 'GPS Overview'),
       h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:-4px;' }, `${COURSES.length} courses added`),
-      courseBox, ninesBox, tee, teeInfo, typeRow, typeNote, confirm, err));
+      courseBox, ninesBox, tee, teeInfo, typeRow, typeNote, confirm, genBook, err));
     return;
   }
   view.replaceChildren(page('top', backBtn(),
@@ -452,6 +462,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.6.1', ['GPS Overview: the yardage book has moved to a GEN BOOK button under START. Pick the course and tee box, tap GEN BOOK, and the book opens on hole 1 (‹ › go round the holes; Print does this hole or the whole course). It’s no longer in the View box']],
   ['1.6.0', ['GPS Overview: Yardage book (in the View box), laid out like a tour book flipped open: the green page on top and the whole hole below the fold, tee at the bottom. Numbers come in pairs, like a tour book: a dot on the spot, the yards to the front of the green above (red) and the yards from the tee below (black), off to the side on a short straight line, with small blue numbers for how many yards the ground goes up (+) or down (−): above the red one from the spot to the front of the green, below the black one from the tee to the spot. There’s a pair at the start and end of every bunker (not greenside ones) and water hazard, and down the middle at 100, 150 and 200 to the front (and 250 and 300 on par 5s). Contour lines and a field of small downhill arrows cover the hole, with plays-like height change in the header. The green page takes in the fairway leading up to the green, with a 3- or 5-yard grid, depth and width, front and back marks, edge numbers from the front, contours every few inches, downhill arrows and lines for notes. Pick the tee box at the top; Show turns each part on or off (kept on this device); Print makes a PDF or paper copy of the hole or the whole course, 4¼ × 7 inches with the green no bigger than 3/8 inch to 5 yards (the USGA limits for green-reading material, Rule 4.3) when printed at 100%. In a Tournament round the green page, contours and plays-like are left out (Rules of Golf 4.3)']],
   ['1.5.1', ['Tournament mode: Contours & slope shows the same contours as a casual round, greens included (no more gap around the greens). Still off at the start of every tournament round']],
   ['1.5.0', ['GPS Overview: under the title it now shows how many courses have been added, in place of “Plan shots on any hole · nothing is saved”']],

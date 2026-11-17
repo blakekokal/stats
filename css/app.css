@@ -597,7 +597,6 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .clubsheet.setsheet { background: transparent; } /* the map stays clear, to see the lines change */
 
 /* Yardage book (GPS Overview > View > Yardage book) */
-.viewbox .btn.bookopen { margin-top: 6px; font-size: 14px; }
 .bookov { position: fixed; inset: 0; z-index: 50; background: #e9ece9; color: #1c2a22; display: flex; flex-direction: column; overflow: hidden; }
 .booktop { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; padding: calc(8px + env(safe-area-inset-top)) 10px 8px; background: #fff; border-bottom: 1px solid #d6dcd8; }
 .booktop b { font-size: 16px; min-width: 56px; text-align: center; }

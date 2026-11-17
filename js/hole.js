@@ -9,7 +9,6 @@
 // shot reaches the green the map zooms onto it, the player places the pin,
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
-import { openBook } from './book.js';
 import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast, complexHoles, partOf } from './app.js';
 import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, drawnRing, YD_PER_M } from './geo.js';
@@ -125,7 +124,7 @@ export function fairwayWidth(tee, target, fairways, reachYd = 80) {
 // bunker or water within 70 m of the hole's line, since those can be shared.
 const centre = ring => [ring.reduce((a, p) => a + p[0], 0) / ring.length, ring.reduce((a, p) => a + p[1], 0) / ring.length];
 // The hole's own green: the one the pin is on, or failing that the nearest.
-function ownGreen(ch, features = course.features) {
+export function ownGreen(ch, features = course.features) {
   const greens = features.filter(f => f.t === 'green' && (f.h == null || f.h === ch.n));
   return greens.find(g => g.h === ch.n) || greens.find(g => inPolygon(ch.pin, g.p))
     || greens.reduce((best, g) => (!best || yards(centre(g.p[0]), ch.pin) < yards(centre(best.p[0]), ch.pin) ? g : best), null);
@@ -135,7 +134,7 @@ const overlaps = (a, b, pad) => a[0][0] <= b[1][0] + pad && a[1][0] >= b[0][0] -
 // The OB area is a big box with the course cut out of it: only the cut-out —
 // the course boundary — is drawn, as a single line.
 const obLines = f => (f.p.length > 1 ? f.p.slice(1) : f.p);
-function holeFeatures(ch, features = course.features) {
+export function holeFeatures(ch, features = course.features) {
   const green = ownGreen(ch, features), holes = complexHoles();
   return features.filter(f => {
     if (f.t === 'ob') return obLines(f).some(r => r.some(p => distToLine(p, ch.line) <= 150));
@@ -942,12 +941,7 @@ export function renderHole(view, n) {
   const playsWrap = h('div', { class: 'playswrap', hidden: true }, playsBtn, playsOpts);
   const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips);
   elevIndex().then(ix => { elevInfo = ix[elevId] || null; elevBox.hidden = !elevInfo; playsWrap.hidden = tourney || !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
-  // GPS Overview: a printable yardage book of this hole (and the course).
-  const bookBtn = scouting ? h('button', { class: 'btn bookopen', onclick: () => {
-    closeView();
-    openBook(n, { teeName, tourney, holeFeatures, ownGreen, onHole: k => { location.hash = '#/hole/' + k; } });
-  } }, '📖 Yardage book') : null;
-  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), tourney ? null : sgtRow, tourney ? null : linesRow, cleanRow, elevBox, bookBtn);
+  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), tourney ? null : sgtRow, tourney ? null : linesRow, cleanRow, elevBox);
   const drawViewBox = () => {
     sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync();
     contourRow.sync(); contourChips.sync();
