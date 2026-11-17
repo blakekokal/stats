@@ -426,6 +426,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.87.0', ['New course: Grapevine Golf Course \u2013 Pecan, the last of its three nines, built from its yardage book']],
   ['0.86.0', ['New course: Grapevine Golf Course \u2013 Mockingbird, the second of its three nines, built from its yardage book']],
   ['0.85.3', ['Fixed: the app opened to a blank screen after 0.85.2']],
   ['0.85.2', ['Text you couldn’t read is readable now: dark grey words on the dark background (subtitles, empty messages, small labels and delete buttons in My Bag, Practice, Coaching and Performance Analysis) are a lighter grey', 'Combine buttons (Short Game Combines, Evaluation Test): the name and its description sit on two lines again instead of running together off the screen']],

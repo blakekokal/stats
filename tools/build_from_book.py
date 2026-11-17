@@ -97,27 +97,40 @@ for n in ids:
         if m_ <= n: continue
         offs = [z - z2 for k, c, a_, z in sigs[n] for k2, c2, a2, z2 in sigs[m_] if k == k2 and c == c2 and abs(a_ - a2) < 0.01 * a_ + 0.5]
         best = max(offs, key=lambda o: sum(abs(o - q) < 1 for q in offs)) if offs else 0; sup = [q for q in offs if abs(q - best) < 1]
+        tree = False
         if len(sup) >= 3: o, w = sum(sup) / len(sup), len(sup)  # one shape alike on two pages can be chance
         else:
             t = tree_link(n, m_)
             if not t: continue
-            o, w = t
-        r_ = np.zeros(len(ids)); r_[ids.index(m_)] = w; r_[ids.index(n)] = -w; rows.append(r_); rhs.append(o * w); links += 1; pairs.append((n, m_, o))
+            (o, w), tree = t, True
+        pairs.append((n, m_, o, w, tree))
 # Pages that share nothing with the rest (holes kept apart by houses, say) make separate groups:
 # the book still gives them the same scale and turn, but each group is shifted on its own.
-grp = {n: n for n in ids}
-def root(n):
-    while grp[n] != n: n = grp[n]
-    return n
-for n, m_, o in pairs: grp[root(m_)] = root(n)
-groups = {}
-for n in ids: groups.setdefault(root(n), []).append(n)
-groups = list(groups.values())
-for g_ in groups:
-    r_ = np.zeros(len(ids)); r_[ids.index(g_[0])] = 100; rows.append(r_); rhs.append(0)
-sol = np.linalg.lstsq(np.array(rows), np.array(rhs), rcond=None)[0]
-plan = {n: sol[i] for i, n in enumerate(ids)}  # each pin on its group's plan, yards east + north (as a complex number)
-worst = max(abs(plan[m_] - plan[n] - o) for n, m_, o in pairs) if pairs else 0
+def solve(pairs):
+    grp = {n: n for n in ids}
+    def root(n):
+        while grp[n] != n: n = grp[n]
+        return n
+    for n, m_, *_ in pairs: grp[root(m_)] = root(n)
+    groups = {}
+    for n in ids: groups.setdefault(root(n), []).append(n)
+    groups = list(groups.values())
+    rows, rhs = [], []
+    for n, m_, o, w, _ in pairs:
+        r_ = np.zeros(len(ids)); r_[ids.index(m_)] = w; r_[ids.index(n)] = -w; rows.append(r_); rhs.append(o * w)
+    for g_ in groups:
+        r_ = np.zeros(len(ids)); r_[ids.index(g_[0])] = 100; rows.append(r_); rhs.append(0)
+    sol = np.linalg.lstsq(np.array(rows), np.array(rhs), rcond=None)[0]
+    return groups, {n: sol[i] for i, n in enumerate(ids)}
+resid = lambda q: abs(plan[q[1]] - plan[q[0]] - q[2])
+groups, plan = solve(pairs)  # each pin on its group's plan, yards east + north (as a complex number)
+# Trees alike on two pages can still be chance: drop the tree link that disagrees most until the pages agree.
+while pairs and max(map(resid, pairs)) >= 1 and any(q[4] for q in pairs):
+    bad = max((q for q in pairs if q[4]), key=resid); pairs.remove(bad)
+    print('trees on pages %d and %d don\'t agree with the rest (%.0f yd): not joined by them' % (bad[0], bad[1], resid(bad)))
+    groups, plan = solve(pairs)
+links = len(pairs)
+worst = max(map(resid, pairs)) if pairs else 0
 print(links, 'pairs of pages share shapes or trees; they agree to %.2f yd;' % worst, len(groups), 'group(s):', groups)
 assert worst < 1, 'the pages do not make one map'
 gid = {n: i for i, g_ in enumerate(groups) for n in g_}
@@ -185,8 +198,12 @@ def seg_d(p, a, b):
 nearest = lambda p: min(LINES, key=lambda n: seg_d(p, *LINES[n]))
 mask = {k: np.zeros((H, W), np.uint8) for k in ('water', 'treezone', 'bunker', 'fairway')}
 feats, greens = [], {}
+# DROP in course.py (optional): [kind, [lat, lng]] for a shape the book draws that isn't there
+# (a pond on dry ground, say); any shape of that kind over the point is left out.
+drops = [(k, px(*q)) for k, q in getattr(C, 'DROP', [])]
 for n, h in B.items():
     for k, gg, *r in h['shapes']:
+        if any(k == dk and yardage_book.inside(dq, [to_px(n, q) for q in gg[0]]) for dk, dq in drops): continue
         if k == 'tree':
             x, y = to_px(n, gg[0]); cv2.circle(mask['treezone'], (int(x), int(y)), int(r[0] * YP + pxm(2)), 1, -1)
         elif k in mask:
