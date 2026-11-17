@@ -452,6 +452,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.96.4', ['GPS Overview: the Score box above the hole pill is gone (nothing is scored there)']],
   ['0.96.3', ['New Round: the Entry Mode GPS button above START is gone (it did nothing)']],
   ['0.96.2', ['New Round and GPS Overview start with Casual picked; tap Tournament to change it']],
   ['0.96.1', ['Tournament mode also drops Course lines view (the bunker, fairway, water and green outlines): the switch is gone from the View box and the lines stay off']],

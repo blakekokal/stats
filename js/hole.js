@@ -1761,7 +1761,7 @@ export function renderHole(view, n) {
   let chipKey = null;
   function drawScoreChips() {
     const { r, strokes, toPar: tp, thru, thruToPar } = roundTotals();
-    const show = !!r;
+    const show = !!r && !scouting; // GPS Overview keeps no score
     const key = show ? [strokes, tp, thru, thruToPar, holeNow().done ? strokesOf(holeNow()) : '-'].join('|') : 'none';
     if (key === chipKey) return;
     chipKey = key;
