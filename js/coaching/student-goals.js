@@ -93,13 +93,13 @@ export async function loadStudentGoalsAndHandicap() {
     var goals = (data && data.goals && Array.isArray(data.goals)) ? data.goals : [];
     var container = document.getElementById('svGoalsList');
     if (goals.length === 0) {
-      container.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px;">This student hasn\'t set any goals yet.</div>';
+      container.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px;">This student hasn\'t set any goals yet.</div>';
     } else {
       renderGoals(container, goals, true);
     }
   } catch(e) {
     var container = document.getElementById('svGoalsList');
-    if (container) container.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:12px;padding:12px;">Unable to load goals.</div>';
+    if (container) container.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:12px;padding:12px;">Unable to load goals.</div>';
   }
 }
 

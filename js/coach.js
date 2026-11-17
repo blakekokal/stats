@@ -67,9 +67,9 @@ export function renderHome(view) {
   search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 
   const brand = h('div', { style: 'text-align:center;margin-bottom:6px;' });
-  brand.innerHTML = `<div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:1px;line-height:1.0;color:#ffffff;">Blake Kokal<br><span style="display:inline-flex;align-items:baseline;justify-content:center;"><span style="font-size:10px;visibility:hidden;font-weight:600;">What's new</span><span style="font-size:13px;visibility:hidden;font-weight:700;margin-right:5px;">v${VERSION}</span>Golf<span class="wn" style="font-size:13px;color:#2e2e2e;font-weight:700;margin-left:6px;cursor:pointer;">v${VERSION}</span><span class="wn" style="font-size:10px;color:#44b8f0;font-weight:600;margin-left:5px;cursor:pointer;">&#x2190; What's new</span></span></div>`;
+  brand.innerHTML = `<div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:1px;line-height:1.0;color:#ffffff;">Blake Kokal<br><span style="display:inline-flex;align-items:baseline;justify-content:center;"><span style="font-size:10px;visibility:hidden;font-weight:600;">What's new</span><span style="font-size:13px;visibility:hidden;font-weight:700;margin-right:5px;">v${VERSION}</span>Golf<span class="wn" style="font-size:13px;color:#606060;font-weight:700;margin-left:6px;cursor:pointer;">v${VERSION}</span><span class="wn" style="font-size:10px;color:#44b8f0;font-weight:600;margin-left:5px;cursor:pointer;">&#x2190; What's new</span></span></div>`;
   brand.querySelectorAll('.wn').forEach(el => el.addEventListener('click', () => { location.hash = '#/whatsnew'; }));
-  brand.append(h('div', { style: 'font-size:11px;color:#2e2e2e;margin-top:3px;' }, sync.user ? '👤 ' + sync.name : ''));
+  brand.append(h('div', { style: 'font-size:11px;color:#606060;margin-top:3px;' }, sync.user ? '👤 ' + sync.name : ''));
 
   // Coaching, with a dot when a note, message or assignment is waiting.
   const coaching = go('🎓', 'Coaching', '#00402c', '#/coaching');
@@ -426,6 +426,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.85.2', ['Text you couldn’t read is readable now: dark grey words on the dark background (subtitles, empty messages, small labels and delete buttons in My Bag, Practice, Coaching and Performance Analysis) are a lighter grey', 'Combine buttons (Short Game Combines, Evaluation Test): the name and its description sit on two lines again instead of running together off the screen']],
   ['0.85.1', ['Plays like: the plays-like number lines up right under the yardage. The Wind box is smaller and sits lower, with just the direction and speed sliders (the Into / Helping / From left / From right buttons are gone); tap Live to go back to the live wind']],
   ['0.85.0', ['Wind: tap the wind arrow under the compass to set the wind by hand and try things out: Into, Helping, From left or From right (as the map faces), or slide the direction and speed. Plays like (with Wnd on) uses it straight away. A hand-set wind has a yellow ring and stays until you tap Use live wind']],
   ['0.84.1', ['Plays like: the main yardage always stays centred over the crosshair; the rise or drop beside it is smaller and centred on the line']],

@@ -72,7 +72,7 @@ function renderCoachTeamCards() {
     + '</div>';
 
   if (teams.length === 0 && students.length === 0) {
-    html = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">No teams or students yet.</div>';
+    html = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No teams or students yet.</div>';
   }
 
   el.innerHTML = html;
@@ -162,7 +162,7 @@ function renderTeamPlayers() {
   var el = document.getElementById('coachTeamPlayerList');
 
   if (teamPlayers.length === 0) {
-    el.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">' + (q ? 'No players match your search.' : 'No players in this team.') + '</div>';
+    el.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">' + (q ? 'No players match your search.' : 'No players in this team.') + '</div>';
     return;
   }
 
@@ -187,7 +187,7 @@ function renderTeamPlayers() {
       + '<div style="flex:1;min-width:0;">'
       + '<div style="display:flex;align-items:center;gap:6px;"><span style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(s.student_name || 'Student') + '</span>'
       + '<span id="rosterHcp_' + sid + '" style="font-size:10px;font-weight:700;background:#1a4a8a;color:#44b8f0;padding:1px 6px;border-radius:10px;white-space:nowrap;"></span></div>'
-      + '<div style="font-size:11px;color:#2e2e2e;">' + escapeHtml(s.student_email || '') + '</div>'
+      + '<div style="font-size:11px;color:#9a9a9a;">' + escapeHtml(s.student_email || '') + '</div>'
       + '</div>'
       + '<div style="display:flex;gap:4px;flex-shrink:0;">'
       + (moveOptions ? '<select onchange="movePlayerToTeam(\'' + sid + '\', this.value)" style="height:28px;font-size:10px;background:#282828;border:1px solid #333;border-radius:6px;color:#9a9a9a;padding:0 4px;max-width:80px;"><option value="">Move...</option>' + moveOptions + '</select>' : '')

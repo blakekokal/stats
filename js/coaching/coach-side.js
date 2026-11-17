@@ -73,7 +73,7 @@ function filterCoachNoteStudents() {
   dropdown.innerHTML = '';
   if (filtered.length === 0) {
     var empty = document.createElement('div');
-    empty.style.cssText = 'padding:10px;color:#2e2e2e;font-size:13px;text-align:center;';
+    empty.style.cssText = 'padding:10px;color:#9a9a9a;font-size:13px;text-align:center;';
     empty.textContent = 'No students found';
     dropdown.appendChild(empty);
   } else {
@@ -160,7 +160,7 @@ async function loadCoachActivityFeed() {
   } catch (e) { /* notifications only */ }
 
   if (data.length === 0) {
-    el.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:10px 0;">No recent activity.</div>';
+    el.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:10px 0;">No recent activity.</div>';
     if (markBtn) markBtn.style.display = 'none';
     return;
   }
@@ -196,7 +196,7 @@ async function loadCoachActivityFeed() {
       + '<div style="flex:1;">'
       + '<div style="font-size:13px;font-weight:700;color:' + (!n.read ? '#44b8f0' : '#9a9a9a') + ';">' + escapeHtml(n.title) + '</div>'
       + '<div style="font-size:12px;color:#606060;margin-top:1px;">' + escapeHtml(n.message) + '</div>'
-      + '<div style="font-size:10px;color:#2e2e2e;margin-top:3px;">' + dateStr + '</div>'
+      + '<div style="font-size:10px;color:#9a9a9a;margin-top:3px;">' + dateStr + '</div>'
       + '</div></div>' + viewBtn + '</div>';
   }).join('');
 }

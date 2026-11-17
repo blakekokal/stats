@@ -169,7 +169,7 @@ export function renderCombCard(c, canDelete, canEditNote){
     +'<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:11px;color:#606060;">'+dateStr+'</span>'+delBtn+'</div>'
     +'</div>'
     +scoreStr
-    +'<div style="font-size:11px;color:#2e2e2e;margin-top:3px;">'+metaStr+'</div>'
+    +'<div style="font-size:11px;color:#9a9a9a;margin-top:3px;">'+metaStr+'</div>'
     +'<div style="display:flex;gap:6px;flex-wrap:wrap;">'+editNoteBtn+detailsBtn+'</div>'
     +'<div id="combnote-'+c.id+'" style="display:none;margin-top:8px;"></div>'
     +'<div id="combdetail-'+c.id+'" style="display:none;margin-top:8px;"></div>'
@@ -184,11 +184,11 @@ function toggleCombDetails(id) {
   if (detail.style.display !== 'none') { detail.style.display = 'none'; return; }
   
   var info = (S.combRowDataMap || {})[id];
-  if (!info || !info.data) { detail.innerHTML = '<div style="color:#2e2e2e;font-size:12px;">No shot data available.</div>'; detail.style.display = 'block'; return; }
+  if (!info || !info.data) { detail.innerHTML = '<div style="color:#9a9a9a;font-size:12px;">No shot data available.</div>'; detail.style.display = 'block'; return; }
   
   var combType = info.type || '';
   var rows;
-  try { rows = typeof info.data === 'string' ? JSON.parse(info.data) : info.data; } catch(e) { detail.innerHTML = '<div style="color:#2e2e2e;font-size:12px;">Could not parse data.</div>'; detail.style.display = 'block'; return; }
+  try { rows = typeof info.data === 'string' ? JSON.parse(info.data) : info.data; } catch(e) { detail.innerHTML = '<div style="color:#9a9a9a;font-size:12px;">Could not parse data.</div>'; detail.style.display = 'block'; return; }
   
   var isPut = combType === 'Putting';
   var isWedge = combType === 'Wedge';
@@ -229,7 +229,7 @@ function toggleCombDetails(id) {
       row += '</tr>';
       return row;
     }
-    row += '<td style="padding:3px 4px;color:#2e2e2e;text-align:center;font-weight:700;">'+k+'</td>';
+    row += '<td style="padding:3px 4px;color:#9a9a9a;text-align:center;font-weight:700;">'+k+'</td>';
     if (isPut) row += '<td style="padding:3px 4px;">'+distStr+' ft</td><td style="padding:3px 4px;">'+valStr+'</td><td style="padding:3px 4px;">'+sgStr+'</td>';
     else if (isWedge) row += '<td style="padding:3px 4px;">'+distStr+' yds</td><td style="padding:3px 4px;">'+valStr+'</td><td style="padding:3px 4px;">'+sgStr+'</td>';
     else if (isChipProx) row += '<td style="padding:3px 4px;">'+distStr+' yds</td><td style="padding:3px 4px;font-size:10px;">'+lieStr+'</td><td style="padding:3px 4px;">'+valStr+' ft</td><td style="padding:3px 4px;">'+sgStr+'</td>';
@@ -294,7 +294,7 @@ async function saveCombNote(id, userId) {
   // Update the note display in the card directly
   var card = document.getElementById('combcard-' + id);
   if (card) {
-    var metaDiv = card.querySelector('div[style*="font-size:11px;color:#2e2e2e"]');
+    var metaDiv = card.querySelector('div[style*="font-size:11px;color:#9a9a9a"]');
     if (metaDiv) {
       var existingNote = metaDiv.querySelector('em');
       if (existingNote) {

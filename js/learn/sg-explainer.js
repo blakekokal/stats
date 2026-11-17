@@ -21,12 +21,12 @@ export function renderSGExplainer() {
     + '<div style="font-size:10px;color:#606060;text-transform:uppercase;letter-spacing:1px;font-weight:700;">Tour Pro</div>'
     + '<div style="font-size:11px;color:#9a9a9a;margin-top:4px;">400 yd Par 4</div>'
     + '<div style="font-size:26px;font-weight:900;color:#44b8f0;margin-top:4px;">3.99</div>'
-    + '<div style="font-size:10px;color:#2e2e2e;">expected strokes</div></div>'
+    + '<div style="font-size:10px;color:#9a9a9a;">expected strokes</div></div>'
     + '<div style="flex:1;background:#1e1e1e;border:1px solid #333333;border-radius:10px;padding:12px;text-align:center;">'
     + '<div style="font-size:10px;color:#606060;text-transform:uppercase;letter-spacing:1px;font-weight:700;">10 Handicap</div>'
     + '<div style="font-size:11px;color:#9a9a9a;margin-top:4px;">400 yd Par 4</div>'
     + '<div style="font-size:26px;font-weight:900;color:#f0c830;margin-top:4px;">4.73</div>'
-    + '<div style="font-size:10px;color:#2e2e2e;">expected strokes</div></div>'
+    + '<div style="font-size:10px;color:#9a9a9a;">expected strokes</div></div>'
     + '</div>'
     
     + '<div style="padding:0 16px 14px;">'
@@ -49,14 +49,14 @@ export function renderSGExplainer() {
     + '<div style="flex:1;background:#1a4a8a;border:1px solid #2d7abc;border-radius:10px;padding:10px;">'
     + '<div style="font-size:10px;font-weight:800;color:#44b8f0;text-transform:uppercase;letter-spacing:1px;">Player 1</div>'
     + '<div style="font-size:11px;color:#9a9a9a;margin-top:4px;">250 yd drive → 150 out</div>'
-    + '<div style="font-size:10px;color:#2e2e2e;margin-top:2px;">Expected from 150 yds:</div>'
-    + '<div style="font-size:18px;font-weight:900;color:#44b8f0;">3.18 <span style="font-size:10px;color:#2e2e2e;">shots</span></div>'
+    + '<div style="font-size:10px;color:#9a9a9a;margin-top:2px;">Expected from 150 yds:</div>'
+    + '<div style="font-size:18px;font-weight:900;color:#44b8f0;">3.18 <span style="font-size:10px;color:#9a9a9a;">shots</span></div>'
     + '</div>'
     + '<div style="flex:1;background:#00402c;border:1px solid #007a52;border-radius:10px;padding:10px;">'
     + '<div style="font-size:10px;font-weight:800;color:#00b87a;text-transform:uppercase;letter-spacing:1px;">Player 2</div>'
     + '<div style="font-size:11px;color:#9a9a9a;margin-top:4px;">300 yd drive → 100 out</div>'
-    + '<div style="font-size:10px;color:#2e2e2e;margin-top:2px;">Expected from 100 yds:</div>'
-    + '<div style="font-size:18px;font-weight:900;color:#00b87a;">2.82 <span style="font-size:10px;color:#2e2e2e;">shots</span></div>'
+    + '<div style="font-size:10px;color:#9a9a9a;margin-top:2px;">Expected from 100 yds:</div>'
+    + '<div style="font-size:18px;font-weight:900;color:#00b87a;">2.82 <span style="font-size:10px;color:#9a9a9a;">shots</span></div>'
     + '</div></div>'
     
     // The math
@@ -173,7 +173,7 @@ export function renderSGExplainer() {
 function sgCard(title, val, desc, color) {
   return '<div style="background:#1e1e1e;border-left:3px solid '+color+';border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;">'
     + '<div><div style="font-size:12px;font-weight:700;color:#ffffff;">'+title+'</div>'
-    + '<div style="font-size:10px;color:#2e2e2e;margin-top:1px;">'+desc+'</div></div>'
+    + '<div style="font-size:10px;color:#9a9a9a;margin-top:1px;">'+desc+'</div></div>'
     + '<div style="font-size:18px;font-weight:900;color:'+color+';font-family:monospace;">'+val+'</div></div>';
 }
 

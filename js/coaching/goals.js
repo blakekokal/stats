@@ -65,7 +65,7 @@ export function renderGoals(targetEl, goals, readOnly) {
   var list = goals || getGoals();
 
   if (list.length === 0) {
-    container.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:12px;padding:8px;">No goals set yet.</div>';
+    container.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:12px;padding:8px;">No goals set yet.</div>';
     return;
   }
 

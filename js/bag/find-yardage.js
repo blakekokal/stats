@@ -30,7 +30,7 @@ function fyRenderClubGrid() {
   var grid = document.getElementById('fyClubGrid');
   if (!grid) return;
   if (clubs.length === 0) {
-    grid.innerHTML = '<div style="color:#2e2e2e;font-size:13px;width:100%;text-align:center;padding:8px 0;">No clubs in bag yet. Add one below.</div>';
+    grid.innerHTML = '<div style="color:#9a9a9a;font-size:13px;width:100%;text-align:center;padding:8px 0;">No clubs in bag yet. Add one below.</div>';
     return;
   }
   grid.innerHTML = clubs.map(function(c) {
@@ -109,7 +109,7 @@ function fyRenderShotInputs() {
   var html = '';
   for (var i = 0; i < _fyShotCount; i++) {
     html += '<div style="display:grid;grid-template-columns:22px 1fr 1fr 70px;gap:4px;align-items:center;">' +
-      '<div style="font-size:11px;color:#2e2e2e;font-weight:700;text-align:center;">' + (i + 1) + '</div>' +
+      '<div style="font-size:11px;color:#9a9a9a;font-weight:700;text-align:center;">' + (i + 1) + '</div>' +
       '<input type="number" id="fyCarry_' + i + '" placeholder="—" min="0" max="400" style="' + distStyle + '">' +
       '<input type="number" id="fyTotal_' + i + '" placeholder="—" min="0" max="450" style="' + distStyle + '">' +
       '<input type="number" id="fyTotalOff_' + i + '" placeholder="0" min="-99" max="99" style="' + offStyle + '">' +

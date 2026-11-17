@@ -118,7 +118,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
   <div style="flex-shrink:0;width:100%;padding:30px 16px 0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;position:relative;">
     <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="font-size:22px;font-weight:800;margin-bottom:6px;">Practice and Learning</div>
-    <div style="font-size:13px;color:#2e2e2e;margin-bottom:14px;">Combines, Drills, Practice &amp; Learn</div>
+    <div style="font-size:13px;color:#9a9a9a;margin-bottom:14px;">Combines, Drills, Practice &amp; Learn</div>
 
     <!-- 4-tab bar -->
     <div style="display:flex;gap:0;width:100%;max-width:360px;margin-bottom:0;border-radius:10px;overflow:hidden;">
@@ -294,12 +294,12 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
             <select id="ppSessionCombine" style="width:100%;height:40px;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;padding:0 10px;font-size:13px;box-sizing:border-box;">
               <option value="">None</option>
             </select>
-            <div style="font-size:10px;color:#2e2e2e;margin-top:3px;">Select if you completed a combine during this session</div>
+            <div style="font-size:10px;color:#9a9a9a;margin-top:3px;">Select if you completed a combine during this session</div>
           </div>
         </div>
         <div style="background:#222222;border-radius:12px;padding:16px;margin-bottom:12px;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:10px;">Practice Notes</div>
-          <div style="font-size:11px;color:#2e2e2e;margin-bottom:10px;">Add what you practiced and how long (in minutes)</div>
+          <div style="font-size:11px;color:#9a9a9a;margin-bottom:10px;">Add what you practiced and how long (in minutes)</div>
           <div id="ppNotesList"></div>
           <div style="display:flex;gap:6px;margin-top:8px;">
             <input type="text" id="ppNoteInput" placeholder="e.g. Short putting 5-25ft" style="flex:1;height:38px;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;padding:0 10px;font-size:13px;box-sizing:border-box;">
@@ -320,7 +320,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
       <div id="ppHistoryView" style="display:none;">
         <button onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
         <div id="ppHistory">
-          <div id="ppHistoryList" style="font-size:13px;color:#2e2e2e;text-align:center;padding:12px 0;">Loading...</div>
+          <div id="ppHistoryList" style="font-size:13px;color:#9a9a9a;text-align:center;padding:12px 0;">Loading...</div>
         </div>
       </div>
 
@@ -830,7 +830,7 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
   <div style="width:100%;max-width:420px;padding:0 14px;box-sizing:border-box;">
     <div style="font-size:22px;font-weight:800;margin-bottom:2px;text-align:center;">Performance Analysis</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-      <div id="perfAnalysisSubtitle" style="font-size:12px;color:#232a27;">Loading...</div>
+      <div id="perfAnalysisSubtitle" style="font-size:12px;color:#8a9a8e;">Loading...</div>
       <div id="perfHcpBadge" style="display:none;background:#1a2533;border:1px solid #2b3d50;border-radius:20px;padding:4px 10px;align-items:center;gap:5px;">
         <span style="font-size:10px;color:#5a6b60;">vs</span>
         <span id="perfHcpLabel" style="font-size:11px;font-weight:700;color:#7a9ab5;">—</span>
@@ -840,13 +840,13 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
     <!-- Page toggle tabs -->
     <div style="display:flex;gap:6px;margin-bottom:16px;background:#0d0f0e;border-radius:12px;padding:4px;">
       <button id="perfTabBtnRounds"   onclick="setPerfPage('rounds')"   style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:#2b3d50;color:#e8ede9;">Past Rounds</button>
-      <button id="perfTabBtnCombines" onclick="setPerfPage('combines')" style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:#232a27;">Combines</button>
+      <button id="perfTabBtnCombines" onclick="setPerfPage('combines')" style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:#8a9a8e;">Combines</button>
     </div>
 
     <!-- ── PAST ROUNDS PAGE ── -->
     <div id="perfPageRounds">
       <!-- No rounds state -->
-      <div id="perfNoRounds" style="display:none;background:#141817;border-radius:12px;padding:24px;text-align:center;color:#232a27;font-size:14px;line-height:1.6;margin-bottom:16px;">
+      <div id="perfNoRounds" style="display:none;background:#141817;border-radius:12px;padding:24px;text-align:center;color:#8a9a8e;font-size:14px;line-height:1.6;margin-bottom:16px;">
         Play and save at least 1 round to see your performance analysis.
       </div>
 
@@ -876,7 +876,7 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
 
     <!-- ── COMBINES PAGE ── -->
     <div id="perfPageCombines" style="display:none;">
-      <div id="perfCombineLoading" style="background:#141817;border-radius:12px;padding:18px;text-align:center;color:#232a27;font-size:13px;margin-bottom:10px;">Loading combine data…</div>
+      <div id="perfCombineLoading" style="background:#141817;border-radius:12px;padding:18px;text-align:center;color:#8a9a8e;font-size:13px;margin-bottom:10px;">Loading combine data…</div>
       <div id="perfCombineGrid" style="display:none;grid-template-columns:1fr 1fr;gap:10px;align-items:start;width:100%;">
         <div>
           <div style="font-size:15px;font-weight:800;color:#e8ede9;margin-bottom:8px;text-align:center;">Putting</div>
@@ -891,7 +891,7 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
           <div id="perfCombineWedgeDetail" style="display:none;"></div>
         </div>
       </div>
-      <div id="perfCombineFooter" style="display:none;text-align:center;font-size:10px;color:#232a27;margin-top:14px;">All stats vs scratch · combines only</div>
+      <div id="perfCombineFooter" style="display:none;text-align:center;font-size:10px;color:#8a9a8e;margin-top:14px;">All stats vs scratch · combines only</div>
     </div>
 
   </div>
@@ -966,14 +966,14 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <button onclick="addBagClub()" style="width:100%;height:42px;background:#007a52;border:none;border-radius:10px;color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;">+ Add to Bag</button>
       <div id="bagAddMsg" style="font-size:12px;min-height:16px;text-align:center;margin-top:6px;color:#00b87a;"></div>
       <div style="text-align:center;margin-top:8px;">
-        <button onclick="document.getElementById('bagImportCSV').click()" style="background:none;border:none;color:#2e2e2e;font-size:11px;font-weight:600;cursor:pointer;text-decoration:underline;">Import from .csv / .xlsx</button>
+        <button onclick="document.getElementById('bagImportCSV').click()" style="background:none;border:none;color:#9a9a9a;font-size:11px;font-weight:600;cursor:pointer;text-decoration:underline;">Import from .csv / .xlsx</button>
         <input type="file" id="bagImportCSV" accept=".csv,.xlsx,.xls" style="display:none;" onchange="importBagFile(this)">
       </div>
     </div>
 
     <!-- Club Tile Grid -->
     <div style="width:100%;max-width:360px;">
-      <div id="bagEmptyMsg" style="background:#222222;border-radius:12px;padding:24px;text-align:center;color:#2e2e2e;font-size:13px;line-height:1.7;">
+      <div id="bagEmptyMsg" style="background:#222222;border-radius:12px;padding:24px;text-align:center;color:#9a9a9a;font-size:13px;line-height:1.7;">
         No clubs in your bag yet.<br>Add clubs above to track your distances.
       </div>
       <div id="bagClubHeaders" style="display:none;"></div>
@@ -993,7 +993,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <div style="background:#222222;border-radius:14px;padding:16px;margin-bottom:12px;">
         <div style="font-size:12px;font-weight:700;color:#44b8f0;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Select a Club</div>
         <div id="fyClubGrid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
-        <div style="font-size:11px;color:#2e2e2e;margin-bottom:8px;text-align:center;">— or add a new club —</div>
+        <div style="font-size:11px;color:#9a9a9a;margin-bottom:8px;text-align:center;">— or add a new club —</div>
         <select id="fyNewClubSelect" style="width:100%;height:40px;font-size:14px;text-align:center;box-sizing:border-box;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;-webkit-appearance:none;appearance:none;">
           <option value="" disabled selected>Select a club...</option>
         </select>
@@ -1025,8 +1025,8 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
         <div style="font-size:12px;font-weight:700;color:#44b8f0;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Enter Carry & Total for each shot</div>
         <div style="display:grid;grid-template-columns:22px 1fr 1fr 70px;gap:4px;align-items:center;margin-bottom:4px;">
           <div></div>
-          <div style="font-size:10px;color:#2e2e2e;font-weight:600;text-align:center;">CARRY</div>
-          <div style="font-size:10px;color:#2e2e2e;font-weight:600;text-align:center;">TOTAL</div>
+          <div style="font-size:10px;color:#9a9a9a;font-weight:600;text-align:center;">CARRY</div>
+          <div style="font-size:10px;color:#9a9a9a;font-weight:600;text-align:center;">TOTAL</div>
           <div style="font-size:10px;color:#00b87a;font-weight:600;text-align:center;">OFFLINE</div>
         </div>
         <div id="fyShotInputs" style="display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto;margin-bottom:12px;"></div>
@@ -1057,7 +1057,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
           <button class="stepback" onclick="wgCancelEntry()" style="background:#333333;border:none;color:#ffffff;border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:16px;">←</button>
           <div style="font-size:15px;font-weight:800;color:#9a9a9a;">Select Wedges</div>
         </div>
-        <div style="font-size:11px;color:#2e2e2e;margin-bottom:12px;">Pick 1–4 wedges. Brighter = in your bag.</div>
+        <div style="font-size:11px;color:#9a9a9a;margin-bottom:12px;">Pick 1–4 wedges. Brighter = in your bag.</div>
         <div id="wgClubGrid" style="width:100%;margin-bottom:14px;"></div>
         <div id="wgStep1Msg" style="font-size:12px;color:#d4706e;min-height:16px;margin-bottom:8px;"></div>
         <button onclick="wgNextStep1()" style="width:100%;height:42px;background:#007a52;border:none;border-radius:10px;color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;">Next →</button>
@@ -1086,7 +1086,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
             <button id="wgTypeBtnFraction" onclick="wgSelectType('fraction')" style="flex:1;height:40px;background:#282828;border:1px solid #3d3d3d;border-radius:10px;color:#606060;font-size:13px;font-weight:700;cursor:pointer;">Fraction</button>
             <button id="wgTypeBtnBody"     onclick="wgSelectType('body')"     style="flex:1;height:40px;background:#282828;border:1px solid #3d3d3d;border-radius:10px;color:#606060;font-size:13px;font-weight:700;cursor:pointer;">Body</button>
           </div>
-          <div id="wgSwingPreview" style="font-size:11px;color:#2e2e2e;margin-top:8px;text-align:center;min-height:14px;"></div>
+          <div id="wgSwingPreview" style="font-size:11px;color:#9a9a9a;margin-top:8px;text-align:center;min-height:14px;"></div>
         </div>
         <div id="wgStep2Msg" style="font-size:12px;color:#d4706e;min-height:16px;margin-bottom:8px;"></div>
         <button onclick="wgNextStep2()" style="width:100%;height:42px;background:#007a52;border:none;border-radius:10px;color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;">Next →</button>
@@ -1152,7 +1152,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
             <div style="font-size:15px;font-weight:800;color:#9a9a9a;">Select a Club</div>
           </div>
           <div id="spClubGrid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
-          <div style="font-size:11px;color:#2e2e2e;margin-bottom:8px;text-align:center;">— or add a new club —</div>
+          <div style="font-size:11px;color:#9a9a9a;margin-bottom:8px;text-align:center;">— or add a new club —</div>
           <select id="spNewClubSelect" style="width:100%;height:40px;font-size:14px;text-align:center;box-sizing:border-box;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;-webkit-appearance:none;appearance:none;">
             <option value="" disabled selected>Select a club...</option>
           </select>
@@ -1185,8 +1185,8 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
             <div></div>
             <div style="font-size:9px;color:#f0c830;font-weight:700;text-align:center;">CLB SPD</div>
             <div style="font-size:9px;color:#44b8f0;font-weight:700;text-align:center;">BALL SPD</div>
-            <div style="font-size:9px;color:#2e2e2e;font-weight:700;text-align:center;">CARRY</div>
-            <div style="font-size:9px;color:#2e2e2e;font-weight:700;text-align:center;">TOTAL</div>
+            <div style="font-size:9px;color:#9a9a9a;font-weight:700;text-align:center;">CARRY</div>
+            <div style="font-size:9px;color:#9a9a9a;font-weight:700;text-align:center;">TOTAL</div>
           </div>
           <div id="spShotInputs" style="display:flex;flex-direction:column;gap:5px;max-height:320px;overflow-y:auto;margin-bottom:12px;"></div>
           <textarea id="spSessionNote" placeholder="Notes (e.g. max effort, course swings, wind...)" style="width:100%;box-sizing:border-box;background:#222222;border:1px solid #333333;border-radius:10px;color:#9a9a9a;font-size:12px;padding:8px 10px;resize:none;height:56px;margin-bottom:8px;font-family:inherit;"></textarea>
@@ -1232,7 +1232,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <div style="font-size:11px;color:#44b8f0;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Select Clubs</div>
       <div id="gvCustomClubGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;"></div>
     </div>
-    <div id="gapVizEmpty" style="display:none;background:#222222;border-radius:12px;padding:24px;text-align:center;color:#2e2e2e;font-size:13px;line-height:1.7;">
+    <div id="gapVizEmpty" style="display:none;background:#222222;border-radius:12px;padding:24px;text-align:center;color:#9a9a9a;font-size:13px;line-height:1.7;">
       No club data to visualize.<br>Add clubs and distances in My Bag first.
     </div>
     <div id="gapVizChartWrap" style="position:relative;width:100%;">
@@ -1788,7 +1788,7 @@ export const SG_PARTS = `<!-- Strokes gained explainer and calculator: kept here
           <div style="display:flex;justify-content:space-around;align-items:center;">
             <div style="text-align:center;"><div style="font-size:8px;color:#606060;text-transform:uppercase;">Exp</div><div id="sgCalcStatExp" style="font-size:15px;font-weight:800;color:#00b87a;">–</div></div>
             <div style="text-align:center;"><div style="font-size:8px;color:#606060;text-transform:uppercase;">Rem</div><div id="sgCalcStatRemain" style="font-size:15px;font-weight:800;color:#44b8f0;">–</div></div>
-            <div style="text-align:center;"><div style="font-size:8px;color:#606060;text-transform:uppercase;">SG</div><div id="sgCalcStatSg" style="font-size:15px;font-weight:800;color:#2e2e2e;">–</div></div>
+            <div style="text-align:center;"><div style="font-size:8px;color:#606060;text-transform:uppercase;">SG</div><div id="sgCalcStatSg" style="font-size:15px;font-weight:800;color:#9a9a9a;">–</div></div>
           </div>
         </div>
         <!-- Interactive SVG -->

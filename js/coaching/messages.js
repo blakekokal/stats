@@ -7,7 +7,7 @@ var _dmCoachId = null; // cached coach ID for student view
 
 function _renderMessages(msgs, container, myId) {
   if (!msgs || !msgs.length) {
-    container.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">No messages yet. Start the conversation!</div>';
+    container.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No messages yet. Start the conversation!</div>';
     return;
   }
   var html = '';
@@ -32,7 +32,7 @@ export async function loadStudentMessages() {
   if (!_dmCoachId) {
     var { data: p } = await _sb.from('profiles').select('coach_id').eq('id', S.currentUser.id).single();
     if (!p || !p.coach_id) {
-      list.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">Connect with a coach to send messages.</div>';
+      list.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">Connect with a coach to send messages.</div>';
       return;
     }
     _dmCoachId = p.coach_id;
@@ -75,7 +75,7 @@ export async function loadCoachMessages() {
   var list = document.getElementById('cctMessagesList');
   var inputWrap = document.getElementById('cctMsgInputWrap');
   if (!studentId) {
-    list.innerHTML = '<div style="text-align:center;color:#2e2e2e;font-size:13px;padding:20px 0;">Select a student to view messages.</div>';
+    list.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">Select a student to view messages.</div>';
     if (inputWrap) inputWrap.style.display = 'none';
     return;
   }
