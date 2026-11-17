@@ -32,8 +32,7 @@ export const BOOK_OPTIONS = [
   ['otherHoles', 'Neighbouring holes', 'Hole page', true],
   ['allTees', 'Every tee box', 'Hole page', true],
   ['centre', 'Centre line', 'Hole page', true],
-  ['layup', 'Yardage dots (100 · 150 · 200 · 250 · 300) & key', 'Hole page', true],
-  ['edges', 'Fairway edge numbers', 'Hole page', true],
+  ['layup', 'Centre numbers (100 · 150 · 200 · 250 · 300)', 'Hole page', true],
   ['hazards', 'Bunker & water numbers (start and end)', 'Hole page', true],
   ['contours', 'Contours & slope arrows', 'Hole page', true, true],
   ['playsLike', 'Plays-like (height change)', 'Hole page', true, true],
@@ -386,47 +385,34 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     return { perp, l: [w.p[0] + perp[0] * l, w.p[1] + perp[1] * l], r: [w.p[0] + perp[0] * r, w.p[1] + perp[1] * r], width: r - l };
   };
 
-  // Yardage dots down the middle at 100, 150, 200, 250 and 300 to the front
-  // of the green, coloured like a course's yardage markers, with a key at the
-  // bottom right.
-  const layupYds = [100, 150, 200, 250, 300];
-  const DOT = { 100: '#d93a3a', 150: '#ffffff', 200: '#2e6fd0', 250: '#f2c40f', 300: '#222222' };
-  const dotsShown = [];
-  if (prefs.layup) {
-    for (const yd of layupYds) {
-      const w = spotAt(yd);
-      if (!w || w.fromTee < 40) continue;
-      const [x, y] = P(w.p);
-      labG.append(el('circle', { cx: x, cy: y, r: 4.2, fill: DOT[yd], stroke: '#222', 'stroke-width': 0.9, 'paint-order': 'normal' }));
-      lab.block([x - 5, y - 5, x + 5, y + 5]);
-      dotsShown.push(yd);
-    }
-    if (dotsShown.length) {
-      const kw = 62, kh = 14 + dotsShown.length * 12, kx = right - kw - 4, ky = bottom - kh - 4;
-      lab.block([kx, ky, kx + kw, ky + kh]);
-      svg.append(el('rect', { x: kx, y: ky, width: kw, height: kh, rx: 3, fill: '#fff', 'fill-opacity': 0.95, stroke: '#c9d0cb', 'stroke-width': 0.8 }),
-        txt(kx + 6, ky + 10, 'TO FRONT', { 'font-size': 7.5, 'font-weight': 700, fill: SOFT, 'letter-spacing': 0.6 }),
-        ...dotsShown.flatMap((yd, i) => [el('circle', { cx: kx + 10, cy: ky + 19 + i * 12, r: 3.6, fill: DOT[yd], stroke: '#222', 'stroke-width': 0.8 }),
-          txt(kx + 19, ky + 22.5 + i * 12, `${yd} yds`, { 'font-size': 9, fill: INK })]));
-    }
-  }
-
-  // Bunkers and water: a dot at the start and the end of each, with the yards
-  // to the front of the green above (red) and the yards from the tee to that
-  // spot below (black).
+  // Numbers in pairs, tour-book style: a dot on the spot, the yards to the
+  // front of the green above (red) and the yards from the tee below (black),
+  // set off to the side with a short line out to them, never on top of a
+  // bunker, a small pond or the green.
   const RED = '#c62f2f';
+  for (const o of feats) {
+    if (!(o.x.t === 'bunker' || o.x.t === 'water' || (o.x.t === 'green' && own(o)))) continue;
+    const q = o.r.map(P), xs = q.map(p => p[0]), ys = q.map(p => p[1]);
+    const box = [Math.min(...xs) - 1.5, Math.min(...ys) - 1.5, Math.max(...xs) + 1.5, Math.max(...ys) + 1.5];
+    if (o.x.t !== 'water' || (box[2] - box[0]) * (box[3] - box[1]) < 2500) lab.block(box);
+  }
   const pair = (q, front, tee, side) => {
     const [x, y] = P(q), wdt = Math.max(textW(front, 10), textW(tee, 9.5)) + 2, hgt = 21;
-    labG.append(el('circle', { cx: x, cy: y, r: 1.8, fill: INK }));
-    const a = side > 0 ? 'start' : 'end';
-    // The pair is drawn from 16 above its spot's y to 5 below, as the labeller boxes it.
-    const spot = lab.place([[x + side * 4, y + 6, a], [x + side * 4, y - 2, a], [x + side * 4, y + 14, a], [x - side * 4, y + 6, side > 0 ? 'end' : 'start'],
-      [x + side * 4, y - 10, a], [x + side * 4, y + 22, a]], wdt, hgt, bounds);
+    // The pair is drawn from 16 above its y to 5 below, as the labeller boxes it.
+    const cands = [];
+    for (const dir of [side, -side]) for (const dx of [10, 18, 28, 40]) for (const dy of [0, -9, 9, -18, 18])
+      cands.push([x + dir * dx, y + 6 + dy, dir > 0 ? 'start' : 'end']);
+    labG.append(el('circle', { cx: x, cy: y, r: 1.9, fill: INK }));
+    const spot = lab.place(cands, wdt, hgt, bounds);
     if (!spot) return;
     const [sx, sy, anc] = spot;
-    labG.append(txt(sx, sy - 8, front, { 'font-size': 10, 'font-weight': 700, fill: RED, 'text-anchor': anc }),
+    const ex = anc === 'start' ? sx - 2 : sx + 2, ey = sy - 5.5;
+    labG.append(el('path', { d: pathD([[x, y], [ex, ey]]), stroke: INK, 'stroke-width': 0.6, fill: 'none' }),
+      txt(sx, sy - 8, front, { 'font-size': 10, 'font-weight': 700, fill: RED, 'text-anchor': anc }),
       txt(sx, sy + 2.5, tee, { 'font-size': 9.5, fill: INK, 'text-anchor': anc }));
   };
+
+  // Bunkers and water: the start and the end of each.
   if (prefs.hazards) {
     const hz = F.own.filter(x => (x.t === 'bunker' && prefs.bunkers) || (x.t === 'water' && prefs.water));
     for (const x of hz) {
@@ -444,20 +430,12 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     }
   }
 
-  // Fairway edge numbers: a dot on each edge every 20 yards, with its own
-  // yards to the front (the left and right edge read a little differently).
-  if (prefs.edges) {
-    for (let yd = 40; yd <= 340; yd += 20) {
+  // Down the middle: 100, 150, 200, 250 and 300 to the front of the green.
+  if (prefs.layup) {
+    for (const yd of [100, 150, 200, 250, 300]) {
       const w = spotAt(yd);
-      if (!w || w.fromTee < 60) continue;
-      const e = edgesAt(w);
-      if (!e) continue;
-      for (const [q, side] of [[e.l, -1], [e.r, 1]]) {
-        const v = Math.round(toFront(q)), [x, y] = P(q);
-        const spot = lab.place([[x + side * 4, y + 3, side > 0 ? 'start' : 'end'], [x + side * 4, y - 3, side > 0 ? 'start' : 'end'], [x + side * 4, y + 9, side > 0 ? 'start' : 'end']], textW(v, 9.5), 9.5, bounds);
-        if (!spot) continue;
-        labG.append(el('circle', { cx: x, cy: y, r: 1.4, fill: INK }), txt(spot[0], spot[1], v, { 'font-size': 9.5, 'font-weight': 700, fill: RED, 'text-anchor': spot[2] }));
-      }
+      if (!w || w.fromTee < 40) continue;
+      pair(w.p, yd, Math.round(w.fromTee), 1);
     }
   }
 
