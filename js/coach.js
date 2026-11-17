@@ -442,6 +442,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.94.3', ['Contour lines (and their downhill arrows) are a slightly darker colour, at the same opacity']],
   ['0.94.2', ['Auto picks the club with the highest SG again: avoiding bunkers, hazards and trees (and preferring the fairway) now only decides each club’s line, never which club. The Auto list no longer shows shots on the fairway']],
   ['0.94.1', ['Auto no longer swings a club towards a bunker to get more shots on the fairway: among options within 0.05 SG of the best it now takes the one with the fewest shots in bunkers, hazards and trees first, and only then the one with more on the fairway']],
   ['0.94.0', ['Auto is rebuilt from scratch. It tries every club in your bag on every line (1° apart) and picks the highest average SG, with three rules: a shot within 5 yd of water or OB counts as in it, and one within 3 yd of a bunker as in the bunker, so the pick keeps that far clear; it never aims at a hazard, bunker, trees or a recovery area while another line is open; and an option within 0.05 SG of the best with more shots on the fairway is taken instead. Trees in the way of the shot are no longer looked at. The Auto list shows each club’s shots on the fairway (out of 20)']],

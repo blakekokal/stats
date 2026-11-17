@@ -192,7 +192,7 @@ function arrowImage() {
   x.lineCap = x.lineJoin = 'round';
   const draw = () => { x.beginPath(); x.moveTo(8, 25); x.lineTo(8, 4); x.moveTo(4, 9); x.lineTo(8, 4); x.lineTo(12, 9); x.stroke(); };
   x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 3.2; draw();
-  x.strokeStyle = '#eafff0'; x.lineWidth = 1.6; draw();
+  x.strokeStyle = '#bcd6c4'; x.lineWidth = 1.6; draw();
   return x.getImageData(0, 0, W, H);
 }
 const EMPTY = { type: 'FeatureCollection', features: [] };
@@ -225,7 +225,7 @@ export async function drawElevation(m, cid, hole) {
     m.addLayer({ id: 'elev-contour-edge', type: 'line', source: 'elev-contours', layout: lineLayout,
       paint: { 'line-color': '#000', 'line-width': ['interpolate', ['linear'], ['zoom'], 16, 1.8, 19, 2.4], 'line-opacity': ['*', 0.12, fade] } }, below());
     m.addLayer({ id: 'elev-contour', type: 'line', source: 'elev-contours', layout: lineLayout,
-      paint: { 'line-color': '#eafff0', 'line-width': ['interpolate', ['linear'], ['zoom'], 16, 0.6, 19, 1], 'line-opacity': ['*', 0.45, fade] } }, below());
+      paint: { 'line-color': '#bcd6c4', 'line-width': ['interpolate', ['linear'], ['zoom'], 16, 0.6, 19, 1], 'line-opacity': ['*', 0.45, fade] } }, below());
   }
   if (!m.getSource('elev-arrows')) {
     if (!m.hasImage('elev-arrow5')) m.addImage('elev-arrow5', arrowImage(), { pixelRatio: 2 });
