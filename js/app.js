@@ -73,6 +73,8 @@ export const COURSES = [
   { id: 'coyoteridge', name: 'Coyote Ridge Golf Club', file: 'data/coyoteridge.json' },
   { id: 'firewheel-lakes', name: 'Firewheel Golf Park – Lakes', file: 'data/firewheel-lakes.json' },
   { id: 'texasstar', name: 'Texas Star Golf Course', file: 'data/texasstar.json' },
+  { id: 'indiancreek-creek', name: 'Indian Creek Golf Club – Creek', file: 'data/indiancreek-creek.json', shares: 'indiancreek-lakes' },
+  { id: 'indiancreek-lakes', name: 'Indian Creek Golf Club – Lakes', file: 'data/indiancreek-lakes.json', shares: 'indiancreek-creek' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 // Nine-hole courses at one club (the same `nines` tag) can be played together
@@ -178,7 +180,7 @@ export async function loadCourse(onHole = false) {
 }
 export const originalFeatures = () => base[course.id].features;
 // Every hole a tee box, fairway or green could belong to: this course's, plus
-// those of a course sharing its outlines (Bear Creek West and East are one map),
+// those of a course sharing its outlines (Bear Creek West and East, and Indian Creek Creek and Lakes, are one map each),
 // so a box is never given to this course when it's nearer the other one's hole.
 export function complexHoles() {
   const other = COURSES.find(c => c.id === course.id)?.shares;

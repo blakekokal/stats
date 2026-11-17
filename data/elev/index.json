@@ -283,5 +283,35 @@
    557
   ],
   "source": "USGS 3DEP"
+ },
+ "indiancreek-creek": {
+  "bounds": [
+   -96.944383,
+   32.994336,
+   -96.926844,
+   33.012724
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   438,
+   478
+  ],
+  "source": "USGS 3DEP"
+ },
+ "indiancreek-lakes": {
+  "bounds": [
+   -96.940343,
+   32.996377,
+   -96.926621,
+   33.012252
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   438,
+   477
+  ],
+  "source": "USGS 3DEP"
  }
 }
