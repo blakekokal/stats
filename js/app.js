@@ -76,6 +76,8 @@ export const COURSES = [
   { id: 'indiancreek-creek', name: 'Indian Creek Golf Club – Creek', file: 'data/indiancreek-creek.json', shares: 'indiancreek-lakes' },
   { id: 'indiancreek-lakes', name: 'Indian Creek Golf Club – Lakes', file: 'data/indiancreek-lakes.json', shares: 'indiancreek-creek' },
   { id: 'ironhorse', name: 'Iron Horse Golf Course', file: 'data/ironhorse.json' },
+  { id: 'fieldsranch-east', name: 'Fields Ranch – East', file: 'data/fieldsranch-east.json', shares: 'fieldsranch-west' },
+  { id: 'fieldsranch-west', name: 'Fields Ranch – West', file: 'data/fieldsranch-west.json', shares: 'fieldsranch-east' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 // Nine-hole courses at one club (the same `nines` tag) can be played together

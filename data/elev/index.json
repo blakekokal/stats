@@ -328,5 +328,35 @@
    635
   ],
   "source": "USGS 3DEP"
+ },
+ "fieldsranch-east": {
+  "bounds": [
+   -96.865937,
+   33.198048,
+   -96.8373,
+   33.21466
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   549,
+   664
+  ],
+  "source": "USGS 3DEP"
+ },
+ "fieldsranch-west": {
+  "bounds": [
+   -96.869695,
+   33.197937,
+   -96.84975,
+   33.214617
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   539,
+   647
+  ],
+  "source": "USGS 3DEP"
  }
 }
