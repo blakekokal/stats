@@ -18,7 +18,7 @@ import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js
 import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
 import { liveLink, isLiveOn, setLiveOn, liveStatus, onLiveStatus, loadWatch, watchHole, shareCurrent } from './live.js';
 import { openBoundaryEditor, resumeEditAt, editFeatures } from './holeedit.js';
-import { elevIndex, elevPrefs, drawElevation, heightAt, CONTOUR_YD } from './elev.js';
+import { elevIndex, elevPrefs, drawElevation, styleElevation, resetContourLook, heightAt, CONTOUR_YD } from './elev.js';
 
 const maplibregl = window.maplibregl;
 const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR', ob: 'OB', recovery: 'REC' };
@@ -1254,6 +1254,22 @@ export function renderHole(view, n) {
   // The course being played or viewed, at the top of the menu, by the tees.
   const courseLabel = () => h('div', { class: 'menucourse' }, h('small', {}, 'Course'), h('strong', {}, round0?.courseName || course.name));
   // Viewing a past round: just Back to Round History and Home.
+  // Settings (in the menu): how the contour lines look — colour, opacity and
+  // width — kept on this device. Changes show on the map straight away.
+  const setSheet = h('div', { class: 'clubsheet setsheet', hidden: true, onclick: e => { if (e.target === setSheet) setSheet.hidden = true; } });
+  function openSettings() {
+    const apply = () => styleElevation(m);
+    const slider = (label, key, min, max, step, show) => h('label', { class: 'setrow' }, h('span', {}, label), h('input', { type: 'range', min, max, step, value: elevPrefs[key], oninput: e => { elevPrefs[key] = +e.target.value; e.target.nextSibling.textContent = show(elevPrefs[key]); apply(); } }), h('b', {}, show(elevPrefs[key])));
+    const draw = () => setSheet.replaceChildren(h('div', { class: 'clubbox setbox' },
+      h('div', { class: 'clubhead' }, h('strong', {}, 'Settings · contour lines'), h('button', { class: 'x', onclick: () => { setSheet.hidden = true; } }, '✕')),
+      h('label', { class: 'setrow' }, h('span', {}, 'Colour'), h('input', { type: 'color', value: elevPrefs.contourColor, oninput: e => { elevPrefs.contourColor = e.target.value; e.target.nextSibling.textContent = elevPrefs.contourColor; apply(); } }), h('b', {}, elevPrefs.contourColor)),
+      slider('Opacity', 'contourOpacity', 0.05, 1, 0.05, v => `${Math.round(v * 100)}%`),
+      slider('Width', 'contourWidth', 0.5, 4, 0.1, v => `${v.toFixed(1)}×`),
+      h('small', { class: 'muted' }, elevPrefs.contours ? 'Kept on this device.' : 'Kept on this device. Turn on Contours & slope in View to see the lines.'),
+      h('div', { class: 'compactions' }, h('button', { class: 'lostball', onclick: () => { resetContourLook(); apply(); draw(); } }, 'Reset to default'))));
+    draw();
+    setSheet.hidden = false;
+  }
   const menu = scouting
     ? h('div', { class: 'sheet', hidden: true },
       courseLabel(),
@@ -1286,6 +1302,7 @@ export function renderHole(view, n) {
       isAdmin ? h('a', { class: 'btn', href: '#/course' }, 'Edit course outlines') : null,
       h('a', { class: 'btn', href: '#/settings' }, 'Settings'),
       credit);
+  menu.insertBefore(h('button', { class: 'btn', onclick: () => { menu.hidden = true; openSettings(); } }, '⚙ Settings'), credit);
 
   // Strokes Gained panel while viewing a past round (filled in by drawSgView).
   const sgView = h('div', { class: 'sgview', hidden: true });
@@ -1416,7 +1433,7 @@ export function renderHole(view, n) {
     watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, playsWrap, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { closeView(); menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist), gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compSetBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
+    addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist), gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compSetBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, setSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
     holePill = h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),

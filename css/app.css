@@ -590,3 +590,7 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .clubbox .clubhead .ydmode { justify-self: auto; }
 
 .autokey .why { font-size: 11px; font-weight: 600; opacity: .8; }
+.setbox .setrow { display: grid; grid-template-columns: 70px 1fr 78px; align-items: center; gap: 10px; font-size: 15px; font-weight: 600; }
+.setbox .setrow input[type=range] { width: 100%; } .setbox .setrow input[type=color] { width: 100%; height: 36px; padding: 0; border: 0; border-radius: 8px; background: none; }
+.setbox .setrow b { text-align: right; font-variant-numeric: tabular-nums; }
+.clubsheet.setsheet { background: transparent; } /* the map stays clear, to see the lines change */

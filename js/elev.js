@@ -10,12 +10,20 @@ export const elevIndex = () => (indexP ||= fetch(abs('data/elev/index.json')).th
 export const CONTOUR_YD = [1, 3, 5];
 const get = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
 const put = (k, v) => { try { localStorage.setItem(k, v); } catch { /* not kept */ } };
+// The contour lines' look for everyone, until changed on a device.
+export const CONTOUR_LOOK = { color: '#bcd6c4', opacity: 0.45, width: 1 };
+export function resetContourLook() { for (const k of ['gs:contourColor', 'gs:contourOpacity', 'gs:contourWidth']) { try { localStorage.removeItem(k); } catch { /* nothing kept */ } } }
 export const elevPrefs = {
   get contours() { return get('gs:contours', '0') === '1'; }, set contours(v) { put('gs:contours', v ? '1' : '0'); },
   get contourYd() { const n = +get('gs:contourYd', '1'); return CONTOUR_YD.includes(n) ? n : 1; }, set contourYd(v) { put('gs:contourYd', String(v)); },
   get playsLike() { return get('gs:playsLike', '0') === '1'; }, set playsLike(v) { put('gs:playsLike', v ? '1' : '0'); },
   // What plays like counts: the height change (on unless turned off) and the wind (off unless turned on).
   get playsElev() { return get('gs:playsElev', '1') === '1'; }, set playsElev(v) { put('gs:playsElev', v ? '1' : '0'); },
+  // How the contour lines look (menu > Settings): colour, opacity (0.05 to 1) and
+  // width (a multiple of the standard width, 0.5 to 4).
+  get contourColor() { const c = get('gs:contourColor', CONTOUR_LOOK.color); return /^#[0-9a-f]{6}$/i.test(c) ? c : CONTOUR_LOOK.color; }, set contourColor(v) { put('gs:contourColor', v); },
+  get contourOpacity() { const n = +get('gs:contourOpacity', CONTOUR_LOOK.opacity); return n >= 0.05 && n <= 1 ? n : CONTOUR_LOOK.opacity; }, set contourOpacity(v) { put('gs:contourOpacity', String(v)); },
+  get contourWidth() { const n = +get('gs:contourWidth', CONTOUR_LOOK.width); return n >= 0.5 && n <= 4 ? n : CONTOUR_LOOK.width; }, set contourWidth(v) { put('gs:contourWidth', String(v)); },
   get playsWind() { return get('gs:playsWind', '0') === '1'; }, set playsWind(v) { put('gs:playsWind', v ? '1' : '0'); },
 };
 
@@ -192,13 +200,26 @@ function arrowImage() {
   x.lineCap = x.lineJoin = 'round';
   const draw = () => { x.beginPath(); x.moveTo(8, 25); x.lineTo(8, 4); x.moveTo(4, 9); x.lineTo(8, 4); x.lineTo(12, 9); x.stroke(); };
   x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 3.2; draw();
-  x.strokeStyle = '#bcd6c4'; x.lineWidth = 1.6; draw();
+  x.strokeStyle = elevPrefs.contourColor; x.lineWidth = 1.6; draw();
   return x.getImageData(0, 0, W, H);
 }
 const EMPTY = { type: 'FeatureCollection', features: [] };
 // Which arrows show at which zoom: the widest-spaced from the hole view, the
 // in-between ones zoomed in more, all of them near the green.
 const ARROW_ZOOM = [0, 17.6, 18.6];
+
+// Puts the contour look (colour, opacity, width) onto the layers; the arrows follow the lines.
+export function styleElevation(m) {
+  if (!m.getStyle() || !m.getLayer('elev-contour')) return;
+  const fade = ['min', 1, ['*', 2, ['get', 'a']]];
+  const { contourColor: color, contourOpacity: op, contourWidth: w } = elevPrefs;
+  m.setPaintProperty('elev-contour', 'line-color', color);
+  m.setPaintProperty('elev-contour', 'line-opacity', ['*', op, fade]);
+  m.setPaintProperty('elev-contour', 'line-width', ['interpolate', ['linear'], ['zoom'], 16, 0.6 * w, 19, w]);
+  m.setPaintProperty('elev-contour-edge', 'line-width', ['interpolate', ['linear'], ['zoom'], 16, 0.6 * w + 1.2, 19, w + 1.4]);
+  if (m.hasImage('elev-arrow5')) m.updateImage('elev-arrow5', arrowImage());
+  ARROW_ZOOM.forEach((z, lvl) => { if (m.getLayer(`elev-arrows-${lvl}`)) m.setPaintProperty(`elev-arrows-${lvl}`, 'icon-opacity', ['*', Math.min(1, op * 1.2), fade]); });
+}
 
 // Adds (or updates) the layers on map m for course id cid, as elevPrefs says.
 // `hole` is { line: [tee, ..., pin], own: the hole's own features }: contours
@@ -235,6 +256,7 @@ export async function drawElevation(m, cid, hole) {
         'icon-allow-overlap': true, 'icon-ignore-placement': true, 'icon-size': ['interpolate', ['linear'], ['zoom'], 16, 0.75, 19, 1] },
       paint: { 'icon-opacity': ['*', 0.55, ['min', 1, ['*', 2, ['get', 'a']]]] } }, below()));
   }
+  styleElevation(m);
   m.getSource('elev-contours').setData(gj ? clipContours(gj, area, elevPrefs.contourYd) : EMPTY);
   m.getSource('elev-arrows').setData(gj ? contourArrows(gj, area, elevPrefs.contourYd) : EMPTY);
 }
