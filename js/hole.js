@@ -1446,15 +1446,12 @@ export function renderHole(view, n) {
   };
   const compassName = d => ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'][Math.round((((d % 360) + 360) % 360) / 22.5) % 16];
   const setManual = w => { try { if (w) sessionStorage.setItem('gs:windManual', JSON.stringify(w)); else sessionStorage.removeItem('gs:windManual'); } catch { /* not kept */ } showWind(); };
-  // The Wind box: quick picks relative to the screen (the way the map faces),
-  // then a direction and a speed slider, and back to the live wind.
+  // The Wind box: a direction and a speed slider, and back to the live wind.
   const windDirIn = h('input', { type: 'range', min: 0, max: 355, step: 5, oninput: e => setManual({ speed: (manualWind() || liveWind || { speed: 10 }).speed, dir: +e.target.value }) });
   const windSpeedIn = h('input', { type: 'range', min: 0, max: 40, step: 1, oninput: e => setManual({ dir: (manualWind() || liveWind || { dir: m.getBearing() }).dir, speed: +e.target.value }) });
   const windDirLabel = h('b'), windSpeedLabel = h('b');
-  const relPick = (label, off) => h('button', { onclick: () => setManual({ speed: (manualWind() || liveWind || { speed: 10 }).speed, dir: Math.round((((m.getBearing() + off) % 360) + 360) % 360) }) }, label);
-  const liveBtnW = h('button', { class: 'windlive', onclick: () => setManual(null) }, 'Use live wind');
+  const liveBtnW = h('button', { class: 'windlive', title: 'Go back to the live wind', onclick: () => setManual(null) }, 'Use live wind');
   const windBox = h('div', { class: 'sheet windbox', hidden: true }, h('strong', {}, 'Wind'),
-    h('div', { class: 'windpicks' }, relPick('Into', 0), relPick('Helping', 180), relPick('From left', -90), relPick('From right', 90)),
     h('label', { class: 'windrow' }, h('span', {}, 'From ', windDirLabel), windDirIn),
     h('label', { class: 'windrow' }, h('span', {}, 'Speed ', windSpeedLabel), windSpeedIn),
     liveBtnW);
@@ -1464,7 +1461,7 @@ export function renderHole(view, n) {
     windSpeedIn.value = w ? Math.round(w.speed) : 0;
     windDirLabel.textContent = w ? `${compassName(w.dir)} (${Math.round(w.dir)}°)` : '–';
     windSpeedLabel.textContent = w ? `${Math.round(w.speed)} mph` : '–';
-    liveBtnW.textContent = liveWind ? `Use live wind (${Math.round(liveWind.speed)} mph ${compassName(liveWind.dir)})` : 'Use live wind';
+    liveBtnW.textContent = liveWind ? `Live: ${Math.round(liveWind.speed)} mph ${compassName(liveWind.dir)}` : 'Use live wind';
     liveBtnW.hidden = !man;
   }
   wind.onclick = () => { windBox.hidden = !windBox.hidden; if (!windBox.hidden) drawWindBox(); };
@@ -2024,8 +2021,9 @@ export function renderHole(view, n) {
       // The number stays centred; the rise/drop and "yd" hang off its right.
       return [h('b', { class: 'playslike' }, h('span', { class: 'num' }, `${yd}`, h('span', { class: 'tail' },
           dz != null ? h('small', { class: 'dz' + (dz > 0 ? ' up' : dz < 0 ? ' down' : '') }, `(${sign(dz)})`) : null, 'yd')),
-        h('span', { class: 'pl' }, h('span', { class: 'num' }, `${yd + (dz || 0) + (wind || 0)} yd`,
-          wind != null ? h('span', { class: 'tail' }, h('small', { class: 'wnd' + (wind > 0 ? ' up' : wind < 0 ? ' down' : '') }, `wind ${sign(wind)}`)) : null)))];
+        // The plays-like number lines up under the yardage: both numbers centred, "yd" and the wind to the right.
+        h('span', { class: 'pl' }, h('span', { class: 'num' }, `${yd + (dz || 0) + (wind || 0)}`, h('span', { class: 'tail' }, 'yd',
+          wind != null ? h('small', { class: 'wnd' + (wind > 0 ? ' up' : wind < 0 ? ' down' : '') }, `wind ${sign(wind)}`) : null))))];
     };
     toPinEl.replaceChildren(...yardage(target, pin, toPin));
     fromTeeEl.replaceChildren(...yardage(from, target, fromTee),
