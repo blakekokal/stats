@@ -1,6 +1,7 @@
 // Yardage book (GPS Overview > View > Yardage book): a clean, printable page
 // per hole drawn from the course file, laid out like a tour player's book.
-// The hole page runs tee (bottom) to green (top); the green page shows the
+// Laid out like a tour book flipped open: the green page on top, the hole
+// page below the fold. The hole page runs tee (bottom) to green (top); the green page shows the
 // green as it's approached, with a grid, contours and slope arrows. Every
 // number on the pages is yards to the FRONT of the green. What's drawn is
 // picked with switches (kept on this device); Print makes a PDF / paper copy
@@ -11,7 +12,7 @@ import { elevIndex, heightAt } from './elev.js';
 
 const M_PER_DEG = 111320, M_PER_YD = 0.9144, FT_PER_M = 3.28084, IN_PER_M = 39.3701;
 const SVGNS = 'http://www.w3.org/2000/svg';
-const W = 400; // a page's width in SVG units (pages are 400 x 650: a 4 x 6.5 pocket book)
+const W = 400, H = 700; // one page, in SVG units (a 4 x 7 pocket book)
 
 // ---------- the switches ----------
 
@@ -27,10 +28,8 @@ export const BOOK_OPTIONS = [
   ['centre', 'Centre line', 'Hole page', true],
   ['layup', 'Layup lines (100 · 150 · 200 · 250)', 'Hole page', true],
   ['edges', 'Fairway edge numbers', 'Hole page', true],
-  ['hazards', 'Bunker & water numbers', 'Hole page', true],
-  ['width', 'Fairway widths', 'Hole page', true],
-  ['contours', 'Contours & downhill arrows', 'Hole page', true, true],
-  ['heights', 'Height circles (feet vs the green)', 'Hole page', true, true],
+  ['hazards', 'Bunker & water numbers (start and end)', 'Hole page', true],
+  ['contours', 'Contours & slope arrows', 'Hole page', true, true],
   ['playsLike', 'Plays-like (height change)', 'Hole page', true, true],
   ['north', 'North arrow & scale', 'Hole page', true],
   ['greenPage', 'Green page', 'Green page', true, true],
@@ -201,6 +200,46 @@ function blur(grid, nx, ny, r) {
   return out;
 }
 
+// Heights (inches) on a grid over area [x0, y0, x1, y1] of frame f (yards),
+// every `step` yards, smoothed over `r` cells: { at(x, y), lines(levels), lo, hi }.
+async function reliefGrid(elevId, info, f, [x0, y0, x1, y1], step, r) {
+  const nx = Math.ceil((x1 - x0) / step) + 1, ny = Math.ceil((y1 - y0) / step) + 1;
+  const pts = [];
+  for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) pts.push(f.back([x0 + i * step, y0 + j * step]));
+  const hs = await heightsAt(elevId, info, pts);
+  // The lidar is about 2 m a pixel: smoothing shows the ground's shape, not the pixels.
+  let grid = hs.map(v => (v == null ? null : v * IN_PER_M));
+  for (let k = 0; k < 2; k++) grid = blur(grid, nx, ny, r);
+  const vals = grid.filter(v => v != null);
+  const at = (x, y) => { const i = Math.round((x - x0) / step), j = Math.round((y - y0) / step); return i >= 0 && j >= 0 && i < nx && j < ny ? grid[j * nx + i] : null; };
+  return { at, lo: Math.min(...vals), hi: Math.max(...vals), ok: vals.length > 0,
+    lines: levels => isolines(grid, nx, ny, x0, y0, step, levels) };
+}
+// Contour levels every `iv` inches between lo and hi.
+const levelsOf = (lo, hi, iv) => { const out = []; for (let v = Math.ceil(lo / iv) * iv; v <= hi; v += iv) out.push(v); return out; };
+// Small downhill arrows, yardage-book style: one per `gap` yards where
+// keep(x, y) says so, longer where it's steeper. Returns an SVG path.
+function slopeArrows(R, [x0, y0, x1, y1], gap, P, keep, scale = 1) {
+  let d = '';
+  const b = Math.max(1, gap / 2);
+  for (let y = y0 + gap / 2; y < y1; y += gap) for (let x = x0 + gap / 2; x < x1; x += gap) {
+    if (!keep(x, y)) continue;
+    const e = R.at(x + b, y), w = R.at(x - b, y), nn = R.at(x, y + b), ss = R.at(x, y - b);
+    if ([e, w, nn, ss].some(v => v == null)) continue;
+    const gx = (e - w) / (2 * b) / 36, gy = (nn - ss) / (2 * b) / 36; // rise per yard
+    const pct = Math.hypot(gx, gy) * 100;
+    if (pct < 0.5) continue;
+    const dx = -gx / Math.hypot(gx, gy), dy = -gy / Math.hypot(gx, gy);
+    const len = Math.min(gap * 0.8, gap * (0.25 + pct * 0.09)) * scale;
+    const A = P([x - (dx * len) / 2, y - (dy * len) / 2]), B = P([x + (dx * len) / 2, y + (dy * len) / 2]);
+    const hx = B[0] - A[0], hy = B[1] - A[1], hl = Math.hypot(hx, hy) || 1, ux = hx / hl, uy = hy / hl, k = Math.min(2.6, hl * 0.4);
+    d += `M${A[0].toFixed(1)},${A[1].toFixed(1)}L${B[0].toFixed(1)},${B[1].toFixed(1)}M${(B[0] - ux * k - uy * k * 0.55).toFixed(1)},${(B[1] - uy * k + ux * k * 0.55).toFixed(1)}L${B[0].toFixed(1)},${B[1].toFixed(1)}L${(B[0] - ux * k + uy * k * 0.55).toFixed(1)},${(B[1] - uy * k - ux * k * 0.55).toFixed(1)}`;
+  }
+  return d;
+}
+const RELIEF_LINE = { fill: 'none', stroke: '#6b6f6c', 'stroke-width': 0.45, 'stroke-opacity': 0.75, 'stroke-linecap': 'round' };
+const RELIEF_ARROW = { fill: 'none', stroke: '#2b2f2c', 'stroke-width': 0.55, 'stroke-opacity': 0.8, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' };
+
 // ---------- one hole's facts ----------
 
 // Everything the pages need about hole n from the tee set `teeName`.
@@ -233,13 +272,7 @@ function frontFn(f, greenRing, pin) {
 
 // ---------- the hole page ----------
 
-// A tour-style flip page: one tall strip, folded in the middle like a book
-// bound at the top — the green half above the fold, the tee half below.
-export const FLIP_H = 1300; // the strip's height; each half is FLIP_H / 2
-const SANS = 'Arial, Helvetica, system-ui, sans-serif';
-
 async function holePage(n, teeName, prefs, helpers, opts) {
-  const H = FLIP_H, FOLD = H / 2;
   const F = holeFacts(n, teeName, helpers);
   const { ch, line, tee, pin, greenRing } = F;
   const teeSet = course.tees.find(t => t.name === teeName) || course.tees[0];
@@ -256,108 +289,77 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   const keep = [...L, ...ownFair.flat(), ...(greenL || []), ...teeBoxesL.flatMap(t => t.r)];
   let [minX, maxX] = [Math.min(...keep.map(p => p[0])), Math.max(...keep.map(p => p[0]))];
   let [minY, maxY] = [Math.min(...keep.map(p => p[1])), Math.max(...keep.map(p => p[1]))];
-  minX = Math.min(minX - 30, -42); maxX = Math.max(maxX + 30, 42); minY -= 16; maxY += 26;
-  const left = 8, right = W - 8, top = 8, bottom = H - 8;
-  const s = Math.min((right - left) / (maxX - minX), (bottom - top - 90) / (maxY - minY), 4.6);
-  // Centred across; along the hole, the green sits a little below the top.
-  const cx = (left + right) / 2 - ((minX + maxX) / 2) * s;
-  const spare = (bottom - top) - (maxY - minY) * s;
-  const cy = top + Math.min(spare / 2, 70) + maxY * s;
+  minX = Math.min(minX - 32, -45); maxX = Math.max(maxX + 32, 45); minY -= 14; maxY += 18;
+  const top = 86, bottom = H - 72, left = 14, right = W - 14;
+  const s = Math.min((right - left) / (maxX - minX), (bottom - top) / (maxY - minY), 4.2);
+  const cx = (left + right) / 2 - ((minX + maxX) / 2) * s, cy = (top + bottom) / 2 + ((minY + maxY) / 2) * s;
   const P = ([x, y]) => [cx + x * s, cy - y * s];
-  const viewYd = [(left - cx) / s, (right - cx) / s, (cy - bottom) / s, (cy - top) / s];
+  const viewYd = [(left - cx) / s, (cx - right) / -s, (cy - bottom) / s, (cy - top) / s]; // minX, maxX, minY, maxY in yards
   const inView = pts => pts.some(([x, y]) => x > viewYd[0] - 20 && x < viewYd[1] + 20 && y > viewYd[2] - 20 && y < viewYd[3] + 20);
 
   const id = `bk${n}p${Math.random().toString(36).slice(2, 7)}`;
-  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bookpage flip', xmlns: SVGNS, 'font-family': SANS });
-  const ownShapes = [...ownFair, ...(greenL ? [greenL] : []), ...teeBoxesL.map(t => t.r)];
-  svg.append(defs(id),
-    el('defs', {},
-      el('radialGradient', { id: `${id}-tree`, cx: '38%', cy: '35%', r: '70%' },
-        el('stop', { offset: '0%', 'stop-color': '#6aa84c' }), el('stop', { offset: '65%', 'stop-color': '#3a7a33' }), el('stop', { offset: '100%', 'stop-color': '#245a26' })),
-      // Leafy texture over the trees' colour.
-      el('pattern', { id: `${id}-leaf`, width: 7, height: 7, patternUnits: 'userSpaceOnUse' },
-        el('circle', { cx: 1.5, cy: 1.8, r: 1.1, fill: '#9ccc78', 'fill-opacity': 0.45 }), el('circle', { cx: 5, cy: 4.6, r: 1.2, fill: '#163f18', 'fill-opacity': 0.35 }),
-        el('circle', { cx: 4.4, cy: 1.2, r: 0.7, fill: '#163f18', 'fill-opacity': 0.3 }), el('circle', { cx: 1.4, cy: 5.6, r: 0.8, fill: '#b4dc90', 'fill-opacity': 0.35 })),
-      el('linearGradient', { id: `${id}-fold`, x1: 0, y1: 0, x2: 0, y2: 1 },
-        el('stop', { offset: '0%', 'stop-color': '#000', 'stop-opacity': 0 }), el('stop', { offset: '78%', 'stop-color': '#000', 'stop-opacity': 0.05 }),
-        el('stop', { offset: '80%', 'stop-color': '#000', 'stop-opacity': 0.2 }), el('stop', { offset: '100%', 'stop-color': '#000', 'stop-opacity': 0 })),
-      el('clipPath', { id: `${id}-own` }, ownShapes.map(r => el('path', { d: pathD(r.map(P), true) })))),
-    el('clipPath', { id: `${id}-clip` }, el('rect', { x: left, y: top, width: right - left, height: bottom - top })));
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bookpage', xmlns: SVGNS, 'font-family': FONT });
+  svg.append(defs(id), el('clipPath', { id: `${id}-clip` }, el('rect', { x: left, y: top, width: right - left, height: bottom - top })));
   svg.append(el('rect', { width: W, height: H, fill: '#fff' }));
   const mapG = el('g', { 'clip-path': `url(#${id}-clip)` });
-  const labG = el('g', { 'clip-path': `url(#${id}-clip)` });
+  // Labels get a white halo so they read over the contours and arrows.
+  const labG = el('g', { stroke: '#fff', 'stroke-width': 2.6, 'stroke-linejoin': 'round', 'paint-order': 'stroke' });
   svg.append(mapG, labG);
   const lab = labeller();
-  const bounds = [left + 4, top + 4, right - 4, bottom - 4];
+  const bounds = [left + 2, top + 2, right - 2, bottom - 2];
 
   const elevId = partOf(course, n);
   const info = opts.tourney ? null : (await elevIndex())[elevId] || null;
+  let reliefNote = '';
 
-  // The hole's corridor: a pale band either side of the line, like the rough
-  // the book is drawn on.
-  const end = greenL ? centroid(greenL) : L.at(-1);
-  if (prefs.fairway) mapG.append(el('path', { d: pathD([...L.slice(0, -1), end].map(P)), fill: 'none', stroke: '#f0f8f2', 'stroke-width': 76 * s, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
-
-  // The course's shapes.
+  // The course's shapes, near ones first.
   const feats = course.features.filter(x => x.t !== 'ob').map(x => ({ x, r: closeRing(ringOf(x)).map(f.fwd) })).filter(o => inView(o.r));
   const own = o => F.ownSet.has(o.x);
-  const draw = (o, attrs, g = mapG) => g.append(el('path', { d: pathD(o.r.map(P), true), ...attrs }));
-  const faint = o => (!own(o) ? { opacity: 0.5 } : {});
+  const draw = (o, attrs) => mapG.append(el('path', { d: pathD(o.r.map(P), true), ...attrs }));
+  const faint = o => (!own(o) ? { opacity: 0.45 } : {});
   const others = prefs.otherHoles;
-  if (prefs.water) for (const o of feats.filter(o => o.x.t === 'water')) draw(o, { fill: '#dce9ee', stroke: '#b3ccd6', 'stroke-width': 1 });
-  if (prefs.fairway) for (const o of feats.filter(o => o.x.t === 'fairway' && (own(o) || others))) draw(o, { fill: '#cdeedb', stroke: '#9fd3b4', 'stroke-width': 1, ...faint(o) });
+  if (prefs.water) for (const o of feats.filter(o => o.x.t === 'water')) draw(o, { fill: `url(#${id}-water)`, stroke: '#4f97c7', 'stroke-width': 0.9 });
+  if (prefs.fairway) for (const o of feats.filter(o => o.x.t === 'fairway' && (own(o) || others))) draw(o, { fill: '#d9f0cf', stroke: '#6aa65a', 'stroke-width': 0.9, ...faint(o) });
+  if (prefs.trees) for (const o of feats.filter(o => o.x.t === 'trees')) draw(o, { fill: '#cfe5c4', stroke: '#7fae70', 'stroke-width': 0.6, 'fill-opacity': 0.9 });
   for (const o of feats.filter(o => o.x.t === 'tee' && (own(o) || others))) {
     if (own(o) && !prefs.allTees && o.x !== F.teeBox) continue;
-    draw(o, { fill: o.x === F.teeBox ? '#9edfb5' : '#d6f1e1', stroke: '#86c79d', 'stroke-width': 1, ...faint(o) });
+    draw(o, { fill: o.x === F.teeBox ? '#9fd18b' : '#e4f3dc', stroke: '#5f9a50', 'stroke-width': 0.9, ...faint(o) });
   }
-  for (const o of feats.filter(o => o.x.t === 'green' && (own(o) || others))) draw(o, own(o) ? { fill: '#62cf8a', stroke: '#1fae4b', 'stroke-width': 2.2 } : { fill: '#cdeedb', stroke: '#9fd3b4', 'stroke-width': 1, opacity: 0.6 });
-
-  // Contours on the hole's own short grass, with small downhill arrows.
-  if (prefs.contours && info) {
-    const gj = await loadContours(elevId);
-    const g = el('g', { 'clip-path': `url(#${id}-own)`, fill: 'none', stroke: '#5f9f78', 'stroke-width': 0.55, 'stroke-opacity': 0.8 });
-    let arrows = '';
-    const near = pts => pts.some(p => ownShapes.some(r => inside(p, r)));
-    for (const c of gj?.features || []) {
-      const pts = c.geometry.coordinates.map(q => f.fwd([q[1], q[0]]));
-      if (!inView(pts) || !near(pts)) continue;
-      g.append(el('path', { d: pathD(pts.map(P)) }));
-      let next = 6, run = 0;
-      for (let i = 0; i < pts.length - 1; i++) {
-        const seg = dist(pts[i], pts[i + 1]);
-        while (seg && next <= run + seg) {
-          const t = (next - run) / seg, p = [pts[i][0] + (pts[i + 1][0] - pts[i][0]) * t, pts[i][1] + (pts[i + 1][1] - pts[i][1]) * t];
-          next += 16;
-          if (!ownShapes.some(r => inside(p, r))) continue;
-          const dx = (pts[i + 1][0] - pts[i][0]) / seg, dy = (pts[i + 1][1] - pts[i][1]) / seg;
-          const side = c.properties.dn === 1 ? [-dy, dx] : [dy, -dx];
-          const a = P([p[0] + side[0] * 0.8, p[1] + side[1] * 0.8]), b = P([p[0] + side[0] * 3.6, p[1] + side[1] * 3.6]);
-          const ux = (b[0] - a[0]) / Math.hypot(b[0] - a[0], b[1] - a[1]), uy = (b[1] - a[1]) / Math.hypot(b[0] - a[0], b[1] - a[1]);
-          arrows += `M${a[0].toFixed(1)},${a[1].toFixed(1)}L${b[0].toFixed(1)},${b[1].toFixed(1)}M${(b[0] - ux * 2.6 - uy * 1.6).toFixed(1)},${(b[1] - uy * 2.6 + ux * 1.6).toFixed(1)}L${b[0].toFixed(1)},${b[1].toFixed(1)}L${(b[0] - ux * 2.6 + uy * 1.6).toFixed(1)},${(b[1] - uy * 2.6 - ux * 1.6).toFixed(1)}`;
-        }
-        run += seg;
-      }
-    }
-    if (arrows) g.append(el('path', { d: arrows, stroke: '#4e6e5a', 'stroke-width': 0.7, 'stroke-opacity': 0.75 }));
-    mapG.append(g);
-  }
-
-  if (prefs.bunkers) for (const o of feats.filter(o => o.x.t === 'bunker')) draw(o, { fill: '#ecdcc9', stroke: '#d8b896', 'stroke-width': 1 });
-  if (prefs.trees) for (const o of feats.filter(o => o.x.t === 'trees')) {
-    draw(o, { fill: `url(#${id}-tree)`, stroke: '#245a26', 'stroke-width': 1.6, 'stroke-dasharray': '1.6 1.4', 'stroke-linecap': 'round' });
-    draw(o, { fill: `url(#${id}-leaf)` });
-  }
+  if (prefs.bunkers) for (const o of feats.filter(o => o.x.t === 'bunker')) draw(o, { fill: `url(#${id}-sand)`, stroke: '#b8954e', 'stroke-width': 0.9 });
+  for (const o of feats.filter(o => o.x.t === 'green' && (own(o) || others))) draw(o, { fill: own(o) ? '#a6dc94' : '#cdeac2', stroke: '#3f8a3a', 'stroke-width': own(o) ? 1.3 : 0.8, ...faint(o) });
   if (prefs.ob) {
     for (const x of course.features.filter(x => x.t === 'ob')) {
       for (const r of x.p.length > 1 ? x.p.slice(1) : x.p) {
         const pts = r.map(f.fwd);
         if (!inView(pts)) continue;
-        mapG.append(el('path', { d: pathD(pts.map(P)), fill: 'none', stroke: '#333', 'stroke-width': 1.1, 'stroke-dasharray': '1.2 4.5', 'stroke-linecap': 'round' }));
+        mapG.append(el('path', { d: pathD(pts.map(P)), fill: 'none', stroke: INK, 'stroke-width': 1.1, 'stroke-dasharray': '1.2 4.5', 'stroke-linecap': 'round' }));
       }
     }
   }
-  if (prefs.centre) mapG.append(el('path', { d: pathD([...L.slice(0, -1), end].map(P)), fill: 'none', stroke: '#8fb59c', 'stroke-width': 0.8, 'stroke-dasharray': '3 3' }));
-  if (greenL) { const [x, y] = P(centroid(greenL)); lab.block([x - 8, y - 8, x + 8, y + 8]); }
+
+  // Contour lines and a field of small downhill arrows over the whole hole,
+  // like a tour book (not in bunkers, water or on the green: that's the green page).
+  if (prefs.contours && info) {
+    const area = [viewYd[0], viewYd[2], viewYd[1], viewYd[3]];
+    const R = await reliefGrid(elevId, info, f, area, 1.5, 2);
+    if (R.ok) {
+      const iv = [12, 24, 36, 48, 72].find(v => (R.hi - R.lo) / v <= 22) || 120;
+      const no = feats.filter(o => ['water', 'bunker'].includes(o.x.t) || (o.x.t === 'green' && own(o))).map(o => o.r);
+      const reliefG = el('g', {});
+      reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => pathD(sg.map(P))).join(''), ...RELIEF_LINE, 'stroke-opacity': 0.5 }));
+      reliefG.append(el('path', { d: slopeArrows(R, area, 9, P, (x, y) => !no.some(r => inside([x, y], r)), 1), ...RELIEF_ARROW, 'stroke-opacity': 0.55 }));
+      mapG.append(reliefG);
+      reliefNote = `Contours every ${iv >= 12 ? `${iv / 12} ft` : `${iv}"`} · arrows point downhill`;
+    }
+  }
+
+  // Centre line, tee to the middle of the green.
+  if (prefs.centre) {
+    const end = greenL ? centroid(greenL) : L.at(-1);
+    mapG.append(el('path', { d: pathD([...L.slice(0, -1), end].map(P)), fill: 'none', stroke: SOFT, 'stroke-width': 0.8, 'stroke-dasharray': '3 3' }));
+    for (const p of L.slice(1, -1)) { const [x, y] = P(p); mapG.append(el('circle', { cx: x, cy: y, r: 1.8, fill: '#fff', stroke: SOFT, 'stroke-width': 0.8 })); }
+  }
+  if (greenL) { const [x, y] = P(centroid(greenL)); lab.block([x - 6, y - 6, x + 6, y + 6]); }
 
   // Walk the hole's line in 1-yard steps: each step's point, direction and yards to the front.
   const walk = [];
@@ -365,62 +367,18 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const a = L[i], b = L[i + 1], seg = dist(a, b), d = [(b[0] - a[0]) / seg, (b[1] - a[1]) / seg];
     for (let t = 0; t < seg; t += 1) { const p = [a[0] + d[0] * t, a[1] + d[1] * t]; walk.push({ p, d, front: toFront(p), fromTee: (walk.length ? walk.at(-1).fromTee + 1 : 0) }); }
   }
+  // The spot on the line (nearest the green) that's `yd` to the front.
   const spotAt = yd => { for (let i = walk.length - 1; i > 0; i--) if (walk[i].front >= yd) return walk[i]; return null; };
   const edgesAt = w => {
-    const perp = [w.d[1], -w.d[0]];
+    const perp = [w.d[1], -w.d[0]]; // to the right
     const hits = ownFair.flatMap(r => crossings(w.p, perp, r, 60));
-    if (!hits.length || !ownFair.some(r => inside(w.p, r))) return null;
+    const inFw = ownFair.some(r => inside(w.p, r));
+    if (!hits.length) return null;
     const lft = hits.filter(v => v < 0), rgt = hits.filter(v => v > 0);
-    if (!lft.length || !rgt.length) return null;
+    if (!inFw || !lft.length || !rgt.length) return null;
     const l = Math.max(...lft), r = Math.min(...rgt);
     return { perp, l: [w.p[0] + perp[0] * l, w.p[1] + perp[1] * l], r: [w.p[0] + perp[0] * r, w.p[1] + perp[1] * r], width: r - l };
   };
-
-  // Fairway widths: a line edge to edge with the width in a grey circle.
-  const widthMarks = [];
-  if (prefs.width && ch.par > 3) {
-    for (let fromTee = 200; widthMarks.length < 5; fromTee += 40) {
-      const w = walk.find(q => q.fromTee >= fromTee);
-      if (!w || w.front < 50) break;
-      const e = edgesAt(w);
-      if (!e || e.width < 8) continue;
-      widthMarks.push(e);
-      const A = P([e.l[0] - e.perp[0] * 3, e.l[1] - e.perp[1] * 3]), B = P([e.r[0] + e.perp[0] * 3, e.r[1] + e.perp[1] * 3]);
-      const m = P([(e.l[0] + e.r[0]) / 2, (e.l[1] + e.r[1]) / 2]);
-      labG.append(el('path', { d: pathD([A, B]), stroke: '#3b4a42', 'stroke-width': 0.9 }),
-        el('circle', { cx: m[0], cy: m[1], r: 8, fill: '#e3e7ec', stroke: '#9aa3ad', 'stroke-width': 0.9 }),
-        txt(m[0], m[1] + 3.2, Math.round(e.width), { 'font-size': 8.5, fill: '#4a5560', 'text-anchor': 'middle' }));
-      lab.block([m[0] - 9, m[1] - 9, m[0] + 9, m[1] + 9]);
-    }
-  }
-
-  // Height circles down the middle: how many feet each spot is above (+) or
-  // below (−) the middle of the green.
-  let plays = null;
-  if (info && greenRing && (prefs.heights || prefs.playsLike)) {
-    const spots = [];
-    if (prefs.heights) {
-      for (let yd = 20; ; yd += 25) {
-        const w = spotAt(yd);
-        if (!w || w.fromTee < 30) break;
-        if (ownFair.some(r => inside(w.p, r)) || (greenL && inside(w.p, greenL))) spots.push(w);
-      }
-    }
-    const hs = await heightsAt(elevId, info, [centroid(greenRing), tee, ...spots.map(w => f.back(w.p))]);
-    const [hg, ht] = hs;
-    if (prefs.playsLike && hg != null && ht != null) plays = { ft: Math.round((hg - ht) * FT_PER_M), yd: Math.round((hg - ht) / M_PER_YD) };
-    spots.forEach((w, i) => {
-      const v = hs[i + 2];
-      if (v == null || hg == null) return;
-      const ft = Math.round((v - hg) * FT_PER_M), [x, y] = P(w.p);
-      const b = [x - 8, y - 8, x + 8, y + 8];
-      if (!lab.place([[x - 8, y + 4, 'start']], 16, 12, bounds)) return;
-      const col = ft < 0 ? '#c8352b' : '#1f9a46';
-      labG.append(el('circle', { cx: x, cy: y, r: 7.5, fill: '#fff', stroke: col, 'stroke-width': 1 }),
-        txt(x, y + 3, ft > 0 ? `+${ft}` : ft < 0 ? `−${-ft}` : '0', { 'font-size': 7.5, fill: col, 'text-anchor': 'middle', 'font-weight': 700 }));
-      lab.block(b);
-    });
-  }
 
   // Layup lines across the fairway, to the front of the green.
   const layupYds = [100, 150, 200, 250, 300];
@@ -428,61 +386,56 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     for (const yd of layupYds) {
       const w = spotAt(yd);
       if (!w || w.fromTee < 40) continue;
-      const e = edgesAt(w), perp = [w.d[1], -w.d[0]];
-      const a = e ? [e.l[0] - perp[0] * 3, e.l[1] - perp[1] * 3] : [w.p[0] - perp[0] * 16, w.p[1] - perp[1] * 16];
-      const b = e ? [e.r[0] + perp[0] * 3, e.r[1] + perp[1] * 3] : [w.p[0] + perp[0] * 16, w.p[1] + perp[1] * 16];
+      const e = edgesAt(w);
+      const perp = [w.d[1], -w.d[0]];
+      const a = e ? [e.l[0] - perp[0] * 4, e.l[1] - perp[1] * 4] : [w.p[0] - perp[0] * 18, w.p[1] - perp[1] * 18];
+      const b = e ? [e.r[0] + perp[0] * 4, e.r[1] + perp[1] * 4] : [w.p[0] + perp[0] * 18, w.p[1] + perp[1] * 18];
       const [A, B] = [P(a), P(b)];
-      labG.append(el('path', { d: pathD([A, B]), stroke: '#2e7bd6', 'stroke-width': 1, 'stroke-dasharray': '5 3' }));
-      const wdt = textW(yd, 10) + 8;
-      const spot = lab.place([[B[0] + 3, B[1] + 3.5, 'start'], [A[0] - 3, A[1] + 3.5, 'end']], wdt, 12, bounds);
+      labG.append(el('path', { d: pathD([A, B]), stroke: INK, 'stroke-width': 0.9, 'stroke-dasharray': '4 2' }));
+      const spot = lab.place([[B[0] + 3, B[1] + 3.5, 'start'], [A[0] - 3, A[1] + 3.5, 'end']], textW(yd, 11) + 6, 11, bounds);
       if (spot) {
-        const [x, y, anc] = spot, x0 = anc === 'start' ? x : x - wdt;
-        labG.append(el('rect', { x: x0, y: y - 9.5, width: wdt, height: 13, rx: 6.5, fill: '#2e7bd6' }),
-          txt(x0 + wdt / 2, y, yd, { 'font-size': 10, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle' }));
+        const [x, y, anc] = spot, wdt = textW(yd, 11) + 6, x0 = anc === 'start' ? x - 1 : x - wdt + 1;
+        labG.append(el('rect', { x: x0, y: y - 9.5, width: wdt, height: 12.5, rx: 6, fill: INK }),
+          txt(x0 + wdt / 2, y, yd, { 'font-size': 11, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle', stroke: 'none' }));
       }
     }
   }
 
-  // Numbered boxes: a yellow dot on the spot and the yards to the front in a
-  // box beside it (with a short leader when it has to sit further off).
-  const box = (q, v, opt = {}) => {
-    const [x, y] = P(q), size = 11, wdt = textW(v, size) * 1.12 + 8, hgt = 15;
-    const dir = opt.side ?? 1;
-    const near = [[x + dir * 6, y - 1], [x + dir * 6, y + 13], [x + dir * 6, y - 10], [x - dir * 6, y - 1], [x - dir * 6, y + 13], [x - dir * 6, y - 10]];
-    const far = [[x + dir * 16, y + 4], [x + dir * 16, y - 12], [x + dir * 16, y + 20], [x - dir * 16, y + 4]];
-    let spot = null, lead = false;
-    for (const [i, cand] of [...near, ...far].entries()) {
-      const anc = cand[0] >= x ? 'start' : 'end';
-      spot = lab.place([[cand[0], cand[1], anc]], wdt, hgt, bounds);
-      if (spot) { lead = i >= near.length; break; }
-    }
-    labG.append(el('circle', { cx: x, cy: y, r: 2.6, fill: opt.dot || '#f3df1d', stroke: '#6e6410', 'stroke-width': 0.7 }));
+  // Bunkers and water: a dot at the start and the end of each, with the yards
+  // to the front of the green above (red) and the yards from the tee to that
+  // spot below (black).
+  const RED = '#c62f2f';
+  const pair = (q, front, tee, side) => {
+    const [x, y] = P(q), wdt = Math.max(textW(front, 10), textW(tee, 9.5)) + 2, hgt = 21;
+    labG.append(el('circle', { cx: x, cy: y, r: 1.8, fill: INK }));
+    const a = side > 0 ? 'start' : 'end';
+    // The pair is drawn from 16 above its spot's y to 5 below, as the labeller boxes it.
+    const spot = lab.place([[x + side * 4, y + 6, a], [x + side * 4, y - 2, a], [x + side * 4, y + 14, a], [x - side * 4, y + 6, side > 0 ? 'end' : 'start'],
+      [x + side * 4, y - 10, a], [x + side * 4, y + 22, a]], wdt, hgt, bounds);
     if (!spot) return;
-    const [sx, sy, anc] = spot, x0 = anc === 'start' ? sx : sx - wdt;
-    if (lead) labG.append(el('path', { d: pathD([[x, y], [anc === 'start' ? x0 : x0 + wdt, sy - 4]]), stroke: '#777', 'stroke-width': 0.6 }));
-    labG.append(el('rect', { x: x0, y: sy - 11, width: wdt, height: hgt, fill: '#fff', stroke: '#8c8c8c', 'stroke-width': 0.8, rx: 1 }),
-      txt(x0 + wdt / 2, sy, v, { 'font-size': size, 'font-weight': 700, fill: opt.color || '#111', 'text-anchor': 'middle' }));
+    const [sx, sy, anc] = spot;
+    labG.append(txt(sx, sy - 8, front, { 'font-size': 10, 'font-weight': 700, fill: RED, 'text-anchor': anc }),
+      txt(sx, sy + 2.5, tee, { 'font-size': 9.5, fill: INK, 'text-anchor': anc }));
   };
-
-  // Bunker and water: the near edge (to reach it) and the far edge (to carry it).
   if (prefs.hazards) {
     const hz = F.own.filter(x => (x.t === 'bunker' && prefs.bunkers) || (x.t === 'water' && prefs.water));
     for (const x of hz) {
+      // Only the part near the line of play (a lake can be huge).
       const pts = ringOf(x).map(f.fwd).filter(p => walk.some(w => Math.abs(w.p[1] - p[1]) < 3 && Math.abs(w.p[0] - p[0]) < 45));
       if (pts.length < 2) continue;
       const fr = pts.map(toFront);
-      const iR = fr.indexOf(Math.max(...fr)), iC = fr.indexOf(Math.min(...fr));
-      const reach = Math.round(fr[iR]), carry = Math.round(fr[iC]);
-      if ((x.t === 'bunker' ? carry < 12 : reach < 15) || reach > 420) continue;
+      const iS = fr.indexOf(Math.max(...fr)), iE = fr.indexOf(Math.min(...fr));
+      if (fr[iS] > 440 || dist(pts[iS], [0, 0]) < 25) continue; // behind or beside the tee
       const c = centroid(pts);
       const nearLine = walk.reduce((b, w) => (dist(w.p, c) < dist(b.p, c) ? w : b), walk[0]);
       const side = (c[0] - nearLine.p[0]) * nearLine.d[1] - (c[1] - nearLine.p[1]) * nearLine.d[0] >= 0 ? 1 : -1;
-      box(pts[iR], reach, { side });
-      if (reach - carry >= 3) box(pts[iC], carry, { side, color: '#1f8a3f' });
+      pair(pts[iS], Math.round(fr[iS]), Math.round(dist(pts[iS], [0, 0])), side);
+      if (fr[iS] - fr[iE] >= 3) pair(pts[iE], Math.round(fr[iE]), Math.round(dist(pts[iE], [0, 0])), side);
     }
   }
 
-  // Fairway edge numbers every 20 yards.
+  // Fairway edge numbers: a dot on each edge every 20 yards, with its own
+  // yards to the front (the left and right edge read a little differently).
   if (prefs.edges) {
     for (let yd = 40; yd <= 340; yd += 20) {
       if (prefs.layup && layupYds.includes(yd)) continue;
@@ -490,73 +443,74 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       if (!w || w.fromTee < 60) continue;
       const e = edgesAt(w);
       if (!e) continue;
-      box(e.l, Math.round(toFront(e.l)), { side: -1 });
-      box(e.r, Math.round(toFront(e.r)), { side: 1 });
+      for (const [q, side] of [[e.l, -1], [e.r, 1]]) {
+        const v = Math.round(toFront(q)), [x, y] = P(q);
+        const spot = lab.place([[x + side * 4, y + 3, side > 0 ? 'start' : 'end'], [x + side * 4, y - 3, side > 0 ? 'start' : 'end'], [x + side * 4, y + 9, side > 0 ? 'start' : 'end']], textW(v, 9.5), 9.5, bounds);
+        if (!spot) continue;
+        labG.append(el('circle', { cx: x, cy: y, r: 1.4, fill: INK }), txt(spot[0], spot[1], v, { 'font-size': 9.5, 'font-weight': 700, fill: RED, 'text-anchor': spot[2] }));
+      }
     }
   }
 
-  // Tee boxes, each with its yards to the front.
+  // Tee boxes: the chosen one marked, each with its yards to the front.
+  const teeFront = Math.round(toFront(f.fwd(tee)));
   for (const { b, r } of teeBoxesL) {
     const chosen = b === F.teeBox;
     if (!chosen && !prefs.allTees) continue;
     const c = P(centroid(r));
     const names = course.tees.filter(t => teeBoxFor(t.name, ch, F.boxes) === b).map(t => t.name);
     const v = Math.round(toFront(f.fwd(boxCentre(b))));
-    const label = `${names.join('/') || 'Tee'} ${v}`, size = chosen ? 10 : 8.5;
-    const spot = lab.place([[c[0] + 10, c[1] + 3, 'start'], [c[0] - 10, c[1] + 3, 'end'], [c[0] + 10, c[1] + 13, 'start'], [c[0] - 10, c[1] + 13, 'end']], textW(label, size) * 1.1, size + 2, bounds);
-    if (spot) labG.append(txt(spot[0], spot[1], label, { 'font-size': size, 'font-weight': chosen ? 700 : 400, fill: chosen ? '#111' : '#555', 'text-anchor': spot[2] }));
+    const label = chosen ? `${names.length ? names.join('/') : teeName} ${v}` : `${names.join('/') || 'Tee'} ${v}`;
+    const size = chosen ? 10 : 8.5;
+    const spot = lab.place([[c[0] + 9, c[1] + 3, 'start'], [c[0] - 9, c[1] + 3, 'end'], [c[0] + 9, c[1] + 12, 'start'], [c[0] - 9, c[1] + 12, 'end']], textW(label, size), size, bounds);
+    if (spot) labG.append(txt(spot[0], spot[1], label, { 'font-size': size, 'font-weight': chosen ? 700 : 400, fill: chosen ? INK : SOFT, 'text-anchor': spot[2] }));
   }
-  if (!F.teeBox) { const [x, y] = P(f.fwd(tee)); labG.append(el('circle', { cx: x, cy: y, r: 3, fill: '#111' })); }
+  if (!F.teeBox) { const [x, y] = P(f.fwd(tee)); labG.append(el('circle', { cx: x, cy: y, r: 3, fill: INK })); }
 
-  // The fold, with the hole number on it.
-  const foldBand = el('rect', { x: left, y: FOLD - 34, width: right - left, height: 80, fill: `url(#${id}-fold)` });
-  svg.append(foldBand, el('line', { x1: left, x2: right, y1: FOLD, y2: FOLD, stroke: '#9a9a9a', 'stroke-width': 0.8 }));
-  const ring = (x, y, r, kids) => el('g', {}, el('circle', { cx: x, cy: y, r, fill: '#fff', stroke: '#2b2b2b', 'stroke-width': 1.6 }), kids);
-  svg.append(ring(right - 30, FOLD, 20, txt(right - 30, FOLD + 9, n, { 'font-size': 25, 'font-weight': 700, 'text-anchor': 'middle', fill: '#111' })));
-
-  // Top: north arrow and the course; the tee and its numbers on the right.
-  const nv = f.rotV([0, 1]), nx = left + 24, ny = top + 26;
-  const nameW = Math.max(textW(course.name.replace(/ Golf (Club|Course)$/, ''), 11.5), textW(course.location || 'Golf Course', 11.5)) * 1.15 + 14;
-  svg.append(el('rect', { x: nx + 16, y: ny - 15, width: nameW, height: 32, rx: 4, fill: '#fff', 'fill-opacity': 0.92 }));
-  svg.append(el('circle', { cx: nx, cy: ny, r: 15, fill: '#fff', stroke: '#2b2b2b', 'stroke-width': 1.2 }),
-    el('path', { d: `M${(nx + nv[0] * 11).toFixed(1)},${(ny - nv[1] * 11).toFixed(1)}L${(nx - nv[0] * 8 + nv[1] * 6).toFixed(1)},${(ny + nv[1] * 8 + nv[0] * 6).toFixed(1)}L${(nx - nv[0] * 3).toFixed(1)},${(ny + nv[1] * 3).toFixed(1)}Z`, fill: '#111' }),
-    txt(nx + 22, ny - 2, course.name.replace(/ Golf (Club|Course)$/, ''), { 'font-size': 11.5, fill: '#111' }),
-    txt(nx + 22, ny + 12, /Golf (Club|Course)$/.test(course.name) ? course.name.match(/Golf (Club|Course)$/)[0] : course.location || '', { 'font-size': 11.5, fill: '#111' }));
-  const info2 = [`${(teeSet?.name || teeName).toUpperCase()} TEES`, `${toFrontTee(F, f, toFront)} to front`];
-  if (plays) info2.push(`Plays ${plays.yd >= 0 ? '+' : '−'}${Math.abs(plays.yd)} (${Math.abs(plays.ft)} ft ${plays.ft >= 0 ? 'up' : 'down'})`);
-  const iw = Math.max(...info2.map(t => textW(t, 10))) + 14;
-  svg.append(el('rect', { x: right - 8 - iw, y: top + 8, width: iw, height: 14 * info2.length + 6, rx: 4, fill: '#fff', 'fill-opacity': 0.92, stroke: '#c9c9c9', 'stroke-width': 0.8 }),
-    ...info2.map((t, i) => txt(right - 15, top + 22 + i * 14, t, { 'font-size': 10, 'text-anchor': 'end', fill: i === 2 ? (plays.ft >= 0 ? '#a0522d' : '#2f6f9a') : '#111', 'font-weight': i === 0 ? 700 : 400 })));
-
-  // Bottom: par and yards on the left, the hole number on the right.
-  svg.append(ring(left + 32, bottom - 32, 24, [
-    txt(left + 32, bottom - 34, `Par ${ch.par}`, { 'font-size': 11, 'text-anchor': 'middle', fill: '#111' }),
-    txt(left + 32, bottom - 22, card ?? '', { 'font-size': 9.5, 'text-anchor': 'middle', fill: '#111' })]),
-  ring(right - 32, bottom - 32, 24, txt(right - 32, bottom - 21, n, { 'font-size': 29, 'font-weight': 700, 'text-anchor': 'middle', fill: '#111' })),
-  el('rect', { x: W / 2 - 112, y: bottom - 47, width: 224, height: 42, rx: 5, fill: '#fff', 'fill-opacity': 0.92 }),
-  txt(W / 2, bottom - 36, 'ALL NUMBERS: YARDS TO THE FRONT OF THE GREEN', { 'font-size': 7.5, 'text-anchor': 'middle', fill: '#555', 'letter-spacing': 0.4 }),
-  txt(W / 2, bottom - 25, [prefs.hazards ? 'black = reach · green = carry' : '', prefs.heights && info ? '○ ft above (+) / below (−) the green' : ''].filter(Boolean).join('   '), { 'font-size': 7.5, 'text-anchor': 'middle', fill: '#555' }));
+  // North arrow and a 50-yard scale.
   if (prefs.north) {
-    const len = 50 * s, sx = W / 2 - len / 2, sy = bottom - 12;
-    svg.append(el('path', { d: `M${sx},${sy - 3}V${sy}H${sx + len}V${sy - 3}`, fill: 'none', stroke: '#777', 'stroke-width': 0.8 }),
-      txt(sx + len + 4, sy, '50 yd', { 'font-size': 7.5, fill: '#777' }));
+    const nx = right - 18, ny = top + 20, nv = f.rotV([0, 1]);
+    const tip = [nx + nv[0] * 11, ny - nv[1] * 11], tail = [nx - nv[0] * 9, ny + nv[1] * 9];
+    labG.append(el('circle', { cx: nx, cy: ny, r: 14, fill: '#fff', stroke: '#c9d0cb', 'stroke-width': 0.8 }),
+      el('path', { d: pathD([tail, tip]), stroke: INK, 'stroke-width': 1.2, 'marker-end': `url(#${id}-arr)` }),
+      txt(tip[0] + nv[0] * 5, tip[1] - nv[1] * 5 + 3, 'N', { 'font-size': 8, 'font-weight': 700, 'text-anchor': 'middle', fill: INK }));
+    lab.block([nx - 15, ny - 15, nx + 15, ny + 15]);
+    const len = 50 * s, sx = left + 6, sy = bottom - 8;
+    labG.append(el('path', { d: `M${sx},${sy - 3}V${sy}H${sx + len}V${sy - 3}M${sx + len / 2},${sy}V${sy - 2}`, fill: 'none', stroke: SOFT, 'stroke-width': 0.8 }),
+      txt(sx + len + 4, sy, '50 yd', { 'font-size': 8, fill: SOFT }));
   }
-  svg.append(el('rect', { x: 2.5, y: 2.5, width: W - 5, height: H - 5, fill: 'none', stroke: '#6f9a69', 'stroke-width': 5 }));
-  return svg;
-}
-const toFrontTee = (F, f, toFront) => Math.round(toFront(f.fwd(F.tee)));
 
-// The two halves of a flip page, as separate pages (for printing).
-function flipHalves(svg) {
-  const H = FLIP_H, a = svg.cloneNode(true), b = svg.cloneNode(true);
-  a.setAttribute('viewBox', `0 0 ${W} ${H / 2}`); b.setAttribute('viewBox', `0 ${H / 2} ${W} ${H / 2}`);
-  return [a, b];
+  // Plays-like: the height change tee to green, as yards.
+  let plays = null;
+  if (prefs.playsLike && info && greenRing) {
+    const [a, b] = await heightsAt(elevId, info, [tee, centroid(greenRing)]);
+    if (a != null && b != null) plays = { ft: Math.round((b - a) * FT_PER_M), yd: Math.round((b - a) / M_PER_YD) };
+  }
+
+  // Header and footer.
+  svg.append(
+    txt(16, 54, n, { 'font-size': 54, 'font-weight': 900, fill: INK }),
+    txt(16 + textW(n, 54) + 10, 32, `PAR ${ch.par}`, { 'font-size': 15, 'font-weight': 700, fill: INK, 'letter-spacing': 1 }),
+    txt(16 + textW(n, 54) + 10, 49, ch.hcp ? `HCP ${ch.hcp}` : '', { 'font-size': 12, fill: SOFT, 'letter-spacing': 1 }),
+    txt(W - 16, 44, card ?? teeFront, { 'font-size': 36, 'font-weight': 900, fill: INK, 'text-anchor': 'end' }),
+    txt(W - 16, 60, `${(teeSet?.name || teeName).toUpperCase()} TEES · ${teeFront} TO FRONT`, { 'font-size': 10.5, fill: SOFT, 'text-anchor': 'end', 'letter-spacing': 0.6 }),
+    plays ? txt(W - 16, 74, `PLAYS ${plays.yd >= 0 ? '+' : '−'}${Math.abs(plays.yd)} · ${Math.abs(plays.ft)} FT ${plays.ft >= 0 ? 'UP' : 'DOWN'}HILL`, { 'font-size': 10.5, 'font-weight': 700, fill: plays.ft >= 0 ? '#a0522d' : '#2f6f9a', 'text-anchor': 'end', 'letter-spacing': 0.6 }) : null,
+    el('line', { x1: 14, x2: W - 14, y1: top - 4, y2: top - 4, stroke: '#d6dcd8', 'stroke-width': 0.8 }),
+    el('line', { x1: 14, x2: W - 14, y1: bottom + 4, y2: bottom + 4, stroke: '#d6dcd8', 'stroke-width': 0.8 }),
+    txt(16, bottom + 20, 'RED: YARDS TO THE FRONT OF THE GREEN', { 'font-size': 9, fill: RED, 'letter-spacing': 0.8, 'font-weight': 700 }),
+    prefs.hazards ? txt(16, bottom + 32, 'Black, under a red number: yards from the tee to that spot', { 'font-size': 9, fill: SOFT }) : null,
+    reliefNote ? txt(16, bottom + 44, reliefNote, { 'font-size': 9, fill: SOFT }) : null,
+    txt(16, H - 12, course.name.toUpperCase(), { 'font-size': 9, fill: '#9aa59e', 'letter-spacing': 1 }),
+    txt(W - 16, H - 12, `HOLE ${n} OF ${course.holes.length}`, { 'font-size': 9, fill: '#9aa59e', 'text-anchor': 'end', 'letter-spacing': 1 }));
+  return svg;
 }
 
 // ---------- the green page ----------
 
+// The front of a green (turned so play is up the page): where the line up its middle first meets it.
+const frontY0 = g => { const d = crossings([0, 0], [0, 1], g, 200); return d.length ? d[0] : Math.min(...g.map(p => p[1])); };
+
 async function greenPage(n, teeName, prefs, helpers, opts) {
-  const H = FLIP_H / 2;
   const F = holeFacts(n, teeName, helpers);
   const { ch, greenRing, line } = F;
   if (!greenRing) return null;
@@ -573,10 +527,15 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   const widthYd = width.length >= 2 ? Math.round(width.at(-1) - width[0]) : Math.round(maxX - minX);
   const frontY = depth.length ? depth[0] : minY;
 
-  const top = 86, bottom = prefs.notes ? 430 : H - 62, left = 30, right = W - 30;
-  const pad = 9;
-  const s = Math.min((right - left) / (maxX - minX + pad * 2), (bottom - top) / (maxY - minY + pad * 2));
-  const cx = (left + right) / 2 - ((minX + maxX) / 2) * s, cy = (top + bottom) / 2 + ((minY + maxY) / 2) * s;
+  const top = 86, bottom = prefs.notes ? 470 : H - 62, left = 30, right = W - 30;
+  // The map takes in the fairway leading up to the green as well (up to 40
+  // yards short of it), not just the ground around it.
+  const approach = F.own.filter(x => x.t === 'fairway').flatMap(x => ringOf(x).map(f.fwd)).filter(([x, y]) => y < frontY0(g) && y > frontY0(g) - 40 && Math.abs(x) < 40);
+  const vx0 = Math.min(minX, ...approach.map(p => p[0])), vx1 = Math.max(maxX, ...approach.map(p => p[0]));
+  const vy0 = Math.min(minY, ...approach.map(p => p[1])), vy1 = maxY;
+  const pad = 7;
+  const s = Math.min((right - left) / (vx1 - vx0 + pad * 2), (bottom - top) / (vy1 - vy0 + pad * 2));
+  const cx = (left + right) / 2 - ((vx0 + vx1) / 2) * s, cy = (top + bottom) / 2 + ((vy0 + vy1) / 2) * s;
   const P = ([x, y]) => [cx + x * s, cy - y * s];
   const view = [(left - cx) / s, (right - cx) / s, (cy - bottom) / s, (cy - top) / s];
   const inView = pts => pts.some(([x, y]) => x > view[0] - 10 && x < view[1] + 10 && y > view[2] - 10 && y < view[3] + 10);
@@ -606,8 +565,8 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
     if (style) mapG.append(el('path', { d: pathD(r.map(P), true), ...style }));
   }
   // The fringe, then the green.
-  mapG.append(el('path', { d: gPath, fill: 'none', stroke: '#cfe9c2', 'stroke-width': 3 * s, 'stroke-linejoin': 'round' }));
-  mapG.append(el('path', { d: gPath, fill: '#a9e3bb' }));
+  mapG.append(el('path', { d: gPath, fill: 'none', stroke: '#e6f4e6', 'stroke-width': 3 * s, 'stroke-linejoin': 'round' }));
+  mapG.append(el('path', { d: gPath, fill: '#d7f0dc' }));
 
   // The yard grid, lined up on the front of the green and its middle.
   const inner = el('g', { 'clip-path': `url(#${id}-green)` });
@@ -617,69 +576,51 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
     for (let y = frontY; y <= maxY + step; y += step) { const a = P([minX - 2, y]), b = P([maxX + 2, y]); d += `M${a[0].toFixed(1)},${a[1].toFixed(1)}H${b[0].toFixed(1)}`; }
     for (let x = 0; x <= maxX + step; x += step) { const a = P([x, minY - 2]), b = P([x, maxY + 2]); d += `M${a[0].toFixed(1)},${a[1].toFixed(1)}V${b[1].toFixed(1)}`; }
     for (let x = -step; x >= minX - step; x -= step) { const a = P([x, minY - 2]), b = P([x, maxY + 2]); d += `M${a[0].toFixed(1)},${a[1].toFixed(1)}V${b[1].toFixed(1)}`; }
-    inner.append(el('path', { d, stroke: '#ffffff', 'stroke-width': 0.9, opacity: 0.9 }));
+    inner.append(el('path', { d, stroke: '#8fa597', 'stroke-width': 0.6, opacity: 0.8 }));
   }
 
-  // Heights over the green: contours every few inches and slope arrows.
+  // Heights over the whole map, tour-book style: thin contour lines a few
+  // inches apart and a field of small downhill arrows (longer = steeper).
   const elevId = partOf(course, n);
   const info = opts.tourney ? null : (await elevIndex())[elevId] || null;
   let slopeNote = '', relief = null;
+  const reliefG = el('g', {});
   if (info && (prefs.greenContours || prefs.slopes)) {
-    const step = 0.5, x0 = minX - 3, y0 = minY - 3;
-    const nx = Math.ceil((maxX - minX + 6) / step) + 1, ny = Math.ceil((maxY - minY + 6) / step) + 1;
-    const pts = [];
-    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) pts.push(f.back([x0 + i * step, y0 + j * step]));
-    const hs = await heightsAt(elevId, info, pts);
-    // The lidar is about 2 m a pixel: smooth it over a couple of yards so the
-    // lines and arrows show the green's shape, not the pixels.
-    const grid = blur(blur(hs.map(v => (v == null ? null : v * IN_PER_M)), nx, ny, 3), nx, ny, 3);
-    const onGreen = grid.map((v, k) => (v != null && inside([x0 + (k % nx) * step, y0 + Math.floor(k / nx) * step], g) ? v : null)).filter(v => v != null);
-    if (onGreen.length) {
-      const lo = Math.min(...onGreen), hi = Math.max(...onGreen);
+    const area = [view[0], view[2], view[1], view[3]];
+    const R = await reliefGrid(elevId, info, f, area, 0.5, 3);
+    if (R.ok) {
+      const onG = [];
+      for (let y = minY; y <= maxY; y += 1) for (let x = minX; x <= maxX; x += 1) if (inside([x, y], g)) { const v = R.at(x, y); if (v != null) onG.push(v); }
+      const lo = onG.length ? Math.min(...onG) : R.lo, hi = onG.length ? Math.max(...onG) : R.hi;
       relief = hi - lo;
       if (prefs.greenContours) {
+        // On the green, a line every few inches; around it (which can drop a
+        // long way) fewer, so the page doesn't go black.
         const iv = [1, 2, 3, 4, 6, 12].find(v => relief / v <= 12) || 24;
-        const levels = [];
-        for (let v = Math.ceil(lo / iv) * iv; v <= hi; v += iv) levels.push(v);
-        const segs = isolines(grid, nx, ny, x0, y0, step, levels);
-        inner.append(el('path', { d: segs.map(sg => pathD(sg.map(P))).join(''), fill: 'none', stroke: '#2f5f3a', 'stroke-width': 0.7, 'stroke-opacity': 0.75, 'stroke-linecap': 'round' }));
-        slopeNote = `Contours every ${iv}" of height`;
+        let ivOut = iv;
+        while ((R.hi - R.lo) / ivOut > 28) ivOut *= 2;
+        const lineD = v => R.lines(levelsOf(R.lo, R.hi, v)).map(sg => pathD(sg.map(P))).join('');
+        reliefG.append(el('path', { d: lineD(ivOut), ...RELIEF_LINE, 'stroke-width': 0.5 }));
+        if (ivOut !== iv) inner.append(el('path', { d: lineD(iv), ...RELIEF_LINE, 'stroke-width': 0.5, stroke: '#3d4a42' }));
+        slopeNote = ivOut !== iv ? `Contours every ${iv}" on the green, ${ivOut}" around it` : `Contours every ${iv}" of height`;
       }
       if (prefs.slopes) {
-        const at = (x, y) => { const i = Math.round((x - x0) / step), j = Math.round((y - y0) / step); return i >= 0 && j >= 0 && i < nx && j < ny ? grid[j * nx + i] : null; };
-        const gs = prefs.grid ? prefs.gridYd : 3;
-        const groups = { lo: '', mid: '', hi: '', top: '' };
-        for (let y = frontY + gs / 2; y < maxY; y += gs) {
-          for (let x = (Math.round(minX / gs) - 0.5) * gs; x < maxX; x += gs) {
-            if (!inside([x, y], g)) continue;
-            const e = at(x + 1.5, y), w = at(x - 1.5, y), nn = at(x, y + 1.5), ss = at(x, y - 1.5);
-            if ([e, w, nn, ss].some(v => v == null)) continue;
-            const gx = (e - w) / 3 / 36, gy = (nn - ss) / 3 / 36; // rise per yard (inches -> yards)
-            const pct = Math.hypot(gx, gy) * 100;
-            if (pct < 0.4) continue;
-            const dx = -gx / Math.hypot(gx, gy), dy = -gy / Math.hypot(gx, gy);
-            const len = Math.min(gs * 0.85, 0.9 + pct * 0.45);
-            const a = P([x - (dx * len) / 2, y - (dy * len) / 2]), b = P([x + (dx * len) / 2, y + (dy * len) / 2]);
-            const hx = b[0] - a[0], hy = b[1] - a[1], hl = Math.hypot(hx, hy) || 1, ux = hx / hl, uy = hy / hl, k = Math.min(4, hl * 0.45);
-            const d = `M${a[0].toFixed(1)},${a[1].toFixed(1)}L${b[0].toFixed(1)},${b[1].toFixed(1)}M${(b[0] - ux * k - uy * k * 0.6).toFixed(1)},${(b[1] - uy * k + ux * k * 0.6).toFixed(1)}L${b[0].toFixed(1)},${b[1].toFixed(1)}L${(b[0] - ux * k + uy * k * 0.6).toFixed(1)},${(b[1] - uy * k - ux * k * 0.6).toFixed(1)}`;
-            groups[pct < 1 ? 'lo' : pct < 2 ? 'mid' : pct < 3 ? 'hi' : 'top'] += d;
-          }
-        }
-        const colors = { lo: '#3c8a3a', mid: '#c9a227', hi: '#e07b2a', top: '#c8352b' };
-        for (const [k, d] of Object.entries(groups)) if (d) inner.append(el('path', { d, fill: 'none', stroke: colors[k], 'stroke-width': 1.3, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
-        {
-          const ly = bottom + 31;
-          svg.append(txt(W - 16 - 4 * 40 - 4, ly, 'SLOPE', { 'font-size': 8.5, fill: SOFT, 'text-anchor': 'end', 'letter-spacing': 0.6 }));
-          [['<1%', 'lo'], ['1–2%', 'mid'], ['2–3%', 'hi'], ['3%+', 'top']].forEach(([t, k], i) => {
-            const x = W - 16 - (4 - i) * 40;
-            svg.append(el('rect', { x, y: ly - 5, width: 9, height: 3.5, fill: colors[k] }), txt(x + 12, ly, t, { 'font-size': 8.5, fill: SOFT }));
-          });
-        }
+        const no = course.features.filter(x => x.t === 'water' || x.t === 'bunker').map(x => ringOf(x).map(f.fwd)).filter(inView);
+        reliefG.append(el('path', { d: slopeArrows(R, area, 3, P, (x, y) => !no.some(r => inside([x, y], r)), 1.1), ...RELIEF_ARROW, 'stroke-width': 0.6 }));
+        slopeNote += `${slopeNote ? ' · ' : ''}arrows point downhill, longer = steeper`;
       }
     }
   }
-  mapG.append(inner);
-  mapG.append(el('path', { d: gPath, fill: 'none', stroke: '#1fae4b', 'stroke-width': 2 }));
+  mapG.append(inner, reliefG);
+  mapG.append(el('path', { d: gPath, fill: 'none', stroke: '#1f3a28', 'stroke-width': 1.6 }));
+  // Front and back of the green, with the depth at the back.
+  if (depth.length >= 2) {
+    const [ax, ay] = P([0, depth[0]]), [bx, by] = P([0, depth.at(-1)]);
+    mapG.append(el('circle', { cx: ax, cy: ay, r: 3, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.7 }),
+      el('circle', { cx: bx, cy: by, r: 3, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.7 }),
+      el('rect', { x: bx - 11, y: by - 19, width: 22, height: 13, rx: 2, fill: '#fff', 'fill-opacity': 0.9 }),
+      txt(bx, by - 8, depthYd, { 'font-size': 12, 'font-weight': 700, fill: '#c62f2f', 'text-anchor': 'middle' }));
+  }
 
   // Edge numbers: yards from the front, down both sides of the grid.
   const side = el('g', { 'font-size': 8.5, fill: SOFT });
@@ -717,7 +658,6 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
     svg.append(txt(16, bottom + 52, 'NOTES', { 'font-size': 10, 'font-weight': 700, fill: INK, 'letter-spacing': 1.2 }));
     for (let y = bottom + 74; y < H - 30; y += 22) svg.append(el('line', { x1: 16, x2: W - 16, y1: y, y2: y, stroke: '#d6dcd8', 'stroke-width': 0.8 }));
   }
-  svg.append(el('rect', { x: 2.5, y: 2.5, width: W - 5, height: H - 5, fill: 'none', stroke: '#6f9a69', 'stroke-width': 5 }));
   return svg;
 }
 
@@ -742,7 +682,8 @@ export function openBook(n, opts) {
     const hp = await holePage(hole, teeName, prefs, helpers, opts);
     const gp = prefs.greenPage ? await greenPage(hole, teeName, prefs, helpers, opts) : null;
     if (my !== token) return;
-    pages.replaceChildren(hp, ...(gp ? [gp] : []));
+    // Like a tour book flipped open: the green page on top, the hole below the fold.
+    pages.replaceChildren(h('div', { class: 'flipbook' }, ...(gp ? [gp] : []), hp));
     status.textContent = '';
   }
   const elevOk = !opts.tourney;
@@ -775,8 +716,8 @@ export function openBook(n, opts) {
     status.textContent = all ? 'Drawing every hole…' : 'Getting ready…';
     const sheet = h('div', { class: 'bookprint' });
     for (const k of holes) {
-      sheet.append(...flipHalves(await holePage(k, teeName, prefs, helpers, opts)));
       if (prefs.greenPage) { const gp = await greenPage(k, teeName, prefs, helpers, opts); if (gp) sheet.append(gp); }
+      sheet.append(await holePage(k, teeName, prefs, helpers, opts));
       if (all) status.textContent = `Drawing hole ${k} of ${holes.length}…`;
     }
     status.textContent = '';
