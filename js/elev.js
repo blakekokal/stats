@@ -24,6 +24,9 @@ export const elevPrefs = {
   get contourColor() { const c = get('gs:contourColor', CONTOUR_LOOK.color); return /^#[0-9a-f]{6}$/i.test(c) ? c : CONTOUR_LOOK.color; }, set contourColor(v) { put('gs:contourColor', v); },
   get contourOpacity() { const n = +get('gs:contourOpacity', CONTOUR_LOOK.opacity); return n >= 0.05 && n <= 1 ? n : CONTOUR_LOOK.opacity; }, set contourOpacity(v) { put('gs:contourOpacity', String(v)); },
   get contourWidth() { const n = +get('gs:contourWidth', CONTOUR_LOOK.width); return n >= 0.5 && n <= 4 ? n : CONTOUR_LOOK.width; }, set contourWidth(v) { put('gs:contourWidth', String(v)); },
+  // Tournament rounds have their own Contours switch, off at the start of each
+  // round: it holds the id of the one tournament round it was turned on in.
+  tourneyContours(id) { return get('gs:tContours', '') === id; }, setTourneyContours(id, v) { put('gs:tContours', v ? id : ''); },
   get playsWind() { return get('gs:playsWind', '0') === '1'; }, set playsWind(v) { put('gs:playsWind', v ? '1' : '0'); },
 };
 
@@ -91,7 +94,11 @@ const loadContours = cid => (smoothed[cid] ||= load(cid, 'contours').then(gj => 
 // within LINE_YD of the hole's line or SHAPE_YD of its own fairways, green and
 // tee boxes, fading out over the next FEATHER_YD. weight(p) is 1 inside, 0 outside.
 const M_PER_YD = 0.9144, LINE_YD = 40, SHAPE_YD = 22, FEATHER_YD = 20, M_PER_DEG = 111320;
-function holeArea({ line, own }) {
+// A tournament (`cut`: the course's green outlines) also cuts the lines out on
+// and within CUT_YD of every green: the Rules only allow green maps at a tiny
+// scale, so nothing is shown there at all.
+export const CUT_YD = 15;
+function holeArea({ line, own, cut }) {
   const o = line[0], k = Math.cos((o[0] * Math.PI) / 180);
   const loc = p => [(p[1] - o[1]) * M_PER_DEG * k, (p[0] - o[0]) * M_PER_DEG];
   const shapes = [{ pts: line.map(loc), r: LINE_YD * M_PER_YD }];
@@ -112,8 +119,18 @@ function holeArea({ line, own }) {
     }
     return c;
   };
+  const C = CUT_YD * M_PER_YD;
+  const cuts = (cut || []).map(r => { const pts = r.map(loc), xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+    return { pts, b: [Math.min(...xs) - C, Math.min(...ys) - C, Math.max(...xs) + C, Math.max(...ys) + C] }; });
+  const nearGreen = q => cuts.some(({ pts, b }) => {
+    if (q[0] < b[0] || q[0] > b[2] || q[1] < b[1] || q[1] > b[3]) return false;
+    if (inside(q, pts)) return true;
+    for (let i = 0; i < pts.length - 1; i++) if (segDist(q, pts[i], pts[i + 1]) <= C) return true;
+    return false;
+  });
   const weightLocal = q => {
     if (q[0] < box[0] || q[0] > box[2] || q[1] < box[1] || q[1] > box[3]) return 0;
+    if (cuts.length && nearGreen(q)) return 0;
     let w = 0;
     for (const s of shapes) {
       let d = Infinity;
@@ -223,18 +240,20 @@ export function styleElevation(m) {
 
 // Adds (or updates) the layers on map m for course id cid, as elevPrefs says.
 // `hole` is { line: [tee, ..., pin], own: the hole's own features }: contours
-// and arrows show only around it. The layers go just above the imagery, under
+// and arrows show only around it. `on` overrides the Contours switch (a
+// tournament has its own) and `cut` lists green rings to leave bare. The layers go just above the imagery, under
 // everything the app draws.
 export async function drawElevation(m, cid, hole) {
   const info = (await elevIndex())[cid];
   if (!info || !m.getStyle()) return;
   const below = () => ['sgzones', 'outlines'].find(id => m.getLayer(id));
-  if (!elevPrefs.contours) {
+  const on = () => hole.on ?? elevPrefs.contours;
+  if (!on()) {
     for (const id of ['elev-contours', 'elev-arrows']) if (m.getSource(id)) m.getSource(id).setData(EMPTY);
     return;
   }
   const gj = await loadContours(cid);
-  if (!m.getStyle() || !elevPrefs.contours) return;
+  if (!m.getStyle() || !on()) return;
   const area = holeArea(hole);
   if (!m.getSource('elev-contours')) {
     m.addSource('elev-contours', { type: 'geojson', data: EMPTY });
