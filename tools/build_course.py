@@ -97,7 +97,7 @@ def main(src, cfg_path, dst):
         lines[int(ref)] = min(cands, key=lambda l: (l[0][0] - start[0]) ** 2 + (l[0][1] - start[1]) ** 2)
     greens = [f["p"][0] for f in feats if f["t"] == "green"]
     out_holes = []
-    for n in range(1, 19):
+    for n in range(1, len(cfg["par"]) + 1):
         line = lines[n]
         end = line[-1]
         g = min(greens, key=lambda r: (centroid(r)[0] - end[0]) ** 2 + (centroid(r)[1] - end[1]) ** 2)
