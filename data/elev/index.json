@@ -253,5 +253,20 @@
    525
   ],
   "source": "USGS 3DEP"
+ },
+ "firewheel-lakes": {
+  "bounds": [
+   -96.63561,
+   32.967088,
+   -96.622597,
+   32.985809
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   461,
+   547
+  ],
+  "source": "USGS 3DEP"
  }
 }
