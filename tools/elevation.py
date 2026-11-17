@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Elevation for a course: hillshade tiles and contour lines from USGS 3DEP lidar.
+"""Elevation for a course: height tiles and contour lines from USGS 3DEP lidar.
 
     python3 tools/elevation.py cowboys
 
@@ -7,8 +7,9 @@ Reads data/<course>.json for the course's extent (holes and features, not the
 course-wide OB area), downloads the 3DEP 1 m bare-earth elevation for it
 (elevation.nationalmap.gov, free, no key) and writes:
 
-  data/elev/<course>/{z}/{x}/{y}.png  Terrarium-encoded elevation tiles (zoom
-                                      13-17) for the map's hillshade layer
+  data/elev/<course>/{z}/{x}/{y}.png  Terrarium-encoded height tiles (zoom 16,
+                                      about 2 m a pixel) the app reads for
+                                      plays-like yardages
   data/elev/<course>.contours.json    contour lines every 1 yd as GeoJSON
                                       (property "yd": height in yards, "dn":
                                       1 if downhill is left of the line's
@@ -38,11 +39,7 @@ SERVICE = 'https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/
 R = 6378137.0
 PAD_M = 120  # ground metres around the course
 RES = 1.0  # web-mercator metres per pixel of the downloaded grid
-ZOOMS = range(13, 18)
-# The shading tiles' heights are stretched this many times (from the lowest
-# point): MapLibre's hillshade is made for mountains, and a golf course's gentle
-# slopes barely show at true height. Contours use true heights.
-SHADE_STRETCH = 5
+ZOOMS = [16]
 FT_PER_M = 3.28084
 YD_PER_M = FT_PER_M / 3
 
@@ -129,7 +126,7 @@ def write_tiles(dem, x0, y0, x1, y1, out):
                 # Smooth more as the tile pixels get bigger than the grid's.
                 src = dem if size / 256 <= RES * 1.5 else ndimage.uniform_filter(dem, max(1, round(size / 256 / RES)))
                 e = sample(src, x0, y1, X.ravel(), Y.ravel()).reshape(256, 256)
-                v = np.round(((e - dem.min()) * SHADE_STRETCH + 32768) * 20) / 20  # to 5 cm: the tiles compress far better
+                v = np.round((e + 32768) * 20) / 20  # true height, to 5 cm: the tiles compress far better
                 rgb = np.stack([np.floor(v / 256), np.floor(v) % 256, np.floor((v - np.floor(v)) * 256)], -1)
                 d = os.path.join(out, str(z), str(tx))
                 os.makedirs(d, exist_ok=True)
@@ -229,7 +226,7 @@ def main():
     idx[cid] = {'bounds': [round(w, 6), round(s, 6), round(e, 6), round(n, 6)],
                 'minzoom': min(ZOOMS), 'maxzoom': max(ZOOMS),
                 'ft': [math.floor(dem.min() * FT_PER_M), math.ceil(dem.max() * FT_PER_M)],
-                'shadeStretch': SHADE_STRETCH, 'source': 'USGS 3DEP'}
+                'source': 'USGS 3DEP'}
     with open(idx_path, 'w') as f:
         json.dump(idx, f, indent=1)
 

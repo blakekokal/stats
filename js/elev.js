@@ -1,6 +1,6 @@
-// Elevation layers for the hole map: hillshade and contour lines, from USGS
-// 3DEP lidar built by tools/elevation.py into data/elev/. Only courses listed
-// in data/elev/index.json have them.
+// Elevation for the hole map: contour lines with downhill arrows, and heights
+// for plays-like yardages, from USGS 3DEP lidar built by tools/elevation.py into
+// data/elev/. Only courses listed in data/elev/index.json have them.
 
 const abs = p => new URL(p, location.href).href;
 let indexP = null;
@@ -8,15 +8,50 @@ export const elevIndex = () => (indexP ||= fetch(abs('data/elev/index.json')).th
 
 // The View box's choices, kept on this device.
 export const CONTOUR_YD = [1, 3, 5];
-export const SHADE = { Soft: 0.25, Medium: 0.45, Strong: 0.7 };
 const get = (k, d) => { try { return localStorage.getItem(k) ?? d; } catch { return d; } };
 const put = (k, v) => { try { localStorage.setItem(k, v); } catch { /* not kept */ } };
 export const elevPrefs = {
-  get shade() { return get('gs:hillshade', '0') === '1'; }, set shade(v) { put('gs:hillshade', v ? '1' : '0'); },
-  get shadeStr() { const s = get('gs:hillshadeStr', 'Medium'); return s in SHADE ? s : 'Medium'; }, set shadeStr(v) { put('gs:hillshadeStr', v); },
   get contours() { return get('gs:contours', '0') === '1'; }, set contours(v) { put('gs:contours', v ? '1' : '0'); },
   get contourYd() { const n = +get('gs:contourYd', '1'); return CONTOUR_YD.includes(n) ? n : 1; }, set contourYd(v) { put('gs:contourYd', String(v)); },
+  get playsLike() { return get('gs:playsLike', '0') === '1'; }, set playsLike(v) { put('gs:playsLike', v ? '1' : '0'); },
 };
+
+// Height in metres at [lat, lng] from the course's height tiles (Terrarium PNGs),
+// or null until the tile is in (then onReady runs, once per tile, so the caller
+// can redraw). Bilinear between the tile's pixels.
+const tiles = {};
+export function heightAt(cid, info, p, onReady) {
+  if (!info || !p) return null;
+  const z = info.maxzoom, n = 2 ** z * 256;
+  const [w, s, e, nn] = info.bounds;
+  if (p[1] < w || p[1] > e || p[0] < s || p[0] > nn) return null;
+  const X = ((p[1] + 180) / 360) * n - 0.5;
+  const lat = (p[0] * Math.PI) / 180;
+  const Y = ((1 - Math.log(Math.tan(lat) + 1 / Math.cos(lat)) / Math.PI) / 2) * n - 0.5;
+  const px = (gx, gy) => {
+    const tx = Math.floor(gx / 256), ty = Math.floor(gy / 256), key = `${cid}/${z}/${tx}/${ty}`;
+    let t = tiles[key];
+    if (!t) {
+      t = tiles[key] = { data: null };
+      const img = new Image();
+      img.onload = () => {
+        const c = document.createElement('canvas'); c.width = c.height = 256;
+        const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0);
+        t.data = x.getImageData(0, 0, 256, 256).data;
+        onReady?.();
+      };
+      img.onerror = () => { t.data = 'none'; };
+      img.src = abs(`data/elev/${key}.png`);
+    }
+    if (!t.data || t.data === 'none') return null;
+    const i = ((gy - ty * 256) * 256 + (gx - tx * 256)) * 4, d = t.data;
+    return d[i] * 256 + d[i + 1] + d[i + 2] / 256 - 32768;
+  };
+  const x0 = Math.floor(X), y0 = Math.floor(Y), fx = X - x0, fy = Y - y0;
+  const a = px(x0, y0), b = px(x0 + 1, y0), c = px(x0, y0 + 1), d = px(x0 + 1, y0 + 1);
+  if ([a, b, c, d].some(v => v == null)) return null;
+  return (a * (1 - fx) + b * fx) * (1 - fy) + (c * (1 - fx) + d * fx) * fy;
+}
 
 // Contours and slope arrows, fetched once per course.
 const loaded = {};
@@ -170,18 +205,6 @@ export async function drawElevation(m, cid, hole) {
   const info = (await elevIndex())[cid];
   if (!info || !m.getStyle()) return;
   const below = () => ['sgzones', 'outlines'].find(id => m.getLayer(id));
-  if (elevPrefs.shade && !m.getSource('elev-dem')) {
-    m.addSource('elev-dem', { type: 'raster-dem', encoding: 'terrarium', tiles: [`${abs(`data/elev/${cid}/`)}{z}/{x}/{y}.png`],
-      tileSize: 256, minzoom: info.minzoom, maxzoom: info.maxzoom, bounds: info.bounds, attribution: 'USGS 3DEP' });
-    m.addLayer({ id: 'elev-shade', type: 'hillshade', source: 'elev-dem', paint: {
-      'hillshade-shadow-color': '#000', 'hillshade-highlight-color': '#fff', 'hillshade-accent-color': '#000',
-      'hillshade-illumination-direction': 315 } }, below());
-  }
-  if (m.getLayer('elev-shade')) {
-    m.setLayoutProperty('elev-shade', 'visibility', elevPrefs.shade ? 'visible' : 'none');
-    m.setPaintProperty('elev-shade', 'hillshade-exaggeration', SHADE[elevPrefs.shadeStr]);
-  }
-
   if (!elevPrefs.contours) {
     for (const id of ['elev-contours', 'elev-arrows']) if (m.getSource(id)) m.getSource(id).setData(EMPTY);
     return;

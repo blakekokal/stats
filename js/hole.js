@@ -18,7 +18,7 @@ import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js
 import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, submitRound, isScouting, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
 import { liveLink, isLiveOn, setLiveOn, liveStatus, onLiveStatus, loadWatch, watchHole, shareCurrent } from './live.js';
 import { openBoundaryEditor, resumeEditAt, editFeatures } from './holeedit.js';
-import { elevIndex, elevPrefs, drawElevation, CONTOUR_YD, SHADE } from './elev.js';
+import { elevIndex, elevPrefs, drawElevation, heightAt, CONTOUR_YD } from './elev.js';
 
 const maplibregl = window.maplibregl;
 const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR', ob: 'OB', recovery: 'REC' };
@@ -868,29 +868,30 @@ export function renderHole(view, n) {
   const sgtRow = viewSwitch('SG map view', () => showSgt, setSgt, 'From the tee only');
   const linesRow = viewSwitch('Course lines view', () => showOutlines, setOutlines);
   const cleanRow = viewSwitch('Clean view', () => cleanView, setClean);
-  // Elevation (courses built with tools/elevation.py): hillshade and contour
-  // lines, each with a row of choices (shading strength, contour interval).
+  // Elevation (courses built with tools/elevation.py): contour lines with a
+  // row of intervals, and plays-like yardages by the crosshair.
   let styleReady = false; // the map's load event has run (sources can be added)
   const redrawElev = () => { if (styleReady) drawElevation(m, course.id, { line: route(), own: holeFeatures(ch) }); };
+  let elevInfo = null; // this course's entry in data/elev/index.json, once fetched
   const elevChips = (opts, get, set) => {
     const row = h('div', { class: 'viewchips' });
     row.sync = () => row.replaceChildren(...opts.map(([label, v]) => h('button', { class: get() === v ? 'on' : '',
       onclick: () => { set(v); redrawElev(); row.sync(); } }, label)));
     return row;
   };
-  const shadeChips = elevChips(Object.keys(SHADE).map(k => [k, k]), () => elevPrefs.shadeStr, v => { elevPrefs.shadeStr = v; });
   const contourChips = elevChips(CONTOUR_YD.map(y => [`${y} yd`, y]), () => elevPrefs.contourYd, v => { elevPrefs.contourYd = v; });
-  const shadeRow = viewSwitch('Hillshade', () => elevPrefs.shade, v => { elevPrefs.shade = v; redrawElev(); drawViewBox(); });
-  const contourRow = viewSwitch('Contours & slope', () => elevPrefs.contours, v => { elevPrefs.contours = v; redrawElev(); drawViewBox(); });
-  const elevBox = h('div', { class: 'viewelev', hidden: true }, shadeRow, shadeChips, contourRow, contourChips);
-  elevIndex().then(ix => { elevBox.hidden = !ix[course.id]; });
+  // Switching contours closes the box (its intervals stay in place either way, so nothing jumps).
+  const contourRow = viewSwitch('Contours & slope', () => elevPrefs.contours, v => { elevPrefs.contours = v; redrawElev(); closeView(); });
+  const playsRow = viewSwitch('Plays like', () => elevPrefs.playsLike, v => { elevPrefs.playsLike = v; update(); });
+  const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips, playsRow);
+  elevIndex().then(ix => { elevInfo = ix[course.id] || null; elevBox.hidden = !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
   const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), sgtRow, linesRow, cleanRow, elevBox);
   const drawViewBox = () => {
     sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync();
-    shadeRow.sync(); contourRow.sync(); shadeChips.sync(); contourChips.sync();
-    shadeChips.hidden = !elevPrefs.shade; contourChips.hidden = !elevPrefs.contours;
+    contourRow.sync(); contourChips.sync(); playsRow.sync();
+    contourChips.classList.toggle('off', !elevPrefs.contours);
   };
-  const viewBtn = h('button', { class: 'fab cleanview', 'aria-label': 'View', title: 'SG map, course lines, clean view and elevation',
+  const viewBtn = h('button', { class: 'fab cleanview', 'aria-label': 'View', title: 'SG map, course lines, clean view, contours and plays like',
     onclick: () => { menu.hidden = true; viewBox.hidden = !viewBox.hidden; placeView(); drawViewBox(); } }, h('span', {}, '◉'), h('small', {}, 'View'));
   // A tap anywhere else (the map or another button) closes the View box; the tap still does its own job.
   const viewAway = e => {
@@ -1935,8 +1936,19 @@ export function renderHole(view, n) {
       toPinEl.replaceChildren(h('b', {}, `${Math.round(yards(tee, aim))} yd`), h('span', { class: 'note' }, 'to aim spot'));
       fromTeeEl.replaceChildren(h('span', { class: 'note' }, 'Move the tee, then Set tee'));
     } else {
-    toPinEl.replaceChildren(h('b', {}, `${Math.round(toPin)} yd`));
-    fromTeeEl.replaceChildren(h('b', {}, `${Math.round(fromTee)} yd`),
+    // Plays like: the yardage, how many yards the ground rises (+) or drops (−)
+    // from where the shot starts to where it ends, and what it plays, at a yard
+    // for a yard: "250(−5) 245".
+    const yardage = (a, b, d) => {
+      const yd = Math.round(d);
+      const ha = elevPrefs.playsLike && heightAt(course.id, elevInfo, a, () => { if (map === m) update(); });
+      const hb = elevPrefs.playsLike && heightAt(course.id, elevInfo, b, () => { if (map === m) update(); });
+      if (ha == null || hb == null || ha === false || hb === false) return [h('b', {}, `${yd} yd`)];
+      const dz = Math.round((hb - ha) * YD_PER_M);
+      return [h('b', { class: 'playslike' }, `${yd}`, h('small', {}, `(${dz > 0 ? '+' : dz < 0 ? '−' : ''}${Math.abs(dz)})`), ` ${yd + dz} yd`)];
+    };
+    toPinEl.replaceChildren(...yardage(target, pin, toPin));
+    fromTeeEl.replaceChildren(...yardage(from, target, fromTee),
       h('span', { class: 'sg ' + (sg >= 0 ? 'gain' : 'loss') }, `${sg >= 0 ? '+' : '−'}${Math.abs(sg).toFixed(2)} (${LIE_TAG[lie]})`),
       h('span', { class: 'wide', hidden: !showWidth }, w ? `${Math.round(w.yards)} yd wide` : 'No fairway here'));
     }
