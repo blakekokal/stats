@@ -617,5 +617,5 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
   body.bookprinting > *:not(.bookprint) { display: none !important; }
   body.bookprinting .bookprint { display: block; }
   body.bookprinting .bookprint .bookpage { display: block; width: auto; height: 100vh; max-height: 100vh; margin: 0 auto; box-shadow: none; border-radius: 0; page-break-after: always; break-after: page; }
-  @page { size: 4.25in 7.5in; margin: 0.15in; }
+  @page { size: 4.25in 6.9in; margin: 0.1in; }
 }
