@@ -72,6 +72,7 @@ export const COURSES = [
   { id: 'lakepark-exec', name: 'Lake Park Golf Course – Executive', file: 'data/lakepark-exec.json' },
   { id: 'coyoteridge', name: 'Coyote Ridge Golf Club', file: 'data/coyoteridge.json' },
   { id: 'firewheel-lakes', name: 'Firewheel Golf Park – Lakes', file: 'data/firewheel-lakes.json' },
+  { id: 'texasstar', name: 'Texas Star Golf Course', file: 'data/texasstar.json' },
   { id: 'indiancreek-creek', name: 'Indian Creek Golf Club – Creek', file: 'data/indiancreek-creek.json', shares: 'indiancreek-lakes' },
   { id: 'indiancreek-lakes', name: 'Indian Creek Golf Club – Lakes', file: 'data/indiancreek-lakes.json', shares: 'indiancreek-creek' },
 ];

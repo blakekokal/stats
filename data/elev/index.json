@@ -269,6 +269,21 @@
   ],
   "source": "USGS 3DEP"
  },
+ "texasstar": {
+  "bounds": [
+   -97.118638,
+   32.806701,
+   -97.103805,
+   32.823342
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   466,
+   557
+  ],
+  "source": "USGS 3DEP"
+ },
  "indiancreek-creek": {
   "bounds": [
    -96.944383,
