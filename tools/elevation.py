@@ -54,17 +54,26 @@ def unmerc(x, y):
     return math.degrees(2 * math.atan(math.exp(y / R)) - math.pi / 2), math.degrees(x / R)
 
 
-def course_points(course):
+def course_points(course, near_m=300):
+    """The points that set the area to fetch: every hole's tee, pin and line,
+    and the course's shapes (not OB) where they're within near_m of the holes'
+    extent. A shape reaching far beyond it (a big lake next door) only counts
+    for its points near the holes, so it can't blow up the area."""
     pts = []
     for h in course['holes']:
         pts += [p for p in [h.get('tee'), h.get('pin')] if p] + (h.get('line') or [])
+    lat0, lat1 = min(p[0] for p in pts), max(p[0] for p in pts)
+    lng0, lng1 = min(p[1] for p in pts), max(p[1] for p in pts)
+    dlat = near_m / 111320
+    dlng = dlat / math.cos(math.radians((lat0 + lat1) / 2))
+    near = lambda q: lat0 - dlat <= q[0] <= lat1 + dlat and lng0 - dlng <= q[1] <= lng1 + dlng
     for f in course['features']:
         if f['t'] == 'ob':
             continue
         p = f['p']
         while isinstance(p[0][0], list):
             p = [q for r in p for q in r]
-        pts += p
+        pts += [q for q in p if near(q)]
     return pts
 
 
@@ -194,12 +203,18 @@ def main():
     x1, y1 = merc(lat1, lng1)
     x0, y0, x1, y1 = x0 - PAD_M * k, y0 - PAD_M * k, x1 + PAD_M * k, y1 + PAD_M * k
     print(f'Fetching 3DEP for {cid}: {round((x1 - x0) / RES)} x {round((y1 - y0) / RES)} px')
-    cache = os.path.join(ROOT, 'tools', f'{cid}.dem.npy')  # git-ignored
+    # The download is kept (git-ignored) with the area it covers, and only
+    # reused for that same area.
+    cache = os.path.join(ROOT, 'tools', f'{cid}.dem.npz')
+    box = np.array([x0, y0, x1, y1])
+    dem = None
     if os.path.exists(cache) and '--refetch' not in sys.argv:
-        dem = np.load(cache)
-    else:
+        z = np.load(cache)
+        if z['box'].shape == box.shape and np.allclose(z['box'], box):
+            dem = z['dem']
+    if dem is None:
         dem = fetch_dem(x0, y0, x1, y1)
-        np.save(cache, dem)
+        np.savez(cache, dem=dem, box=box)
     print(f'Elevation {dem.min():.1f}-{dem.max():.1f} m ({dem.min() * FT_PER_M:.0f}-{dem.max() * FT_PER_M:.0f} ft)')
 
     out = os.path.join(ROOT, 'data', 'elev')

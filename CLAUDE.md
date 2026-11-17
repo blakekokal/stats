@@ -5,6 +5,29 @@
   unless the owner says otherwise for that change.
 - Bump `js/version.js` with every release and add a line to What's New in `js/coach.js`.
 
+## More than one session works on this repo at once
+
+Other Claude sessions release to `main` while you work. Twice that has broken
+the live app: a merge left `js/version.js` empty (the app opened to a blank
+screen), and a version bump that replaced a hard-coded old number did nothing
+because `main` had moved on. So, for every release:
+
+1. Right before the pull request, `git fetch origin main` and merge it into
+   your branch, so you build on what's live now, not what was live when you
+   started.
+2. Bump from main's number: read `VERSION` in `origin/main:js/version.js` and
+   set yours one higher. Never `sed` an old version you remember; it may be gone.
+3. In a merge conflict, keep both sides: `js/version.js` is one line,
+   `export const VERSION = 'x.y.z';` with the new number (never empty); in
+   What's New keep every entry, yours on top with that same number.
+4. Run `tools/check_release.sh --page` and fix anything it reports. It checks
+   the version line, that What's New starts with it, no duplicate versions,
+   a version higher than main's, no conflict markers, that every JS file
+   parses, and that the app actually opens.
+5. Merge, then fetch `main` again. If someone else merged first and your PR
+   is now behind, repeat from step 1 for the next release, not by editing
+   their entry.
+
 # Building a course
 
 New courses are built from the owner's yardage books (vector PDFs: cover, plan,
@@ -50,7 +73,8 @@ of each green in the imagery); see `tools/sherrillpark2` as the model.
   changed): `tools/trees_from_imagery.py`.
 - Elevation (View box: contours in yards with downhill arrows on the lines, and plays-like yardages) comes from USGS 3DEP lidar:
   `tools/elevation.py <course>` writes `data/elev/` (no book needed, the course
-  file isn't touched). Cowboys has it so far.
+  file isn't touched). Every course has it; run it for each new course. The
+  USGS server throws the odd 502: just run it again.
 - Scorecard (tees, ratings, pars, handicaps) still comes from the club.
 - Check by eye on an overlay and in the app (GPS Overview), and commit the
   book PDF next to the scripts so the course can be rebuilt. The build takes

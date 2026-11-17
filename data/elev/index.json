@@ -13,5 +13,170 @@
    598
   ],
   "source": "USGS 3DEP"
+ },
+ "bearcreek-east": {
+  "bounds": [
+   -97.064702,
+   32.852209,
+   -97.051353,
+   32.867989
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   470,
+   576
+  ],
+  "source": "USGS 3DEP"
+ },
+ "bearcreek-west": {
+  "bounds": [
+   -97.064916,
+   32.852299,
+   -97.051322,
+   32.868137
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   470,
+   576
+  ],
+  "source": "USGS 3DEP"
+ },
+ "bridlewood": {
+  "bounds": [
+   -97.110777,
+   33.039922,
+   -97.084087,
+   33.060074
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   582,
+   682
+  ],
+  "source": "USGS 3DEP"
+ },
+ "crosstimbers": {
+  "bounds": [
+   -97.573267,
+   32.872434,
+   -97.557503,
+   32.883731
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   726,
+   882
+  ],
+  "source": "USGS 3DEP"
+ },
+ "grapevine-bluebonnet": {
+  "bounds": [
+   -97.054329,
+   32.977027,
+   -97.041658,
+   32.985866
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   458,
+   553
+  ],
+  "source": "USGS 3DEP"
+ },
+ "sherrillpark1": {
+  "bounds": [
+   -96.69777,
+   32.982596,
+   -96.683415,
+   32.996961
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   527,
+   624
+  ],
+  "source": "USGS 3DEP"
+ },
+ "squawcreek": {
+  "bounds": [
+   -97.651542,
+   32.750241,
+   -97.638974,
+   32.764922
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   869,
+   977
+  ],
+  "source": "USGS 3DEP"
+ },
+ "sherrillpark2": {
+  "bounds": [
+   -96.693371,
+   32.977139,
+   -96.682475,
+   32.98638
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   523,
+   603
+  ],
+  "source": "USGS 3DEP"
+ },
+ "tangleridge": {
+  "bounds": [
+   -97.026227,
+   32.558615,
+   -97.006461,
+   32.570413
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   525,
+   651
+  ],
+  "source": "USGS 3DEP"
+ },
+ "tour18dallas": {
+  "bounds": [
+   -97.170338,
+   33.043904,
+   -97.157609,
+   33.069686
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   569,
+   717
+  ],
+  "source": "USGS 3DEP"
+ },
+ "grapevine-mockingbird": {
+  "bounds": [
+   -97.053965,
+   32.976172,
+   -97.038206,
+   32.985736
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   458,
+   553
+  ],
+  "source": "USGS 3DEP"
  }
 }
