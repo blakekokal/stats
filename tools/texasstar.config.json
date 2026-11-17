@@ -1,0 +1,18 @@
+{
+  "id": "texasstar",
+  "name": "Texas Star Golf Course",
+  "location": "Euless, TX",
+  "par": [4,4,3,4,4,4,5,3,4, 5,4,4,4,3,4,3,4,5],
+  "hcp": [12,10,18,6,4,14,16,8,2, 11,17,3,1,7,9,15,5,13],
+  "_comment_tees": "Scorecard from GolfPass (its pars match OpenStreetMap's hole tags). The back tee is Gold on the card, Texas in the ratings table. Green and Silver have no published rating, so they are left out. Red is rated for women.",
+  "tees": [
+    {"name": "Gold",  "rating": 74.1, "slope": 136, "yards": [425,382,147,420,454,389,516,217,422, 539,337,457,431,245,370,179,471,535]},
+    {"name": "Blue",  "rating": 72.2, "slope": 126, "yards": [395,367,127,400,428,380,497,196,379, 521,305,441,414,212,347,169,446,505]},
+    {"name": "White", "rating": 70.1, "slope": 121, "yards": [357,318,120,382,364,366,479,176,350, 504,279,383,394,188,327,152,413,483]},
+    {"name": "Red",   "rating": 69.0, "slope": 120, "yards": [294,275,87,309,311,339,425,134,253, 438,265,307,278,137,278,108,334,387]}
+  ],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting all bunkers to the sand); every point is moved by it.",
+  "shift": {"east": 0.3, "north": 1.3},
+  "_comment_drop": "Polygons containing these points are not part of the course (the two practice greens by the clubhouse).",
+  "drop": [[32.816721, -97.113701], [32.81678, -97.114168]]
+}

@@ -72,6 +72,7 @@ export const COURSES = [
   { id: 'lakepark-exec', name: 'Lake Park Golf Course – Executive', file: 'data/lakepark-exec.json' },
   { id: 'coyoteridge', name: 'Coyote Ridge Golf Club', file: 'data/coyoteridge.json' },
   { id: 'firewheel-lakes', name: 'Firewheel Golf Park – Lakes', file: 'data/firewheel-lakes.json' },
+  { id: 'texasstar', name: 'Texas Star Golf Course', file: 'data/texasstar.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 // Nine-hole courses at one club (the same `nines` tag) can be played together
