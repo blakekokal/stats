@@ -154,7 +154,7 @@ function arrowImage() {
   x.lineCap = x.lineJoin = 'round';
   const draw = () => { x.beginPath(); x.moveTo(8, 25); x.lineTo(8, 4); x.moveTo(4, 9); x.lineTo(8, 4); x.lineTo(12, 9); x.stroke(); };
   x.strokeStyle = 'rgba(0,0,0,.4)'; x.lineWidth = 3.2; draw();
-  x.strokeStyle = '#c6f5cf'; x.lineWidth = 1.6; draw();
+  x.strokeStyle = '#eafff0'; x.lineWidth = 1.6; draw();
   return x.getImageData(0, 0, W, H);
 }
 const EMPTY = { type: 'FeatureCollection', features: [] };
@@ -192,16 +192,22 @@ export async function drawElevation(m, cid, hole) {
   if (!m.getSource('elev-contours')) {
     m.addSource('elev-contours', { type: 'geojson', data: EMPTY });
     // Thin, even green lines, like a yardage book's green pages.
-    m.addLayer({ id: 'elev-contour', type: 'line', source: 'elev-contours', layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: { 'line-color': '#b4efc0', 'line-width': ['interpolate', ['linear'], ['zoom'], 16, 0.6, 19, 1], 'line-opacity': ['*', 1, ['get', 'a']] } }, below());
+    // Full strength until close to the edge of the hole's area, then fading.
+    const fade = ['min', 1, ['*', 2, ['get', 'a']]];
+    const lineLayout = { 'line-join': 'round', 'line-cap': 'round' };
+    // A faint dark edge under each line so it shows on light and dark ground alike.
+    m.addLayer({ id: 'elev-contour-edge', type: 'line', source: 'elev-contours', layout: lineLayout,
+      paint: { 'line-color': '#000', 'line-width': ['interpolate', ['linear'], ['zoom'], 16, 1.8, 19, 2.4], 'line-opacity': ['*', 0.3, fade] } }, below());
+    m.addLayer({ id: 'elev-contour', type: 'line', source: 'elev-contours', layout: lineLayout,
+      paint: { 'line-color': '#eafff0', 'line-width': ['interpolate', ['linear'], ['zoom'], 16, 0.6, 19, 1], 'line-opacity': fade } }, below());
   }
   if (!m.getSource('elev-arrows')) {
-    if (!m.hasImage('elev-arrow4')) m.addImage('elev-arrow4', arrowImage(), { pixelRatio: 2 });
+    if (!m.hasImage('elev-arrow5')) m.addImage('elev-arrow5', arrowImage(), { pixelRatio: 2 });
     m.addSource('elev-arrows', { type: 'geojson', data: EMPTY });
     ARROW_ZOOM.forEach((z, lvl) => m.addLayer({ id: `elev-arrows-${lvl}`, type: 'symbol', source: 'elev-arrows', minzoom: z, filter: ['==', ['get', 'lvl'], lvl],
-      layout: { 'icon-image': 'elev-arrow4', 'icon-anchor': 'bottom', 'icon-rotate': ['get', 'b'], 'icon-rotation-alignment': 'map',
+      layout: { 'icon-image': 'elev-arrow5', 'icon-anchor': 'bottom', 'icon-rotate': ['get', 'b'], 'icon-rotation-alignment': 'map',
         'icon-allow-overlap': true, 'icon-ignore-placement': true, 'icon-size': ['interpolate', ['linear'], ['zoom'], 16, 0.75, 19, 1] },
-      paint: { 'icon-opacity': ['get', 'a'] } }, below()));
+      paint: { 'icon-opacity': ['min', 1, ['*', 2, ['get', 'a']]] } }, below()));
   }
   m.getSource('elev-contours').setData(gj ? clipContours(gj, area, elevPrefs.contourYd) : EMPTY);
   m.getSource('elev-arrows').setData(gj ? contourArrows(gj, area, elevPrefs.contourYd) : EMPTY);
