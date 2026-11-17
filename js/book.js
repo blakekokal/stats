@@ -160,10 +160,17 @@ function heightsAt(cid, info, pts) {
   return new Promise(resolve => {
     let done = false, timer = null;
     const finish = () => { if (done) return; done = true; clearTimeout(timer); resolve(pts.map(p => heightAt(cid, info, p))); };
+    // Points outside the course's height tiles never get a height: don't wait for them.
+    const [w, so, e, no] = info.bounds;
+    const inTiles = pts.map(p => p[1] >= w && p[1] <= e && p[0] >= so && p[0] <= no);
+    let queued = false;
     const tryNow = () => {
+      queued = false;
       if (done) return;
-      const hs = pts.map(p => heightAt(cid, info, p, () => setTimeout(tryNow, 0)));
-      if (hs.every(v => v != null)) finish();
+      const again = () => { if (!queued) { queued = true; setTimeout(tryNow, 30); } };
+      let ready = true;
+      for (let i = 0; i < pts.length; i++) if (inTiles[i] && heightAt(cid, info, pts[i], again) == null) ready = false;
+      if (ready) finish();
     };
     timer = setTimeout(finish, 6000);
     tryNow();
@@ -209,6 +216,8 @@ function blur(grid, nx, ny, r) {
 // Heights (inches) on a grid over area [x0, y0, x1, y1] of frame f (yards),
 // every `step` yards, smoothed over `r` cells: { at(x, y), lines(levels), lo, hi }.
 async function reliefGrid(elevId, info, f, [x0, y0, x1, y1], step, r) {
+  // Keep it to about 25,000 points (phones), spacing them out on big areas.
+  while (((x1 - x0) / step + 1) * ((y1 - y0) / step + 1) > 25000) step *= 1.25;
   const nx = Math.ceil((x1 - x0) / step) + 1, ny = Math.ceil((y1 - y0) / step) + 1;
   const pts = [];
   for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) pts.push(f.back([x0 + i * step, y0 + j * step]));
@@ -218,7 +227,10 @@ async function reliefGrid(elevId, info, f, [x0, y0, x1, y1], step, r) {
   for (let k = 0; k < 2; k++) grid = blur(grid, nx, ny, r);
   const vals = grid.filter(v => v != null);
   const at = (x, y) => { const i = Math.round((x - x0) / step), j = Math.round((y - y0) / step); return i >= 0 && j >= 0 && i < nx && j < ny ? grid[j * nx + i] : null; };
-  return { at, lo: Math.min(...vals), hi: Math.max(...vals), ok: vals.length > 0,
+  // A loop, not Math.min(...vals): Safari can't take tens of thousands of arguments.
+  let lo = Infinity, hi = -Infinity;
+  for (const v of vals) { if (v < lo) lo = v; if (v > hi) hi = v; }
+  return { at, lo, hi, ok: vals.length > 0,
     lines: levels => isolines(grid, nx, ny, x0, y0, step, levels) };
 }
 // Contour levels every `iv` inches between lo and hi.
@@ -707,12 +719,29 @@ export function openBook(n, opts) {
     const my = ++token;
     title.textContent = `Hole ${hole}`;
     status.textContent = 'Drawing…';
-    const hp = await holePage(hole, teeName, prefs, helpers, opts);
-    const gp = prefs.greenPage ? await greenPage(hole, teeName, prefs, helpers, opts) : null;
+    let pagesNow, note = '';
+    try { pagesNow = await drawHole(hole, prefs); } catch (e) {
+      // Something in the heights went wrong (a phone running short, say): draw
+      // the hole without them rather than leave a blank screen.
+      console.error('yardage book', e);
+      note = 'Drawn without contours (they didn’t load on this device)';
+      try { pagesNow = await drawHole(hole, { ...prefs, contours: false, greenContours: false, slopes: false, deltas: false, playsLike: false }); } catch (e2) {
+        console.error('yardage book', e2);
+        if (my !== token) return;
+        pages.replaceChildren(h('div', { class: 'bookerr' }, `Couldn’t draw hole ${hole}: ${e2.message || e2}`));
+        status.textContent = '';
+        return;
+      }
+    }
     if (my !== token) return;
     // Like a tour book flipped open: the green page on top, the hole below the fold.
-    pages.replaceChildren(h('div', { class: 'flipbook' }, ...(gp ? [gp] : []), hp));
-    status.textContent = '';
+    pages.replaceChildren(h('div', { class: 'flipbook' }, ...pagesNow));
+    status.textContent = note;
+  }
+  async function drawHole(k, p) {
+    const hp = await holePage(k, teeName, p, helpers, opts);
+    const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, opts) : null;
+    return [...(gp ? [gp] : []), hp];
   }
   const elevOk = !opts.tourney;
   const optRows = [];
@@ -744,8 +773,9 @@ export function openBook(n, opts) {
     status.textContent = all ? 'Drawing every hole…' : 'Getting ready…';
     const sheet = h('div', { class: 'bookprint' });
     for (const k of holes) {
-      if (prefs.greenPage) { const gp = await greenPage(k, teeName, prefs, helpers, opts); if (gp) sheet.append(gp); }
-      sheet.append(await holePage(k, teeName, prefs, helpers, opts));
+      let got;
+      try { got = await drawHole(k, prefs); } catch (e) { console.error('yardage book', e); got = await drawHole(k, { ...prefs, contours: false, greenContours: false, slopes: false, deltas: false, playsLike: false }); }
+      sheet.append(...got);
       if (all) status.textContent = `Drawing hole ${k} of ${holes.length}…`;
     }
     status.textContent = '';
