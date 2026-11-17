@@ -135,7 +135,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     type.value = v; err.textContent = '';
     typeRow.querySelectorAll('button').forEach(b => { const on = b === typeRow.querySelector(`[data-v="${v}"]`); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     placeWrap.hidden = scout || v !== 'Tournament';
-    typeNote.textContent = v === 'Tournament' ? 'Tournament: plain yardages only. No plays-like, wind, strokes gained or club picks; contours (off to start) never on or near the greens.' : 'Casual: every tool.';
+    typeNote.textContent = v === 'Tournament' ? 'Tournament: plain yardages only. No plays-like, wind, strokes gained or club picks; contours off to start.' : 'Casual: every tool.';
   }, 'data-v': v }, h('b', {}, label), h('small', {}, sub));
   const typeRow = h('div', { class: 'roundtypes', role: 'group', 'aria-label': 'Round type' },
     h('div', { class: 'ninesq' }, 'What type of round is this?'),
@@ -452,6 +452,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.5.1', ['Tournament mode: Contours & slope shows the same contours as a casual round, greens included (no more gap around the greens). Still off at the start of every tournament round']],
   ['1.5.0', ['GPS Overview: under the title it now shows how many courses have been added, in place of “Plan shots on any hole · nothing is saved”']],
   ['1.4.0', ['Tournament mode: Contours is back in the View box as its own switch, off at the start of every tournament round. On, it shows the contour lines and downhill arrows everywhere except on and within 15 yards of any green (the Rules only allow green maps at a tiny scale). Plays-like yardages stay off']],
   ['1.3.1', ['Tournament mode: the Tools button (Width, Arc, Disp, Appr) is gone completely']],
