@@ -752,8 +752,9 @@ export function renderHole(view, n) {
   let cleanView = false;
   // Auto: finds the best club and aiming point for the next shot. Every club
   // (with a yardage) is tried along lines up to 35° either side of the pin, each
-  // scored by the average SG of 20 shots in its dispersion, keeping the dots clear
-  // of hazards where it can (15 yd from OB, 10 from water, 5 from bunkers and trees). Trees
+  // scored by the average SG of 20 shots in its dispersion, keeping the dots out
+  // of hazards and clear of them where it can (15 yd from OB, 10 from water, 5
+  // from bunkers and trees), even at a little cost in SG. Trees
   // also block: a line that has to climb over trees close in front of the ball, or that
   // leaves trees close between the ball and the hole, is marked down. The best is picked,
   // the crosshair moves to it and Disp shows its spread. Clubs that would fly
@@ -770,10 +771,14 @@ export function renderHole(view, n) {
     const feats = aimFeatures.map(f => ({ ...f, box: boundsOf(f.p[0]) })).filter(f => overlaps(f.box, box, 0));
     const lieHere = q => lieOn(q, feats.filter(f => q[0] >= f.box[0][0] && q[0] <= f.box[1][0] && q[1] >= f.box[0][1] && q[1] <= f.box[1][1]));
     const main = bearing(from, pin), k = Math.cos((from[0] * Math.PI) / 180);
-    // Hazards (water, OB, bunkers) and how close a dot is to one, in metres.
-    // Clearance wanted from each kind of hazard (yd -> m), and what a dot inside it costs.
+    // Hazards (water, OB, bunkers, trees) and how close a dot is to one, in metres.
+    // Clearance wanted from each kind of hazard (yd -> m), and what a dot inside
+    // one costs, in strokes, on top of its own SG: big enough that a line with
+    // dots in a hazard loses to a clean line even when the clean one's SG is a
+    // little worse (one dot of 20 in a bunker costs the line 0.05). A dot that's
+    // clear but within the cushion costs much less (0.15 as much): being in one is what counts.
     const CUSHION = { ob: 15 / YD_PER_M, water: 10 / YD_PER_M, bunker: 5 / YD_PER_M, trees: 5 / YD_PER_M };
-    const COST = { ob: 1.2, water: 0.8, bunker: 0.4, trees: 0.5 };
+    const COST = { ob: 3, water: 2.5, trees: 1.5, bunker: 1 }, NEAR = 0.15;
     const padDeg = CUSHION.ob / M_PER_DEG * 1.5;
     const hz = feats.filter(f => f.t === 'water' || f.t === 'ob' || f.t === 'bunker' || f.t === 'trees');
     const segDist = (q, a, b) => {
@@ -785,8 +790,9 @@ export function renderHole(view, n) {
     const hazardCost = q => hz.reduce((worst, f) => {
       if (COST[f.t] <= worst) return worst;
       if (q[0] < f.box[0][0] - padDeg || q[0] > f.box[1][0] + padDeg || q[1] < f.box[0][1] - padDeg / k || q[1] > f.box[1][1] + padDeg / k) return worst;
-      const near = inPolygon(q, f.p) || f.p.some(r => r.some((a, i) => i && segDist(q, r[i - 1], a) < CUSHION[f.t]));
-      return near ? COST[f.t] : worst;
+      if (inPolygon(q, f.p)) return Math.max(worst, COST[f.t]);
+      const near = f.p.some(r => r.some((a, i) => i && segDist(q, r[i - 1], a) < CUSHION[f.t]));
+      return near ? Math.max(worst, COST[f.t] * NEAR) : worst;
     }, 0);
     // Trees in the way. A ball can't climb over trees that are close in front of
     // it, so a shot from a to b is blocked when trees cross the first part of its
@@ -808,22 +814,43 @@ export function renderHole(view, n) {
     // What trees cost a dot: 1 when the shot to it can't get over them, and 0.5
     // when it leaves trees close between the ball and the hole (a punch-out next).
     const treeCost = q => (blocked(from, q) ? 1 : 0) + (yards(q, pin) > 15 && blocked(q, pin) ? 0.5 : 0);
+    // How bad the hazards a dot actually lands in are (0 when it's on grass).
+    const inHazard = q => hz.reduce((worst, f) => (COST[f.t] > worst && q[0] >= f.box[0][0] && q[0] <= f.box[1][0] && q[1] >= f.box[0][1] && q[1] <= f.box[1][1] && inPolygon(q, f.p) ? COST[f.t] : worst), 0);
+    // A line with no dots in a hazard wins over one with some, as long as it
+    // gives up no more than this (in score: SG less the costs above).
+    const CLEAN_SLACK = 0.15;
     const results = [];
     for (const c of only ? only.map(name => ({ name })) : bag()) {
       const yd = compYards(c.name);
       if (!yd || /putt/i.test(c.name) || (!only && yd > toPinYd + 15)) continue;
       const w = clubArcW(c.name);
-      let best = null;
-      for (let off = -35; off <= 35; off += 2.5) {
+      const lines = [];
+      const tryLine = off => {
         const brg = ((main + off) * Math.PI) / 180, dm = yd / YD_PER_M;
         const aim = [from[0] + (dm * Math.cos(brg)) / M_PER_DEG, from[1] + (dm * Math.sin(brg)) / (M_PER_DEG * k)];
         const d = dispersion(from, aim, w, fromExp, lieHere);
-        // Keep every dot 5 yd clear of hazards: each one closer costs the line, so
-        // the pick skews away from them. A tiny nudge favours straighter lines on ties.
+        // Keep every dot clear of hazards: each one in or close to one costs the
+        // line, so the pick moves away from them. A tiny nudge favours straighter lines on ties.
         const close = d.dots.reduce((t, x) => t + hazardCost(x.q) + treeCost(x.q), 0);
         const score = d.sg - close / d.dots.length - Math.abs(off) * 0.0005;
-        if (!best || score > best.score) best = { club: c.name, yd, aim, off, brg: main + off, sg: d.sg, score, close };
-      }
+        const wet = d.dots.reduce((t, x) => t + inHazard(x.q), 0); // dots landing in hazards
+        const blk = d.dots.filter(x => blocked(from, x.q)).length; // shots that have to get over trees close in front
+        lines.push({ club: c.name, yd, aim, off, brg: main + off, sg: d.sg, score, close, wet, blk });
+      };
+      // The best line: the top score, unless a line with no dots in a hazard
+      // is close behind it (CLEAN_SLACK), or failing that the line with the
+      // fewest (and least bad) dots in hazards that is.
+      const pickBest = () => {
+        const top = lines.reduce((a, b) => (b.score > a.score ? b : a));
+        const ok = lines.filter(l => l.score >= top.score - CLEAN_SLACK);
+        const least = Math.min(...ok.map(l => l.wet));
+        return ok.filter(l => l.wet === least).reduce((a, b) => (b.score > a.score ? b : a));
+      };
+      // Every 2.5° first, then every 0.5° around the best of those (2.5° is
+      // about 10 yd across at 250, too coarse to find the gap between hazards).
+      for (let off = -35; off <= 35; off += 2.5) tryLine(off);
+      if (lines.length) { const o = pickBest().off; for (let off = o - 2; off <= o + 2; off += 0.5) if (off !== o && Math.abs(off) <= 35) tryLine(off); }
+      const best = lines.length ? pickBest() : null;
       if (best) results.push(best);
     }
     return { from, results: results.sort((a, b) => b.score - a.score) };
@@ -855,7 +882,9 @@ export function renderHole(view, n) {
     if (!showDisp) { setDispOn(true); onlyOne('disp'); }
     autoKey.replaceChildren(h('small', {}, 'Auto · best clubs (avg SG)'), ...results.slice(0, 4).map((r, i) => h('span', { class: i ? '' : 'best' },
       `${clubShort(r.club)} ${r.yd}y · ${Math.abs(r.off) < 1 ? 'at pin' : `${Math.round(Math.abs(r.off))}° ${r.off < 0 ? 'L' : 'R'}`} · `,
-      h('b', { class: r.sg >= 0 ? 'pos' : 'neg' }, `${r.sg >= 0 ? '+' : '−'}${Math.abs(r.sg).toFixed(2)}`))));
+      h('b', { class: r.sg >= 0 ? 'pos' : 'neg' }, `${r.sg >= 0 ? '+' : '−'}${Math.abs(r.sg).toFixed(2)}`),
+      // Why a club with a better SG can rank lower: some of its shots have trees close in front.
+      r.blk >= 3 ? h('small', { class: 'why' }, ` · trees in the way (${r.blk}/20)`) : null)));
     autoKey.hidden = false;
     m.easeTo({ center: ll(b.aim), duration: 500 });
     update();
