@@ -126,7 +126,7 @@ export function renderNewRound(view, { scout = false } = {}) {
   fillTees();
   const place = h('input', { type: 'number', inputmode: 'numeric', min: 1, placeholder: 'Place (e.g. 1, 2, 3...)' });
   const placeWrap = h('div', { style: 'width:100%;max-width:320px;', hidden: true }, place);
-  // Round type, asked every time: Casual has every tool; Tournament keeps to what
+  // Round type, Casual to start: Casual has every tool; Tournament keeps to what
   // the Rules of Golf allow (distances only: no plays-like, wind, contours,
   // strokes gained or club advice on the hole screen).
   const type = { value: '' };
@@ -148,6 +148,7 @@ export function renderNewRound(view, { scout = false } = {}) {
   const custom = h('input', { type: 'number', inputmode: 'numeric', min: 3, max: 18, placeholder: 'Custom # of Holes (3–18)', oninput: () => { const n = parseInt(custom.value, 10); if (n >= 3 && n <= +custom.max) pick(null, n); } });
 
   const err = h('div', { class: 'msg err' });
+  typeRow.querySelector('[data-v="Casual"]').click(); // Casual to start; tap Tournament to change it
   const confirm = h('button', { class: 'holes9', onclick: () => {
     if (!chosen) { err.textContent = 'Select a course.'; return; }
     if (!tee.value) { err.textContent = 'Select a tee box.'; return; }
@@ -455,6 +456,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.96.2', ['New Round and GPS Overview start with Casual picked; tap Tournament to change it']],
   ['0.96.1', ['Tournament mode also drops Course lines view (the bunker, fairway, water and green outlines): the switch is gone from the View box and the lines stay off']],
   ['0.96.0', ['Tournament mode: New Round and GPS Overview now ask whether the round is Casual or Tournament. Casual has every tool. Tournament keeps to the Rules of Golf (4.3): plain yardages, compass, fairway width, arc, approach circle, scorecard and shot tracking stay; plays-like yardages, wind, contours and slope, strokes gained (crosshair SG, Disp, Appr SG, SG map, Expected) and club picks (Auto, Comp, the Club box’s Auto) are gone. The tag at the top left turns gold in a tournament round. A finished tournament round viewed from Round History shows everything again']],
   ['0.95.2', ['Contour lines are black for everyone now (same 60% opacity and width). You can still change them in the menu’s Settings']],
