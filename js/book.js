@@ -29,6 +29,7 @@ export const BOOK_OPTIONS = [
   ['water', 'Water', 'Hole page', true],
   ['trees', 'Trees', 'Hole page', true],
   ['ob', 'Out of bounds', 'Hole page', true],
+  ['onlyHole', 'Only this hole (saves ink)', 'Hole page', true],
   ['otherHoles', 'Neighbouring holes', 'Hole page', true],
   ['allTees', 'Every tee box', 'Hole page', true],
   ['centre', 'Centre line', 'Hole page', true],
@@ -313,6 +314,24 @@ function frontPointFn(f, greenRing, pin) {
   };
 }
 
+// "Only this hole", like the live view's spotlight: everything on the map is
+// drawn only within LINE_YD of the hole's line of play or SHAPE_YD of its own
+// fairways, green and tee boxes, fading out at the edge. A mask: white strokes
+// along the line and round the shapes, softened. Labels sit outside it.
+const LINE_YD = 40, SHAPE_YD = 20;
+function onlyHole(svg, mapG, id, P, s, line, shapes) {
+  const mid = `${id}-only`;
+  const soft = el('filter', { id: `${mid}-soft`, filterUnits: 'userSpaceOnUse', x: 0, y: 0, width: W, height: H }, el('feGaussianBlur', { stdDeviation: (5 * s).toFixed(1) }));
+  const mask = el('mask', { id: mid, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: W, height: H },
+    el('g', { filter: `url(#${mid}-soft)`, fill: '#fff', stroke: '#fff', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
+      el('path', { d: pathD(line.map(P)), fill: 'none', 'stroke-width': (2 * LINE_YD * s).toFixed(1) }),
+      ...shapes.map(r => el('path', { d: pathD(r.map(P), true), 'stroke-width': (2 * SHAPE_YD * s).toFixed(1) }))));
+  svg.append(el('defs', {}, soft, mask));
+  const g = el('g', { mask: `url(#${mid})` });
+  g.append(...mapG.childNodes);
+  mapG.append(g);
+}
+
 // ---------- the hole page ----------
 
 async function holePage(n, teeName, prefs, helpers, opts) {
@@ -555,6 +574,10 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     reliefNote ? txt(16, bottom + 44, reliefNote, { 'font-size': 9, fill: SOFT }) : null,
     txt(16, H - 12, course.name.toUpperCase(), { 'font-size': 9, fill: '#9aa59e', 'letter-spacing': 1 }),
     txt(W - 16, H - 12, `HOLE ${n} OF ${course.holes.length}`, { 'font-size': 9, fill: '#9aa59e', 'text-anchor': 'end', 'letter-spacing': 1 }));
+  if (prefs.onlyHole) {
+    const tail = greenL ? centroid(greenL) : L.at(-1);
+    onlyHole(svg, mapG, id, P, s, [...L.slice(0, -1), tail], [...ownFair, ...(greenL ? [greenL] : []), ...teeBoxesL.map(t => t.r)]);
+  }
   return svg;
 }
 
@@ -711,6 +734,10 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   if (prefs.notes) {
     svg.append(txt(16, bottom + 64, 'NOTES', { 'font-size': 10, 'font-weight': 700, fill: INK, 'letter-spacing': 1.2 }));
     for (let y = bottom + 84; y < H - 28; y += 22) svg.append(el('line', { x1: 16, x2: W - 16, y1: y, y2: y, stroke: '#d6dcd8', 'stroke-width': 0.8 }));
+  }
+  if (prefs.onlyHole) {
+    const own = F.own.filter(x => x.t === 'fairway' || x.t === 'tee').map(x => closeRing(ringOf(x)).map(f.fwd));
+    onlyHole(svg, mapG, id, P, s, line.map(f.fwd), [g, ...own]);
   }
   return svg;
 }
