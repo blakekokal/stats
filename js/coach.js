@@ -426,6 +426,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.81.1', ['Plays like: the yardage stays centred by the crosshair, with the rise or drop beside it (red uphill, green downhill) and the plays-like number a little smaller, in blue']],
   ['0.82.0', ['Course lines are smooth and rounded now: fairways, greens, bunkers, water, tee boxes and trees are drawn as curves instead of jagged straight edges, on the hole map and in the hole editor. OB and the course boundary keep their hard corners']],
   ['0.81.0', ['Plays like (View box, Cowboys): the yardages by the crosshair show how many yards the ground rises or drops and what the shot plays, e.g. 250(−5) 245 yd from the tee to the crosshair and 125(+2) 127 yd from there to the pin', 'Hillshade is gone; switching Contours & slope now closes the View box, and the box no longer jumps around']],
   ['0.80.5', ['Contours & slope: contour lines and arrows are see-through now, so the course shows through them']],
