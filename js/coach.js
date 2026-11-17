@@ -135,7 +135,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     type.value = v; err.textContent = '';
     typeRow.querySelectorAll('button').forEach(b => { const on = b === typeRow.querySelector(`[data-v="${v}"]`); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     placeWrap.hidden = scout || v !== 'Tournament';
-    typeNote.textContent = v === 'Tournament' ? 'Tournament: plain yardages only. No plays-like, wind, strokes gained or club picks; contours (off to start) never on or near the greens.' : 'Casual: every tool.';
+    typeNote.textContent = v === 'Tournament' ? 'Tournament: plain yardages only. No plays-like, wind, strokes gained or club picks; contours off to start.' : 'Casual: every tool.';
   }, 'data-v': v }, h('b', {}, label), h('small', {}, sub));
   const typeRow = h('div', { class: 'roundtypes', role: 'group', 'aria-label': 'Round type' },
     h('div', { class: 'ninesq' }, 'What type of round is this?'),
@@ -453,6 +453,7 @@ export function renderLogin(view) {
 
 const CHANGES = [
   ['1.6.0', ['GPS Overview: Yardage book (in the View box), laid out like a tour book flipped open: the green page on top and the whole hole below the fold, tee at the bottom. Numbers come in pairs, like a tour book: a dot on the spot, the yards to the front of the green above (red) and the yards from the tee below (black), off to the side on a short straight line, with small blue numbers for how many yards the ground goes up (+) or down (−): above the red one from the spot to the front of the green, below the black one from the tee to the spot. There’s a pair at the start and end of every bunker (not greenside ones) and water hazard, and down the middle at 100, 150 and 200 to the front (and 250 and 300 on par 5s). Contour lines and a field of small downhill arrows cover the hole, with plays-like height change in the header. The green page takes in the fairway leading up to the green, with a 3- or 5-yard grid, depth and width, front and back marks, edge numbers from the front, contours every few inches, downhill arrows and lines for notes. Pick the tee box at the top; Show turns each part on or off (kept on this device); Print makes a PDF or paper copy of the hole or the whole course, 4¼ × 7 inches with the green no bigger than 3/8 inch to 5 yards (the USGA limits for green-reading material, Rule 4.3) when printed at 100%. In a Tournament round the green page, contours and plays-like are left out (Rules of Golf 4.3)']],
+  ['1.5.1', ['Tournament mode: Contours & slope shows the same contours as a casual round, greens included (no more gap around the greens). Still off at the start of every tournament round']],
   ['1.5.0', ['GPS Overview: under the title it now shows how many courses have been added, in place of “Plan shots on any hole · nothing is saved”']],
   ['1.4.0', ['Tournament mode: Contours is back in the View box as its own switch, off at the start of every tournament round. On, it shows the contour lines and downhill arrows everywhere except on and within 15 yards of any green (the Rules only allow green maps at a tiny scale). Plays-like yardages stay off']],
   ['1.3.1', ['Tournament mode: the Tools button (Width, Arc, Disp, Appr) is gone completely']],
