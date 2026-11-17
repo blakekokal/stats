@@ -883,14 +883,28 @@ export function renderHole(view, n) {
   // The intervals stay in place whether contours are on or off, so the box doesn't jump.
   const contourRow = viewSwitch('Contours & slope', () => elevPrefs.contours, v => { elevPrefs.contours = v; redrawElev(); drawViewBox(); });
   // Plays like: a switch at the top right, under Expected.
-  const playsBtn = h('button', { class: 'playsbtn' + (elevPrefs.playsLike ? ' on' : ''), hidden: true, 'aria-pressed': String(elevPrefs.playsLike),
-    title: 'Plays-like yardages (height change)', onclick: () => {
+  // Plays like: a button left of Expected. On, it shows two round switches
+  // under it: Elv (the height change, on to start) and Wnd (the wind, off to start).
+  let playsWindNow = null; // the latest wind ({ speed mph, dir it comes from }), for plays like
+  const playsCircle = (label, get, set) => {
+    const b = h('button', { class: 'playscircle', title: label === 'Elv' ? 'Count the height change' : 'Count the wind', onclick: () => { set(!get()); sync(); update(); } }, label);
+    const sync = () => { b.classList.toggle('on', get()); b.setAttribute('aria-pressed', String(get())); };
+    b.sync = sync; sync();
+    return b;
+  };
+  const elvCircle = playsCircle('Elv', () => elevPrefs.playsElev, v => { elevPrefs.playsElev = v; });
+  const wndCircle = playsCircle('Wnd', () => elevPrefs.playsWind, v => { elevPrefs.playsWind = v; });
+  const playsOpts = h('div', { class: 'playsopts', hidden: !elevPrefs.playsLike }, elvCircle, wndCircle);
+  const playsBtn = h('button', { class: 'playsbtn' + (elevPrefs.playsLike ? ' on' : ''), 'aria-pressed': String(elevPrefs.playsLike),
+    title: 'Plays-like yardages (height change and wind)', onclick: () => {
       elevPrefs.playsLike = !elevPrefs.playsLike;
       playsBtn.classList.toggle('on', elevPrefs.playsLike); playsBtn.setAttribute('aria-pressed', String(elevPrefs.playsLike));
+      playsOpts.hidden = !elevPrefs.playsLike;
       update();
-    } }, 'Plays like');
+    } }, 'Plays', h('br'), 'like');
+  const playsWrap = h('div', { class: 'playswrap', hidden: true }, playsBtn, playsOpts);
   const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips);
-  elevIndex().then(ix => { elevInfo = ix[course.id] || null; elevBox.hidden = playsBtn.hidden = !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
+  elevIndex().then(ix => { elevInfo = ix[course.id] || null; elevBox.hidden = playsWrap.hidden = !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
   const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), sgtRow, linesRow, cleanRow, elevBox);
   const drawViewBox = () => {
     sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync();
@@ -1378,7 +1392,7 @@ export function renderHole(view, n) {
   if (!scouting && !watching && !viewing()) shareCurrent();
 
   view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (wi && !wi.id.startsWith('sv-') ? ' watchlive' : '') + (toolsBtn.open ? ' toolsopen' : '') + (sgBtn.open ? ' sgopen' : '') }, mapEl,
-    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, expPill), playsBtn, scorecard,
+    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, playsWrap, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { closeView(); menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist), gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
@@ -1413,6 +1427,7 @@ export function renderHole(view, n) {
   const showWind = w => {
     if (map !== m || !w) return;
     windNow = w;
+    playsWindNow = w; if (elevPrefs.playsLike && elevPrefs.playsWind) update();
     wind.hidden = false;
     wind.querySelector('b').textContent = Math.round(w.speed);
     const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
@@ -1945,17 +1960,32 @@ export function renderHole(view, n) {
     // Plays like: the yardage, how many yards the ground rises (+) or drops (−)
     // from where the shot starts to where it ends, and what it plays, at a yard
     // for a yard: "250(−5) 245".
+    // Plays like: the yardage, and what it plays counting the height change
+    // (a yard for a yard) and, if Wnd is on, the wind: into it adds 1% a mph,
+    // downwind takes off 0.5% a mph (crosswind not counted). The rise/drop
+    // sits right by the number (red uphill, green downhill), "161(+1) yd",
+    // and the plays-like number under it.
     const yardage = (a, b, d) => {
       const yd = Math.round(d);
-      const ha = elevPrefs.playsLike && heightAt(course.id, elevInfo, a, () => { if (map === m) update(); });
-      const hb = elevPrefs.playsLike && heightAt(course.id, elevInfo, b, () => { if (map === m) update(); });
-      if (ha == null || hb == null || ha === false || hb === false) return [h('b', {}, `${yd} yd`)];
-      const dz = Math.round((hb - ha) * YD_PER_M);
-      // The yardage stays centred with the rise/drop (red uphill, green
-      // downhill) just to its right, and the plays-like number under it.
-      return [h('b', { class: 'playslike' }, `${yd} yd`,
-        h('small', { class: 'dz' + (dz > 0 ? ' up' : dz < 0 ? ' down' : '') }, `(${dz > 0 ? '+' : dz < 0 ? '−' : ''}${Math.abs(dz)})`),
-        h('span', { class: 'pl' }, `${yd + dz}`))];
+      const plain = [h('b', {}, `${yd} yd`)];
+      if (!elevPrefs.playsLike || !elevInfo) return plain;
+      let dz = null;
+      if (elevPrefs.playsElev) {
+        const ha = heightAt(course.id, elevInfo, a, () => { if (map === m) update(); });
+        const hb = heightAt(course.id, elevInfo, b, () => { if (map === m) update(); });
+        if (ha != null && hb != null) dz = Math.round((hb - ha) * YD_PER_M);
+      }
+      let wind = null;
+      if (elevPrefs.playsWind && playsWindNow && yd > 5) {
+        const into = playsWindNow.speed * Math.cos(((playsWindNow.dir - bearing(a, b)) * Math.PI) / 180); // + into the wind
+        wind = Math.round(yd * (into > 0 ? 0.01 : 0.005) * into);
+      }
+      if (dz == null && wind == null) return plain;
+      const sign = v => `${v > 0 ? '+' : v < 0 ? '−' : ''}${Math.abs(v)}`;
+      return [h('b', { class: 'playslike' }, h('span', { class: 'num' }, `${yd}`,
+          dz != null ? h('small', { class: 'dz' + (dz > 0 ? ' up' : dz < 0 ? ' down' : '') }, `(${sign(dz)})`) : null), ' yd',
+        h('span', { class: 'pl' }, `${yd + (dz || 0) + (wind || 0)} yd`,
+          wind != null ? h('small', { class: 'wnd' + (wind > 0 ? ' up' : wind < 0 ? ' down' : '') }, ` wind ${sign(wind)}`) : null))];
     };
     toPinEl.replaceChildren(...yardage(target, pin, toPin));
     fromTeeEl.replaceChildren(...yardage(from, target, fromTee),
