@@ -455,6 +455,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.96.1', ['Tournament mode also drops Course lines view (the bunker, fairway, water and green outlines): the switch is gone from the View box and the lines stay off']],
   ['0.96.0', ['Tournament mode: New Round and GPS Overview now ask whether the round is Casual or Tournament. Casual has every tool. Tournament keeps to the Rules of Golf (4.3): plain yardages, compass, fairway width, arc, approach circle, scorecard and shot tracking stay; plays-like yardages, wind, contours and slope, strokes gained (crosshair SG, Disp, Appr SG, SG map, Expected) and club picks (Auto, Comp, the Club box’s Auto) are gone. The tag at the top left turns gold in a tournament round. A finished tournament round viewed from Round History shows everything again']],
   ['0.95.2', ['Contour lines are black for everyone now (same 60% opacity and width). You can still change them in the menu’s Settings']],
   ['0.95.1', ['Contour lines are a little stronger for everyone: 60% opacity (was 45%), same colour and width. You can still change them in the menu’s Settings']],

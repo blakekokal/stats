@@ -199,10 +199,11 @@ export function renderHole(view, n) {
   // Golf (4.3a) allow while playing: plain distances, compass, scorecard, shot
   // tracking. No plays-like (height or wind), wind, contours and slope, club or
   // line advice (Auto, Comp, the Club box's Auto pick) and no strokes gained
-  // (crosshair SG, Disp, Appr SG, SG map, Expected). A finished round viewed
+  // (crosshair SG, Disp, Appr SG, SG map, Expected), and no course lines. A finished round viewed
   // afterwards shows everything again.
   const tourney = !watching && (scouting ? isTourneyScout()
     : round0?.type === 'Tournament' && !round0.submitted && localStorage.getItem('gs:viewOnly') !== '1');
+  if (tourney) showOutlines = false; // no course lines in a tournament either
   // Replay (a client's past round, played back shot by shot): this hole shows
   // only the strokes played so far.
   const rp = watching && sessionStorage.getItem('gs:replay') === '1' ? (replay ||= { playing: true, speed: 1 }) : null;
@@ -934,7 +935,7 @@ export function renderHole(view, n) {
   const playsWrap = h('div', { class: 'playswrap', hidden: true }, playsBtn, playsOpts);
   const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips);
   elevIndex().then(ix => { elevInfo = ix[elevId] || null; elevBox.hidden = playsWrap.hidden = tourney || !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
-  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), tourney ? null : sgtRow, linesRow, cleanRow, elevBox);
+  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), tourney ? null : sgtRow, tourney ? null : linesRow, cleanRow, elevBox);
   const drawViewBox = () => {
     sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync();
     contourRow.sync(); contourChips.sync();
