@@ -580,15 +580,12 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   const widthYd = width.length >= 2 ? Math.round(width.at(-1) - width[0]) : Math.round(maxX - minX);
   const frontY = depth.length ? depth[0] : minY;
 
-  const top = 86, bottom = prefs.notes ? 450 : H - 70, left = 30, right = W - 30;
-  // The map takes in the fairway leading up to the green as well (up to 40
-  // yards short of it), not just the ground around it.
-  const approach = F.own.filter(x => x.t === 'fairway').flatMap(x => ringOf(x).map(f.fwd)).filter(([x, y]) => y < frontY0(g) && y > frontY0(g) - 40 && Math.abs(x) < 40);
-  const vx0 = Math.min(minX, ...approach.map(p => p[0])), vx1 = Math.max(maxX, ...approach.map(p => p[0]));
-  const vy0 = Math.min(minY, ...approach.map(p => p[1])), vy1 = maxY;
-  const pad = 7;
-  const s = Math.min((right - left) / (vx1 - vx0 + pad * 2), (bottom - top) / (vy1 - vy0 + pad * 2), MAX_UNITS_PER_YD);
-  const cx = (left + right) / 2 - ((vx0 + vx1) / 2) * s, cy = (top + bottom) / 2 + ((vy0 + vy1) / 2) * s;
+  const top = 86, bottom = prefs.notes ? 520 : H - 70, left = 18, right = W - 18;
+  // Zoomed in on the green as far as the USGA allows (3/8 inch to 5 yards),
+  // or until it fills the map; any room left over shows the approach below it.
+  const pad = 5;
+  const s = Math.min((right - left) / (maxX - minX + pad * 2), (bottom - top) / (maxY - minY + pad * 2), MAX_UNITS_PER_YD);
+  const cx = (left + right) / 2 - ((minX + maxX) / 2) * s, cy = top + (maxY + pad + 2) * s;
   const P = ([x, y]) => [cx + x * s, cy - y * s];
   const view = [(left - cx) / s, (right - cx) / s, (cy - bottom) / s, (cy - top) / s];
   const inView = pts => pts.some(([x, y]) => x > view[0] - 10 && x < view[1] + 10 && y > view[2] - 10 && y < view[3] + 10);
