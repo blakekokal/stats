@@ -2,7 +2,7 @@
 // coaching app. My Bag, Performance Analysis, Practice and Learning and
 // Coaching are the coaching app's own pages (js/coaching).
 
-import { h, course, toast, COURSES, courseById, setActiveCourse, goBack } from './app.js';
+import { h, course, toast, COURSES, courseById, setActiveCourse, goBack, ninesWith, comboId } from './app.js';
 import { store, sync } from './store.js';
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
@@ -161,15 +161,31 @@ export function renderNewRound(view, { scout = false } = {}) {
   // Course: a blank box to type in; the courses matching what's typed are listed
   // below it to tap. Picking one fills in its tee boxes.
   const results = h('div', { class: 'courseresults', hidden: true });
-  const pickCourse = c => {
-    setActiveCourse(c.id); chosen = courseById(c.id);
-    search.value = c.name; results.hidden = true; err.textContent = '';
+  // A nine at a club with other nines asks: just these 9 holes, or 18 with
+  // another nine as the back nine (each listed by its name).
+  const ninesBox = h('div', { class: 'ninesbox', hidden: true });
+  const shortName = id => { const n = COURSES.find(x => x.id === id)?.name || id; return n.split(' – ').slice(1).join(' – ') || n; };
+  const useCourse = id => {
+    setActiveCourse(id); chosen = courseById(id);
+    search.value = chosen.name; err.textContent = '';
     fillTees();
     // A nine-hole course is played as 9 holes (or fewer, as a custom round).
     const nine = chosen.holes.length <= 9;
     b18.hidden = nine; custom.max = nine ? 9 : 18; custom.placeholder = `Custom # of Holes (3–${nine ? 9 : 18})`;
     if (nine && holes > 9) pick(b9, 9);
+    if (!nine && chosen.parts) pick(b18, 18);
+    drawNines();
   };
+  function drawNines() {
+    const front = chosen?.parts ? chosen.parts[0] : chosen?.id, others = front ? ninesWith(front) : [];
+    ninesBox.hidden = !others.length;
+    if (!others.length) return;
+    const opt = (label, sub, on, go) => h('button', { class: on ? 'on' : '', onmousedown: e => e.preventDefault(), onclick: go }, h('b', {}, label), sub ? h('small', {}, sub) : null);
+    ninesBox.replaceChildren(h('div', { class: 'ninesq' }, `${shortName(front)} is a 9-hole course. Play just these 9, or add another nine to make 18?`),
+      opt('9 holes only', shortName(front), !chosen.parts, () => useCourse(front)),
+      ...others.map(o => opt(`18 holes: + ${shortName(o.id)}`, `${shortName(front)} front 9, ${shortName(o.id)} back 9`, chosen.parts?.[1] === o.id, () => useCourse(comboId(front, o.id)))));
+  }
+  const pickCourse = c => { results.hidden = true; useCourse(c.id); };
   // Tapping the box lists every course, so one can be picked without typing (the
   // keyboard doesn't always come up). Typing narrows it to the matches, names
   // starting with what's typed first. The list drops down over the page, about
@@ -187,7 +203,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     results.hidden = false;
   };
   const search = h('input', { type: 'search', placeholder: 'Course name', 'aria-label': 'Course', autocomplete: 'off', value: '',
-    oninput: () => { if (chosen && search.value !== chosen.name) { chosen = null; fillTees(); } showHits(); },
+    oninput: () => { if (chosen && search.value !== chosen.name) { chosen = null; fillTees(); drawNines(); } showHits(); },
     onfocus: showHits,
     onclick: showHits, // already focused: show the list again
     onblur: () => { results.hidden = true; },
@@ -197,14 +213,14 @@ export function renderNewRound(view, { scout = false } = {}) {
     view.replaceChildren(page('top', backBtn(),
       h('div', { style: 'font-size:22px;font-weight:800;' }, 'GPS Overview'),
       h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:-4px;' }, 'Plan shots on any hole · nothing is saved'),
-      courseBox, tee, teeInfo, confirm, err));
+      courseBox, ninesBox, tee, teeInfo, confirm, err));
     return;
   }
   view.replaceChildren(page('top', backBtn(),
     h('div', { style: 'font-size:22px;font-weight:800;' }, 'New Round'),
     name,
     h('div', { class: 'row' }, level, date),
-    courseBox,
+    courseBox, ninesBox,
     tee, teeInfo, type, placeWrap,
     h('div', { class: 'row' }, b9, b18),
     custom,
@@ -426,7 +442,8 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
-  ['0.88.0', ['New course: Grapevine Golf Course \u2013 Pecan, the last of its three nines, built from its yardage book']],
+  ['0.89.0', ['New course: Grapevine Golf Course \u2013 Pecan, the last of its three nines, built from its yardage book. Play it as 9, or with Bluebonnet or Mockingbird to make 18']],
+  ['0.88.0', ['Nine-hole courses: picking one in New Round or GPS Overview asks whether to play just those 9 or add another nine at the same club to make 18 (e.g. Bluebonnet front 9, Mockingbird back 9). The back nine is holes 10–18, with the tee boxes’ yardages added up, and each hole keeps its own contours and plays-like heights']],
   ['0.87.0', ['Elevation on every course: contour lines with downhill arrows (View box) and plays-like yardages now work at Bear Creek East and West, Bridlewood, Cross Timbers, Grapevine Bluebonnet, Sherrill Park #1 and #2, Squaw Creek, Tangle Ridge, Tour 18 Dallas and Grapevine Mockingbird, as well as Cowboys']],
   ['0.86.0', ['New course: Grapevine Golf Course \u2013 Mockingbird, the second of its three nines, built from its yardage book']],
   ['0.85.3', ['Fixed: the app opened to a blank screen after 0.85.2']],
