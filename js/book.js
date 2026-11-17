@@ -36,6 +36,7 @@ export const BOOK_OPTIONS = [
   ['hazards', 'Bunker & water numbers (start and end)', 'Hole page', true],
   ['contours', 'Contours & slope arrows', 'Hole page', true, true],
   ['playsLike', 'Plays-like (height change)', 'Hole page', true, true],
+  ['deltas', 'Up/down yards by each number', 'Hole page', true, true],
   ['north', 'North arrow & scale', 'Hole page', true],
   ['greenPage', 'Green page', 'Green page', true, true],
   ['grid', 'Yard grid', 'Green page', true, true],
@@ -275,6 +276,17 @@ function frontFn(f, greenRing, pin) {
   };
 }
 
+// Where that line meets the front of the green (in the same frame).
+function frontPointFn(f, greenRing, pin) {
+  if (!greenRing) return () => f.fwd(pin);
+  const g = greenRing.map(f.fwd), c = centroid(g);
+  return p => {
+    if (inside(p, g)) return p;
+    const t = firstCross(p, c, g) ?? 1;
+    return [p[0] + (c[0] - p[0]) * t, p[1] + (c[1] - p[1]) * t];
+  };
+}
+
 // ---------- the hole page ----------
 
 async function holePage(n, teeName, prefs, helpers, opts) {
@@ -387,32 +399,19 @@ async function holePage(n, teeName, prefs, helpers, opts) {
 
   // Numbers in pairs, tour-book style: a dot on the spot, the yards to the
   // front of the green above (red) and the yards from the tee below (black),
-  // set off to the side with a short line out to them, never on top of a
-  // bunker, a small pond or the green.
-  const RED = '#c62f2f';
+  // off to the side on a short straight line. Beside each, in blue, how many
+  // yards the ground rises (+) or falls (−): from the spot up to the front of
+  // the green, and from the tee to the spot.
+  const RED = '#c62f2f', BLUE = '#2f5fb3';
   for (const o of feats) {
-    if (!(o.x.t === 'bunker' || o.x.t === 'water' || (o.x.t === 'green' && own(o)))) continue;
+    if (!(o.x.t === 'green' && own(o))) continue;
     const q = o.r.map(P), xs = q.map(p => p[0]), ys = q.map(p => p[1]);
-    const box = [Math.min(...xs) - 1.5, Math.min(...ys) - 1.5, Math.max(...xs) + 1.5, Math.max(...ys) + 1.5];
-    if (o.x.t !== 'water' || (box[2] - box[0]) * (box[3] - box[1]) < 2500) lab.block(box);
+    lab.block([Math.min(...xs) - 1.5, Math.min(...ys) - 1.5, Math.max(...xs) + 1.5, Math.max(...ys) + 1.5]);
   }
-  const pair = (q, front, tee, side) => {
-    const [x, y] = P(q), wdt = Math.max(textW(front, 10), textW(tee, 9.5)) + 2, hgt = 21;
-    // The pair is drawn from 16 above its y to 5 below, as the labeller boxes it.
-    const cands = [];
-    for (const dir of [side, -side]) for (const dx of [10, 18, 28, 40]) for (const dy of [0, -9, 9, -18, 18])
-      cands.push([x + dir * dx, y + 6 + dy, dir > 0 ? 'start' : 'end']);
-    labG.append(el('circle', { cx: x, cy: y, r: 1.9, fill: INK }));
-    const spot = lab.place(cands, wdt, hgt, bounds);
-    if (!spot) return;
-    const [sx, sy, anc] = spot;
-    const ex = anc === 'start' ? sx - 2 : sx + 2, ey = sy - 5.5;
-    labG.append(el('path', { d: pathD([[x, y], [ex, ey]]), stroke: INK, 'stroke-width': 0.6, fill: 'none' }),
-      txt(sx, sy - 8, front, { 'font-size': 10, 'font-weight': 700, fill: RED, 'text-anchor': anc }),
-      txt(sx, sy + 2.5, tee, { 'font-size': 9.5, fill: INK, 'text-anchor': anc }));
-  };
+  const pairs = [];
+  const pair = (q, front, tee, side) => pairs.push({ q, front, tee, side });
 
-  // Bunkers and water: the start and the end of each.
+  // Bunkers and water: the start and the end of each (not greenside bunkers).
   if (prefs.hazards) {
     const hz = F.own.filter(x => (x.t === 'bunker' && prefs.bunkers) || (x.t === 'water' && prefs.water));
     for (const x of hz) {
@@ -422,6 +421,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       const fr = pts.map(toFront);
       const iS = fr.indexOf(Math.max(...fr)), iE = fr.indexOf(Math.min(...fr));
       if (fr[iS] > 440 || dist(pts[iS], [0, 0]) < 25) continue; // behind or beside the tee
+      if (x.t === 'bunker' && fr[iE] < 10) continue; // greenside
       const c = centroid(pts);
       const nearLine = walk.reduce((b, w) => (dist(w.p, c) < dist(b.p, c) ? w : b), walk[0]);
       const side = (c[0] - nearLine.p[0]) * nearLine.d[1] - (c[1] - nearLine.p[1]) * nearLine.d[0] >= 0 ? 1 : -1;
@@ -430,13 +430,52 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     }
   }
 
-  // Down the middle: 100, 150, 200, 250 and 300 to the front of the green.
+  // Down the middle: 100, 150 and 200 to the front of the green (and 250 and
+  // 300 on a par 5).
   if (prefs.layup) {
-    for (const yd of [100, 150, 200, 250, 300]) {
+    for (const yd of ch.par >= 5 ? [100, 150, 200, 250, 300] : [100, 150, 200]) {
       const w = spotAt(yd);
       if (!w || w.fromTee < 40) continue;
       pair(w.p, yd, Math.round(w.fromTee), 1);
     }
+  }
+
+  // The rises and falls, in yards, from the height tiles.
+  if (pairs.length && prefs.deltas && info) {
+    const frontPt = frontPointFn(f, greenRing, pin);
+    const hs = await heightsAt(elevId, info, [tee, ...pairs.flatMap(pr => [f.back(pr.q), f.back(frontPt(pr.q))])]);
+    pairs.forEach((pr, i) => {
+      const ht = hs[0], hp = hs[1 + i * 2], hf = hs[2 + i * 2];
+      if (hp == null) return;
+      if (hf != null) pr.dFront = Math.round((hf - hp) / M_PER_YD);
+      if (ht != null) pr.dTee = Math.round((hp - ht) / M_PER_YD);
+    });
+  }
+  const signed = v => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0');
+  for (const { q, front, tee, side, dFront, dTee } of pairs) {
+    const [x, y] = P(q);
+    const numW = Math.max(textW(front, 10), textW(tee, 9.5));
+    const dW = dFront != null || dTee != null ? Math.max(textW(signed(dFront ?? 0), 8), textW(signed(dTee ?? 0), 8)) + 3 : 0;
+    const wdt = numW + dW + 2, hgt = 21;
+    labG.append(el('circle', { cx: x, cy: y, r: 1.9, fill: INK }));
+    // Level with the spot, so the line out to it is straight across; it may
+    // run over the edge of its bunker.
+    const cands = [];
+    for (const dir of [side, -side]) for (const dx of [10, 16, 24, 34, 46]) cands.push([x + dir * dx, y + 5.5, dir > 0 ? 'start' : 'end']);
+    // No room level with it: a little above or below, the line still going
+    // straight out and then a short step to the numbers.
+    const more = [];
+    for (const dy of [-13, 13, -24, 24]) for (const dir of [side, -side]) for (const dx of [14, 24, 34, 46]) more.push([x + dir * dx, y + 5.5 + dy, dir > 0 ? 'start' : 'end']);
+    const spot = lab.place(cands, wdt, hgt, bounds) || lab.place(more, wdt, hgt, bounds) || [x + side * 10, y + 5.5, side > 0 ? 'start' : 'end'];
+    const [sx, sy, anc] = spot;
+    const x0 = anc === 'start' ? sx : sx - wdt;
+    const ex = anc === 'start' ? x0 - 2 : x0 + wdt + 2, my = sy - 5.5;
+    const knee = anc === 'start' ? ex - 4 : ex + 4;
+    labG.append(el('path', { d: Math.abs(my - y) < 1 ? pathD([[x, y], [ex, y]]) : pathD([[x, y], [knee, y], [ex, my]]), stroke: INK, 'stroke-width': 0.6, fill: 'none' }),
+      txt(x0, sy - 8, front, { 'font-size': 10, 'font-weight': 700, fill: RED }),
+      txt(x0, sy + 2.5, tee, { 'font-size': 9.5, fill: INK }));
+    if (dFront != null) labG.append(txt(x0 + numW + 3, sy - 8, signed(dFront), { 'font-size': 8, fill: BLUE, 'font-weight': 700 }));
+    if (dTee != null) labG.append(txt(x0 + numW + 3, sy + 2.5, signed(dTee), { 'font-size': 8, fill: BLUE, 'font-weight': 700 }));
   }
 
   // Tee boxes: the chosen one marked, each with its yards to the front.
@@ -485,7 +524,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     el('line', { x1: 14, x2: W - 14, y1: top - 4, y2: top - 4, stroke: '#d6dcd8', 'stroke-width': 0.8 }),
     el('line', { x1: 14, x2: W - 14, y1: bottom + 4, y2: bottom + 4, stroke: '#d6dcd8', 'stroke-width': 0.8 }),
     txt(16, bottom + 20, 'RED: YARDS TO THE FRONT OF THE GREEN', { 'font-size': 9, fill: RED, 'letter-spacing': 0.8, 'font-weight': 700 }),
-    prefs.hazards ? txt(16, bottom + 32, 'Black, under a red number: yards from the tee to that spot', { 'font-size': 9, fill: SOFT }) : null,
+    txt(16, bottom + 32, `Black: yards from the tee${prefs.deltas && info ? ' · Blue: yards uphill (+) or downhill (−) for that number' : ''}`, { 'font-size': 9, fill: SOFT }),
     reliefNote ? txt(16, bottom + 44, reliefNote, { 'font-size': 9, fill: SOFT }) : null,
     txt(16, H - 12, course.name.toUpperCase(), { 'font-size': 9, fill: '#9aa59e', 'letter-spacing': 1 }),
     txt(W - 16, H - 12, `HOLE ${n} OF ${course.holes.length}`, { 'font-size': 9, fill: '#9aa59e', 'text-anchor': 'end', 'letter-spacing': 1 }));
