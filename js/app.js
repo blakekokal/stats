@@ -68,7 +68,8 @@ export const COURSES = [
   { id: 'grapevine-pecan', name: 'Grapevine Golf Course – Pecan', file: 'data/grapevine-pecan.json', nines: 'grapevine' },
   { id: 'tour18dallas', name: 'Tour 18 Golf Course Dallas', file: 'data/tour18dallas.json' },
   { id: 'lantana', name: 'Lantana Golf Club', file: 'data/lantana.json' },
-  { id: 'lakepark-exec', name: 'Lake Park Golf Club – Executive', file: 'data/lakepark-exec.json' },
+  { id: 'lakepark', name: 'Lake Park Golf Course – Championship', file: 'data/lakepark.json' },
+  { id: 'lakepark-exec', name: 'Lake Park Golf Course – Executive', file: 'data/lakepark-exec.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 // Nine-hole courses at one club (the same `nines` tag) can be played together

@@ -1,4 +1,4 @@
-# Lake Park Golf Club – Executive (Lewisville, TX), 9 holes
+# Lake Park Golf Course – Executive (Lewisville, TX), 9 holes
 
 Built with no yardage book, from OpenStreetMap: greens, tee boxes, fairways (the
 short grass round each green), the pond and the nine hole lines are all mapped and
