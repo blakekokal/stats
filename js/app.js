@@ -64,6 +64,7 @@ export const COURSES = [
   { id: 'sherrillpark1', name: 'Sherrill Park Golf Course #1', file: 'data/sherrillpark1.json' },
   { id: 'sherrillpark2', name: 'Sherrill Park Golf Course #2', file: 'data/sherrillpark2.json' },
   { id: 'grapevine-bluebonnet', name: 'Grapevine Golf Course – Bluebonnet', file: 'data/grapevine-bluebonnet.json' },
+  { id: 'grapevine-mockingbird', name: 'Grapevine Golf Course – Mockingbird', file: 'data/grapevine-mockingbird.json' },
   { id: 'tour18dallas', name: 'Tour 18 Golf Course Dallas', file: 'data/tour18dallas.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
