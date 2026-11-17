@@ -204,6 +204,7 @@ export function renderHole(view, n) {
   const tourney = !watching && (scouting ? isTourneyScout()
     : round0?.type === 'Tournament' && !round0.submitted && localStorage.getItem('gs:viewOnly') !== '1');
   if (tourney) showOutlines = false; // no course lines in a tournament either
+  if (tourney) showWidth = showArc = false; // and no Tools at all (Width, Arc, Disp, Appr): the Tools button is gone
   // Replay (a client's past round, played back shot by shot): this hole shows
   // only the strokes played so far.
   const rp = watching && sessionStorage.getItem('gs:replay') === '1' ? (replay ||= { playing: true, speed: 1 }) : null;
@@ -307,7 +308,7 @@ export function renderHole(view, n) {
   //  Distance — a ring of a set size in feet around the crosshair (where you're aiming)
   //  SG       — a ring around the pin where landing on the green gains this much
   //             (-1 to +1, default 0) for an approach from where the ball is now
-  let showAppr = flag('gs:appr', '0');
+  let showAppr = !tourney && flag('gs:appr', '0');
   let apprFt = Math.min(80, Math.max(10, +localStorage.getItem('gs:apprFt') || 40));
   let apprMode = !tourney && localStorage.getItem('gs:apprMode') === 'sg' ? 'sg' : 'ft';
   const apprSlider = h('div', { class: 'arcslider appr', hidden: true });
@@ -961,6 +962,7 @@ export function renderHole(view, n) {
     return btn;
   };
   const toolsBtn = groupBtn('tools', 'gs:toolsOpen', 'Tools', 'Width, Arc, Disp and Appr');
+  if (tourney) toolsBtn.open = false; // never open (or shown) in a tournament
   const sgBtn = groupBtn('sgtools', 'gs:sgOpen', 'SG', 'Auto target and Compare clubs');
   const drawGroup = (btn, members, onCount, icon, openCls) => {
     btn.hidden = members.every(b => b.hidden);
@@ -1984,6 +1986,7 @@ export function renderHole(view, n) {
     // Tools and SG: hidden when there's nothing to open; closed, they show how many of their tools are on.
     drawGroup(toolsBtn, [widthBtn, arcBtn, dispBtn, apprBtn], [showWidth, showArc, showDisp, showAppr].filter(Boolean).length, '⋯', 'toolsopen');
     if (viewing()) { toolsBtn.hidden = true; holeEl()?.classList.remove('toolsopen'); } // no aiming tools on a past round
+    if (tourney) { toolsBtn.hidden = widthBtn.hidden = arcBtn.hidden = dispBtn.hidden = apprBtn.hidden = true; toolsBtn.open = false; holeEl()?.classList.remove('toolsopen'); } // no Tools button at all in a tournament
     drawGroup(sgBtn, [compBtn, autoBtn], [showComp, !!autoPick].filter(Boolean).length, '⊙', 'sgopen');
     if (!toolsBtn.open) arcSlider.hidden = apprSlider.hidden = true;
     if (!viewBox.hidden) drawViewBox();
