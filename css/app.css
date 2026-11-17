@@ -588,3 +588,5 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .clubsheet.bagmode .clubbox { margin-bottom: 0; }
 .clubsheet.bagmode .baglist { height: min(46vh, 340px); max-height: none; align-content: start; }
 .clubbox .clubhead .ydmode { justify-self: auto; }
+
+.autokey .why { font-size: 11px; font-weight: 600; opacity: .8; }
