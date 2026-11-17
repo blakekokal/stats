@@ -14,6 +14,8 @@
 # puts it better on sand or green turf.
 import importlib.util, json, math, os, sys, cv2, numpy as np
 import yardage_book, tree_circles
+import shapely
+from shapely.geometry import Polygon
 cdir, pdf, img, out = sys.argv[1:5]
 spec = importlib.util.spec_from_file_location('course', os.path.join(cdir, 'course.py')); C = importlib.util.module_from_spec(spec); spec.loader.exec_module(C)
 TEES, PAR, HCP = C.TEES, C.PAR, C.HCP
@@ -154,9 +156,12 @@ for n, h in B.items():
         key = {'bunker': 'bunker', 'water': 'dark'}.get(k)
         if not key: continue
         ring = gg[0]; xs_ = [q[0] for q in ring]; ys_ = [q[1] for q in ring]
-        for yy in np.arange(min(ys_), max(ys_), 0.7):
-            for xx in np.arange(min(xs_), max(xs_), 0.7):  # not in a hole in the shape (an island green in a pond)
-                if yardage_book.inside((xx, yy), ring) and not any(yardage_book.inside((xx, yy), q) for q in gg[1:] + (land[n] if k == 'water' else [])): pts[gid[n]][key].append(plan[n] + complex(xx, yy))
+        gx_, gy_ = np.meshgrid(np.arange(min(xs_), max(xs_), 0.7), np.arange(min(ys_), max(ys_), 0.7))
+        gx_, gy_ = gx_.ravel(), gy_.ravel()
+        ok_ = shapely.contains_xy(Polygon(ring).buffer(0), gx_, gy_)
+        for q in gg[1:] + (land[n] if k == 'water' else []):  # not in a hole in the shape (an island green in a pond)
+            if len(q) >= 3: ok_ &= ~shapely.contains_xy(Polygon(q).buffer(0), gx_, gy_)
+        pts[gid[n]][key].extend(plan[n] + gx_[ok_] + 1j * gy_[ok_])
 rng = np.random.default_rng(1)  # a sample is plenty, and keeps the search quick
 for pg in pts:
     for k in pg:
