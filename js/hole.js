@@ -197,7 +197,8 @@ export function renderHole(view, n) {
   const scouting = isScouting(); // GPS Scouting: a round held in memory only, never saved
   // Tournament mode (picked on New Round / GPS Overview): only what the Rules of
   // Golf (4.3a) allow while playing: plain distances, compass, scorecard, shot
-  // tracking. No plays-like (height or wind), wind, contours and slope, club or
+  // tracking. No plays-like (height or wind), wind, contours on or near a green
+  // (elsewhere a switch, off to start), club or
   // line advice (Auto, Comp, the Club box's Auto pick) and no strokes gained
   // (crosshair SG, Disp, Appr SG, SG map, Expected), and no course lines. A finished round viewed
   // afterwards shows everything again.
@@ -902,7 +903,13 @@ export function renderHole(view, n) {
   // row of intervals, and plays-like yardages by the crosshair.
   let styleReady = false; // the map's load event has run (sources can be added)
   const elevId = partOf(course, n); // two nines played as 18: the elevation of the nine this hole is on
-  const redrawElev = () => { if (styleReady && !tourney) drawElevation(m, elevId, { line: route(), own: holeFeatures(ch) }); };
+  // A tournament has its own Contours switch (off at the start of each round)
+  // and never shows contours on or within 15 yards of any green.
+  const tourneyId = tourney ? (scouting ? 'scout' : String(round0?.id ?? '')) : null;
+  const contoursOn = () => (tourney ? elevPrefs.tourneyContours(tourneyId) : elevPrefs.contours);
+  const setContours = v => { if (tourney) elevPrefs.setTourneyContours(tourneyId, v); else elevPrefs.contours = v; };
+  const greenRings = () => course.features.filter(f => f.t === 'green').map(f => f.p[0]);
+  const redrawElev = () => { if (styleReady) drawElevation(m, elevId, { line: route(), own: holeFeatures(ch), ...(tourney ? { on: contoursOn(), cut: greenRings() } : {}) }); };
   let elevInfo = null; // this course's entry in data/elev/index.json, once fetched
   const elevChips = (opts, get, set) => {
     const row = h('div', { class: 'viewchips' });
@@ -912,7 +919,7 @@ export function renderHole(view, n) {
   };
   const contourChips = elevChips(CONTOUR_YD.map(y => [`${y} yd`, y]), () => elevPrefs.contourYd, v => { elevPrefs.contourYd = v; });
   // The intervals stay in place whether contours are on or off, so the box doesn't jump.
-  const contourRow = viewSwitch('Contours & slope', () => elevPrefs.contours, v => { elevPrefs.contours = v; redrawElev(); drawViewBox(); });
+  const contourRow = viewSwitch(tourney ? 'Contours (not near greens)' : 'Contours & slope', contoursOn, v => { setContours(v); redrawElev(); drawViewBox(); });
   // Plays like: a switch at the top right, under Expected.
   // Plays like: a button left of Expected. On, it shows two round switches
   // under it: Elv (the height change, on to start) and Wnd (the wind, off to start).
@@ -935,12 +942,12 @@ export function renderHole(view, n) {
     } }, 'Plays', h('br'), 'like');
   const playsWrap = h('div', { class: 'playswrap', hidden: true }, playsBtn, playsOpts);
   const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips);
-  elevIndex().then(ix => { elevInfo = ix[elevId] || null; elevBox.hidden = playsWrap.hidden = tourney || !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
+  elevIndex().then(ix => { elevInfo = ix[elevId] || null; elevBox.hidden = !elevInfo; playsWrap.hidden = tourney || !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
   const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), tourney ? null : sgtRow, tourney ? null : linesRow, cleanRow, elevBox);
   const drawViewBox = () => {
     sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync();
     contourRow.sync(); contourChips.sync();
-    contourChips.classList.toggle('off', !elevPrefs.contours);
+    contourChips.classList.toggle('off', !contoursOn());
   };
   const viewBtn = h('button', { class: 'fab cleanview', 'aria-label': 'View', title: 'SG map, course lines, clean view and contours',
     onclick: () => { menu.hidden = true; viewBox.hidden = !viewBox.hidden; placeView(); drawViewBox(); } }, h('span', {}, '◉'), h('small', {}, 'View'));
