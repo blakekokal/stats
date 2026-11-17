@@ -705,8 +705,12 @@ export function renderHole(view, n) {
   let showComp = flag('gs:comp', '0') && compClubs.length >= 2;
   const compSheet = h('div', { class: 'clubsheet', hidden: true, onclick: e => { if (e.target === compSheet) compSheet.hidden = true; } });
   const saveComp = () => { localStorage.setItem('gs:comp', showComp ? '1' : '0'); localStorage.setItem('gs:compClubs', JSON.stringify(compClubs)); };
+  // Comp's settings (the ⚙ above Comp, or Comp itself the first time, before
+  // any clubs are picked): the 2-3 clubs, and arcs or dispersion dots. Done
+  // keeps Comp on with these.
+  let compMode = localStorage.getItem('gs:compMode') === 'disp' ? 'disp' : 'arc';
   function openCompPicker() {
-    let sel = compClubs.filter(c => compYards(c));
+    let sel = compClubs.filter(c => compYards(c)), mode = compMode;
     const draw = () => compSheet.replaceChildren(h('div', { class: 'clubbox' },
       h('div', { class: 'clubhead' }, h('strong', {}, 'Compare · pick 2–3 clubs'), h('button', { class: 'x', onclick: () => { compSheet.hidden = true; } }, '✕')),
       ydToggle(draw),
@@ -716,18 +720,31 @@ export function renderHole(view, n) {
           onclick: () => { sel = i >= 0 ? sel.filter(x => x !== c.name) : [...sel, c.name].slice(-3); draw(); } },
           h('b', {}, clubShort(c.name)), h('small', {}, yd ? `${yd} yds` : 'no yds'));
       })),
+      h('div', { class: 'compmodes' }, ...[['arc', '◠ Arc'], ['disp', '⁘ Disp']].map(([k, label]) =>
+        h('button', { class: mode === k ? 'on' : '', onclick: () => { mode = k; draw(); } }, label))),
       h('div', { class: 'compactions' },
-        h('button', { class: 'off', onclick: () => { showComp = false; saveComp(); compSheet.hidden = true; update(); } }, 'Off'),
-        h('button', { class: 'record', disabled: sel.length < 2, onclick: () => { compClubs = sel; showComp = true; compAim = {}; if (autoPick) { autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; } saveComp();
-          if (showArc) setArcOn(false); if (showDisp) setDispOn(false); /* only the Comp arcs */ compSheet.hidden = true; update(); } }, 'Compare'))));
+        h('button', { class: 'record', disabled: sel.length < 2, onclick: () => {
+          compClubs = sel; compMode = mode; localStorage.setItem('gs:compMode', compMode);
+          compSheet.hidden = true; setComp(true);
+        } }, 'Done'))));
     draw();
     compSheet.hidden = false;
   }
-  // Next to Comp while it's on: show the clubs as arcs or as dispersion dots.
-  let compMode = localStorage.getItem('gs:compMode') === 'disp' ? 'disp' : 'arc';
-  const compModeBtn = h('button', { class: 'fab arcadj compmode', 'aria-label': 'Arcs or dispersion', title: 'Show the compared clubs as arcs or dispersion dots', hidden: true,
-    onclick: () => { compMode = compMode === 'arc' ? 'disp' : 'arc'; localStorage.setItem('gs:compMode', compMode); update(); } }, h('span', {}, ''), h('small', {}, ''));
-  const compBtn = h('button', { class: 'fab comp', 'aria-label': 'Compare clubs', title: 'Compare 2-3 clubs on one line', onclick: openCompPicker }, h('span', {}, '⫶'), h('small', {}, 'Comp'));
+  // Comp on or off. On: only the compared clubs' arcs or dots show (Arc and Disp
+  // go off); with Auto on, each compared club goes onto its own best line.
+  // Off: with Auto on, Auto picks the club and line again.
+  function setComp(on) {
+    if (autoPick) { if (autoPick.comp) compAim = {}; else { pickedClub = null; if (showDisp) setDispOn(false); } autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; }
+    showComp = on; compAim = {}; saveComp();
+    if (on) { if (showArc) setArcOn(false); if (showDisp) setDispOn(false); }
+    update();
+    if (autoWanted()) runAuto();
+  }
+  const compBtn = h('button', { class: 'fab comp', 'aria-label': 'Compare clubs', title: 'Compare 2-3 clubs on one line (on / off)', onclick: () => {
+    if (!showComp && compClubs.filter(c => compYards(c)).length < 2) { openCompPicker(); return; } // first time: pick the clubs
+    setComp(!showComp);
+  } }, h('span', {}, '⫶'), h('small', {}, 'Comp'));
+  const compSetBtn = h('button', { class: 'fab compset', 'aria-label': 'Compare settings', title: 'Pick the compared clubs, and arcs or dispersion', hidden: true, onclick: openCompPicker }, '⚙');
   const compLegend = h('div', { class: 'zonelegend compkey', hidden: true });
   // View: a clean look at the hole — no crosshair or its yardages, no aiming
   // line, arc, width or approach circle, no shot tracer or shot dots. Comp arcs
@@ -811,31 +828,30 @@ export function renderHole(view, n) {
     }
     return { from, results: results.sort((a, b) => b.score - a.score) };
   }
-  const autoBtn = h('button', { class: 'fab autotarget', 'aria-label': 'Auto target', title: 'Pick the best club and aiming point', onclick: () => {
-    if (autoPick) {
-      if (autoPick.comp) compAim = {}; // the compared clubs go back on the one line
-      else { pickedClub = null; if (showDisp) setDispOn(false); }
-      autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; update(); return;
-    }
+  // Auto stays on from hole to hole (for this visit): each new hole opens with
+  // its pick made, or with Comp on, each compared club on its own best line.
+  const autoWanted = () => { try { return sessionStorage.getItem('gs:autoOn') === '1'; } catch { return false; } };
+  const setAutoWanted = v => { try { if (v) sessionStorage.setItem('gs:autoOn', '1'); else sessionStorage.removeItem('gs:autoOn'); } catch { /* not kept */ } };
+  // Picks the best club and line (or, with Comp on, each compared club's line). False if there's none.
+  function runAuto() {
     if (showComp) {
       // Comparing: each compared club gets its own best line (the crosshair stays put).
       const { from, results } = findBest(compClubs);
-      if (!results.length) return;
+      if (!results.length) return false;
       compAim = {}; compAimFrom = from.join(',');
       for (const r of results) compAim[r.club] = r.brg;
       autoPick = { comp: true, from: from.join(',') };
       autoBtn.classList.add('on');
       autoKey.hidden = true; // the Compare key lists each club's SG
       update();
-      return;
+      return true;
     }
     const { from, results } = findBest();
-    if (!results.length) return;
+    if (!results.length) return false;
     const b = results[0];
     autoPick = { ...b, from: from.join(',') };
     autoBtn.classList.add('on');
     pickedClub = b.club;
-    if (showComp) { showComp = false; saveComp(); }
     if (!showDisp) { setDispOn(true); onlyOne('disp'); }
     autoKey.replaceChildren(h('small', {}, 'Auto · best clubs (avg SG)'), ...results.slice(0, 4).map((r, i) => h('span', { class: i ? '' : 'best' },
       `${clubShort(r.club)} ${r.yd}y · ${Math.abs(r.off) < 1 ? 'at pin' : `${Math.round(Math.abs(r.off))}° ${r.off < 0 ? 'L' : 'R'}`} · `,
@@ -843,6 +859,15 @@ export function renderHole(view, n) {
     autoKey.hidden = false;
     m.easeTo({ center: ll(b.aim), duration: 500 });
     update();
+    return true;
+  }
+  const autoBtn = h('button', { class: 'fab autotarget', 'aria-label': 'Auto target', title: 'Pick the best club and aiming point (stays on from hole to hole)', onclick: () => {
+    if (autoPick) {
+      if (autoPick.comp) compAim = {}; // the compared clubs go back on the one line
+      else { pickedClub = null; if (showDisp) setDispOn(false); }
+      autoPick = null; autoBtn.classList.remove('on'); autoKey.hidden = true; setAutoWanted(false); update(); return;
+    }
+    if (runAuto()) setAutoWanted(true);
   } }, h('span', {}, '✦'), h('small', {}, 'Auto'));
   // Clean view, for screenshots: just the map, the hole pill and the View and
   // menu buttons. View drops to just above the menu, but not while its box is
@@ -1396,7 +1421,7 @@ export function renderHole(view, n) {
     watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') }, scouting ? 'GPS Overview' : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, playsWrap, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { closeView(); menu.hidden = !menu.hidden; } }, '☰'),
-    addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist), gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compModeBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
+    addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist), gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compSetBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
     holePill = h('div', { class: 'holepill' },
       h('a', { href: `#/hole/${prevHole}`, 'aria-label': 'Previous hole' }, '‹'),
       h('div', {}, pillSmall, pillStrong),
@@ -1919,8 +1944,7 @@ export function renderHole(view, n) {
     autoBtn.hidden = onGreen || viewing();
     if (autoBtn.hidden) autoKey.hidden = true;
     compBtn.classList.toggle('on', showComp);
-    compModeBtn.hidden = compBtn.hidden || !showComp;
-    compModeBtn.firstChild.textContent = compMode === 'arc' ? '◠' : '⁘'; compModeBtn.lastChild.textContent = compMode === 'arc' ? 'Arc' : 'Disp';
+    compSetBtn.hidden = compBtn.hidden || !showComp;
     if (compBtn.hidden) compLegend.hidden = true;
     arcSlider.hidden = !(showArc || showDisp) || onGreen || !arcAdjOpen;
     dispBtn.hidden = onGreen;
@@ -2332,6 +2356,8 @@ export function renderHole(view, n) {
     if (keepCam) m.jumpTo(keepCam);
     else if (stage() !== 'play' && !viewing()) zoomToGreen();
     update();
+    // Auto on: this hole opens with its pick made (and shown).
+    if (autoWanted() && stage() === 'play' && !viewing() && !watching && !rp) runAuto();
     if (scouting && isAdmin && resumeEditAt(n)) editBoundaries(); // moved here with ‹ › while editing boundaries
     if (rp) {
       m.addSource('replay', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
