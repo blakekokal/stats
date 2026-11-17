@@ -8,3 +8,4 @@ tools/*/*-check.jpg
 tools/*/m1[6-9].png
 tools/*/m1[6-9].png.meta
 tools/*.dem.npy
+tools/*.dem.npz
