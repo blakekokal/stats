@@ -757,8 +757,9 @@ export function renderHole(view, n) {
   // within 3 yd of a bunker as in the bunker, so the pick keeps that far clear.
   // Shots in trees or recovery areas score as recovery shots, and a line aimed
   // at a hazard, bunker or trees is never picked while another is open. The
-  // highest SG wins, except that an option within 0.05 of it with more shots on
-  // the fairway (or green) is preferred. Trees in the way of the shot aren't
+  // highest SG wins, except that an option within 0.05 of it with fewer shots in
+  // trouble (hazards, bunkers, trees) or, level on those, more on the fairway
+  // (or green) is preferred. Trees in the way of the shot aren't
   // looked at. The crosshair moves to the pick and Disp shows its spread. Clubs
   // that would fly well past the pin are skipped. While Comp is on, Auto instead
   // swings each compared club onto its own best line (the crosshair stays put).
@@ -792,11 +793,12 @@ export function renderHole(view, n) {
     };
     const AVOID = ['ob', 'water', 'bunker', 'recovery']; // never aimed at while another line is open
     const FAIRWAY_SLACK = 0.05; // the SG given up for more shots on the fairway
-    // The best of some options: the highest score, or one within FAIRWAY_SLACK of it with more shots on the fairway.
+    // The best of some options: the highest score, or one within FAIRWAY_SLACK of it with fewer shots in
+    // trouble (hazards, bunkers, trees, buffers included) or, level on those, more shots on the fairway.
     const choose = list => {
       const pool = list.some(l => !l.bad) ? list.filter(l => !l.bad) : list;
       const top = Math.max(...pool.map(l => l.score));
-      return pool.filter(l => l.score >= top - FAIRWAY_SLACK).reduce((a, b) => (b.fw > a.fw || (b.fw === a.fw && b.score > a.score) ? b : a));
+      return pool.filter(l => l.score >= top - FAIRWAY_SLACK).reduce((a, b) => (b.tr < a.tr || (b.tr === a.tr && (b.fw > a.fw || (b.fw === a.fw && b.score > a.score))) ? b : a));
     };
     const results = [];
     for (const c of only ? only.map(name => ({ name })) : bag()) {
@@ -807,13 +809,13 @@ export function renderHole(view, n) {
         const brg = ((main + off) * Math.PI) / 180;
         const aim = [from[0] + (dm * Math.cos(brg)) / M_PER_DEG, from[1] + (dm * Math.sin(brg)) / (M_PER_DEG * k)];
         const d = dispersion(from, aim, w, fromExp, lieHere);
-        let score = 0, fw = 0;
+        let score = 0, fw = 0, tr = 0;
         for (const x of d.dots) {
           const lie = playLie(x.q, x.lie);
           score += sgFinish(fromExp, lie, yards(x.q, pin));
-          if (lie === 'fairway' || lie === 'green') fw++;
+          if (lie === 'fairway' || lie === 'green') fw++; else if (AVOID.includes(lie)) tr++;
         }
-        lines.push({ club: c.name, yd, aim, off, brg: main + off, sg: d.sg, score: score / d.dots.length, fw, bad: AVOID.includes(playLie(aim)) });
+        lines.push({ club: c.name, yd, aim, off, brg: main + off, sg: d.sg, score: score / d.dots.length, fw, tr, bad: AVOID.includes(playLie(aim)) });
       }
       results.push(choose(lines));
     }
