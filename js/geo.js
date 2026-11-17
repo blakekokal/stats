@@ -65,3 +65,30 @@ export function distToLine(p, line) {
   }
   return best;
 }
+
+// A ring drawn as a smooth, rounded curve instead of straight edges: each
+// corner is replaced by a curve between the middles of its two edges (a
+// quadratic B-spline), so the line stays inside the corners and never
+// overshoots. For drawing only: lies are still decided by the ring itself.
+// Returns a closed ring (first point repeated at the end).
+export function smoothRing(ring) {
+  // Without repeated points (the closing one included): a doubled point would stay a sharp corner.
+  const same = (a, b) => a[0] === b[0] && a[1] === b[1];
+  const pts = ring.filter((p, i) => !same(p, ring[(i + 1) % ring.length]) || ring.length === 1);
+  const n = pts.length;
+  if (n < 3) return ring;
+  const steps = n <= 8 ? 10 : n <= 40 ? 5 : 3;
+  const out = [];
+  for (let i = 0; i < n; i++) {
+    const a = pts[(i + n - 1) % n], b = pts[i], c = pts[(i + 1) % n];
+    const s = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2], e = [(b[0] + c[0]) / 2, (b[1] + c[1]) / 2];
+    for (let k = 0; k < steps; k++) {
+      const t = k / steps, u = 1 - t;
+      out.push([u * u * s[0] + 2 * u * t * b[0] + t * t * e[0], u * u * s[1] + 2 * u * t * b[1] + t * t * e[1]]);
+    }
+  }
+  out.push(out[0]);
+  return out;
+}
+// OB and the course boundary keep their hard corners; everything else is rounded.
+export const drawnRing = (ring, t) => (t === 'ob' || t === 'course' ? ring : smoothRing(ring));

@@ -11,7 +11,7 @@
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast, complexHoles } from './app.js';
 import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity } from './store.js';
-import { lieAt, yards, inPolygon, boundsOf, distToLine, YD_PER_M } from './geo.js';
+import { lieAt, yards, inPolygon, boundsOf, distToLine, drawnRing, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js';
@@ -2235,8 +2235,8 @@ export function renderHole(view, n) {
     if (map !== m) return;
     m.resize(); place();
     m.addSource('outlines', { type: 'geojson', data: { type: 'FeatureCollection', features: holeFeatures(ch).map(f => ({
-      type: 'Feature', properties: { color: LIE_COLOR[f.t] }, geometry: { type: 'MultiLineString', coordinates: (f.t === 'ob' ? obLines(f) : f.p).map(r => r.map(ll)) } })) } });
-    m.addLayer({ id: 'outlines', type: 'line', source: 'outlines', layout: { visibility: showOutlines ? 'visible' : 'none' }, paint: { 'line-color': ['get', 'color'], 'line-width': 1.25, 'line-opacity': 0.7 } });
+      type: 'Feature', properties: { color: LIE_COLOR[f.t] }, geometry: { type: 'MultiLineString', coordinates: (f.t === 'ob' ? obLines(f) : f.p).map(r => drawnRing(r, f.t).map(ll)) } })) } });
+    m.addLayer({ id: 'outlines', type: 'line', source: 'outlines', layout: { visibility: showOutlines ? 'visible' : 'none', 'line-join': 'round' }, paint: { 'line-color': ['get', 'color'], 'line-width': 1.25, 'line-opacity': 0.7 } });
     if (watching) { try { holeSpotlight(); } catch { /* the hole still shows, just without the tint */ } }
     const addLine = (id, shadow, paint, layout = {}) => {
       m.addSource(id, { type: 'geojson', data: line([]) });
