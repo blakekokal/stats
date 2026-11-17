@@ -178,5 +178,20 @@
    553
   ],
   "source": "USGS 3DEP"
+ },
+ "grapevine-pecan": {
+  "bounds": [
+   -97.05624,
+   32.963325,
+   -97.048869,
+   32.980413
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   460,
+   591
+  ],
+  "source": "USGS 3DEP"
  }
 }
