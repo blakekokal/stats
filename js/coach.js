@@ -442,6 +442,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.89.0', ['New course: Grapevine Golf Course \u2013 Pecan, the last of its three nines, built from its yardage book. Play it as 9, or with Bluebonnet or Mockingbird to make 18']],
   ['0.88.0', ['Nine-hole courses: picking one in New Round or GPS Overview asks whether to play just those 9 or add another nine at the same club to make 18 (e.g. Bluebonnet front 9, Mockingbird back 9). The back nine is holes 10–18, with the tee boxes’ yardages added up, and each hole keeps its own contours and plays-like heights']],
   ['0.87.0', ['Elevation on every course: contour lines with downhill arrows (View box) and plays-like yardages now work at Bear Creek East and West, Bridlewood, Cross Timbers, Grapevine Bluebonnet, Sherrill Park #1 and #2, Squaw Creek, Tangle Ridge, Tour 18 Dallas and Grapevine Mockingbird, as well as Cowboys']],
   ['0.86.0', ['New course: Grapevine Golf Course \u2013 Mockingbird, the second of its three nines, built from its yardage book']],
