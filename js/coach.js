@@ -426,6 +426,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['0.80.5', ['Contours & slope: contour lines and arrows are see-through now, so the course shows through them']],
   ['0.80.4', ['Contours & slope: lighter, near-white contour lines and arrows with a faint dark edge, at full strength across the hole (fading only at the very edge), so they stand out on the grass']],
   ['0.80.3', ['Contours & slope: contour lines and arrows are a little thinner and fully opaque, so they stand out more']],
   ['0.80.2', ['Contours & slope: smooth, rounded contour lines in a thin light green, all the same weight, like a yardage book’s green pages, with smaller, finer downhill arrows']],
