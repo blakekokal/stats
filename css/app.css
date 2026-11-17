@@ -504,7 +504,8 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .viewelev { border-top: 1px solid rgba(255,255,255,.15); margin-top: 4px; padding-top: 4px; display: flex; flex-direction: column; gap: 4px; }
 .viewelev[hidden] { display: none; }
 .viewchips { display: flex; gap: 6px; padding: 0 2px 4px; }
-.viewchips[hidden] { display: none; }
+.viewchips.off { opacity: .45; }
+.readout b.playslike small { font-size: .6em; font-weight: 700; margin: 0 .05em; vertical-align: .35em; }
 .viewchips button { flex: 1; min-height: 0; padding: 6px 4px; border-radius: 8px; border: 1px solid rgba(255,255,255,.25); background: transparent; color: inherit; font-size: 13px; font-weight: 600; }
 .viewchips button.on { background: #22c55e; border-color: #22c55e; color: #111; }
 .viewswitch input:checked + i { background: #22c55e; }

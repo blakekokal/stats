@@ -6,13 +6,12 @@
    -97.039504,
    32.985631
   ],
-  "minzoom": 13,
-  "maxzoom": 17,
+  "minzoom": 16,
+  "maxzoom": 16,
   "ft": [
    458,
    598
   ],
-  "shadeStretch": 5,
   "source": "USGS 3DEP"
  }
 }
