@@ -488,7 +488,11 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       const pts = ringOf(x).map(f.fwd).filter(p => walk.some(w => Math.abs(w.p[1] - p[1]) < 3 && Math.abs(w.p[0] - p[0]) < reach));
       if (pts.length < 2) continue;
       const fr = pts.map(toFront);
-      const iS = fr.indexOf(Math.max(...fr)), iE = fr.indexOf(Math.min(...fr));
+      let iS = fr.indexOf(Math.max(...fr)), iE = fr.indexOf(Math.min(...fr));
+      if (x.t === 'water') { // the nearest point from the tee (to reach it) and the farthest (to carry it all)
+        const dt = pts.map(q => dist(q, [0, 0]));
+        iS = dt.indexOf(Math.min(...dt)); iE = dt.indexOf(Math.max(...dt));
+      }
       if (fr[iS] > 440) continue; // behind the tee
       if (x.t === 'bunker' && fr[iE] < 10) continue; // greenside
       const nearTee = q => dist(q, [0, 0]) < 25; // beside the tee: no number there
@@ -498,7 +502,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       const side = (c[0] - nearLine.p[0]) * nearLine.d[1] - (c[1] - nearLine.p[1]) * nearLine.d[0] >= 0 ? 1 : -1;
       // Water by the tee still gets its far end (the carry).
       if (!nearTee(pts[iS])) pair(pts[iS], Math.round(fr[iS]), Math.round(dist(pts[iS], [0, 0])), side);
-      if (fr[iS] - fr[iE] >= 3 || nearTee(pts[iS])) pair(pts[iE], Math.round(fr[iE]), Math.round(dist(pts[iE], [0, 0])), side);
+      if (Math.abs(fr[iS] - fr[iE]) >= 3 || dist(pts[iE], pts[iS]) >= 3 || nearTee(pts[iS])) pair(pts[iE], Math.round(fr[iE]), Math.round(dist(pts[iE], [0, 0])), side);
     }
   }
 
@@ -679,6 +683,8 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     svg.dataset.tees = JSON.stringify(teeInfo);
     svg.dataset.teebox = [Math.min(...q.map(p => p[0])), Math.min(...q.map(p => p[1])), Math.max(...q.map(p => p[0])), Math.max(...q.map(p => p[1]))].map(v => v.toFixed(1)).join(' ');
   }
+  // The map view: where the page's corners are on the ground.
+  svg.geo = { at: (u, v) => f.back([(u - cx) / s, (cy - v) / s]), rect: [left, top, right, bottom], up };
   return svg;
 }
 
@@ -1139,6 +1145,35 @@ export function openBook(n, opts) {
   document.body.classList.add('bookopen');
   draw();
   return ov;
+}
+
+// The yardage book as a map (GPS Overview > View > Yardage book view): the
+// whole hole page (no tees box), as a picture with its four corners on the
+// ground [lng, lat] (top left, top right, bottom right, bottom left) and the
+// bearing that's up the page (degrees).
+export async function bookMapImage(n, teeName, helpers, opts = {}, scale = 6) {
+  const prefs = { ...loadPrefs(), teeInset: false };
+  let svg;
+  try { svg = await holePage(n, teeName, prefs, helpers, opts); } catch (e) {
+    console.error('yardage book map', e);
+    svg = await holePage(n, teeName, { ...prefs, contours: false, deltas: false }, helpers, opts);
+  }
+  const [l, t, r, b] = svg.geo.rect, H = +svg.getAttribute('viewBox').split(' ')[3];
+  const cv = document.createElement('canvas');
+  cv.width = Math.round((r - l) * scale); cv.height = Math.round((b - t) * scale);
+  const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+  await drawSvg(ctx, svg, -l * scale, -t * scale, W * scale, H * scale, await bookFontCss());
+  const url = await new Promise(ok => cv.toBlob(bl => ok(URL.createObjectURL(bl)), 'image/png'));
+  const corners = [[l, t], [r, t], [r, b], [l, b]].map(([u, v]) => { const [la, lo] = svg.geo.at(u, v); return [lo, la]; });
+  return { url, corners, bearing: (svg.geo.up * 180) / Math.PI };
+}
+// The green page by itself (tapping the green in the map view).
+export async function bookGreenPage(n, teeName, helpers, opts = {}) {
+  const prefs = { ...loadPrefs() };
+  try { return await greenPage(n, teeName, prefs, helpers, opts); } catch (e) {
+    console.error('yardage book green', e);
+    return greenPage(n, teeName, { ...prefs, greenContours: false, slopes: false }, helpers, opts);
+  }
 }
 
 // For tests and tools: draw a hole's pages without the screen.

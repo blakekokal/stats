@@ -462,6 +462,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.8.2', ['GPS Overview: Yardage book view is now a map drawn like the book. Pinch to zoom, drag and turn it like the satellite map; the whole hole is there, tees and all. Tap the green for the green page (tap again to close). ‹ › still go round the holes', 'Yardage book: water numbers go from the nearest point of the water to the tee (to reach it) to the farthest (to carry it all)']],
   ['1.8.1', ['Yardage book: a 50 to the front of the green down the middle of every hole, with the 100, 150 and 200', 'Yardage book: water is marked like bunkers on more holes. A pond up to 80 yards off the line of play now gets its start and end numbers (Bridlewood #1’s lake right of the green: 82 and 53), and water that starts beside the tee still gets the number to carry it']],
   ['1.8.0', ['GPS Overview: Yardage book view in the View box. Switch it on and the hole turns into its yardage book pages (the green page over the hole page, from your tee box), with no tools or crosshair; ‹ › on the hole pill still go round the holes, and it stays on until you switch it off']],
   ['1.7.2', ['Yardage book: tee boxes are grey instead of green, and the one you’re playing from is dark with a heavy outline so it stands out']],
