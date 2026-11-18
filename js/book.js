@@ -498,7 +498,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
 
   // Down the middle: 100, 150 and 200 to the front of the green (and 250 and
   // 300 on a par 5).
-  if (prefs.layup) {
+  if (prefs.layup && !opts.teeView) { // (they're on the map; not in the tees box)
     for (const yd of ch.par >= 5 ? [100, 150, 200, 250, 300] : [100, 150, 200]) {
       const w = spotAt(yd);
       if (!w || w.fromTee < 40) continue;
@@ -521,6 +521,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   for (const { q, front, tee, side, dFront, dTee } of pairs) {
     const [x, y] = P(q);
     if (y > bottom - 6 || y < top + 6) continue; // off the map (short of where it starts)
+    if (opts.teeView && tee > 130) continue; // the tees box: just what's near the tees
     // Four rows: blue up/down to the green, red to the front, black from the
     // tee, blue up/down from the tee. The labeller boxes them from 32 above
     // the anchor's y to 10 below; their middle (my) is level with the spot.
@@ -547,6 +548,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   }
 
   const teeFrontYd = Math.round(toFront(f.fwd(tee)));
+  const teeMarks = []; // labels and the ruler round the tees (page units), for the tees box
   // Tee boxes: the chosen one marked, each with its yards to the front.
   const teeFront = Math.round(toFront(f.fwd(tee)));
   for (const { b, r } of cropped ? [] : teeBoxesL) {
@@ -561,7 +563,29 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const label = chosen ? `${names.length ? names.join('/') : teeName} ${v}` : `${names.join('/') || 'Tee'} ${v} · ${gap > 0 ? '+' : gap < 0 ? '−' : '±'}${Math.abs(gap)}`;
     const size = opts.teeView ? (chosen ? 13 : 12) : chosen ? 10 : 8.5; // bigger when seen in the tees box
     const spot = lab.place([[c[0] + 9, c[1] + 3, 'start'], [c[0] - 9, c[1] + 3, 'end'], [c[0] + 9, c[1] + 12, 'start'], [c[0] - 9, c[1] + 12, 'end']], textW(label, size), size, bounds);
-    if (spot) labG.append(txt(spot[0], spot[1], label, { 'font-size': size, 'font-weight': chosen ? 700 : 400, fill: chosen ? INK : SOFT, 'text-anchor': spot[2] }));
+    if (spot) {
+      labG.append(txt(spot[0], spot[1], label, { 'font-size': size, 'font-weight': chosen ? 700 : 400, fill: chosen ? INK : SOFT, 'text-anchor': spot[2] }));
+      const lw = textW(label, size) * 1.05, lx = spot[2] === 'start' ? spot[0] : spot[0] - lw;
+      teeMarks.push([lx, spot[1] - size, lx + lw, spot[1] + 2]);
+    }
+  }
+  // In the tees box: a ruler beside the tees, with a line from the front of
+  // each tee box (a dot) to it, to show the distances are front to front.
+  if (opts.teeView) {
+    const fronts = teeBoxesL.filter(t => t.b === F.teeBox || prefs.allTees).map(t => f.fwd(boxFront(t.b, ch.line[1])));
+    if (fronts.length > 1) {
+      const rx = Math.min(...teeBoxesL.flatMap(t => t.r.map(p => p[0]))) - 8;
+      const ys = fronts.map(q => q[1]);
+      const [a, b] = [P([rx, Math.min(...ys)]), P([rx, Math.max(...ys)])];
+      labG.append(el('path', { d: pathD([a, b]), stroke: INK, 'stroke-width': 0.9, fill: 'none' }));
+      for (const q of fronts) {
+        const [fx, fy] = P(q), [tx, ty] = P([rx, q[1]]);
+        labG.append(el('path', { d: `M${fx.toFixed(1)},${fy.toFixed(1)}L${tx.toFixed(1)},${ty.toFixed(1)}`, stroke: INK, 'stroke-width': 0.6, 'stroke-dasharray': '2 1.5', fill: 'none' }),
+          el('path', { d: `M${(tx - 3).toFixed(1)},${ty.toFixed(1)}H${(tx + 3).toFixed(1)}`, stroke: INK, 'stroke-width': 1, fill: 'none' }),
+          el('circle', { cx: fx, cy: fy, r: 1.8, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.5 }));
+        teeMarks.push([tx - 4, Math.min(fy, ty) - 2, Math.max(fx, tx) + 4, Math.max(fy, ty) + 2]);
+      }
+    }
   }
   if (!F.teeBox && !cropped) { const [x, y] = P(f.fwd(tee)); labG.append(el('circle', { cx: x, cy: y, r: 3, fill: INK })); }
 
@@ -572,23 +596,27 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const full = await holePage(n, teeName, prefs, helpers, { ...opts, teeView: true });
     const tb = full.dataset.teebox?.split(' ').map(Number);
     if (!tb) return;
-    const size = 168, pad = 20;
+    // Narrow and tall, like the tee boxes' row: the window fits the tees,
+    // their labels and the ruler, at the box's shape.
+    const bw = 112, bh = 176, pad = 10;
     let [ax, ay, bx2, by2] = [tb[0] - pad, tb[1] - pad, tb[2] + pad, tb[3] + pad];
-    const vw = Math.max(bx2 - ax, by2 - ay); // square, round the tees
-    ax = (ax + bx2) / 2 - vw / 2; ay = (ay + by2) / 2 - vw / 2;
+    let vw = bx2 - ax, vh = by2 - ay;
+    if (vw / vh > bw / bh) vh = (vw * bh) / bw; else vw = (vh * bw) / bh;
+    ax = (ax + bx2) / 2 - vw / 2; ay = (ay + by2) / 2 - vh / 2;
+    ay = Math.max(top, Math.min(ay, bottom - vh)); // keep the window on the drawn map (same page size)
     // The corner away from the green (under the north arrow on the right).
     const gx = greenL ? P(centroid(greenL))[0] : W / 2;
     const onRight = gx < W / 2;
-    const x0 = onRight ? right - size - 4 : left + 4, y0 = onRight ? top + 38 : top + 4;
-    const win = el('svg', { x: x0, y: y0, width: size, height: size, viewBox: `${ax.toFixed(1)} ${ay.toFixed(1)} ${vw.toFixed(1)} ${vw.toFixed(1)}`, preserveAspectRatio: 'xMidYMid slice' });
+    const x0 = onRight ? right - bw - 4 : left + 4, y0 = onRight ? top + 38 : top + 4;
+    const win = el('svg', { x: x0, y: y0, width: bw, height: bh, viewBox: `${ax.toFixed(1)} ${ay.toFixed(1)} ${vw.toFixed(1)} ${vh.toFixed(1)}`, preserveAspectRatio: 'xMidYMid meet' });
     win.append(...full.childNodes);
     const g = el('g', {});
-    g.append(el('rect', { x: x0 - 1, y: y0 - 1, width: size + 2, height: size + 2, fill: '#fff', stroke: 'none' }), win,
-      el('rect', { x: x0, y: y0, width: size, height: size, fill: 'none', stroke: '#6b746e', 'stroke-width': 1 }),
+    g.append(el('rect', { x: x0 - 1, y: y0 - 1, width: bw + 2, height: bh + 2, fill: '#fff', stroke: 'none' }), win,
+      el('rect', { x: x0, y: y0, width: bw, height: bh, fill: 'none', stroke: '#6b746e', 'stroke-width': 1 }),
       el('rect', { x: x0, y: y0, width: 30, height: 12, fill: '#6b746e' }),
       txt(x0 + 15, y0 + 9, 'TEES', { 'font-size': 8, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle', 'letter-spacing': 0.6, stroke: 'none' }));
     svg.append(g); // on top of the map, under nothing
-    lab.block([x0 - 2, y0 - 2, x0 + size + 2, y0 + size + 2]);
+    lab.block([x0 - 2, y0 - 2, x0 + bw + 2, y0 + bh + 2]);
   }
 
   // North arrow and a 50-yard scale.
@@ -623,7 +651,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   }
   // Where the tee boxes are on this page (for the tees box of a cropped page).
   if (teeBoxesL.length) {
-    const q = teeBoxesL.flatMap(t => t.r.map(P));
+    const q = [...teeBoxesL.flatMap(t => t.r.map(P)), ...teeMarks.flatMap(m => [[m[0], m[1]], [m[2], m[3]]])];
     svg.dataset.teebox = [Math.min(...q.map(p => p[0])), Math.min(...q.map(p => p[1])), Math.max(...q.map(p => p[0])), Math.max(...q.map(p => p[1]))].map(v => v.toFixed(1)).join(' ');
   }
   return svg;
