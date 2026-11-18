@@ -462,6 +462,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.8.6', ['GEN BOOK: in the Satellite style the green pages are on the satellite picture too: the green, bunkers and water outlined, with the yard grid, the yards from the front, and white contours and downhill arrows on top']],
   ['1.8.5', ['GEN BOOK: a Style choice beside the tee box. Satellite draws each hole page like Satellite book view, the satellite picture with the book’s outlines and numbers on it, on screen and in the printed PDF; the green pages stay as they are. Book is the plain book. Your pick is kept on this device']],
   ['1.8.4', ['GPS Overview: Satellite book view (was Yardage book + satellite) is the satellite picture with the yardage book’s outlines and numbers drawn on it, like Course lines view with all the book’s yardages: greens, tee boxes, fairways, bunkers and water outlined, not filled in, and no contours']],
   ['1.8.3', ['GPS Overview: Yardage book + satellite in the View box: the book drawn over the satellite picture, half and half', 'Yardage book: no 50 · 100 · 150 numbers down the middle of par 3s', 'Yardage book: water across the line of play has carry numbers: where the dotted line to the front of the green goes into the water and comes out, and where lines 20 yards either side of it come out']],
