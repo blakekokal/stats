@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.12.2', ['Yardage book Edit: tap any point (its dot or its numbers), including the book’s yardage markers and bunker numbers, to select it (a yellow ring), then Delete point; or drag a point to move it, and its yards update for where you put it. Tap the map to add a point, or to deselect']],
   ['1.12.1', ['Yardage book: the 50, 100, 150… yardage markers sit in the middle of the fairway (not on the hole line, which can run along its side). Yards to the front of the green are measured to the front as you come into the green on the approach (the yellow dot), not the side of the green facing the tee; on a dogleg that changes the tee’s yards to the front and some bunker numbers by the green']],
   ['1.12.0', ['New course: Prairie Lakes Golf Course (Grand Prairie), all three nines (Red, White and Blue): play any nine, or any two as 18. Traced from the satellite picture (greens, fairways, ponds, bunkers, trees), routed from the club\u2019s course map, with out-of-bounds line and elevation (contours and plays-like yardages). Each hole has one tee box (the back one); the shorter tees use the card yardages']],
   ['1.11.4', ['Yardage book: Add point is now Edit. In Edit, tap the hole page to add a point, or tap any point to delete it, including the book’s own (yardage markers, bunker and green numbers). Deleted book points stay gone in that yardage book; Bring back under the page restores them. Tap Done to finish']],

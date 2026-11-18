@@ -564,7 +564,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const q = o.r.map(P), xs = q.map(p => p[0]), ys = q.map(p => p[1]);
     lab.block([Math.min(...xs) - 1.5, Math.min(...ys) - 1.5, Math.max(...xs) + 1.5, Math.max(...ys) + 1.5]);
   }
-  const pairs = [], autoDrawn = []; // autoDrawn: the book's own points on the map, for Edit
+  const pairs = [], drawnPts = []; // drawnPts: every point drawn on the map, with its numbers' box, for Edit
   const pair = (q, front, tee, side, mine = false, teeOnly = false) => pairs.push({ q, front, tee, side, mine, teeOnly });
   // Par 3s: the front and the back of the green, along the line to its middle,
   // always, first (so they get the room): yards from the front of the tee and
@@ -648,11 +648,12 @@ async function holePage(n, teeName, prefs, helpers, opts) {
 
   // Points added by hand (Preview and edit > Edit): yards and up/down
   // from the tee and to the front of the green, like the other numbers.
-  for (const pt of opts.points || []) {
+  for (const [idx, pt] of (opts.points || []).entries()) {
     const q = f.fwd(pt);
     const nearLine = walk.reduce((b, w) => (dist(w.p, q) < dist(b.p, q) ? w : b), walk[0]);
     const side = (q[0] - nearLine.p[0]) * nearLine.d[1] - (q[1] - nearLine.p[1]) * nearLine.d[0] >= 0 ? 1 : -1;
     pair(q, Math.round(toFront(q)), Math.round(dist(q, [0, 0])), side, true);
+    pairs.at(-1).idx = idx;
   }
 
   // The book's own points deleted in Edit mode (this book only): gone if one
@@ -673,11 +674,10 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   }
   const signed = v => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0');
   const bunkerRings = feats.filter(o => o.x.t === 'bunker' && prefs.bunkers).map(o => o.r.map(P));
-  for (const { q, front, tee, side, dFront, dTee, mine, teeOnly } of pairs) {
+  for (const { q, front, tee, side, dFront, dTee, mine, teeOnly, idx } of pairs) {
     const [x, y] = P(q);
     if (y > bottom - 6 || y < top + 6) continue; // off the map (short of where it starts)
     if (opts.teeView && tee > 130) continue; // the tees box: just what's near the tees
-    if (!mine) autoDrawn.push({ ll: f.back(q), front, tee });
     // Four rows: blue up/down to the green, red to the front, black from the
     // tee, blue up/down from the tee. The labeller boxes them from 32 above
     // the anchor's y to 10 below; their middle (my) is level with the spot.
@@ -704,6 +704,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const x0 = anc === 'start' ? sx : sx - wdt, my = sy - 10;
     const ex = anc === 'start' ? x0 - 2 : x0 + wdt + 2;
     const knee = anc === 'start' ? ex - 4 : ex + 4;
+    if (!opts.teeView) drawnPts.push({ ll: f.back(q), front, tee, mine, idx, dot: [x, y], box: [Math.min(x0, x) - 3, Math.min(my - (teeOnly ? 7 : 22), y - 4), Math.max(x0 + wdt, x) + 3, Math.max(my + (teeOnly ? 15 : 20), y + 4)] });
     labG.append(el('path', { d: Math.abs(my - y) < 1 ? pathD([[x, y], [ex, y]]) : pathD([[x, y], [knee, y], [ex, my]]), stroke: INK, 'stroke-width': 0.6, fill: 'none' }));
     if (teeOnly) {
       labG.append(txt(x0, my + 3, tee, { 'font-size': 9.5, fill: INK }));
@@ -853,7 +854,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   svg.geo = { at: (u, v) => f.back([(u - cx) / s, (cy - v) / s]), to: p => P(f.fwd(p)), rect: [left, top, right, bottom], up };
   svg.dataset.page = 'hole';
   svg.points = pairs.filter(pr => pr.mine).map(pr => ({ front: pr.front, tee: pr.tee }));
-  svg.autoPoints = autoDrawn;
+  svg.drawnPoints = drawnPts;
   if (opts.satellite) {
     const url = await satelliteUnder(svg.geo.at, svg.geo.rect);
     if (url) mapG.parentNode.insertBefore(el('image', { href: url, x: left, y: top, width: right - left, height: bottom - top, preserveAspectRatio: 'none' }), mapG);
@@ -1231,6 +1232,7 @@ export function openBook(n, opts) {
     pages.replaceChildren(h('div', { class: 'flipbook' }, ...pagesNow));
     applyZoom(); listPoints();
     status.textContent = note;
+    if (adding) { showSel(); if (note) status.textContent = note; }
   }
   async function drawHole(k, p) {
     const hp = await holePage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat', points: book.points[k] || [], removed: (book.removed ||= {})[k] || [] });
@@ -1307,35 +1309,102 @@ export function openBook(n, opts) {
     // The book's own points deleted in Edit: all brought back in one go.
     gone.length ? h('button', { class: 'bookbtn', onclick: () => { delete book.removed[hole]; keep(); draw(); } }, `↺ Bring back ${gone.length} deleted book point${gone.length > 1 ? 's' : ''}`) : null].filter(Boolean));
   };
-  // Edit: tap the hole page to add a point there; tap any point to delete it,
-  // yours or the book's own (yardage markers, bunker and green numbers).
-  let adding = false;
+  // Edit: tap the map to add a point. Tap a point (its dot or its numbers),
+  // yours or the book's own (yardage markers, bunker and green numbers), to
+  // select it, then Delete; or drag it somewhere else. The book's own points
+  // deleted or moved are kept in this book (removed); a moved one becomes yours.
+  let adding = false, sel = null; // sel: { hole, mine, idx, ll }
+  const HINT = 'Tap the map to add a point · tap a point to select it · drag a point to move it';
   const addBtn = h('button', { class: 'bookbtn', onclick: () => {
     adding = !adding; addBtn.classList.toggle('primary', adding); pages.classList.toggle('adding', adding);
     addBtn.textContent = adding ? '✓ Done' : '✎ Edit';
-    status.textContent = adding ? 'Tap the hole page to add a point; tap any point to delete it' : '';
+    status.textContent = adding ? HINT : '';
+    sel = null; showSel();
   } }, '✎ Edit');
-  pages.addEventListener('click', e => {
+  const delBtn = h('button', { class: 'bookbtn', hidden: true, onclick: () => { if (!sel) return; dropPt(sel); sel = null; keep(); draw(); } }, '🗑 Delete point');
+  const holeSvg = () => pages.querySelector('svg.bookpage[data-page=hole]');
+  const local = (svg, cx, cy) => { const pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
+  const inMap = (svg, x, y) => { const [l, t, r, b] = svg.geo.rect; return x >= l && x <= r && y >= t && y <= b; };
+  // The point under (x, y): its dot (within reach of a finger), or its numbers.
+  const hitAt = (svg, x, y) => {
+    const pts = svg.drawnPoints || [];
+    const byDot = pts.map(p => ({ p, d: Math.hypot(p.dot[0] - x, p.dot[1] - y) })).filter(o => o.d < 14).sort((a, b) => a.d - b.d)[0];
+    if (byDot) return byDot.p;
+    return pts.find(p => x >= p.box[0] && x <= p.box[2] && y >= p.box[1] && y <= p.box[3]) || null;
+  };
+  const llOf = ll => [+ll[0].toFixed(7), +ll[1].toFixed(7)];
+  const dropPt = p => {
+    if (p.mine) { const list = book.points[hole] || []; list.splice(p.idx, 1); if (!list.length) delete book.points[hole]; }
+    else ((book.removed ||= {})[hole] ||= []).push(llOf(p.ll));
+  };
+  const movePt = (p, ll) => {
+    const list = book.points[hole] || (book.points[hole] = []);
+    if (p.mine) { list[p.idx] = llOf(ll); return { hole, mine: true, idx: p.idx }; }
+    ((book.removed ||= {})[hole] ||= []).push(llOf(p.ll));
+    list.push(llOf(ll));
+    return { hole, mine: true, idx: list.length - 1 };
+  };
+  const same = (p, q) => q && p.mine === q.mine && (p.mine ? p.idx === q.idx : Math.abs(p.ll[0] - q.ll[0]) < 1e-7 && Math.abs(p.ll[1] - q.ll[1]) < 1e-7);
+  // A yellow ring round the selected point, and the Delete button.
+  function showSel() {
+    const svg = holeSvg();
+    svg?.querySelectorAll('.bksel').forEach(n => n.remove());
+    const p = sel && sel.hole === hole && svg ? (svg.drawnPoints || []).find(q => same(q, sel)) : null;
+    if (!p) sel = null;
+    delBtn.hidden = !sel;
+    if (p) svg.append(el('circle', { class: 'bksel', cx: p.dot[0], cy: p.dot[1], r: 7, fill: 'none', stroke: '#f3c623', 'stroke-width': 2.5 }),
+      el('rect', { class: 'bksel', x: p.box[0], y: p.box[1], width: p.box[2] - p.box[0], height: p.box[3] - p.box[1], rx: 3, fill: 'none', stroke: '#f3c623', 'stroke-width': 1.2, 'stroke-dasharray': '3 2' }));
+    if (adding) status.textContent = sel ? 'Selected: Delete it, or drag it to move it · tap the map to deselect' : HINT;
+  }
+  let drag = null;
+  pages.addEventListener('pointerdown', e => {
     if (!adding) return;
     const svg = e.target.closest?.('svg.bookpage');
     if (!svg || svg.dataset.page !== 'hole' || !svg.geo) return;
-    const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
-    const { x, y } = pt.matrixTransform(svg.getScreenCTM().inverse());
-    const [l, t, r, b] = svg.geo.rect;
-    if (x < l || x > r || y < t || y > b) return;
-    const far = ll => { const [u, v] = svg.geo.to(ll); return Math.hypot(u - x, v - y); };
-    const list = book.points[hole] || (book.points[hole] = []);
-    const near = list.findIndex(p => far(p) < 12);
-    // The book's own point nearest the tap (within reach), if no point of yours is nearer.
-    const auto = (svg.autoPoints || []).map(a => ({ a, d: far(a.ll) })).filter(o => o.d < 12).sort((p, q) => p.d - q.d)[0];
-    if (near >= 0 && (!auto || far(list[near]) <= auto.d)) list.splice(near, 1);
-    else if (auto) {
-      const gone = (book.removed ||= {})[hole] || (book.removed[hole] = []);
-      gone.push(auto.a.ll.map(v => +v.toFixed(7)));
-    } else { const [la, lo] = svg.geo.at(x, y); list.push([+la.toFixed(7), +lo.toFixed(7)]); }
-    if (!list.length) delete book.points[hole];
-    keep(); draw();
+    const { x, y } = local(svg, e.clientX, e.clientY);
+    if (!inMap(svg, x, y)) return;
+    drag = { svg, hit: hitAt(svg, x, y), sx: e.clientX, sy: e.clientY, moved: false, ghost: null };
+    if (drag.hit) { e.preventDefault(); try { svg.setPointerCapture(e.pointerId); } catch { /* not needed */ } }
   });
+  pages.addEventListener('pointermove', e => {
+    if (!drag?.hit) return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 8) return;
+    drag.moved = true;
+    const { x, y } = local(drag.svg, e.clientX, e.clientY);
+    if (!drag.ghost) { drag.ghost = el('circle', { class: 'bksel', r: 5, fill: '#f3c623', stroke: INK, 'stroke-width': 1 }); drag.svg.append(drag.ghost); }
+    drag.ghost.setAttribute('cx', x); drag.ghost.setAttribute('cy', y);
+  });
+  const endDrag = e => {
+    if (!drag) return;
+    const d = drag; drag = null;
+    if (e.type === 'pointercancel') { d.ghost?.remove(); return; }
+    const moved = d.moved || Math.hypot(e.clientX - d.sx, e.clientY - d.sy) >= 8;
+    const { x, y } = local(d.svg, e.clientX, e.clientY);
+    if (d.hit) {
+      if (moved) {
+        const [l, t, r, b] = d.svg.geo.rect;
+        sel = movePt(d.hit, d.svg.geo.at(Math.min(r, Math.max(l, x)), Math.min(b, Math.max(t, y))));
+        keep(); draw();
+      } else { sel = same(d.hit, sel) ? null : { hole, mine: d.hit.mine, idx: d.hit.idx, ll: d.hit.ll }; showSel(); }
+      return;
+    }
+    if (moved) return; // a scroll, not a tap
+    if (sel) { sel = null; showSel(); return; } // a tap off the selected point: deselect
+    if (!inMap(d.svg, x, y)) return;
+    const list = book.points[hole] || (book.points[hole] = []);
+    list.push(llOf(d.svg.geo.at(x, y)));
+    keep(); draw();
+  };
+  pages.addEventListener('pointerup', endDrag);
+  pages.addEventListener('pointercancel', endDrag);
+  // On a phone: a finger on a point drags it rather than scrolling the page.
+  pages.addEventListener('touchstart', e => {
+    if (!adding || e.touches.length !== 1) return;
+    const svg = e.target.closest?.('svg.bookpage');
+    if (!svg || svg.dataset.page !== 'hole' || !svg.geo) return;
+    const { x, y } = local(svg, e.touches[0].clientX, e.touches[0].clientY);
+    if (hitAt(svg, x, y)) e.preventDefault();
+  }, { passive: false });
   // Print: the book is made into a PDF here on the device (phones, and the app
   // added to the home screen, won't print a page straight from the app), then
   // shared, opened or saved from the bar that comes up. Layouts:
@@ -1592,7 +1661,7 @@ export function openBook(n, opts) {
       h('button', { class: 'bookbtn', 'aria-label': 'Close', onclick: close }, '✕'),
       h('button', { class: 'bookbtn', 'aria-label': 'Previous hole', onclick: () => go(-1) }, '‹'), title,
       h('button', { class: 'bookbtn', 'aria-label': 'Next hole', onclick: () => go(1) }, '›'),
-      teeSel, styleSel, addBtn, saveBtn,
+      teeSel, styleSel, addBtn, delBtn, saveBtn,
       h('span', { class: 'bookzoomgrp' }, h('button', { class: 'bookbtn', 'aria-label': 'Zoom out', onclick: () => zoomBy(1 / 1.5) }, '−'), zoomLabel,
         h('button', { class: 'bookbtn', 'aria-label': 'Zoom in', onclick: () => zoomBy(1.5) }, '+')),
       h('button', { class: 'bookbtn', onclick: () => { opts_.hidden = !opts_.hidden; } }, '☰ Show'),
