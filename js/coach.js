@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.12.4', ['Yardage book Edit: move the start, where every “from the tee” number is measured. Tap another tee box (on the map, or its yards in the TEES box) to measure from its front, or drag the yellow start dot anywhere; every number on the hole updates. ↺ Start from the … tee again under the page puts it back. Kept in that yardage book only']],
   ['1.12.3', ['Yardage book: no more dotted line from the tee to the green on the hole page (and the Center line switch is gone); the yellow dot at the front of the green, where every number is measured to, stays']],
   ['1.12.2', ['Yardage book Edit: tap any point (its dot or its numbers), including the book’s yardage markers and bunker numbers, to select it (a yellow ring), then Delete point; or drag a point to move it, and its yards update for where you put it. Tap the map to add a point, or to deselect']],
   ['1.12.1', ['Yardage book: the 50, 100, 150… yardage markers sit in the middle of the fairway (not on the hole line, which can run along its side). Yards to the front of the green are measured to the front as you come into the green on the approach (the yellow dot), not the side of the green facing the tee; on a dogleg that changes the tee’s yards to the front and some bunker numbers by the green']],

@@ -321,17 +321,23 @@ function boxFront(box, toward) {
   return k == null ? c : f.back([far[0] * k, far[1] * k]);
 }
 
-function holeFacts(n, teeName, helpers) {
+function holeFacts(n, teeName, helpers, start) {
   const ch = course.holes[n - 1];
   const own = helpers.holeFeatures(ch);
   const ownSet = new Set(own);
   const greenF = helpers.ownGreen(ch);
   const boxes = own.filter(f => f.t === 'tee');
-  const teeBox = teeBoxFor(teeName, ch, boxes);
+  let teeBox = teeBoxFor(teeName, ch, boxes);
   if (teeBox && !boxes.includes(teeBox)) boxes.push(teeBox); // tied to this hole by the course file
   // Every number is measured from the front of the tee box (the edge nearest
-  // the green), not its middle.
-  const tee = teeBox ? boxFront(teeBox, ch.line[1]) : teePosition(teeName, ch, boxes);
+  // the green), not its middle; or from a start moved in Edit (this book only),
+  // which makes the tee box it's on (if any) the one marked.
+  let tee = teeBox ? boxFront(teeBox, ch.line[1]) : teePosition(teeName, ch, boxes);
+  if (start) {
+    const fr = frame(start, 0);
+    teeBox = boxes.find(b => inside([0, 0], closeRing(ringOf(b)).map(fr.fwd))) || boxes.find(b => Math.hypot(...fr.loc(boxFront(b, ch.line[1]))) < 6) || null;
+    tee = start;
+  }
   const line = [tee, ...ch.line.slice(1)];
   const pin = ch.pin;
   const greenRing = greenF ? closeRing(ringOf(greenF)) : null;
@@ -390,7 +396,7 @@ function onlyHole(svg, mapG, id, P, s, line, shapes, lineYd = LINE_YD, shapeYd =
 
 async function holePage(n, teeName, prefs, helpers, opts) {
   const H = opts.pageH || PAGE_H;
-  const F = holeFacts(n, teeName, helpers);
+  const F = holeFacts(n, teeName, helpers, opts.start);
   const { ch, line, tee, pin, greenRing } = F;
   const teeSet = course.tees.find(t => t.name === teeName) || course.tees[0];
   const card = teeSet?.yards[n - 1];
@@ -728,7 +734,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const label = chosen ? `${names.length ? names.join('/') : teeName} ${v}` : `${names.join('/') || 'Tee'} ${v} · ${gap > 0 ? '+' : gap < 0 ? '−' : '±'}${Math.abs(gap)}`;
     if (opts.teeView) { // the tees box writes these beside its picture: just the yards (no tee names, to save space)
       const fp = P(f.fwd(boxFront(b, ch.line[1])));
-      teeInfo.push({ y: fp[1], label: chosen ? `${v}` : `${v} ${gap > 0 ? '+' : gap < 0 ? '−' : '±'}${Math.abs(gap)}`, yards: v, gap: chosen ? null : gap, chosen });
+      teeInfo.push({ front: boxFront(b, ch.line[1]), y: fp[1], label: chosen ? `${v}` : `${v} ${gap > 0 ? '+' : gap < 0 ? '−' : '±'}${Math.abs(gap)}`, yards: v, gap: chosen ? null : gap, chosen });
       continue;
     }
     const size = chosen ? 10 : 8.5;
@@ -757,7 +763,13 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       }
     }
   }
-  if (!F.teeBox && !cropped) { const [x, y] = P(f.fwd(tee)); labG.append(el('circle', { cx: x, cy: y, r: 3, fill: INK })); }
+  if ((!F.teeBox || opts.start) && !cropped) { const [x, y] = P(f.fwd(tee)); labG.append(el('circle', { cx: x, cy: y, r: opts.teeView ? 2.4 : 3, fill: '#f3c623', stroke: INK, 'stroke-width': 0.8 })); }
+  // For Edit: the start on the page (when it's on the map), and the tee boxes (their fronts).
+  if (!opts.teeView) {
+    svg.startDot = cropped ? null : P(f.fwd(tee));
+    svg.startLL = tee;
+    svg.teeBoxes = teeBoxesL.map(t => ({ front: boxFront(t.b, ch.line[1]), ring: closeRing(ringOf(t.b)) }));
+  }
 
   // The tees, in a small box at the top left: the tee area exactly as it's drawn
   // when the hole is shown whole (the same page, drawn uncropped, seen through
@@ -788,6 +800,12 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     // The numbers on the left, by the ruler; the tee markers' picture right of them.
     const px = x0 + labW + 6;
     const win = el('svg', { x: px, y: y0, width: pw, height: ph, viewBox: `${ax.toFixed(1)} ${ay.toFixed(1)} ${vw.toFixed(1)} ${(ph / zoom).toFixed(1)}`, preserveAspectRatio: 'xMidYMin meet' });
+    // For Edit: the tees box's picture as a window onto the ground.
+    const fullGeo = full.geo;
+    svg.insetMap = { rect: [x0, y0 - 12, x0 + bw, y0 + bh], pic: [px, y0, px + pw, y0 + ph],
+      toLL: (u, v) => fullGeo.at(ax + (u - px) / zoom, ay + (v - y0) / zoom),
+      toPage: ll => { const [a, b] = fullGeo.to(ll); return [px + (a - ax) * zoom, y0 + (b - ay) * zoom]; } };
+    svg.insetRows = [];
     win.append(...full.childNodes);
     const g = el('g', {});
     g.append(el('rect', { x: x0 - 1, y: y0 - 1, width: bw + 2, height: bh + 2, fill: '#fff', stroke: 'none' }), win,
@@ -798,6 +816,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     for (const t of tees) {
       const ly = Math.max(y0 + (t.y - ay) * zoom + 3, lastY + 10, y0 + 9);
       lastY = ly;
+      if (t.front) svg.insetRows.push({ box: [x0, ly - 10, px + pw, ly + 3], ll: t.front });
       g.append(el('path', { d: `M${(px + 2).toFixed(1)},${(y0 + (t.y - ay) * zoom).toFixed(1)}L${(px - 1).toFixed(1)},${(ly - 3).toFixed(1)}`, stroke: '#9aa59e', 'stroke-width': 0.5, fill: 'none' }),
         // The gap from your tee: red when further back (+), green when forward (−).
         el('text', { x: (px - 3).toFixed(1), y: ly.toFixed(1), 'font-size': t.chosen ? 9.5 : 8.5, 'font-weight': t.chosen ? 700 : 400, fill: t.chosen ? INK : SOFT, stroke: 'none', 'text-anchor': 'end' },
@@ -1054,7 +1073,7 @@ const setLayout = v => { try { localStorage.setItem('gs:bookLayout6', v); } catc
 // ones are kept with the account (store 'ybook:<id>').
 export function newBook(teeName) {
   return { id: null, name: '', courseId: course.id, courseName: course.name, teeName: teeName || course.tees[0]?.name,
-    style: getStyle(), layout: getLayout(), prefs: loadPrefs(), points: {}, removed: {}, updated: null };
+    style: getStyle(), layout: getLayout(), prefs: loadPrefs(), points: {}, removed: {}, starts: {}, updated: null };
 }
 export function saveBook(book) {
   if (!book.id) book.id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -1069,7 +1088,7 @@ export const savedBooks = () => store.list('ybook:').filter(b => b && b.id).sort
 // A saved book, ready to open: its course made the active one, its switches filled in.
 function openable(b) {
   setActiveCourse(b.courseId);
-  return { ...JSON.parse(JSON.stringify(b)), prefs: { ...loadPrefs(), ...b.prefs, markers: cleanMarkers(b.prefs?.markers), onlyHole: true, greenPage: true, hazards: true, deltas: true }, points: b.points || {}, removed: b.removed || {} };
+  return { ...JSON.parse(JSON.stringify(b)), prefs: { ...loadPrefs(), ...b.prefs, markers: cleanMarkers(b.prefs?.markers), onlyHole: true, greenPage: true, hazards: true, deltas: true }, points: b.points || {}, removed: b.removed || {}, starts: b.starts || {} };
 }
 
 // Saved yardage books (GPS Overview > Saved yardage books): open one to edit
@@ -1229,7 +1248,7 @@ export function openBook(n, opts) {
     if (adding) { showSel(); if (note) status.textContent = note; }
   }
   async function drawHole(k, p) {
-    const hp = await holePage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat', points: book.points[k] || [], removed: (book.removed ||= {})[k] || [] });
+    const hp = await holePage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat', points: book.points[k] || [], removed: (book.removed ||= {})[k] || [], start: (book.starts ||= {})[k] || null });
     const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat' }) : null;
     return [...(gp ? [gp] : []), hp];
   }
@@ -1295,20 +1314,23 @@ export function openBook(n, opts) {
     const list = book.points[hole] || [];
     const gone = (book.removed ||= {})[hole] || [];
     const info = pages.querySelector('svg.bookpage[data-page=hole]')?.points || [];
-    pointsBar.hidden = !list.length && !gone.length;
+    const moved = (book.starts ||= {})[hole];
+    pointsBar.hidden = !list.length && !gone.length && !moved;
     pointsBar.replaceChildren(...[list.length ? h('small', {}, `Your points on hole ${hole}:`) : null, ...list.map((p, i) => h('button', { class: 'bookbtn', title: 'Delete this point', onclick: () => {
       list.splice(i, 1); if (!list.length) delete book.points[hole]; keep(); draw();
     } }, info[i] ? `${info[i].front} to front · ${info[i].tee} from tee ✕` : `Point ${i + 1} ✕`)),
     list.length > 1 ? h('button', { class: 'bookbtn', onclick: () => { if (confirm(`Delete all ${list.length} of your points on hole ${hole}?`)) { delete book.points[hole]; keep(); draw(); } } }, 'Delete all') : null,
     // The book's own points deleted in Edit: all brought back in one go.
-    gone.length ? h('button', { class: 'bookbtn', onclick: () => { delete book.removed[hole]; keep(); draw(); } }, `↺ Bring back ${gone.length} deleted book point${gone.length > 1 ? 's' : ''}`) : null].filter(Boolean));
+    gone.length ? h('button', { class: 'bookbtn', onclick: () => { delete book.removed[hole]; keep(); draw(); } }, `↺ Bring back ${gone.length} deleted book point${gone.length > 1 ? 's' : ''}`) : null,
+    // The start moved: back to the front of this book's tee box.
+    moved ? h('button', { class: 'bookbtn', onclick: () => { delete book.starts[hole]; keep(); draw(); } }, `↺ Start from the ${teeName} tee again`) : null].filter(Boolean));
   };
   // Edit: tap the map to add a point. Tap a point (its dot or its numbers),
   // yours or the book's own (yardage markers, bunker and green numbers), to
   // select it, then Delete; or drag it somewhere else. The book's own points
   // deleted or moved are kept in this book (removed); a moved one becomes yours.
   let adding = false, sel = null; // sel: { hole, mine, idx, ll }
-  const HINT = 'Tap the map to add a point · tap a point to select it · drag a point to move it';
+  const HINT = 'Tap the map to add a point · tap a point to select it · drag a point to move it · drag the yellow start dot, or tap a tee box, to measure from there';
   const addBtn = h('button', { class: 'bookbtn', onclick: () => {
     adding = !adding; addBtn.classList.toggle('primary', adding); pages.classList.toggle('adding', adding);
     addBtn.textContent = adding ? '✓ Done' : '✎ Edit';
@@ -1320,7 +1342,24 @@ export function openBook(n, opts) {
   const local = (svg, cx, cy) => { const pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
   const inMap = (svg, x, y) => { const [l, t, r, b] = svg.geo.rect; return x >= l && x <= r && y >= t && y <= b; };
   // The point under (x, y): its dot (within reach of a finger), or its numbers.
+  // The start (where "from the tee" is measured): its dot on the map, or in the tees box.
+  const startAt = svg => svg.startDot || (svg.insetMap && svg.startLL ? svg.insetMap.toPage(svg.startLL) : null);
+  const inRect = (r, x, y) => r && x >= r[0] && x <= r[2] && y >= r[1] && y <= r[3];
+  const llAt = (svg, x, y) => (svg.insetMap && inRect(svg.insetMap.pic, x, y) ? svg.insetMap.toLL(x, y) : inRect(svg.insetMap?.rect, x, y) ? null : svg.geo.at(x, y));
+  // The tee box tapped (on the map, in the tees box's picture, or its row of yards): its front.
+  const teeTapped = (svg, x, y) => {
+    const row = (svg.insetRows || []).find(r => inRect(r.box, x, y) && !inRect(svg.insetMap?.pic, x, y));
+    if (row) return row.ll;
+    const ll = llAt(svg, x, y);
+    if (!ll) return null;
+    const fr = frame(ll, 0);
+    const b = (svg.teeBoxes || []).find(t => inside([0, 0], t.ring.map(fr.fwd)));
+    return b ? b.front : null;
+  };
+  const setStart = ll => { (book.starts ||= {})[hole] = llOf(ll); keep(); draw(); };
   const hitAt = (svg, x, y) => {
+    const st = startAt(svg);
+    if (st && Math.hypot(st[0] - x, st[1] - y) < 12) return { start: true, dot: st };
     const pts = svg.drawnPoints || [];
     const byDot = pts.map(p => ({ p, d: Math.hypot(p.dot[0] - x, p.dot[1] - y) })).filter(o => o.d < 14).sort((a, b) => a.d - b.d)[0];
     if (byDot) return byDot.p;
@@ -1374,6 +1413,11 @@ export function openBook(n, opts) {
     if (e.type === 'pointercancel') { d.ghost?.remove(); return; }
     const moved = d.moved || Math.hypot(e.clientX - d.sx, e.clientY - d.sy) >= 8;
     const { x, y } = local(d.svg, e.clientX, e.clientY);
+    if (d.hit?.start) { // the start: dragged somewhere (on the map or in the tees box), or tapped (nothing to do)
+      d.ghost?.remove();
+      if (moved) { const ll = llAt(d.svg, x, y); if (ll) setStart(ll); }
+      return;
+    }
     if (d.hit) {
       if (moved) {
         const [l, t, r, b] = d.svg.geo.rect;
@@ -1384,7 +1428,9 @@ export function openBook(n, opts) {
     }
     if (moved) return; // a scroll, not a tap
     if (sel) { sel = null; showSel(); return; } // a tap off the selected point: deselect
-    if (!inMap(d.svg, x, y)) return;
+    const tb = teeTapped(d.svg, x, y);
+    if (tb) { setStart(tb); return; } // a tee box: start from its front
+    if (!inMap(d.svg, x, y) || inRect(d.svg.insetMap?.rect, x, y)) return;
     const list = book.points[hole] || (book.points[hole] = []);
     list.push(llOf(d.svg.geo.at(x, y)));
     keep(); draw();
@@ -1623,7 +1669,7 @@ export function openBook(n, opts) {
   }
   async function drawHoleParts(k, p, pageH = PAGE_H) {
     const o = { ...opts, pageH };
-    const hp = await holePage(k, teeName, p, helpers, { ...o, satellite: style === 'sat', points: book.points[k] || [], removed: (book.removed ||= {})[k] || [] });
+    const hp = await holePage(k, teeName, p, helpers, { ...o, satellite: style === 'sat', points: book.points[k] || [], removed: (book.removed ||= {})[k] || [], start: (book.starts ||= {})[k] || null });
     const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, { ...o, satellite: style === 'sat' }) : null;
     return { hole: hp, green: gp };
   }
