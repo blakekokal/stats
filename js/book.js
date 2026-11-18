@@ -562,9 +562,9 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     // than yours: add it to the black (from the tee) numbers when playing them.
     const gap = v - teeFrontYd;
     const label = chosen ? `${names.length ? names.join('/') : teeName} ${v}` : `${names.join('/') || 'Tee'} ${v} · ${gap > 0 ? '+' : gap < 0 ? '−' : '±'}${Math.abs(gap)}`;
-    if (opts.teeView) { // the tees box writes these beside its picture
+    if (opts.teeView) { // the tees box writes these beside its picture: just the yards (no tee names, to save space)
       const fp = P(f.fwd(boxFront(b, ch.line[1])));
-      teeInfo.push({ y: fp[1], label, chosen });
+      teeInfo.push({ y: fp[1], label: chosen ? `${v}` : `${v} ${gap > 0 ? '+' : gap < 0 ? '−' : '±'}${Math.abs(gap)}`, chosen });
       continue;
     }
     const size = chosen ? 10 : 8.5;
@@ -610,7 +610,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const zoom = Math.min(1.1, 130 / vh, 40 / vw);
     const pw = vw * zoom, ph = Math.max(40, vh * zoom);
     const tees = JSON.parse(full.dataset.tees || '[]').sort((p1, p2) => p1.y - p2.y);
-    const labW = Math.max(30, ...tees.map(t => textW(t.label, t.chosen ? 9 : 8.5) + 2));
+    const labW = Math.max(18, ...tees.map(t => textW(t.label, t.chosen ? 9.5 : 8.5) + 2));
     const bw = pw + labW + 10, bh = ph;
     // Top left, like a tour book (its TEES tab just above it).
     const x0 = left + 4, y0 = top + 16;
@@ -626,7 +626,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       const ly = Math.max(y0 + (t.y - ay) * zoom + 3, lastY + 10, y0 + 9);
       lastY = ly;
       g.append(el('path', { d: `M${(x0 + pw - 2).toFixed(1)},${(y0 + (t.y - ay) * zoom).toFixed(1)}L${(x0 + pw + 4).toFixed(1)},${(ly - 3).toFixed(1)}`, stroke: '#9aa59e', 'stroke-width': 0.5, fill: 'none' }),
-        txt(x0 + pw + 6, ly, t.label, { 'font-size': t.chosen ? 9 : 8.5, 'font-weight': t.chosen ? 700 : 400, fill: t.chosen ? INK : SOFT, stroke: 'none' }));
+        txt(x0 + pw + 6, ly, t.label, { 'font-size': t.chosen ? 9.5 : 8.5, 'font-weight': t.chosen ? 700 : 400, fill: t.chosen ? INK : SOFT, stroke: 'none' }));
     }
     svg.append(g); // on top of the map, under nothing
     lab.block([x0 - 2, y0 - 14, x0 + bw + 2, y0 + bh + 2]);
