@@ -461,6 +461,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.8.7', ['GEN BOOK opens a page to set the book up first: Style (Flat or Satellite), the tee box, the Format (Double-sided · letter to start, then Double-sided · legal, then the others) and what to show. Then Preview to look through it, or Make PDF for the whole book. Your picks are kept on this device']],
   ['1.8.6', ['GEN BOOK: in the Satellite style the green pages are on the satellite picture too: the green, bunkers and water outlined, with the yard grid, the yards from the front, and white contours and downhill arrows on top']],
   ['1.8.5', ['GEN BOOK: a Style choice beside the tee box. Satellite draws each hole page like Satellite book view, the satellite picture with the book’s outlines and numbers on it, on screen and in the printed PDF; the green pages stay as they are. Book is the plain book. Your pick is kept on this device']],
   ['1.8.4', ['GPS Overview: Satellite book view (was Yardage book + satellite) is the satellite picture with the yardage book’s outlines and numbers drawn on it, like Course lines view with all the book’s yardages: greens, tee boxes, fairways, bunkers and water outlined, not filled in, and no contours']],
