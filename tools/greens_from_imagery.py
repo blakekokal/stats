@@ -134,47 +134,66 @@ for h in d['holes']:
     hazards = fill(im.shape, [f for f in feats if f['t'] in ('bunker', 'water')], to_px).astype(bool)
 
     # --- the green
-    core = cv2.erode(old_g.astype(np.uint8), disk(int(2 / M))) > 0
-    if core.sum() < 50: core = old_g
-    Lg, Ag, Bg = np.median(L[core]), np.median(A[core]), np.median(B[core])
-    sA = max(2.0, 1.2 * np.std(A[core]))
-    like = (np.abs(A - Ag) < sA + 0.5) & (np.abs(L - Lg) < 7) & (np.abs(B - Bg) < 5) & (tex < 3.5)
-    allow = cv2.dilate(old_g.astype(np.uint8), disk(int(GREEN_GROW / M))) > 0
-    gm = like & allow & ~hazards & ~others
-    # Greens are smooth, rounded shapes: a wide opening takes off the collar's fingers.
-    gm = cv2.morphologyEx(gm.astype(np.uint8), cv2.MORPH_CLOSE, disk(int(2 / M)))
-    gm = cv2.morphologyEx(gm, cv2.MORPH_OPEN, disk(int(3 / M)))
-    k, lb, st, _ = cv2.connectedComponentsWithStats(gm)
+    # The putting surface is a duller green than the fringe and fairway round
+    # it. Where that line falls differs hole to hole, so it's set from two
+    # samples: right round the pin, and the approach 18-32 m short of the
+    # green along the hole line (or, where that isn't grass, the brighter
+    # half of the grass round the green).
+    turf_any = (A < -10) & (L > 20) & (L < 65) & (tex < 4.5) & ~hazards
+    pin = to_px(h['pin'])
+    yy, xx = np.mgrid[0:im.shape[0], 0:im.shape[1]]
+    seed = ((xx - pin[0]) ** 2 + (yy - pin[1]) ** 2 < (4 / M) ** 2) & turf_any
     new_g = None
-    if k > 1:
-        best = max(range(1, k), key=lambda i: ((lb == i) & core).sum())
-        cand = lb == best
-        # fill holes (a flag, a shadow)
-        ff = cand.astype(np.uint8).copy(); hh, ww = ff.shape
-        msk = np.zeros((hh + 2, ww + 2), np.uint8); cv2.floodFill(ff, msk, (0, 0), 2)
-        cand = (ff != 2)
-        ratio = cand.sum() / max(1, old_g.sum())
-        overlap = (cand & old_g).sum() / max(1, old_g.sum())
-        # Clean and round (no ragged edge), about the old size, mostly where the old one was.
-        cs = cv2.findContours(cand.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]
-        c0 = max(cs, key=cv2.contourArea) if cs else None
-        solid = cv2.contourArea(c0) / max(1, cv2.contourArea(cv2.convexHull(c0))) if c0 is not None else 0
-        per = cv2.arcLength(c0, True) if c0 is not None else 1
-        round_ = 4 * math.pi * cv2.contourArea(c0) / per ** 2 if c0 is not None else 0
-        if 0.75 <= ratio <= 1.45 and overlap > 0.75 and solid > 0.88 and round_ > 0.55: new_g = cand
+    if seed.sum() > 30:
+        Ag = float(np.median(A[seed]))
+        prev = to_px(h['line'][-2]); dx, dy = prev[0] - pin[0], prev[1] - pin[1]; ln = math.hypot(dx, dy) or 1
+        appr = []
+        for dm in range(18, 33):
+            x, y = int(pin[0] + dx / ln * dm / M), int(pin[1] + dy / ln * dm / M)
+            if 0 <= y < im.shape[0] and 0 <= x < im.shape[1] and turf_any[y, x] and A[y, x] < -17: appr.append(A[y, x])
+        near15 = cv2.dilate(old_g.astype(np.uint8), disk(int(15 / M))) > 0
+        if len(appr) >= 5: Af = float(np.median(appr))
+        else:
+            v = A[near15 & turf_any & (A < Ag)]
+            Af = float(np.percentile(v, 25)) if v.size > 100 else Ag - 10
+        if os.environ.get('GDEBUG') and not Af < Ag - 3: print(h['n'], 'no contrast', Ag, Af)
+        if Af < Ag - 3:
+            T = Ag + 0.4 * (Af - Ag)  # nearer the green's colour: a collar nearly as dull isn't taken in
+            Lg = float(np.median(L[seed]))
+            gm = turf_any & (A > T) & (np.abs(L - Lg) < 7) & near15 & ~others  # not tree shade (much darker)
+            gm = cv2.morphologyEx(gm.astype(np.uint8), cv2.MORPH_CLOSE, disk(int(1.5 / M)))
+            gm = cv2.morphologyEx(gm, cv2.MORPH_OPEN, disk(int(3.5 / M)))  # cuts the necks a leak runs out through
+            k, lb, st, _ = cv2.connectedComponentsWithStats(gm)
+            pick = lb[int(pin[1]), int(pin[0])] if 0 <= int(pin[1]) < lb.shape[0] and 0 <= int(pin[0]) < lb.shape[1] else 0
+            if not pick and k > 1: pick = max(range(1, k), key=lambda i: ((lb == i) & seed).sum())
+            if pick:
+                cand = cv2.morphologyEx((lb == pick).astype(np.uint8), cv2.MORPH_CLOSE, disk(int(3 / M))) > 0  # no bites (a shadow, a flag)
+                ff = cand.astype(np.uint8).copy(); hh, ww = ff.shape
+                msk = np.zeros((hh + 2, ww + 2), np.uint8); cv2.floodFill(ff, msk, (0, 0), 2)
+                cand = ff != 2  # holes filled (a flag, a shadow)
+                cs = cv2.findContours(cand.astype(np.uint8), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)[0]
+                c0 = max(cs, key=cv2.contourArea)
+                solid = cv2.contourArea(c0) / max(1, cv2.contourArea(cv2.convexHull(c0)))
+                ratio = cand.sum() / max(1, old_g.sum())
+                # A green: a solid shape, not wildly bigger or smaller than the mapped one.
+                if os.environ.get('GDEBUG'): print(h['n'], f'Ag {Ag:.1f} Af {Af:.1f} T {T:.1f} ratio {ratio:.2f} solid {solid:.2f}')
+                if 0.45 <= ratio <= 1.7 and solid > 0.8: new_g = cand
     g_final = new_g if new_g is not None else old_g
 
     # --- the fairway by the green
     fw_old = fill(im.shape, near_fw, to_px).astype(bool)
     zone = cv2.dilate(g_final.astype(np.uint8), disk(int(FW_ZONE / M))) > 0
-    turf = (A < -17) & (L > 20) & (L < 62) & (tex < 4.5)  # still-green grass; dormant rough is tan (A above -12)
+    # Still-green grass (dormant rough is tan, A above -10): the fringe right round the
+    # green can be nearly as dull as the green itself, so close to it a little less green counts.
+    ring10 = cv2.dilate(g_final.astype(np.uint8), disk(int(10 / M))) > 0
+    turf = ((A < -17) | (ring10 & (A < -12))) & (L > 20) & (L < 62) & (tex < 4.5)
     turf = cv2.morphologyEx(turf.astype(np.uint8), cv2.MORPH_OPEN, disk(int(1.0 / M)))
     turf = cv2.morphologyEx(turf, cv2.MORPH_CLOSE, disk(int(3 / M))) > 0
     near_ok = cv2.dilate((fw_old | g_final).astype(np.uint8), disk(int(FW_GROW / M))) > 0
     fw_zone = turf & near_ok & zone & ~cv2.dilate(g_final.astype(np.uint8), disk(1)).astype(bool) & ~hazards & ~others
     # The fairway leads to the green: only grass joined to the old fairway's part in the zone, or touching the green.
     # No fingers or peninsulas: a wide opening keeps the solid ring of mown grass round the green.
-    fw_zone = cv2.morphologyEx(fw_zone.astype(np.uint8), cv2.MORPH_OPEN, disk(int(2 / M))) > 0
+    fw_zone = cv2.morphologyEx(fw_zone.astype(np.uint8), cv2.MORPH_OPEN, disk(int(1.2 / M))) > 0
     fw_new = (fw_old & ~zone) | fw_zone
     fw_new = cv2.morphologyEx(fw_new.astype(np.uint8), cv2.MORPH_OPEN, disk(int(1.5 / M)))
     fw_new = cv2.morphologyEx(fw_new, cv2.MORPH_CLOSE, disk(int(2 / M))) > 0
@@ -183,7 +202,7 @@ for h in d['holes']:
     gring = cv2.dilate(g_final.astype(np.uint8), disk(int(3 / M))) > 0
     for i in range(1, k):
         comp = lb == i
-        if (comp & fw_old & ~zone).any() or ((comp & gring).any() and st[i, 4] * M * M > 150): keep_ids.add(i)
+        if (comp & fw_old & ~zone).any() or ((comp & gring).any() and st[i, 4] * M * M > 300): keep_ids.add(i)
     fw_new = np.isin(lb, list(keep_ids))
     # No little holes in it (a shadow, a darker patch): only bunkers, water and greens cut it.
     holes_ = ~fw_new & ~hazards & ~others & ~g_final
