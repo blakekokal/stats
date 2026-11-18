@@ -167,12 +167,14 @@ for h in d['holes']:
     # --- the fairway by the green
     fw_old = fill(im.shape, near_fw, to_px).astype(bool)
     zone = cv2.dilate(g_final.astype(np.uint8), disk(int(FW_ZONE / M))) > 0
-    turf = (A < min(Ag - 3, -19)) & (L > 20) & (L < 62) & (tex < 4.5)
+    turf = (A < -17) & (L > 20) & (L < 62) & (tex < 4.5)  # still-green grass; dormant rough is tan (A above -12)
     turf = cv2.morphologyEx(turf.astype(np.uint8), cv2.MORPH_OPEN, disk(int(1.0 / M)))
     turf = cv2.morphologyEx(turf, cv2.MORPH_CLOSE, disk(int(3 / M))) > 0
     near_ok = cv2.dilate((fw_old | g_final).astype(np.uint8), disk(int(FW_GROW / M))) > 0
     fw_zone = turf & near_ok & zone & ~cv2.dilate(g_final.astype(np.uint8), disk(1)).astype(bool) & ~hazards & ~others
     # The fairway leads to the green: only grass joined to the old fairway's part in the zone, or touching the green.
+    # No fingers or peninsulas: a wide opening keeps the solid ring of mown grass round the green.
+    fw_zone = cv2.morphologyEx(fw_zone.astype(np.uint8), cv2.MORPH_OPEN, disk(int(2 / M))) > 0
     fw_new = (fw_old & ~zone) | fw_zone
     fw_new = cv2.morphologyEx(fw_new.astype(np.uint8), cv2.MORPH_OPEN, disk(int(1.5 / M)))
     fw_new = cv2.morphologyEx(fw_new, cv2.MORPH_CLOSE, disk(int(2 / M))) > 0
@@ -181,7 +183,7 @@ for h in d['holes']:
     gring = cv2.dilate(g_final.astype(np.uint8), disk(int(3 / M))) > 0
     for i in range(1, k):
         comp = lb == i
-        if (comp & fw_old & ~zone).any() or ((comp & gring).any() and st[i, 4] * M * M > 60): keep_ids.add(i)
+        if (comp & fw_old & ~zone).any() or ((comp & gring).any() and st[i, 4] * M * M > 150): keep_ids.add(i)
     fw_new = np.isin(lb, list(keep_ids))
     # No little holes in it (a shadow, a darker patch): only bunkers, water and greens cut it.
     holes_ = ~fw_new & ~hazards & ~others & ~g_final
