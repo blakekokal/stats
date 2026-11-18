@@ -631,8 +631,14 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 /* Yardage book view (GPS Overview > View): the hole's book pages fill the
    screen; only the hole pill, View, the menu and their boxes stay. */
 .holeview.bookmode > :not(.bookview):not(.holepill):not(.menu):not(.cleanview):not(.sheet):not(.leave) { display: none !important; }
-.holeview .bookview { position: absolute; inset: 0; overflow: auto; -webkit-overflow-scrolling: touch; background: #e9ebef; display: flex; justify-content: center; align-items: flex-start; padding: calc(12px + env(safe-area-inset-top)) 12px calc(90px + env(safe-area-inset-bottom)); box-sizing: border-box; }
+.holeview .bookview { position: absolute; inset: 0; background: #fff; }
 .holeview .bookview[hidden] { display: none; }
-.holeview .bookview .bookstatus { margin-top: 40vh; color: #555; }
+.holeview .bookmap { position: absolute; inset: 0; }
+.holeview .bookview .booknote { position: absolute; left: 50%; top: calc(14px + env(safe-area-inset-top)); transform: translateX(-50%); background: #111c; color: #fff; border-radius: 999px; padding: 5px 12px; font-size: 13px; white-space: nowrap; pointer-events: none; }
+.holeview .bookgreen { position: absolute; inset: 0; background: #e9ebefee; overflow: auto; display: flex; justify-content: center; align-items: flex-start; padding: calc(12px + env(safe-area-inset-top)) 12px calc(90px + env(safe-area-inset-bottom)); box-sizing: border-box; }
+.holeview .bookgreen[hidden] { display: none; }
+.holeview .bookgreenpage { width: min(420px, 100%); box-shadow: 0 2px 12px rgba(0,0,0,.2); }
+.holeview .bookgreenpage .bookpage { width: 100%; }
+.holeview .bookgreen .booknote { top: auto; bottom: calc(76px + env(safe-area-inset-bottom)); }
 .holeview.bookmode .fab.cleanview { bottom: calc(70px + env(safe-area-inset-bottom)); }
 .holeview.bookmode .sheet.viewbox { bottom: calc(70px + env(safe-area-inset-bottom)); }

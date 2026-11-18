@@ -13,7 +13,7 @@ import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast, complexHol
 import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, drawnRing, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
-import { bookPages } from './book.js';
+import { bookMapImage, bookGreenPage } from './book.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js';
 import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, submitRound, isScouting, isTourneyScout, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
@@ -29,6 +29,7 @@ const M_PER_DEG = 111320;
 const CROSSHAIR_Y = 1 / 3; // fraction of the screen height, from the top
 
 let map = null;
+let bookMap = null; // the yardage book view's own map (GPS Overview)
 
 // Club names as the coaching app's My Bag stores them ('Dr', '3W', '4HY', '7I', 'PW', '52', ...).
 export function clubName(n) {
@@ -70,7 +71,7 @@ async function fetchWind(id, at) {
     return (windCache[id] = { at: Date.now(), speed: cur.wind_speed_10m, dir: cur.wind_direction_10m });
   } catch { return c || null; }
 }
-export function closeHole() { clearInterval(windTimer); windTimer = null; stopGps(); clearInterval(watchTimer); watchTimer = null; liveUnsub?.(); liveUnsub = null; if (map) { map.remove(); map = null; } }
+export function closeHole() { clearInterval(windTimer); windTimer = null; stopGps(); clearInterval(watchTimer); watchTimer = null; liveUnsub?.(); liveUnsub = null; if (map) { map.remove(); map = null; } if (bookMap) { bookMap.remove(); bookMap = null; } }
 export const lastHole = () => +sessionStorage.getItem('hole') || 1;
 
 // Compass direction from a to b, in degrees clockwise from north.
@@ -900,26 +901,62 @@ export function renderHole(view, n) {
   const sgtRow = viewSwitch('SG map view', () => showSgt, setSgt, 'From the tee only');
   const linesRow = viewSwitch('Course lines view', () => showOutlines, setOutlines);
   const cleanRow = viewSwitch('Clean view', () => cleanView, setClean);
-  // Yardage book view (GPS Overview only): the hole drawn as its yardage book
-  // pages (green page over the hole page), with no tools or crosshair; the hole
-  // pill still goes round the holes. Stays on from hole to hole this visit.
+  // Yardage book view (GPS Overview only): the map turns into the hole's
+  // yardage book page, still zoomable and turnable, with no tools or
+  // crosshair; tap the green for the green page. The hole pill still goes
+  // round the holes. Stays on from hole to hole this visit.
   let bookView = scouting && sessionStorage.getItem('gs:bookView') === '1';
-  const bookEl = h('div', { class: 'bookview', hidden: true });
+  const bookMapEl = h('div', { class: 'bookmap' });
+  const bookNote = h('small', { class: 'booknote' }, 'Drawing…');
+  const bookGreen = h('div', { class: 'bookgreen', hidden: true, onclick: () => { bookGreen.hidden = true; } });
+  const bookEl = h('div', { class: 'bookview', hidden: true }, bookMapEl, bookNote, bookGreen);
+  const bookHelpers = { holeFeatures, ownGreen };
   let bookToken = 0;
+  const openGreenPage = async () => {
+    bookGreen.replaceChildren(h('small', { class: 'booknote' }, 'Drawing the green…')); bookGreen.hidden = false;
+    try {
+      const pg = await bookGreenPage(n, teeName, bookHelpers, { tourney });
+      bookGreen.replaceChildren(h('div', { class: 'bookgreenpage' }, pg), h('small', { class: 'booknote' }, 'Tap to close'));
+    } catch (e) { bookGreen.replaceChildren(h('small', { class: 'booknote' }, `Couldn’t draw the green: ${e.message || e}`)); }
+  };
   const drawBookView = async () => {
     const my = ++bookToken;
-    bookEl.replaceChildren(h('small', { class: 'bookstatus' }, 'Drawing…'));
-    const helpers = { holeFeatures, ownGreen };
-    let pages;
-    try { pages = await bookPages(n, teeName, {}, helpers, { tourney }); } catch (e) {
+    bookNote.textContent = 'Drawing…'; bookNote.hidden = false;
+    let img;
+    try { img = await bookMapImage(n, teeName, bookHelpers, { tourney }); } catch (e) {
       console.error('yardage book view', e);
-      try { pages = await bookPages(n, teeName, { contours: false, greenContours: false, slopes: false, deltas: false }, helpers, { tourney }); } catch (e2) {
-        if (my === bookToken) bookEl.replaceChildren(h('div', { class: 'bookerr' }, `Couldn’t draw hole ${n}: ${e2.message || e2}`));
-        return;
-      }
+      if (my === bookToken) bookNote.textContent = `Couldn’t draw hole ${n}: ${e.message || e}`;
+      return;
     }
-    if (my !== bookToken || !bookView) return;
-    bookEl.replaceChildren(h('div', { class: 'flipbook' }, ...pages.reverse()));
+    if (my !== bookToken || !bookView || !bookEl.isConnected) { URL.revokeObjectURL(img.url); return; }
+    bookMap?.remove();
+    const lng = img.corners.reduce((a, c) => a + c[0], 0) / 4, lat = img.corners.reduce((a, c) => a + c[1], 0) / 4;
+    // Zoom so the page fills the screen.
+    const mPerDeg = 111320, k = Math.cos((lat * Math.PI) / 180);
+    const len = (a, b) => Math.hypot((a[0] - b[0]) * mPerDeg * k, (a[1] - b[1]) * mPerDeg);
+    const wM = len(img.corners[0], img.corners[1]), hM = len(img.corners[1], img.corners[2]);
+    const px = Math.min(bookMapEl.clientWidth / wM, bookMapEl.clientHeight / hM); // pixels a metre
+    const zoom = Math.log2(px * 78271.52 * k); // (a 512-pixel world at zoom 0)
+    const bm = bookMap = new maplibregl.Map({
+      container: bookMapEl,
+      style: { version: 8, sources: { book: { type: 'image', url: img.url, coordinates: img.corners } },
+        layers: [{ id: 'bg', type: 'background', paint: { 'background-color': '#fff' } }, { id: 'book', type: 'raster', source: 'book', paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' } }] },
+      center: [lng, lat], zoom, bearing: img.bearing, minZoom: zoom - 1.5, maxZoom: 21,
+      pitchWithRotate: false, touchPitch: false, attributionControl: false,
+    });
+    bm.once('load', () => {
+      URL.revokeObjectURL(img.url);
+      if (tourney) { bookNote.hidden = true; return; }
+      bookNote.textContent = 'Tap the green for the green page';
+      setTimeout(() => { if (my === bookToken) bookNote.hidden = true; }, 3000);
+    });
+    // Tap the green: the green page, full screen.
+    const green = ownGreen(ch);
+    bm.on('click', e => {
+      if (tourney || !green) return;
+      const p = [e.lngLat.lat, e.lngLat.lng];
+      if (inPolygon(p, green.p) || yards(p, centre(green.p[0])) < 12) openGreenPage();
+    });
   };
   const setBookView = v => {
     bookView = v;
@@ -927,7 +964,7 @@ export function renderHole(view, n) {
     bookEl.hidden = !v;
     holeEl()?.classList.toggle('bookmode', v);
     viewBtn.classList.toggle('on', v || cleanView);
-    if (v) drawBookView(); else bookEl.replaceChildren();
+    if (v) drawBookView(); else { ++bookToken; bookMap?.remove(); bookMap = null; bookGreen.hidden = true; }
   };
   const bookRow = viewSwitch('Yardage book view', () => bookView, setBookView);
   // Elevation (courses built with tools/elevation.py): contour lines with a
@@ -1486,7 +1523,7 @@ export function renderHole(view, n) {
       h('div', {}, pillSmall, pillStrong),
       h('a', { href: `#/hole/${nextHole}`, 'aria-label': 'Next hole' }, '›'))));
 
-  if (bookView) { bookEl.hidden = false; viewBtn.classList.add('on'); drawBookView(); }
+  if (bookView) { bookEl.hidden = false; viewBtn.classList.add('on'); requestAnimationFrame(drawBookView); }
   // The score box is as wide as the hole pill, whatever the pill says.
   if (window.ResizeObserver) new ResizeObserver(() => { if (holePill.offsetWidth) chips.style.width = `${holePill.offsetWidth}px`; }).observe(holePill);
   const m = map = new maplibregl.Map({
