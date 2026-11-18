@@ -137,9 +137,28 @@ const el = (tag, attrs = {}, ...kids) => {
   for (const kid of kids.flat()) if (kid != null && kid !== false) e.append(kid);
   return e;
 };
-const pathD = (pts, close) => pts.length ? 'M' + pts.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('L') + (close ? 'Z' : '') : '';
+const xy = p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`;
+const lineD = (pts, close) => pts.length ? 'M' + pts.map(xy).join('L') + (close ? 'Z' : '') : '';
+// A smooth curve through the points (Catmull-Rom as cubic Béziers): outlines
+// and contours come out round, not faceted.
+const curveD = (pts, close) => {
+  if (close && pts.length > 1 && dist(pts[0], pts.at(-1)) < 1e-6) pts = pts.slice(0, -1);
+  // Closed shapes: one gentle corner-cutting pass first, so sharp corners round off.
+  if (close && pts.length >= 4) pts = pts.flatMap((p, i) => { const q = pts[(i + 1) % pts.length]; return [[0.75 * p[0] + 0.25 * q[0], 0.75 * p[1] + 0.25 * q[1]], [0.25 * p[0] + 0.75 * q[0], 0.25 * p[1] + 0.75 * q[1]]]; });
+  const n = pts.length;
+  if (n < 3) return lineD(pts, close);
+  const at = i => (close ? pts[(i + n) % n] : pts[Math.max(0, Math.min(n - 1, i))]);
+  let d = 'M' + xy(pts[0]);
+  for (let i = 0; i < (close ? n : n - 1); i++) {
+    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+    d += 'C' + xy([p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6]) + ' ' + xy([p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]) + ' ' + xy(p2);
+  }
+  return d + (close ? 'Z' : '');
+};
+// Shapes (closed) are drawn smooth; straight lines (hole line, leaders) stay straight.
+const pathD = (pts, close) => (close ? curveD(pts, true) : lineD(pts));
 const txt = (x, y, s, attrs = {}) => el('text', { x: x.toFixed(1), y: y.toFixed(1), ...attrs }, String(s));
-const INK = '#1c2a22', SOFT = '#5d6b62', FONT = "'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif";
+const INK = '#1c2a22', SOFT = '#5d6b62', FONT = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
 // The shared patterns: stippled sand, rippled water.
 function defs(id) {
@@ -171,7 +190,7 @@ function labeller() {
     },
   };
 }
-const textW = (s, size) => String(s).length * size * 0.52;
+const textW = (s, size) => String(s).length * size * 0.6; // the system font is wider than the old condensed one
 
 // ---------- heights (for contours and the green page) ----------
 
@@ -402,7 +421,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   const inView = pts => pts.some(([x, y]) => x > viewYd[0] - 20 && x < viewYd[1] + 20 && y > viewYd[2] - 20 && y < viewYd[3] + 20);
 
   const id = `bk${n}p${Math.random().toString(36).slice(2, 7)}`;
-  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bookpage', xmlns: SVGNS, 'font-family': FONT });
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bookpage', xmlns: SVGNS, 'font-family': FONT, 'stroke-linejoin': 'round' });
   svg.append(defs(id), el('clipPath', { id: `${id}-clip` }, el('rect', { x: left, y: top, width: right - left, height: bottom - top })));
   // Lines (the book over the satellite picture): no paper, just outlines and numbers.
   // opts.satellite (a book printed that way): the same, over the satellite picture, on a white page.
@@ -457,7 +476,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       const iv = [12, 24, 36, 48, 72].find(v => (R.hi - R.lo) / v <= 22) || 120;
       const no = feats.filter(o => ['water', 'bunker'].includes(o.x.t) || (o.x.t === 'green' && own(o))).map(o => o.r);
       const reliefG = el('g', {});
-      reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => pathD(sg.map(P))).join(''), ...RELIEF_LINE, 'stroke-opacity': 0.5 }));
+      reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => curveD(sg.map(P))).join(''), ...RELIEF_LINE, 'stroke-opacity': 0.5 }));
       reliefG.append(el('path', { d: slopeArrows(R, area, 10.8, P, (x, y) => !no.some(r => inside([x, y], r)), 0.6), ...RELIEF_ARROW, 'stroke-opacity': 0.55 }));
       mapG.append(reliefG);
       reliefNote = `Contours every ${iv >= 12 ? `${iv / 12} ft` : `${iv}"`} · arrows point downhill`;
@@ -829,7 +848,7 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   const inView = pts => pts.some(([x, y]) => x > view[0] - 10 && x < view[1] + 10 && y > view[2] - 10 && y < view[3] + 10);
 
   const id = `bk${n}g${Math.random().toString(36).slice(2, 7)}`;
-  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bookpage', xmlns: SVGNS, 'font-family': FONT });
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bookpage', xmlns: SVGNS, 'font-family': FONT, 'stroke-linejoin': 'round' });
   const gPath = pathD(g.map(P), true);
   svg.append(defs(id),
     el('clipPath', { id: `${id}-clip` }, el('rect', { x: left - 16, y: top, width: right - left + 32, height: bottom - top })),
@@ -901,7 +920,7 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
       if (prefs.greenContours) {
         let iv = 2;
         while ((R.hi - R.lo) / iv > 40) iv *= 2;
-        reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => pathD(sg.map(P))).join(''), ...RELIEF_LINE, ...(sat ? { stroke: '#fff', 'stroke-opacity': 0.75 } : {}), 'stroke-width': 0.5, mask: `url(#${id}-lines)` }));
+        reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => curveD(sg.map(P))).join(''), ...RELIEF_LINE, ...(sat ? { stroke: '#fff', 'stroke-opacity': 0.75 } : {}), 'stroke-width': 0.5, mask: `url(#${id}-lines)` }));
         slopeNote = `Contours every ${iv}" around the green`;
       }
       if (prefs.slopes) {
@@ -1106,16 +1125,8 @@ const loadScript = src => new Promise((ok, no) => {
   sc.src = abs(src); sc.onload = ok; sc.onerror = () => no(new Error('the PDF maker didn’t load (offline?)'));
   document.head.append(sc);
 });
-// The book's font, built into each page so it looks the same in the PDF.
-let fontCssP = null;
-const bookFontCss = () => (fontCssP ||= Promise.all([400, 700, 900].map(async w => {
-  const r = await fetch(abs(`vendor/fonts/barlow-condensed-latin-${w}-normal.woff2`));
-  if (!r.ok) return '';
-  const b = new Uint8Array(await r.arrayBuffer());
-  let str = '';
-  for (let i = 0; i < b.length; i += 0x4000) str += String.fromCharCode.apply(null, b.subarray(i, i + 0x4000));
-  return `@font-face{font-family:'Barlow Condensed';font-weight:${w};src:url(data:font/woff2;base64,${btoa(str)}) format('woff2');}`;
-})).then(a => a.join('')).catch(() => ''));
+// The book uses the device's own system font, so nothing is built into the pages.
+const bookFontCss = async () => '';
 // One page (an SVG) drawn into a canvas at x, y, w, h (pixels).
 async function drawSvg(ctx, svg, x, y, w, hgt, css) {
   const c = svg.cloneNode(true);
@@ -1319,7 +1330,7 @@ export function openBook(n, opts) {
       }
       status.textContent = 'Making the PDF…';
       const { jsPDF } = window.jspdf;
-      const DPI = 200;
+      const DPI = 300; // print-sharp lines (a legal sheet is 2550 × 4200 px, inside phones' canvas limits)
       let doc = null;
       const sheet = async (wIn, hIn, place) => {
         const cv = document.createElement('canvas'); cv.width = Math.round(wIn * DPI); cv.height = Math.round(hIn * DPI);
@@ -1327,7 +1338,7 @@ export function openBook(n, opts) {
         await place(ctx);
         if (!doc) doc = new jsPDF({ unit: 'in', format: [wIn, hIn], orientation: wIn > hIn ? 'landscape' : 'portrait' });
         else doc.addPage([wIn, hIn], wIn > hIn ? 'landscape' : 'portrait');
-        doc.addImage(cv.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, wIn, hIn, undefined, 'FAST');
+        doc.addImage(cv.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, wIn, hIn, undefined, 'FAST');
       };
       // A card's or strip's place in the stack (1 on top): a numbered dot.
       const numberAt = (ctx, cxN, cyN, r, num) => {
@@ -1497,7 +1508,7 @@ export function openBook(n, opts) {
   const coverPage = (tn, note = '', H = PAGE_H) => {
     const fy = y => (y * H) / PAGE_H; // laid out for a 658-high page
     const t = course.tees.find(x => x.name === tn) || course.tees[0];
-    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS, 'font-family': FONT });
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS, 'font-family': FONT, 'stroke-linejoin': 'round' });
     const yds = t ? t.yards.slice(0, course.holes.length).reduce((a, b) => a + b, 0) : '';
     const par = course.holes.reduce((a, c) => a + c.par, 0);
     svg.append(el('rect', { width: W, height: H, fill: '#fff' }),
@@ -1512,7 +1523,7 @@ export function openBook(n, opts) {
   };
   const blankPage = (H = PAGE_H) => el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS }, el('rect', { width: W, height: H, fill: '#fff' }));
   const notesPage = (H = PAGE_H) => {
-    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS, 'font-family': FONT }, el('rect', { width: W, height: H, fill: '#fff' }),
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS, 'font-family': FONT, 'stroke-linejoin': 'round' }, el('rect', { width: W, height: H, fill: '#fff' }),
       txt(16, 40, 'NOTES', { 'font-size': 14, 'font-weight': 700, fill: INK, 'letter-spacing': 1.5 }));
     for (let y = 80; y < H - 30; y += 26) svg.append(el('line', { x1: 16, x2: W - 16, y1: y, y2: y, stroke: '#d6dcd8', 'stroke-width': 0.8 }));
     return svg;
