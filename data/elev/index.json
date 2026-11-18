@@ -358,5 +358,20 @@
    647
   ],
   "source": "USGS 3DEP"
+ },
+ "cedarcrest": {
+  "bounds": [
+   -96.801738,
+   32.718823,
+   -96.785937,
+   32.72759
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   410,
+   582
+  ],
+  "source": "USGS 3DEP"
  }
 }

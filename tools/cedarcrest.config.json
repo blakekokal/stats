@@ -1,0 +1,17 @@
+{
+  "id": "cedarcrest",
+  "name": "Cedar Crest Golf Course",
+  "location": "Dallas, TX",
+  "par": [5,4,3,4,4,3,5,4,3, 5,3,4,4,5,3,5,3,4],
+  "hcp": [2,17,3,6,13,10,9,16,12, 1,4,15,18,8,7,11,5,14],
+  "_comment_tees": "Scorecard from GolfPass. Gold, Silver and Ruby play to par 71 (#10 a 456-yd par 5); the Tournament and Black tees play #10 as a par 4 (par 70, as OpenStreetMap tags it) and the card gives no hole yardages for them, so they are left out. Men's ratings.",
+  "tees": [
+    {"name": "Gold",   "rating": 70.8, "slope": 134, "yards": [586,342,175,445,360,169,485,290,161, 456,187,322,365,520,187,495,175,394]},
+    {"name": "Silver", "rating": 69.1, "slope": 125, "yards": [562,327,157,428,335,153,465,276,138, 447,167,298,338,485,161,466,147,325]},
+    {"name": "Ruby",   "rating": 65.2, "slope": 112, "yards": [485,273,134,328,282,136,410,247,127, 443,137,274,286,423,138,400,128,251]}
+  ],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting all bunkers to the sand); every point is moved by it.",
+  "shift": {"east": -0.8, "north": 0.3},
+  "_comment_drop": "Polygons containing these points are not part of the course (practice greens).",
+  "drop": [[32.722463, -96.796668], [32.721959, -96.78911], [32.721752, -96.797928], [32.721717, -96.797364]]
+}
