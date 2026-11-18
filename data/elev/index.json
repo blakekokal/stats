@@ -418,5 +418,50 @@
    537
   ],
   "source": "USGS 3DEP"
+ },
+ "prairielakes-red": {
+  "bounds": [
+   -96.986722,
+   32.696564,
+   -96.977265,
+   32.706631
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   455,
+   502
+  ],
+  "source": "USGS 3DEP"
+ },
+ "prairielakes-white": {
+  "bounds": [
+   -96.986031,
+   32.696565,
+   -96.974658,
+   32.706636
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   455,
+   502
+  ],
+  "source": "USGS 3DEP"
+ },
+ "prairielakes-blue": {
+  "bounds": [
+   -96.98666,
+   32.692883,
+   -96.973625,
+   32.700006
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   455,
+   505
+  ],
+  "source": "USGS 3DEP"
  }
 }

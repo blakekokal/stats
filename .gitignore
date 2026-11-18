@@ -9,3 +9,4 @@ tools/*/m1[6-9].png
 tools/*/m1[6-9].png.meta
 tools/*.dem.npy
 tools/*.dem.npz
+tools/prairielakes/work/
