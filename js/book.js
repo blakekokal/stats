@@ -14,7 +14,7 @@ const M_PER_DEG = 111320, M_PER_YD = 0.9144, IN_PER_M = 39.3701;
 const SVGNS = 'http://www.w3.org/2000/svg';
 // One page, in SVG units: 4 1/4 x 7 inches at 100% (the USGA's size limit for
 // a yardage book, Rule 4.3 / Interpretation 4.3a(1)/1).
-const W = 400, H = 658;
+const W = 400, PAGE_H = 658; // a page's height can change for a print layout (opts.pageH)
 // The USGA's scale limit for any picture of a putting green: 3/8 inch to 5
 // yards (1:480). At W units = 4.25 in that's 400 / 4.25 * 0.075 = 7.06 units a
 // yard; every page stays under it.
@@ -329,7 +329,7 @@ function frontPointFn(f, greenRing, pin) {
 // along the line and round the shapes, softened. Labels sit outside it.
 const LINE_YD = 46, SHAPE_YD = 23;
 function onlyHole(svg, mapG, id, P, s, line, shapes, lineYd = LINE_YD, shapeYd = SHAPE_YD) {
-  const mid = `${id}-only`;
+  const mid = `${id}-only`, H = +svg.getAttribute('viewBox').split(' ')[3];
   const soft = el('filter', { id: `${mid}-soft`, filterUnits: 'userSpaceOnUse', x: 0, y: 0, width: W, height: H }, el('feGaussianBlur', { stdDeviation: (5 * s).toFixed(1) }));
   const mask = el('mask', { id: mid, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: W, height: H },
     el('g', { filter: `url(#${mid}-soft)`, fill: '#fff', stroke: '#fff', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
@@ -344,6 +344,7 @@ function onlyHole(svg, mapG, id, P, s, line, shapes, lineYd = LINE_YD, shapeYd =
 // ---------- the hole page ----------
 
 async function holePage(n, teeName, prefs, helpers, opts) {
+  const H = opts.pageH || PAGE_H;
   const F = holeFacts(n, teeName, helpers);
   const { ch, line, tee, pin, greenRing } = F;
   const teeSet = course.tees.find(t => t.name === teeName) || course.tees[0];
@@ -587,6 +588,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
 const frontY0 = g => { const d = crossings([0, 0], [0, 1], g, 200); return d.length ? d[0] : Math.min(...g.map(p => p[1])); };
 
 async function greenPage(n, teeName, prefs, helpers, opts) {
+  const H = opts.pageH || PAGE_H;
   const F = holeFacts(n, teeName, helpers);
   const { ch, greenRing, line } = F;
   if (!greenRing) return null;
@@ -603,7 +605,7 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   const widthYd = width.length >= 2 ? Math.round(width.at(-1) - width[0]) : Math.round(maxX - minX);
   const frontY = depth.length ? depth[0] : minY;
 
-  const top = 86, bottom = prefs.notes ? 552 : H - 28, left = 18, right = W - 18;
+  const top = 86, bottom = prefs.notes ? H - 106 : H - 28, left = 18, right = W - 18;
   // Zoomed in on the green as far as the USGA allows (3/8 inch to 5 yards),
   // or until it fills the map; any room left over shows the approach below it.
   const pad = 5;
@@ -841,22 +843,23 @@ export function openBook(n, opts) {
   // Print: the book is made into a PDF here on the device (phones, and the app
   // added to the home screen, won't print a page straight from the app), then
   // shared, opened or saved from the bar that comes up. Layouts:
-  //  legal  - a flip book: two 4 1/4 x 14 strips on 8 1/2 x 14 paper, each a
-  //           green page over a hole page; cut down the middle, fold each strip
-  //           in half (printing outside) and stack them, folds at the top
-  //  letter - the same on 8 1/2 x 11, at 79%
-  //  duplex-letter (the default) / duplex-legal - printed on both sides:
-  //           cards four to a sheet (2 x 2; on letter at 75%, about 3.2 x
-  //           5.25 in), or two big ones to a letter sheet (duplex-letter-2),
-  //           the hole page on the front and the next hole's green on the
-  //           back; cut apart, stack, bind at the top. No folding.
+  //  letter (the default) / legal - fold: each half of the sheet is a strip
+  //           with a green page over a hole page. Cut once down the middle,
+  //           fold each strip in half (printing outside), stack, bind along the
+  //           folds. Each strip is centred in its half (a quarter-inch either
+  //           side, so the cut leaves both halves the same) and its pages
+  //           fill it: 3 3/4 wide, 6 3/4 tall on legal (folds to 4 1/4 x 7)
+  //           or 5 1/4 on letter (folds to 4 1/4 x 5 1/2).
+  //  duplex-letter / duplex-legal - printed on both sides: cards four to a
+  //           sheet (2 x 2; on letter at 75%), or two big ones to a letter
+  //           sheet (duplex-letter-2), the hole page on the front and the next
+  //           hole's green on the back; cut apart, stack, bind at the top.
   //  single - one 4 1/4 x 7 page per sheet
-  // A new key, so everyone starts on double-sided letter (8 1/2 x 11, what
-  // most printers and print shops use).
-  const LAYOUTS = [['duplex-letter', 'Double-sided · letter'], ['duplex-letter-2', 'Double-sided · letter, 2 big cards'], ['duplex-legal', 'Double-sided · legal'], ['letter', 'Fold · letter'], ['legal', 'Fold · legal'], ['single', 'Single pages']];
-  let layout = (() => { try { return localStorage.getItem('gs:bookLayout3') || 'duplex-letter'; } catch { return 'duplex-letter'; } })();
-  if (!LAYOUTS.some(([v]) => v === layout)) layout = 'duplex-letter';
-  const layoutSel = h('select', { 'aria-label': 'Print layout', onchange: e => { layout = e.target.value; try { localStorage.setItem('gs:bookLayout3', layout); } catch { /* not kept */ } } },
+  // A new key, so everyone starts on fold · letter: one cut, then fold.
+  const LAYOUTS = [['letter', 'Fold · letter (cut once)'], ['legal', 'Fold · legal (cut once)'], ['duplex-letter', 'Double-sided · letter'], ['duplex-letter-2', 'Double-sided · letter, 2 big cards'], ['duplex-legal', 'Double-sided · legal'], ['single', 'Single pages']];
+  let layout = (() => { try { return localStorage.getItem('gs:bookLayout4') || 'letter'; } catch { return 'letter'; } })();
+  if (!LAYOUTS.some(([v]) => v === layout)) layout = 'letter';
+  const layoutSel = h('select', { 'aria-label': 'Print layout', onchange: e => { layout = e.target.value; try { localStorage.setItem('gs:bookLayout4', layout); } catch { /* not kept */ } } },
     LAYOUTS.map(([v, t]) => h('option', { value: v, selected: v === layout }, t)));
   const pdfBar = h('div', { class: 'bookpdf', hidden: true });
   let pdfUrl = null;
@@ -868,8 +871,13 @@ export function openBook(n, opts) {
       status.textContent = 'Getting the PDF maker…';
       await loadScript('vendor/jspdf/jspdf.umd.min.js');
       const css = await bookFontCss();
+      // Fold layouts: the pages are as tall as half the strip, as wide as it.
+      const MARGIN = 0.25, fold = layout === 'letter' || layout === 'legal';
+      const sheetH = layout === 'legal' || layout === 'duplex-legal' ? 14 : 11;
+      const pageWIn = 4.25 - 2 * MARGIN, pageHIn = sheetH / 2 - MARGIN;
+      const pageH = fold ? Math.round((W * pageHIn) / pageWIn) : PAGE_H;
       const pagesFor = async k => {
-        try { return await drawHoleParts(k, prefs); } catch (e) { console.error('yardage book', e); return drawHoleParts(k, { ...prefs, contours: false, greenContours: false, slopes: false, deltas: false }); }
+        try { return await drawHoleParts(k, prefs, pageH); } catch (e) { console.error('yardage book', e); return drawHoleParts(k, { ...prefs, contours: false, greenContours: false, slopes: false, deltas: false }, pageH); }
       };
       const parts = {};
       for (const k of holes) { status.textContent = `Drawing hole ${k}${all ? ` of ${holes.length}` : ''}…`; parts[k] = await pagesFor(k); }
@@ -877,12 +885,12 @@ export function openBook(n, opts) {
       // spread for hole k is the back of leaf k-1 (its top page) over the
       // front of leaf k (its bottom page), so each leaf carries hole k's hole
       // page and hole k+1's green; the first leaf is the cover.
-      const blank = () => blankPage();
+      const blank = () => blankPage(pageH);
       let leaves;
       if (!all) leaves = [[parts[hole].green || blank(), parts[hole].hole]];
       else {
-        leaves = [[parts[holes[0]].green || blank(), coverPage(teeName, layout.startsWith('duplex') ? 'Printed two-sided: flip on short edge' : '')]];
-        holes.forEach((k, i) => leaves.push([i + 1 < holes.length ? parts[holes[i + 1]].green || blank() : notesPage(), parts[k].hole]));
+        leaves = [[parts[holes[0]].green || blank(), coverPage(teeName, layout.startsWith('duplex') ? 'Printed two-sided: flip on short edge' : '', pageH)]];
+        holes.forEach((k, i) => leaves.push([i + 1 < holes.length ? parts[holes[i + 1]].green || blank() : notesPage(pageH), parts[k].hole]));
       }
       status.textContent = 'Making the PDF…';
       const { jsPDF } = window.jspdf;
@@ -906,7 +914,6 @@ export function openBook(n, opts) {
       // so everything sits inside a quarter-inch margin: the cards shrink a
       // little to fit (still within the USGA's size and green-scale limits),
       // and the dashed cut lines go round every card.
-      const MARGIN = 0.25;
       const cutBox = (ctx, xs, ys, wPx, hPx) => {
         ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2; ctx.setLineDash([18, 12]); ctx.beginPath();
         for (const x of xs) { ctx.moveTo(x, 0); ctx.lineTo(x, hPx); }
@@ -921,22 +928,22 @@ export function openBook(n, opts) {
         // are centred on the sheet, so the two sides line up.
         const legal = layout === 'duplex-legal', sw = 8.5, sh = legal ? 14 : 11, rows = layout === 'duplex-letter-2' ? 1 : 2, per = 2 * rows; // four cards a sheet (two big ones on letter-2)
         const k = Math.min((sw - 2 * MARGIN) / 8.5, (sh - 2 * MARGIN) / (7 * rows), 1);
-        const cw = 4.25 * k * DPI, chh = 7 * k * DPI, x0 = (sw * DPI - 2 * cw) / 2, y0 = (sh * DPI - rows * chh) / 2;
+        const cw = 4.25 * k * DPI, chh = 7 * k * DPI, half = (sw / 2) * DPI, cx0 = (half - cw) / 2, y0 = (sh * DPI - rows * chh) / 2; // each card centred in its half
         const nSheets = Math.ceil(leaves.length / per);
         for (let i = 0; i < leaves.length; i += per) {
           const group = leaves.slice(i, i + per);
           status.textContent = `Making sheet ${i / per + 1} of ${nSheets}…`;
           await sheet(sw, sh, async ctx => {
             for (const [j, [, front]] of group.entries()) {
-              const x = x0 + (j % 2) * cw, y = y0 + Math.floor(j / 2) * chh;
+              const x = (j % 2) * half + cx0, y = y0 + Math.floor(j / 2) * chh;
               await drawSvg(ctx, front, x, y, cw, chh, css);
               if (leaves.length > 1) numberAt(ctx, x + cw / 2, y + chh - 0.2 * k * DPI, 0.12 * k * DPI, i + j + 1);
             }
-            cutBox(ctx, [x0, x0 + cw, x0 + 2 * cw], Array.from({ length: rows + 1 }, (_, r) => y0 + r * chh), sw * DPI, sh * DPI);
+            cutBox(ctx, [half], rows > 1 ? [y0 + chh] : [], sw * DPI, sh * DPI);
           });
           await sheet(sw, sh, async ctx => {
             for (const [j, [back]] of group.entries()) {
-              const x = x0 + (j % 2) * cw, y = y0 + (rows - 1 - Math.floor(j / 2)) * chh;
+              const x = (j % 2) * half + cx0, y = y0 + (rows - 1 - Math.floor(j / 2)) * chh;
               await drawSvg(ctx, back, x, y, cw, chh, css);
             }
           });
@@ -947,24 +954,24 @@ export function openBook(n, opts) {
         const pw = 4.25 * k * DPI, ph = 7 * k * DPI, x0 = (4.25 * DPI - pw) / 2, y0 = (7 * DPI - ph) / 2;
         for (const [i, svg] of flat.entries()) { status.textContent = `Making page ${i + 1} of ${flat.length}…`; await sheet(4.25, 7, ctx => drawSvg(ctx, svg, x0, y0, pw, ph, css)); }
       } else {
-        const legal = layout === 'legal', sw = 8.5, sh = legal ? 14 : 11;
-        const k = Math.min((sw - 2 * MARGIN) / 8.5, (sh - 2 * MARGIN) / 14); // strips are 4 1/4 x 14 at k
-        const stripW = 4.25 * k * DPI, stripH = 14 * k * DPI, x0 = (sw * DPI - 2 * stripW) / 2, y0 = (sh * DPI - stripH) / 2;
+        // One cut down the middle; each strip centred in its half, its two
+        // pages meeting at the sheet's middle, where it folds.
+        const sw = 8.5, sh = sheetH, half = (sw / 2) * DPI, pw = pageWIn * DPI, ph = pageHIn * DPI;
+        const px0 = (half - pw) / 2, fy = (sh / 2) * DPI;
         for (let i = 0; i < leaves.length; i += 2) {
           status.textContent = `Making sheet ${i / 2 + 1} of ${Math.ceil(leaves.length / 2)}…`;
           await sheet(sw, sh, async ctx => {
             for (let j = 0; j < 2 && i + j < leaves.length; j++) {
-              const [top, bottom] = leaves[i + j], x = x0 + j * stripW;
-              await drawSvg(ctx, top, x, y0, stripW, stripH / 2, css);
-              await drawSvg(ctx, bottom, x, y0 + stripH / 2, stripW, stripH / 2, css);
+              const [top, bottom] = leaves[i + j], x = j * half + px0;
+              await drawSvg(ctx, top, x, fy - ph, pw, ph, css);
+              await drawSvg(ctx, bottom, x, fy, pw, ph, css);
               // Its place in the stack (1 on top), at the foot of the strip.
-              if (leaves.length > 1) numberAt(ctx, x + stripW / 2, y0 + stripH - 0.2 * k * DPI, 0.12 * k * DPI, i + j + 1);
-              // Fold marks at the strip's edges, half way down.
-              const fy = y0 + stripH / 2;
+              if (leaves.length > 1) numberAt(ctx, x + pw / 2, fy + ph - 0.18 * DPI, 0.11 * DPI, i + j + 1);
+              // Fold marks at the strip's edges.
               ctx.strokeStyle = '#999'; ctx.lineWidth = 2; ctx.setLineDash([]);
-              ctx.beginPath(); ctx.moveTo(x, fy); ctx.lineTo(x + 0.12 * DPI, fy); ctx.moveTo(x + stripW, fy); ctx.lineTo(x + stripW - 0.12 * DPI, fy); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(j * half + 0.04 * DPI, fy); ctx.lineTo(j * half + 0.2 * DPI, fy); ctx.moveTo((j + 1) * half - 0.04 * DPI, fy); ctx.lineTo((j + 1) * half - 0.2 * DPI, fy); ctx.stroke();
             }
-            cutBox(ctx, [x0, x0 + stripW, x0 + 2 * stripW], [y0, y0 + stripH], sw * DPI, sh * DPI);
+            cutBox(ctx, [half], [], sw * DPI, sh * DPI);
           });
         }
       }
@@ -974,12 +981,12 @@ export function openBook(n, opts) {
       const file = (() => { try { return new File([blob], name, { type: 'application/pdf' }); } catch { return null; } })();
       const canShare = file && navigator.canShare?.({ files: [file] });
       pdfBar.replaceChildren(...[
-        h('b', {}, `PDF ready · ${{ 'duplex-legal': 'double-sided, legal paper, 4 cards per sheet', 'duplex-letter': 'double-sided, letter paper, 4 cards per sheet', 'duplex-letter-2': 'double-sided, letter paper, 2 big cards per sheet', legal: 'fold, legal paper, 2 per sheet', letter: 'fold, letter paper, 2 per sheet', single: '4¼ × 7 pages' }[layout]}`),
+        h('b', {}, `PDF ready · ${{ 'duplex-legal': 'double-sided, legal paper, 4 cards per sheet', 'duplex-letter': 'double-sided, letter paper, 4 cards per sheet', 'duplex-letter-2': 'double-sided, letter paper, 2 big cards per sheet', legal: 'fold, legal paper, 2 strips per sheet', letter: 'fold, letter paper, 2 strips per sheet', single: '4¼ × 7 pages' }[layout]}`),
         canShare ? h('button', { class: 'bookbtn primary', onclick: () => navigator.share({ files: [file], title: name }).catch(() => {}) }, 'Share / Print') : null,
         h('a', { class: 'bookbtn', href: pdfUrl, target: '_blank', download: name }, 'Open PDF'),
         h('small', {}, layout === 'single' ? 'Print at 100% (actual size, not “fit to page”).'
           : layout.startsWith('duplex') ? `Print at 100% on ${layout === 'duplex-legal' ? 'legal (8½ × 14)' : 'letter (8½ × 11)'} paper (at a print shop, ask for ${layout === 'duplex-legal' ? 'legal 8½ × 14' : 'letter 8½ × 11'}, actual size), two-sided, flip on short edge. Cut along the dashed lines (trimming off the margin)${all ? ', stack them by the number at the foot of each (1 on top)' : ''} and staple or clip along the top.`
-          : `Print at 100% on ${layout === 'legal' ? 'legal (8½ × 14)' : 'letter'} paper. Cut along the dashed lines, fold each strip in half at the marks with the printing outside, and stack them in order${all ? ' by the number at the foot of each strip (1 on top)' : ''}, folds at the top, then staple or clip along the fold.`)].filter(Boolean));
+          : `Print at 100% on ${layout === 'legal' ? 'legal (8½ × 14)' : 'letter (8½ × 11)'} paper, one side. Cut once down the dashed line, fold each strip in half at the marks with the printing outside (${layout === 'legal' ? '4¼ × 7' : '4¼ × 5½'}), stack them${all ? ' by the number at the foot of each (1 on top)' : ''} with the folds at the top, and staple along the folds.`)].filter(Boolean));
       pdfBar.hidden = false;
       status.textContent = '';
     } catch (e) {
@@ -987,28 +994,30 @@ export function openBook(n, opts) {
       status.textContent = `Couldn’t make the PDF: ${e.message || e}`;
     }
   }
-  async function drawHoleParts(k, p) {
-    const hp = await holePage(k, teeName, p, helpers, opts);
-    const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, opts) : null;
+  async function drawHoleParts(k, p, pageH = PAGE_H) {
+    const o = { ...opts, pageH };
+    const hp = await holePage(k, teeName, p, helpers, o);
+    const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, o) : null;
     return { hole: hp, green: gp };
   }
-  const coverPage = (tn, note = '') => {
+  const coverPage = (tn, note = '', H = PAGE_H) => {
+    const fy = y => (y * H) / PAGE_H; // laid out for a 658-high page
     const t = course.tees.find(x => x.name === tn) || course.tees[0];
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS, 'font-family': FONT });
     const yds = t ? t.yards.slice(0, course.holes.length).reduce((a, b) => a + b, 0) : '';
     const par = course.holes.reduce((a, c) => a + c.par, 0);
     svg.append(el('rect', { width: W, height: H, fill: '#fff' }),
-      txt(W / 2, 200, course.name.toUpperCase(), { 'font-size': 26, 'font-weight': 900, 'text-anchor': 'middle', fill: INK }),
-      course.location ? txt(W / 2, 226, course.location.toUpperCase(), { 'font-size': 12, 'text-anchor': 'middle', fill: SOFT, 'letter-spacing': 1 }) : null,
-      txt(W / 2, 300, 'YARDAGE BOOK', { 'font-size': 34, 'font-weight': 700, 'text-anchor': 'middle', fill: INK, 'letter-spacing': 3 }),
-      txt(W / 2, 336, `${(t?.name || tn).toUpperCase()} TEES · ${yds} YDS · PAR ${par}`, { 'font-size': 13, 'text-anchor': 'middle', fill: SOFT, 'letter-spacing': 1 }),
-      txt(W / 2, 600, 'Red: yards to the front of the green · Black: yards from the tee', { 'font-size': 10, 'text-anchor': 'middle', fill: SOFT }),
-      txt(W / 2, 616, 'Blue: yards uphill (+) or downhill (−)', { 'font-size': 10, 'text-anchor': 'middle', fill: SOFT }),
-      note ? txt(W / 2, 460, note.toUpperCase(), { 'font-size': 11, 'font-weight': 700, 'text-anchor': 'middle', fill: INK, 'letter-spacing': 1 }) : null);
+      txt(W / 2, fy(200), course.name.toUpperCase(), { 'font-size': 26, 'font-weight': 900, 'text-anchor': 'middle', fill: INK }),
+      course.location ? txt(W / 2, fy(226), course.location.toUpperCase(), { 'font-size': 12, 'text-anchor': 'middle', fill: SOFT, 'letter-spacing': 1 }) : null,
+      txt(W / 2, fy(300), 'YARDAGE BOOK', { 'font-size': 34, 'font-weight': 700, 'text-anchor': 'middle', fill: INK, 'letter-spacing': 3 }),
+      txt(W / 2, fy(336), `${(t?.name || tn).toUpperCase()} TEES · ${yds} YDS · PAR ${par}`, { 'font-size': 13, 'text-anchor': 'middle', fill: SOFT, 'letter-spacing': 1 }),
+      txt(W / 2, fy(600), 'Red: yards to the front of the green · Black: yards from the tee', { 'font-size': 10, 'text-anchor': 'middle', fill: SOFT }),
+      txt(W / 2, fy(616), 'Blue: yards uphill (+) or downhill (−)', { 'font-size': 10, 'text-anchor': 'middle', fill: SOFT }),
+      note ? txt(W / 2, fy(460), note.toUpperCase(), { 'font-size': 11, 'font-weight': 700, 'text-anchor': 'middle', fill: INK, 'letter-spacing': 1 }) : null);
     return svg;
   };
-  const blankPage = () => el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS }, el('rect', { width: W, height: H, fill: '#fff' }));
-  const notesPage = () => {
+  const blankPage = (H = PAGE_H) => el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS }, el('rect', { width: W, height: H, fill: '#fff' }));
+  const notesPage = (H = PAGE_H) => {
     const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS, 'font-family': FONT }, el('rect', { width: W, height: H, fill: '#fff' }),
       txt(16, 40, 'NOTES', { 'font-size': 14, 'font-weight': 700, fill: INK, 'letter-spacing': 1.5 }));
     for (let y = 80; y < H - 30; y += 26) svg.append(el('line', { x1: 16, x2: W - 16, y1: y, y2: y, stroke: '#d6dcd8', 'stroke-width': 0.8 }));
