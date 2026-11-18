@@ -24,33 +24,37 @@ const MAX_UNITS_PER_YD = 7;
 
 export const BOOK_OPTIONS = [
   // [key, label, group, default, not in a tournament (elevation, or a green map: Rules 4.3)]
-  ['fairway', 'Fairways', 'Hole page', true],
-  ['bunkers', 'Bunkers', 'Hole page', true],
-  ['water', 'Water', 'Hole page', true],
-  ['trees', 'Trees', 'Hole page', true],
-  ['ob', 'Out of bounds', 'Hole page', true],
-  ['onlyHole', 'Only this hole (saves ink)', 'Hole page', true],
-  ['otherHoles', 'Neighbouring holes', 'Hole page', true],
-  ['teeInset', 'Tees in a box (the map starts at the fairway)', 'Hole page', true],
-  ['allTees', 'Every tee box', 'Hole page', true],
-  ['centre', 'Centre line', 'Hole page', true],
-  ['layup', 'Centre numbers (50 · 100 · 150 · 200 · 250 · 300)', 'Hole page', true],
-  ['hazards', 'Bunker & water numbers (start and end)', 'Hole page', true],
-  ['contours', 'Contours & slope arrows', 'Hole page', true, true],
-  ['deltas', 'Up/down yards by each number', 'Hole page', true, true],
-  ['north', 'North arrow & scale', 'Hole page', true],
-  ['greenPage', 'Green page', 'Green page', true, true],
-  ['grid', 'Yard grid', 'Green page', true, true],
-  ['greenContours', 'Green contours', 'Green page', true, true],
-  ['slopes', 'Slope arrows', 'Green page', true, true],
-  ['notes', 'Notes lines', 'Green page', true, true],
+  ['fairway', 'Fairways', 'Hole overview page', true],
+  ['bunkers', 'Bunkers', 'Hole overview page', true],
+  ['water', 'Water', 'Hole overview page', true],
+  ['trees', 'Trees', 'Hole overview page', true],
+  ['ob', 'Out of bounds', 'Hole overview page', true],
+  ['onlyHole', 'Only this hole (saves ink)', 'Hole overview page', true],
+  ['otherHoles', 'Neighboring holes', 'Hole overview page', true],
+  ['teeInset', 'Zoomed view (starts at the fairway, tees in a box)', 'Hole overview page', true],
+  ['allTees', 'Every tee box', 'Hole overview page', true],
+  ['centre', 'Center line', 'Hole overview page', true],
+  ['layup', 'Center numbers (50 · 100 · 150 · 200 · 250 · 300)', 'Hole overview page', true],
+  ['hazards', 'Bunker & water numbers (start and end)', 'Hole overview page', true],
+  ['contours', 'Contours & slope arrows', 'Hole overview page', true, true],
+  ['deltas', 'Up/down yards by each number', 'Hole overview page', true, true],
+  ['north', 'North arrow & scale', 'Hole overview page', true],
+  ['greenPage', 'Green page', 'Green overview page', true, true],
+  ['grid', 'Yard grid', 'Green overview page', true, true],
+  ['greenContours', 'Green contours', 'Green overview page', true, true],
+  ['slopes', 'Slope arrows', 'Green overview page', true, true],
+  ['notes', 'Notes lines', 'Green overview page', true, true],
 ];
+// Not switches on the screen: Only this hole and the green page are always on,
+// and Zoomed view is its own choice (Zoomed or Entire hole).
+const HIDDEN = new Set(['onlyHole', 'greenPage', 'teeInset']);
 const PREFS_KEY = 'gs:bookPrefs';
 function loadPrefs() {
   let p = {};
   try { p = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'); } catch { p = {}; }
   const out = {};
   for (const [k, , , d] of BOOK_OPTIONS) out[k] = typeof p[k] === 'boolean' ? p[k] : d;
+  out.onlyHole = out.greenPage = true;
   // A new name (was gridYd, 3 to start): everyone starts on the 5-yard grid, like a tour book.
   out.gridYd = out.gridYards = [3, 5].includes(p.gridYards) ? p.gridYards : 5;
   return out;
@@ -1033,7 +1037,7 @@ export function openBook(n, opts) {
   const optRows = [];
   let group = '';
   for (const [k, label, grp, , needsElev] of BOOK_OPTIONS) {
-    if (needsElev && !elevOk) continue;
+    if ((needsElev && !elevOk) || HIDDEN.has(k)) continue;
     if (grp !== group) { group = grp; optRows.push(h('div', { class: 'bookgroup' }, grp)); }
     const input = h('input', { type: 'checkbox', onchange: e => { prefs[k] = e.target.checked; savePrefs(saved); draw(); } });
     input.checked = prefs[k];
@@ -1041,14 +1045,16 @@ export function openBook(n, opts) {
   }
   const gridSel = h('select', { onchange: e => { prefs.gridYd = prefs.gridYards = +e.target.value; savePrefs(saved); draw(); } },
     [3, 5].map(v => h('option', { value: v, selected: v === prefs.gridYd }, `${v}-yard grid`)));
-  const setAll = v => { for (const [k] of BOOK_OPTIONS) prefs[k] = v; if (!v) prefs.fairway = prefs.bunkers = prefs.water = prefs.greenPage = true; savePrefs(saved); syncInputs(); draw(); };
+  const setAll = v => { for (const [k] of BOOK_OPTIONS) if (!HIDDEN.has(k)) prefs[k] = v; if (!v) prefs.fairway = prefs.bunkers = prefs.water = true; savePrefs(saved); syncInputs(); draw(); };
+  const zoomSel = h('select', { 'aria-label': 'Hole view', onchange: e => { prefs.teeInset = e.target.value === 'zoom'; savePrefs(saved); draw(); } },
+    [['zoom', 'Zoomed view'], ['whole', 'Entire hole']].map(([v, t]) => h('option', { value: v, selected: (v === 'zoom') === !!prefs.teeInset }, t)));
   const allOn = h('button', { class: 'bookbtn', onclick: () => setAll(true) }, 'All on');
   const allOff = h('button', { class: 'bookbtn', onclick: () => setAll(false) }, 'Basic');
-  const opts_ = h('div', { class: 'bookopts', hidden: true }, h('div', { class: 'bookrow' }, allOn, allOff, gridSel), ...optRows,
+  const opts_ = h('div', { class: 'bookopts', hidden: true }, h('div', { class: 'bookrow' }, allOn, allOff, zoomSel, gridSel), ...optRows,
     opts.tourney ? h('small', { class: 'muted' }, 'Tournament: no green page or contours (Rules of Golf 4.3)') : null);
   function syncInputs() {
     let i = 0;
-    for (const [k, , , , needsElev] of BOOK_OPTIONS) { if (needsElev && !elevOk) continue; const inp = opts_.querySelectorAll('input')[i++]; if (inp) inp.checked = prefs[k]; }
+    for (const [k, , , , needsElev] of BOOK_OPTIONS) { if ((needsElev && !elevOk) || HIDDEN.has(k)) continue; const inp = opts_.querySelectorAll('input')[i++]; if (inp) inp.checked = prefs[k]; }
   }
   // Style: the plain book, or the satellite picture with the book's outlines
   // and numbers on it (the hole pages; the green pages stay plain). Kept on this device.
@@ -1279,23 +1285,29 @@ export function openBookSetup(opts) {
   const inputs = {};
   const optRows = [];
   let group = '';
+  // Zoomed view (from the fairway, with the tees in a box) or the entire hole.
+  const zoom = radios('setupzoom', [['zoom', 'Zoomed view', '· starts at the fairway, tees in a box (par 4s and 5s)'], ['whole', 'Entire hole', '· tee to green']],
+    () => (prefs.teeInset ? 'zoom' : 'whole'), v => { prefs.teeInset = v === 'zoom'; savePrefs(prefs); });
   for (const [k, label, grp, , needsElev] of BOOK_OPTIONS) {
-    if (needsElev && !elevOk) continue;
-    if (grp !== group) { group = grp; optRows.push(h('div', { class: 'bookgroup' }, grp)); }
+    if ((needsElev && !elevOk) || HIDDEN.has(k)) continue;
+    if (grp !== group) {
+      group = grp; optRows.push(h('div', { class: 'bookgroup' }, grp));
+      if (grp === 'Hole overview page') optRows.push(h('div', { class: 'setupwide' }, zoom));
+    }
     const input = inputs[k] = h('input', { type: 'checkbox', onchange: e => { prefs[k] = e.target.checked; savePrefs(prefs); } });
     input.checked = prefs[k];
     optRows.push(h('label', { class: 'bookopt' }, input, h('span', {}, label)));
   }
   const setAll = v => {
-    for (const [k] of BOOK_OPTIONS) prefs[k] = v;
-    if (!v) prefs.fairway = prefs.bunkers = prefs.water = prefs.greenPage = true;
+    for (const [k] of BOOK_OPTIONS) if (!HIDDEN.has(k)) prefs[k] = v;
+    if (!v) prefs.fairway = prefs.bunkers = prefs.water = true;
     savePrefs(prefs);
     for (const [k, inp] of Object.entries(inputs)) inp.checked = prefs[k];
   };
   const close = () => { ov.remove(); document.body.classList.remove('bookopen'); };
   const go = autoPdf => { ov.remove(); openBook(1, { ...opts, teeName, autoPdf }); };
   const section = (title, ...kids) => h('section', { class: 'setupsec' }, h('div', { class: 'bookgroup' }, title), ...kids);
-  const ov = h('div', { class: 'bookov' },
+  const ov = h('div', { class: 'bookov setupov' },
     h('div', { class: 'booktop' },
       h('button', { class: 'bookbtn', 'aria-label': 'Close', onclick: close }, '✕'),
       h('b', {}, 'Yardage book'), h('small', { class: 'muted' }, course.name)),
