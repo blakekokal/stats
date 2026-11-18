@@ -1,0 +1,21 @@
+{
+  "id": "riverside",
+  "name": "Riverside Golf Club",
+  "location": "Grand Prairie, TX",
+  "par": [4, 5, 4, 4, 3, 5, 4, 3, 4, 4, 5, 4, 3, 5, 4, 3, 4, 4],
+  "hcp": [13, 15, 11, 5, 17, 3, 1, 9, 7, 6, 12, 18, 10, 14, 4, 8, 16, 2],
+  "_comment_tees": "Scorecard from GolfPass (2972); its pars match OpenStreetMap's hole tags. Men's ratings; Red is rated for women only.",
+  "tees": [
+    {"name": "Black", "rating": 74.1, "slope": 131, "yards": [442, 504, 377, 462, 212, 543, 434, 198, 450, 402, 544, 355, 181, 545, 325, 179, 366, 438]},
+    {"name": "Blue", "rating": 71.2, "slope": 128, "yards": [392, 472, 358, 402, 154, 512, 404, 175, 411, 371, 506, 320, 155, 515, 320, 168, 343, 411]},
+    {"name": "White", "rating": 69.0, "slope": 120, "yards": [352, 422, 327, 371, 121, 486, 279, 155, 394, 337, 474, 292, 123, 490, 317, 141, 320, 383]},
+    {"name": "Silver", "rating": 67.0, "slope": 118, "yards": [340, 410, 295, 320, 100, 471, 275, 140, 382, 290, 440, 275, 110, 480, 315, 98, 310, 375]},
+    {"name": "Red", "rating": 70.8, "slope": 120, "yards": [330, 407, 276, 300, 84, 463, 270, 134, 376, 286, 427, 263, 96, 471, 313, 92, 296, 363]}
+  ],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting all bunkers to the sand); every point is moved by it.",
+  "shift": {"east": -0.5, "north": 1.8},
+  "_comment_drop": "Polygons containing these points are not part of the course (two practice greens; four bunkers OSM draws on grass, where the imagery has none; seven ponds and river reaches outside the course boundary).",
+  "_comment_pinAtLineEnd": "#13 and #18 share one big double green: their pins are the ends of their own hole lines, not its middle.",
+  "pinAtLineEnd": [13, 18],
+  "drop": [[32.806468, -97.05729], [32.809936, -97.057089], [32.808644, -97.058271], [32.808833, -97.058197], [32.805246, -97.060317], [32.808786, -97.058793], [32.796583, -97.061695], [32.804046, -97.055564], [32.805028, -97.064937], [32.797274, -97.068905], [32.79223, -97.066679], [32.799016, -97.066457], [32.805349, -97.068865]]
+}

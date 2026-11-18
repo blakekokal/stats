@@ -1,0 +1,18 @@
+{
+  "id": "stevenspark",
+  "name": "Stevens Park Golf Course",
+  "location": "Dallas, TX",
+  "par": [4, 4, 4, 3, 4, 5, 3, 3, 5, 5, 4, 3, 4, 3, 4, 5, 3, 4],
+  "hcp": [8, 16, 10, 18, 6, 4, 12, 14, 2, 3, 9, 15, 11, 7, 5, 1, 17, 13],
+  "_comment_tees": "Scorecard from GolfPass (2870). OpenStreetMap tags #1 as a par 5; the card has it a 449-yd par 4, which is kept. Men's ratings.",
+  "tees": [
+    {"name": "Black", "rating": 71.9, "slope": 133, "yards": [449, 331, 339, 159, 439, 549, 169, 176, 602, 541, 369, 169, 371, 204, 413, 501, 155, 349]},
+    {"name": "Blue", "rating": 70.5, "slope": 130, "yards": [426, 321, 324, 148, 431, 537, 161, 166, 538, 529, 361, 156, 364, 193, 387, 492, 141, 338]},
+    {"name": "White", "rating": 68.1, "slope": 122, "yards": [414, 312, 307, 131, 365, 521, 129, 154, 503, 481, 342, 133, 351, 181, 336, 469, 128, 302]},
+    {"name": "Red", "rating": 64.4, "slope": 118, "yards": [377, 251, 289, 109, 335, 479, 107, 128, 448, 379, 294, 111, 279, 139, 279, 391, 83, 209]}
+  ],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting all bunkers to the sand); every point is moved by it.",
+  "shift": {"east": -0.5, "north": 0.0},
+  "_comment_drop": "Polygons containing these points are not part of the course (practice greens and a practice bunker).",
+  "drop": [[32.756073, -96.847253], [32.75484, -96.855643], [32.756884, -96.846948], [32.758629, -96.848675], [32.758336, -96.848615], [32.758647, -96.848568]]
+}
