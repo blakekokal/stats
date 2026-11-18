@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.10.1', ['Cowboys: the fairway round every green follows the dark, mown grass in the satellite picture (a clean ring round the green and the approach into it, no more peninsulas out into the rough), and the greens on #2, #4, #5, #6, #8, #10, #11 and #18 are redrawn on the putting surface']],
   ['1.10.0', ['Yardage book: a new Booklet layout, now the default, made like a tour book. Print two-sided (flip on short edge), cut once down the middle, lay the strips flat in a stack (strip 1 on top, numbered at the foot), staple across the middle on the STAPLE · FOLD line and fold the top half back on the staples. Every spread is the hole’s green above the staples and the hole below; 18 holes is 10 strips on 5 sheets. The cards are now called Cards · double-sided and the old fold layout Fold each strip; the setup page says how to put together whichever is picked']],
   ['1.9.6', ['Printed yardage book: the double-sided layouts have a dashed line marked CUT round every card (cut on it all round and no white margin is left on the cards), and the fold layouts have CUT down the middle and a FOLD line right across each strip']],
   ['1.9.5', ['Saved yardage books: each book has an Edit button (beside Rename and Delete) to open it, instead of tapping its name']],
