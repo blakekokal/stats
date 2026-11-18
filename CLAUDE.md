@@ -102,8 +102,8 @@ other session starts it too; when it's live, move it to Done.
 
 Done: Lantana (OSM had no hole lines; routed from the scorecard), Lake Park
 Championship and Executive, Texas Star, Iron Horse, Indian Creek Creek and Lakes,
-Fields Ranch East and West (two courses: holes told apart by OSM course boundary).
-Cedar Crest (Dallas): built, waiting for the owner's go.
+Fields Ranch East and West (two courses: holes told apart by OSM course boundary),
+Cedar Crest.
 
 Public, complete:
 - Tenison Park (Dallas; two courses, East and Glen, like Fields Ranch)
