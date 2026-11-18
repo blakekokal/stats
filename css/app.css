@@ -652,3 +652,15 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .setupsec .bookrow { display: flex; gap: 6px; margin: 4px 0; }
 .setupgo { display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0; }
 .setupgo .bookbtn { height: 44px; padding: 0 20px; font-size: 16px; }
+/* The setup page in the app's own colours (the book itself stays on white paper). */
+.bookov.setupov { background: var(--bg); color: var(--text); }
+.setupov .booktop { background: var(--surface); border-bottom-color: var(--line); }
+.setupov .bookbtn { background: var(--surface2); color: var(--text); border-color: var(--line); }
+.setupov .bookbtn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.setupov .setupsec { background: var(--surface); border-color: var(--line); }
+.setupov .bookgroup { color: var(--muted); }
+.setupov .muted { color: var(--muted); }
+.setupov .bookopt input { accent-color: var(--accent); color-scheme: dark; }
+.setupov .setupopts > .bookgroup { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
+.setupov .setupopts > .bookgroup:first-child { margin-top: 4px; padding-top: 0; border-top: 0; }
+.setupwide { grid-column: 1 / -1; margin-bottom: 4px; }
