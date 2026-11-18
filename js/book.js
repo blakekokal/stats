@@ -341,20 +341,27 @@ function holeFacts(n, teeName, helpers) {
 
 // "To the front of the green" from any point, in a frame f (yards): along the
 // straight line to the middle of the green, to where it first meets the green.
-function frontFn(f, greenRing, pin) {
+// With `from` (the approach: the hole line's last bend, in the same frame)
+// the front is one fixed point, where the line from there to the middle of
+// the green first meets it, and yards to the front are measured to that point:
+// the front as you come into the green, not as seen from the tee.
+function frontFn(f, greenRing, pin, from) {
   if (!greenRing) return p => dist(p, f.fwd(pin));
   const g = greenRing.map(f.fwd), c = centroid(g);
+  const fp = from && frontPointFn(f, greenRing, pin, null)(from);
   return p => {
     if (inside(p, g)) return 0;
+    if (fp) return dist(p, fp);
     const t = firstCross(p, c, g);
     return t == null ? dist(p, c) : dist(p, c) * t;
   };
 }
 
 // Where that line meets the front of the green (in the same frame).
-function frontPointFn(f, greenRing, pin) {
+function frontPointFn(f, greenRing, pin, from) {
   if (!greenRing) return () => f.fwd(pin);
   const g = greenRing.map(f.fwd), c = centroid(g);
+  if (from) { const fp = frontPointFn(f, greenRing, pin)(from); return p => (inside(p, g) ? p : fp); }
   return p => {
     if (inside(p, g)) return p;
     const t = firstCross(p, c, g) ?? 1;
@@ -395,7 +402,10 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   const land = line.slice(1, -1).find(p => Math.hypot(...f0.loc(p)) >= 150);
   const up = bearingOf(tee, land || (greenRing ? centroid(greenRing) : pin), f0);
   const f = frame(tee, up);
-  const toFront = frontFn(f, greenRing, pin);
+  // The approach: from the hole line's last bend (the tee on a straight hole).
+  const approach = f.fwd(line.length > 2 ? line.at(-2) : line[0]);
+  const toFront = frontFn(f, greenRing, pin, approach);
+  const toEdge = frontFn(f, greenRing, pin); // to the nearest edge on the way in (greenside or not)
   const L = line.map(f.fwd);
   const greenL = greenRing ? greenRing.map(f.fwd) : null;
   const ownFair = F.own.filter(x => x.t === 'fairway').map(x => closeRing(ringOf(x)).map(f.fwd));
@@ -512,6 +522,35 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     return { perp, l: [w.p[0] + perp[0] * l, w.p[1] + perp[1] * l], r: [w.p[0] + perp[0] * r, w.p[1] + perp[1] * r], width: r - l };
   };
 
+  // The middle of the fairway `yd` to the front, near p (a spot on the hole
+  // line, which can run along the side of the fairway): across the fairway
+  // square to the way to the front, halfway between its edges, then nudged
+  // along so it's still `yd` to the front. p itself when it's not by a fairway.
+  const frontAt = greenL ? frontPointFn(f, greenRing, pin, approach)(approach) : f.fwd(pin);
+  const midFairway = (p, yd) => {
+    if (!ownFair.length) return p;
+    const inF = q => ownFair.some(r => inside(q, r));
+    let q = p;
+    for (let k = 0; k < 3; k++) {
+      const dl = dist(q, frontAt) || 1, d = [(frontAt[0] - q[0]) / dl, (frontAt[1] - q[1]) / dl], perp = [d[1], -d[0]];
+      const at = o => [q[0] + perp[0] * o, q[1] + perp[1] * o];
+      const runs = []; let start = null;
+      for (let o = -60; o <= 60.01; o += 0.5) {
+        if (inF(at(o))) { if (start == null) start = o; } else if (start != null) { runs.push([start, o - 0.5]); start = null; }
+      }
+      if (start != null) runs.push([start, 60]);
+      if (!runs.length) return p;
+      const gap = ([a, b]) => (a <= 0 && b >= 0 ? 0 : Math.min(Math.abs(a), Math.abs(b)));
+      const run = runs.sort((r1, r2) => gap(r1) - gap(r2))[0];
+      if (gap(run) > 30) return p;
+      q = at((run[0] + run[1]) / 2);
+      const off = toFront(q) - yd; // back onto the yd arc, along the way to the front
+      const dl2 = dist(q, frontAt) || 1;
+      q = [q[0] + ((frontAt[0] - q[0]) / dl2) * off, q[1] + ((frontAt[1] - q[1]) / dl2) * off];
+    }
+    return inF(q) ? q : p;
+  };
+
   let insetRight = false;
   if (cropped) await teeInset(); // first, so the numbers keep out of its way
   // Numbers in pairs, tour-book style: a dot on the spot, the yards to the
@@ -554,7 +593,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       let iS = fr.indexOf(Math.max(...fr)), iE = fr.indexOf(Math.min(...fr));
       // Greenside bunkers: left off, except on par 3s (where they're what's in
       // play), with their reach and carry from the tee like the green's numbers.
-      const greenside = x.t === 'bunker' && fr[iE] < 10;
+      const greenside = x.t === 'bunker' && Math.min(...pts.map(toEdge)) < 10;
       if (greenside && ch.par !== 3) continue;
       if (x.t === 'water' || greenside) { // the nearest point from the tee (to reach it) and the farthest (to carry it all)
         const dt = pts.map(q => dist(q, [0, 0]));
@@ -602,7 +641,8 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     for (const yd of markersFor(prefs, ch.par)) {
       const w = spotAt(yd);
       if (!w || w.fromTee < 40) continue;
-      pair(w.p, yd, Math.round(w.fromTee), 1);
+      const q = midFairway(w.p, yd);
+      pair(q, yd, Math.round(q === w.p ? w.fromTee : dist(q, [0, 0])), 1);
     }
   }
 
@@ -622,7 +662,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
 
   // The rises and falls, in yards, from the height tiles.
   if (pairs.length && prefs.deltas && info) {
-    const frontPt = frontPointFn(f, greenRing, pin);
+    const frontPt = frontPointFn(f, greenRing, pin, approach);
     const hs = await heightsAt(elevId, info, [tee, ...pairs.flatMap(pr => [f.back(pr.q), f.back(frontPt(pr.q))])]);
     pairs.forEach((pr, i) => {
       const ht = hs[0], hp = hs[1 + i * 2], hf = hs[2 + i * 2];
