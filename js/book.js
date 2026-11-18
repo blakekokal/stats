@@ -137,9 +137,28 @@ const el = (tag, attrs = {}, ...kids) => {
   for (const kid of kids.flat()) if (kid != null && kid !== false) e.append(kid);
   return e;
 };
-const pathD = (pts, close) => pts.length ? 'M' + pts.map(p => `${p[0].toFixed(1)},${p[1].toFixed(1)}`).join('L') + (close ? 'Z' : '') : '';
+const xy = p => `${p[0].toFixed(2)},${p[1].toFixed(2)}`;
+const lineD = (pts, close) => pts.length ? 'M' + pts.map(xy).join('L') + (close ? 'Z' : '') : '';
+// A smooth curve through the points (Catmull-Rom as cubic Béziers): outlines
+// and contours come out round, not faceted.
+const curveD = (pts, close) => {
+  if (close && pts.length > 1 && dist(pts[0], pts.at(-1)) < 1e-6) pts = pts.slice(0, -1);
+  // Closed shapes: one gentle corner-cutting pass first, so sharp corners round off.
+  if (close && pts.length >= 4) pts = pts.flatMap((p, i) => { const q = pts[(i + 1) % pts.length]; return [[0.75 * p[0] + 0.25 * q[0], 0.75 * p[1] + 0.25 * q[1]], [0.25 * p[0] + 0.75 * q[0], 0.25 * p[1] + 0.75 * q[1]]]; });
+  const n = pts.length;
+  if (n < 3) return lineD(pts, close);
+  const at = i => (close ? pts[(i + n) % n] : pts[Math.max(0, Math.min(n - 1, i))]);
+  let d = 'M' + xy(pts[0]);
+  for (let i = 0; i < (close ? n : n - 1); i++) {
+    const [p0, p1, p2, p3] = [at(i - 1), at(i), at(i + 1), at(i + 2)];
+    d += 'C' + xy([p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6]) + ' ' + xy([p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]) + ' ' + xy(p2);
+  }
+  return d + (close ? 'Z' : '');
+};
+// Shapes (closed) are drawn smooth; straight lines (hole line, leaders) stay straight.
+const pathD = (pts, close) => (close ? curveD(pts, true) : lineD(pts));
 const txt = (x, y, s, attrs = {}) => el('text', { x: x.toFixed(1), y: y.toFixed(1), ...attrs }, String(s));
-const INK = '#1c2a22', SOFT = '#5d6b62', FONT = "'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif";
+const INK = '#1c2a22', SOFT = '#5d6b62', FONT = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
 // The shared patterns: stippled sand, rippled water.
 function defs(id) {
@@ -171,7 +190,7 @@ function labeller() {
     },
   };
 }
-const textW = (s, size) => String(s).length * size * 0.52;
+const textW = (s, size) => String(s).length * size * 0.6; // the system font is wider than the old condensed one
 
 // ---------- heights (for contours and the green page) ----------
 
@@ -402,7 +421,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   const inView = pts => pts.some(([x, y]) => x > viewYd[0] - 20 && x < viewYd[1] + 20 && y > viewYd[2] - 20 && y < viewYd[3] + 20);
 
   const id = `bk${n}p${Math.random().toString(36).slice(2, 7)}`;
-  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bookpage', xmlns: SVGNS, 'font-family': FONT });
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bookpage', xmlns: SVGNS, 'font-family': FONT, 'stroke-linejoin': 'round' });
   svg.append(defs(id), el('clipPath', { id: `${id}-clip` }, el('rect', { x: left, y: top, width: right - left, height: bottom - top })));
   // Lines (the book over the satellite picture): no paper, just outlines and numbers.
   // opts.satellite (a book printed that way): the same, over the satellite picture, on a white page.
@@ -457,7 +476,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       const iv = [12, 24, 36, 48, 72].find(v => (R.hi - R.lo) / v <= 22) || 120;
       const no = feats.filter(o => ['water', 'bunker'].includes(o.x.t) || (o.x.t === 'green' && own(o))).map(o => o.r);
       const reliefG = el('g', {});
-      reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => pathD(sg.map(P))).join(''), ...RELIEF_LINE, 'stroke-opacity': 0.5 }));
+      reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => curveD(sg.map(P))).join(''), ...RELIEF_LINE, 'stroke-opacity': 0.5 }));
       reliefG.append(el('path', { d: slopeArrows(R, area, 10.8, P, (x, y) => !no.some(r => inside([x, y], r)), 0.6), ...RELIEF_ARROW, 'stroke-opacity': 0.55 }));
       mapG.append(reliefG);
       reliefNote = `Contours every ${iv >= 12 ? `${iv / 12} ft` : `${iv}"`} · arrows point downhill`;
@@ -506,7 +525,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const q = o.r.map(P), xs = q.map(p => p[0]), ys = q.map(p => p[1]);
     lab.block([Math.min(...xs) - 1.5, Math.min(...ys) - 1.5, Math.max(...xs) + 1.5, Math.max(...ys) + 1.5]);
   }
-  const pairs = [];
+  const pairs = [], autoDrawn = []; // autoDrawn: the book's own points on the map, for Edit
   const pair = (q, front, tee, side, mine = false, teeOnly = false) => pairs.push({ q, front, tee, side, mine, teeOnly });
   // Par 3s: the front and the back of the green, along the line to its middle,
   // always, first (so they get the room): yards from the front of the tee and
@@ -587,7 +606,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     }
   }
 
-  // Points added by hand (Preview and edit > Add point): yards and up/down
+  // Points added by hand (Preview and edit > Edit): yards and up/down
   // from the tee and to the front of the green, like the other numbers.
   for (const pt of opts.points || []) {
     const q = f.fwd(pt);
@@ -595,6 +614,11 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const side = (q[0] - nearLine.p[0]) * nearLine.d[1] - (q[1] - nearLine.p[1]) * nearLine.d[0] >= 0 ? 1 : -1;
     pair(q, Math.round(toFront(q)), Math.round(dist(q, [0, 0])), side, true);
   }
+
+  // The book's own points deleted in Edit mode (this book only): gone if one
+  // is within 4 yd of where the point would be.
+  const gone = (opts.removed || []).map(p => f.fwd(p));
+  if (gone.length) for (let i = pairs.length - 1; i >= 0; i--) if (!pairs[i].mine && gone.some(g => dist(g, pairs[i].q) < 4)) pairs.splice(i, 1);
 
   // The rises and falls, in yards, from the height tiles.
   if (pairs.length && prefs.deltas && info) {
@@ -613,6 +637,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const [x, y] = P(q);
     if (y > bottom - 6 || y < top + 6) continue; // off the map (short of where it starts)
     if (opts.teeView && tee > 130) continue; // the tees box: just what's near the tees
+    if (!mine) autoDrawn.push({ ll: f.back(q), front, tee });
     // Four rows: blue up/down to the green, red to the front, black from the
     // tee, blue up/down from the tee. The labeller boxes them from 32 above
     // the anchor's y to 10 below; their middle (my) is level with the spot.
@@ -788,6 +813,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   svg.geo = { at: (u, v) => f.back([(u - cx) / s, (cy - v) / s]), to: p => P(f.fwd(p)), rect: [left, top, right, bottom], up };
   svg.dataset.page = 'hole';
   svg.points = pairs.filter(pr => pr.mine).map(pr => ({ front: pr.front, tee: pr.tee }));
+  svg.autoPoints = autoDrawn;
   if (opts.satellite) {
     const url = await satelliteUnder(svg.geo.at, svg.geo.rect);
     if (url) mapG.parentNode.insertBefore(el('image', { href: url, x: left, y: top, width: right - left, height: bottom - top, preserveAspectRatio: 'none' }), mapG);
@@ -829,7 +855,7 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   const inView = pts => pts.some(([x, y]) => x > view[0] - 10 && x < view[1] + 10 && y > view[2] - 10 && y < view[3] + 10);
 
   const id = `bk${n}g${Math.random().toString(36).slice(2, 7)}`;
-  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bookpage', xmlns: SVGNS, 'font-family': FONT });
+  const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bookpage', xmlns: SVGNS, 'font-family': FONT, 'stroke-linejoin': 'round' });
   const gPath = pathD(g.map(P), true);
   svg.append(defs(id),
     el('clipPath', { id: `${id}-clip` }, el('rect', { x: left - 16, y: top, width: right - left + 32, height: bottom - top })),
@@ -901,7 +927,7 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
       if (prefs.greenContours) {
         let iv = 2;
         while ((R.hi - R.lo) / iv > 40) iv *= 2;
-        reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => pathD(sg.map(P))).join(''), ...RELIEF_LINE, ...(sat ? { stroke: '#fff', 'stroke-opacity': 0.75 } : {}), 'stroke-width': 0.5, mask: `url(#${id}-lines)` }));
+        reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => curveD(sg.map(P))).join(''), ...RELIEF_LINE, ...(sat ? { stroke: '#fff', 'stroke-opacity': 0.75 } : {}), 'stroke-width': 0.5, mask: `url(#${id}-lines)` }));
         slopeNote = `Contours every ${iv}" around the green`;
       }
       if (prefs.slopes) {
@@ -988,11 +1014,12 @@ const setLayout = v => { try { localStorage.setItem('gs:bookLayout6', v); } catc
 // ---------- saved yardage books ----------
 
 // A yardage book: the course and tee box, the style, print format and
-// switches, and points added by hand ({ hole: [[lat, lng], ...] }). Saved
+// switches, points added by hand ({ hole: [[lat, lng], ...] }) and the book's
+// own points deleted in Edit (removed, the same shape). Saved
 // ones are kept with the account (store 'ybook:<id>').
 export function newBook(teeName) {
   return { id: null, name: '', courseId: course.id, courseName: course.name, teeName: teeName || course.tees[0]?.name,
-    style: getStyle(), layout: getLayout(), prefs: loadPrefs(), points: {}, updated: null };
+    style: getStyle(), layout: getLayout(), prefs: loadPrefs(), points: {}, removed: {}, updated: null };
 }
 export function saveBook(book) {
   if (!book.id) book.id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
@@ -1007,7 +1034,7 @@ export const savedBooks = () => store.list('ybook:').filter(b => b && b.id).sort
 // A saved book, ready to open: its course made the active one, its switches filled in.
 function openable(b) {
   setActiveCourse(b.courseId);
-  return { ...JSON.parse(JSON.stringify(b)), prefs: { ...loadPrefs(), ...b.prefs, markers: cleanMarkers(b.prefs?.markers), onlyHole: true, greenPage: true, hazards: true, deltas: true }, points: b.points || {} };
+  return { ...JSON.parse(JSON.stringify(b)), prefs: { ...loadPrefs(), ...b.prefs, markers: cleanMarkers(b.prefs?.markers), onlyHole: true, greenPage: true, hazards: true, deltas: true }, points: b.points || {}, removed: b.removed || {} };
 }
 
 // Saved yardage books (GPS Overview > Saved yardage books): open one to edit
@@ -1106,16 +1133,8 @@ const loadScript = src => new Promise((ok, no) => {
   sc.src = abs(src); sc.onload = ok; sc.onerror = () => no(new Error('the PDF maker didn’t load (offline?)'));
   document.head.append(sc);
 });
-// The book's font, built into each page so it looks the same in the PDF.
-let fontCssP = null;
-const bookFontCss = () => (fontCssP ||= Promise.all([400, 700, 900].map(async w => {
-  const r = await fetch(abs(`vendor/fonts/barlow-condensed-latin-${w}-normal.woff2`));
-  if (!r.ok) return '';
-  const b = new Uint8Array(await r.arrayBuffer());
-  let str = '';
-  for (let i = 0; i < b.length; i += 0x4000) str += String.fromCharCode.apply(null, b.subarray(i, i + 0x4000));
-  return `@font-face{font-family:'Barlow Condensed';font-weight:${w};src:url(data:font/woff2;base64,${btoa(str)}) format('woff2');}`;
-})).then(a => a.join('')).catch(() => ''));
+// The book uses the device's own system font, so nothing is built into the pages.
+const bookFontCss = async () => '';
 // One page (an SVG) drawn into a canvas at x, y, w, h (pixels).
 async function drawSvg(ctx, svg, x, y, w, hgt, css) {
   const c = svg.cloneNode(true);
@@ -1174,7 +1193,7 @@ export function openBook(n, opts) {
     status.textContent = note;
   }
   async function drawHole(k, p) {
-    const hp = await holePage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat', points: book.points[k] || [] });
+    const hp = await holePage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat', points: book.points[k] || [], removed: (book.removed ||= {})[k] || [] });
     const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat' }) : null;
     return [...(gp ? [gp] : []), hp];
   }
@@ -1238,19 +1257,24 @@ export function openBook(n, opts) {
   const pointsBar = h('div', { class: 'bookpoints', hidden: true });
   const listPoints = () => {
     const list = book.points[hole] || [];
+    const gone = (book.removed ||= {})[hole] || [];
     const info = pages.querySelector('svg.bookpage[data-page=hole]')?.points || [];
-    pointsBar.hidden = !list.length;
-    pointsBar.replaceChildren(...[h('small', {}, `Points on hole ${hole}:`), ...list.map((p, i) => h('button', { class: 'bookbtn', title: 'Delete this point', onclick: () => {
+    pointsBar.hidden = !list.length && !gone.length;
+    pointsBar.replaceChildren(...[list.length ? h('small', {}, `Your points on hole ${hole}:`) : null, ...list.map((p, i) => h('button', { class: 'bookbtn', title: 'Delete this point', onclick: () => {
       list.splice(i, 1); if (!list.length) delete book.points[hole]; keep(); draw();
     } }, info[i] ? `${info[i].front} to front · ${info[i].tee} from tee ✕` : `Point ${i + 1} ✕`)),
-    list.length > 1 ? h('button', { class: 'bookbtn', onclick: () => { if (confirm(`Delete all ${list.length} points on hole ${hole}?`)) { delete book.points[hole]; keep(); draw(); } } }, 'Delete all') : null].filter(Boolean));
+    list.length > 1 ? h('button', { class: 'bookbtn', onclick: () => { if (confirm(`Delete all ${list.length} of your points on hole ${hole}?`)) { delete book.points[hole]; keep(); draw(); } } }, 'Delete all') : null,
+    // The book's own points deleted in Edit: all brought back in one go.
+    gone.length ? h('button', { class: 'bookbtn', onclick: () => { delete book.removed[hole]; keep(); draw(); } }, `↺ Bring back ${gone.length} deleted book point${gone.length > 1 ? 's' : ''}`) : null].filter(Boolean));
   };
-  // Add point: tap the hole page to put a point on it (tap one again to take it off).
+  // Edit: tap the hole page to add a point there; tap any point to delete it,
+  // yours or the book's own (yardage markers, bunker and green numbers).
   let adding = false;
   const addBtn = h('button', { class: 'bookbtn', onclick: () => {
     adding = !adding; addBtn.classList.toggle('primary', adding); pages.classList.toggle('adding', adding);
-    status.textContent = adding ? 'Tap the hole page to add a point; tap a point to remove it' : '';
-  } }, '＋ Add point');
+    addBtn.textContent = adding ? '✓ Done' : '✎ Edit';
+    status.textContent = adding ? 'Tap the hole page to add a point; tap any point to delete it' : '';
+  } }, '✎ Edit');
   pages.addEventListener('click', e => {
     if (!adding) return;
     const svg = e.target.closest?.('svg.bookpage');
@@ -1259,10 +1283,16 @@ export function openBook(n, opts) {
     const { x, y } = pt.matrixTransform(svg.getScreenCTM().inverse());
     const [l, t, r, b] = svg.geo.rect;
     if (x < l || x > r || y < t || y > b) return;
+    const far = ll => { const [u, v] = svg.geo.to(ll); return Math.hypot(u - x, v - y); };
     const list = book.points[hole] || (book.points[hole] = []);
-    const near = list.findIndex(p => { const [u, v] = svg.geo.to(p); return Math.hypot(u - x, v - y) < 12; });
-    if (near >= 0) list.splice(near, 1);
-    else { const [la, lo] = svg.geo.at(x, y); list.push([+la.toFixed(7), +lo.toFixed(7)]); }
+    const near = list.findIndex(p => far(p) < 12);
+    // The book's own point nearest the tap (within reach), if no point of yours is nearer.
+    const auto = (svg.autoPoints || []).map(a => ({ a, d: far(a.ll) })).filter(o => o.d < 12).sort((p, q) => p.d - q.d)[0];
+    if (near >= 0 && (!auto || far(list[near]) <= auto.d)) list.splice(near, 1);
+    else if (auto) {
+      const gone = (book.removed ||= {})[hole] || (book.removed[hole] = []);
+      gone.push(auto.a.ll.map(v => +v.toFixed(7)));
+    } else { const [la, lo] = svg.geo.at(x, y); list.push([+la.toFixed(7), +lo.toFixed(7)]); }
     if (!list.length) delete book.points[hole];
     keep(); draw();
   });
@@ -1319,7 +1349,7 @@ export function openBook(n, opts) {
       }
       status.textContent = 'Making the PDF…';
       const { jsPDF } = window.jspdf;
-      const DPI = 200;
+      const DPI = 300; // print-sharp lines (a legal sheet is 2550 × 4200 px, inside phones' canvas limits)
       let doc = null;
       const sheet = async (wIn, hIn, place) => {
         const cv = document.createElement('canvas'); cv.width = Math.round(wIn * DPI); cv.height = Math.round(hIn * DPI);
@@ -1327,7 +1357,7 @@ export function openBook(n, opts) {
         await place(ctx);
         if (!doc) doc = new jsPDF({ unit: 'in', format: [wIn, hIn], orientation: wIn > hIn ? 'landscape' : 'portrait' });
         else doc.addPage([wIn, hIn], wIn > hIn ? 'landscape' : 'portrait');
-        doc.addImage(cv.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, wIn, hIn, undefined, 'FAST');
+        doc.addImage(cv.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, wIn, hIn, undefined, 'FAST');
       };
       // A card's or strip's place in the stack (1 on top): a numbered dot.
       const numberAt = (ctx, cxN, cyN, r, num) => {
@@ -1490,14 +1520,14 @@ export function openBook(n, opts) {
   }
   async function drawHoleParts(k, p, pageH = PAGE_H) {
     const o = { ...opts, pageH };
-    const hp = await holePage(k, teeName, p, helpers, { ...o, satellite: style === 'sat', points: book.points[k] || [] });
+    const hp = await holePage(k, teeName, p, helpers, { ...o, satellite: style === 'sat', points: book.points[k] || [], removed: (book.removed ||= {})[k] || [] });
     const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, { ...o, satellite: style === 'sat' }) : null;
     return { hole: hp, green: gp };
   }
   const coverPage = (tn, note = '', H = PAGE_H) => {
     const fy = y => (y * H) / PAGE_H; // laid out for a 658-high page
     const t = course.tees.find(x => x.name === tn) || course.tees[0];
-    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS, 'font-family': FONT });
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS, 'font-family': FONT, 'stroke-linejoin': 'round' });
     const yds = t ? t.yards.slice(0, course.holes.length).reduce((a, b) => a + b, 0) : '';
     const par = course.holes.reduce((a, c) => a + c.par, 0);
     svg.append(el('rect', { width: W, height: H, fill: '#fff' }),
@@ -1512,7 +1542,7 @@ export function openBook(n, opts) {
   };
   const blankPage = (H = PAGE_H) => el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS }, el('rect', { width: W, height: H, fill: '#fff' }));
   const notesPage = (H = PAGE_H) => {
-    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS, 'font-family': FONT }, el('rect', { width: W, height: H, fill: '#fff' }),
+    const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, xmlns: SVGNS, 'font-family': FONT, 'stroke-linejoin': 'round' }, el('rect', { width: W, height: H, fill: '#fff' }),
       txt(16, 40, 'NOTES', { 'font-size': 14, 'font-weight': 700, fill: INK, 'letter-spacing': 1.5 }));
     for (let y = 80; y < H - 30; y += 26) svg.append(el('line', { x1: 16, x2: W - 16, y1: y, y2: y, stroke: '#d6dcd8', 'stroke-width': 0.8 }));
     return svg;
