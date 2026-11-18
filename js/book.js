@@ -1321,6 +1321,23 @@ export function openBook(n, opts) {
         for (const y of ys) { ctx.moveTo(0, y); ctx.lineTo(wPx, y); }
         ctx.stroke(); ctx.setLineDash([]);
       };
+      // A small grey word on a line (CUT, FOLD), on a white patch so it reads
+      // over the line; turned for an up-and-down line.
+      const mark = (ctx, text, x, y, upright = false) => {
+        const fs = Math.round(0.085 * DPI);
+        ctx.save(); ctx.translate(x, y); if (upright) ctx.rotate(-Math.PI / 2);
+        ctx.font = `700 ${fs}px Arial, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        const w = ctx.measureText(text).width + fs * 0.8;
+        ctx.fillStyle = '#fff'; ctx.fillRect(-w / 2, -fs * 0.7, w, fs * 1.4);
+        ctx.fillStyle = '#777'; ctx.fillText(text, 0, fs * 0.05);
+        ctx.restore();
+      };
+      // A dashed CUT line round a card (its own edges, so nothing white is left on it).
+      const cutRect = (ctx, x, y, w, hh) => {
+        ctx.strokeStyle = '#999'; ctx.lineWidth = 2; ctx.setLineDash([18, 12]); ctx.strokeRect(x, y, w, hh); ctx.setLineDash([]);
+        mark(ctx, '✂ CUT', x + w / 2, y); mark(ctx, '✂ CUT', x + w / 2, y + hh);
+        mark(ctx, 'CUT', x, y + hh / 2, true); mark(ctx, 'CUT', x + w, y + hh / 2, true);
+      };
       if (layout.startsWith('duplex')) {
         // Fronts (hole pages) then backs (greens) for each sheet. Printed
         // two-sided flipping on the short edge, a card's back sits in the
@@ -1340,7 +1357,8 @@ export function openBook(n, opts) {
               await drawSvg(ctx, front, x, y, cw, chh, css);
               if (leaves.length > 1) numberAt(ctx, x + cw / 2, y + chh - 0.2 * k * DPI, 0.12 * k * DPI, i + j + 1);
             }
-            cutBox(ctx, [half], rows > 1 ? [y0 + chh] : [], sw * DPI, sh * DPI);
+            // Cut round each card on this side (the backs line up behind them).
+            for (const j of group.keys()) cutRect(ctx, (j % 2) * half + cx0, y0 + Math.floor(j / 2) * chh, cw, chh);
           });
           await sheet(sw, sh, async ctx => {
             for (const [j, [back]] of group.entries()) {
@@ -1368,11 +1386,13 @@ export function openBook(n, opts) {
               await drawSvg(ctx, bottom, x, fy, pw, ph, css);
               // Its place in the stack (1 on top), at the foot of the strip.
               if (leaves.length > 1) numberAt(ctx, x + pw / 2, fy + ph - 0.18 * DPI, 0.11 * DPI, i + j + 1);
-              // Fold marks at the strip's edges.
-              ctx.strokeStyle = '#999'; ctx.lineWidth = 2; ctx.setLineDash([]);
-              ctx.beginPath(); ctx.moveTo(j * half + 0.04 * DPI, fy); ctx.lineTo(j * half + 0.2 * DPI, fy); ctx.moveTo((j + 1) * half - 0.04 * DPI, fy); ctx.lineTo((j + 1) * half - 0.2 * DPI, fy); ctx.stroke();
+              // The fold: a dash-dot line right across the strip, FOLD at each end.
+              ctx.strokeStyle = '#999'; ctx.lineWidth = 2; ctx.setLineDash([24, 8, 4, 8]);
+              ctx.beginPath(); ctx.moveTo(j * half + 0.04 * DPI, fy); ctx.lineTo((j + 1) * half - 0.04 * DPI, fy); ctx.stroke(); ctx.setLineDash([]);
+              mark(ctx, 'FOLD', j * half + px0 / 2 + 0.02 * DPI, fy, true); mark(ctx, 'FOLD', (j + 1) * half - px0 / 2 - 0.02 * DPI, fy, true);
             }
             cutBox(ctx, [half], [], sw * DPI, sh * DPI);
+            mark(ctx, '✂ CUT', half, 0.35 * DPI, true); mark(ctx, '✂ CUT', half, sh * DPI - 0.35 * DPI, true);
           });
         }
       }
