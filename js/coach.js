@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.9.4', ['Yardage book: on par 3s the greenside bunkers have their numbers (yards from the tee to reach and to carry them, with up/down), like the front and back of the green', 'Yardage book: the line from a spot to its numbers no longer runs through a bunker when there’s another place for them']],
   ['1.9.3', ['Yardage book: on par 3s the front and back of the green look like the other numbers: a dot, a straight line out, the yards from the front of the tee in black and the blue up/down under it (no yards-to-the-front number, no F / B)']],
   ['1.9.2', ['Preview and edit: the points on the hole are listed under the buttons with their yards; tap one to delete it (or Delete all). − and + zoom the pages in and out (up to 4×; scroll round them)', 'Yardage book: par 3s always show the yards from the front of the tee to the front (F) and back (B) of the green']],
   ['1.9.1', ['Edit yardage markers lists the markers in use on par 3s, 4s and 5s separately (to start: none on par 3s, 50 to 200 on par 4s, 50 to 300 on par 5s). Tap one to take it off, type a number to add it to that par, or Reset a par to the default. Markers closer than 40 yards to the tee are left off']],
