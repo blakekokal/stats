@@ -845,16 +845,17 @@ export function openBook(n, opts) {
   //           green page over a hole page; cut down the middle, fold each strip
   //           in half (printing outside) and stack them, folds at the top
   //  letter - the same on 8 1/2 x 11, at 79%
-  //  duplex-legal / duplex-letter (the default) - printed on both sides:
+  //  duplex-letter (the default) / duplex-legal - printed on both sides:
   //           4 1/4 x 7 cards, four to a legal sheet (two to a letter one),
   //           the hole page on the front and the next hole's green on the
   //           back; cut apart, stack, bind at the top. No folding.
   //  single - one 4 1/4 x 7 page per sheet
-  // A new key, so everyone starts on double-sided legal.
-  const LAYOUTS = [['duplex-legal', 'Double-sided · legal'], ['duplex-letter', 'Double-sided · letter'], ['legal', 'Fold · legal'], ['letter', 'Fold · letter'], ['single', 'Single pages']];
-  let layout = (() => { try { return localStorage.getItem('gs:bookLayout2') || 'duplex-legal'; } catch { return 'duplex-legal'; } })();
-  if (!LAYOUTS.some(([v]) => v === layout)) layout = 'duplex-legal';
-  const layoutSel = h('select', { 'aria-label': 'Print layout', onchange: e => { layout = e.target.value; try { localStorage.setItem('gs:bookLayout2', layout); } catch { /* not kept */ } } },
+  // A new key, so everyone starts on double-sided letter (8 1/2 x 11, what
+  // most printers and print shops use).
+  const LAYOUTS = [['duplex-letter', 'Double-sided · letter'], ['duplex-legal', 'Double-sided · legal'], ['letter', 'Fold · letter'], ['legal', 'Fold · legal'], ['single', 'Single pages']];
+  let layout = (() => { try { return localStorage.getItem('gs:bookLayout3') || 'duplex-letter'; } catch { return 'duplex-letter'; } })();
+  if (!LAYOUTS.some(([v]) => v === layout)) layout = 'duplex-letter';
+  const layoutSel = h('select', { 'aria-label': 'Print layout', onchange: e => { layout = e.target.value; try { localStorage.setItem('gs:bookLayout3', layout); } catch { /* not kept */ } } },
     LAYOUTS.map(([v, t]) => h('option', { value: v, selected: v === layout }, t)));
   const pdfBar = h('div', { class: 'bookpdf', hidden: true });
   let pdfUrl = null;

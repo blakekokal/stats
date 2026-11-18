@@ -462,6 +462,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.6.12', ['Yardage book: printing starts on Double-sided · letter (8½ × 11, two cards per sheet, about 4 × 6.6 in each), the paper most printers and print shops use. Legal and the fold layouts are still in the menu']],
   ['1.6.11', ['Yardage book: printing no longer cuts off the top of the pages. Every layout keeps a quarter-inch margin round the sheet (printers and print shops can’t print to the edge), the cards shrink a little to fit (about 4 × 6.6 in on legal), and the dashed cut lines go round every card']],
   ['1.6.10', ['Yardage book: a double-sided print layout, now the default. Four 4¼ × 7 cards per legal sheet (two per letter sheet), each hole page on the front and the next hole’s green on the back. Print at 100%, two-sided, flip on short edge; cut along the dashed lines, stack the cards by their numbers (1, the cover, on top) and staple along the top. 18 holes take 5 legal sheets. The fold layouts are still there']],
   ['1.6.9', ['Every course: greens, tee boxes, fairways, bunkers and water have soft, rounded outlines instead of jagged corners and kinks (Bridlewood’s tee boxes and greens most of all), so they look smooth on the map and in the yardage book. No outline moved more than about a yard and a half; trees, OB and course boundaries are unchanged']],
