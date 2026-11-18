@@ -7,7 +7,7 @@
 // picked with switches (kept on this device); Print makes a PDF / paper copy
 // of this hole or of the whole course.
 
-import { h, course, teePosition, teeBoxFor, boxCentre, partOf } from './app.js';
+import { h, course, teePosition, teeBoxFor, boxCentre, partOf, TILE_URL } from './app.js';
 import { elevIndex, heightAt } from './elev.js';
 
 const M_PER_DEG = 111320, M_PER_YD = 0.9144, IN_PER_M = 39.3701;
@@ -381,8 +381,9 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bookpage', xmlns: SVGNS, 'font-family': FONT });
   svg.append(defs(id), el('clipPath', { id: `${id}-clip` }, el('rect', { x: left, y: top, width: right - left, height: bottom - top })));
   // Lines (the book over the satellite picture): no paper, just outlines and numbers.
-  const lines = !!opts.lines;
-  if (!lines) svg.append(el('rect', { width: W, height: H, fill: '#fff' }));
+  // opts.satellite (a book printed that way): the same, over the satellite picture, on a white page.
+  const lines = !!(opts.lines || opts.satellite);
+  if (!opts.lines) svg.append(el('rect', { width: W, height: H, fill: '#fff' }));
   const mapG = el('g', { 'clip-path': `url(#${id}-clip)` });
   // Labels get a white halo so they read over the contours and arrows.
   const labG = el('g', { stroke: '#fff', 'stroke-width': 2.6, 'stroke-linejoin': 'round', 'paint-order': 'stroke' });
@@ -714,6 +715,10 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   }
   // The map view: where the page's corners are on the ground.
   svg.geo = { at: (u, v) => f.back([(u - cx) / s, (cy - v) / s]), rect: [left, top, right, bottom], up };
+  if (opts.satellite) {
+    const url = await satelliteUnder(svg.geo.at, svg.geo.rect);
+    if (url) mapG.parentNode.insertBefore(el('image', { href: url, x: left, y: top, width: right - left, height: bottom - top, preserveAspectRatio: 'none' }), mapG);
+  }
   return svg;
 }
 
@@ -876,6 +881,59 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   return svg;
 }
 
+// ---------- the satellite picture ----------
+
+// The satellite picture under a page's map (the satellite book): the Esri tiles
+// (zoom 18) covering it, turned and scaled onto the page. A JPEG data URL, or
+// null if the tiles won't load (offline): the page is then drawn without it.
+const tileCache = new Map();
+// A tile that fails (the server says too many at once, say) is tried twice more, a little later.
+const loadTile = url => {
+  if (!tileCache.has(url)) tileCache.set(url, new Promise(ok => {
+    const go = left => {
+      const img = new Image(); img.crossOrigin = 'anonymous';
+      img.onload = () => ok(img);
+      img.onerror = () => { if (left) setTimeout(() => go(left - 1), 1500); else { tileCache.delete(url); ok(null); } };
+      img.src = url;
+    };
+    go(2);
+  }));
+  return tileCache.get(url);
+};
+async function satelliteUnder(at, [l, t, r, b], k = 3, z = 18) {
+  try {
+    const n = 2 ** z;
+    const world = ([lat, lng]) => {
+      const sin = Math.sin((lat * Math.PI) / 180);
+      return [((lng + 180) / 360) * n, (0.5 - Math.log((1 + sin) / (1 - sin)) / (4 * Math.PI)) * n]; // in tiles
+    };
+    const A = world(at(l, t)), B = world(at(r, t)), C = world(at(l, b)), D = world(at(r, b));
+    const xs = [A, B, C, D].map(p => p[0]), ys = [A, B, C, D].map(p => p[1]);
+    const x0 = Math.floor(Math.min(...xs)), x1 = Math.floor(Math.max(...xs)), y0 = Math.floor(Math.min(...ys)), y1 = Math.floor(Math.max(...ys));
+    if ((x1 - x0 + 1) * (y1 - y0 + 1) > 120) return null; // far too big a hole for this zoom
+    const cv = document.createElement('canvas');
+    const wpx = Math.round((r - l) * k), hpx = Math.round((b - t) * k);
+    cv.width = wpx; cv.height = hpx;
+    const ctx = cv.getContext('2d');
+    ctx.fillStyle = '#7a8a6a'; ctx.fillRect(0, 0, wpx, hpx);
+    // Canvas pixel (i, j) is at A + ex*i + ey*j (tile units, from tile x0, y0); draw with the inverse.
+    const a = [(A[0] - x0) * 256, (A[1] - y0) * 256];
+    const ex = [((B[0] - A[0]) * 256) / wpx, ((B[1] - A[1]) * 256) / wpx], ey = [((C[0] - A[0]) * 256) / hpx, ((C[1] - A[1]) * 256) / hpx];
+    const det = ex[0] * ey[1] - ey[0] * ex[1];
+    const i00 = ey[1] / det, i01 = -ey[0] / det, i10 = -ex[1] / det, i11 = ex[0] / det;
+    ctx.setTransform(i00, i10, i01, i11, -(i00 * a[0] + i01 * a[1]), -(i10 * a[0] + i11 * a[1]));
+    const jobs = [];
+    for (let x = x0; x <= x1; x++) for (let y = y0; y <= y1; y++) {
+      jobs.push(loadTile(TILE_URL.replace('{z}', z).replace('{x}', x).replace('{y}', y)).then(img => { if (img) ctx.drawImage(img, (x - x0) * 256 - 0.5, (y - y0) * 256 - 0.5, 257, 257); }));
+    }
+    await Promise.all(jobs);
+    return cv.toDataURL('image/jpeg', 0.85);
+  } catch (e) {
+    console.error('satellite under the book', e);
+    return null;
+  }
+}
+
 // ---------- making a PDF ----------
 
 const abs = p => new URL(p, location.href).href;
@@ -946,7 +1004,7 @@ export function openBook(n, opts) {
     status.textContent = note;
   }
   async function drawHole(k, p) {
-    const hp = await holePage(k, teeName, p, helpers, opts);
+    const hp = await holePage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat' });
     const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, opts) : null;
     return [...(gp ? [gp] : []), hp];
   }
@@ -971,6 +1029,11 @@ export function openBook(n, opts) {
     let i = 0;
     for (const [k, , , , needsElev] of BOOK_OPTIONS) { if (needsElev && !elevOk) continue; const inp = opts_.querySelectorAll('input')[i++]; if (inp) inp.checked = prefs[k]; }
   }
+  // Style: the plain book, or the satellite picture with the book's outlines
+  // and numbers on it (the hole pages; the green pages stay plain). Kept on this device.
+  let style = (() => { try { return localStorage.getItem('gs:bookStyle') === 'sat' ? 'sat' : 'book'; } catch { return 'book'; } })();
+  const styleSel = h('select', { 'aria-label': 'Style', onchange: e => { style = e.target.value; try { localStorage.setItem('gs:bookStyle', style); } catch { /* not kept */ } draw(); } },
+    [['book', 'Book'], ['sat', 'Satellite']].map(([v, t]) => h('option', { value: v, selected: v === style }, t)));
   const teeSel = h('select', { 'aria-label': 'Tee box', onchange: e => { teeName = e.target.value; draw(); } },
     course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} tees`)));
   const go = d => { hole = ((hole - 1 + d + course.holes.length) % course.holes.length) + 1; draw(); };
@@ -1131,7 +1194,7 @@ export function openBook(n, opts) {
   }
   async function drawHoleParts(k, p, pageH = PAGE_H) {
     const o = { ...opts, pageH };
-    const hp = await holePage(k, teeName, p, helpers, o);
+    const hp = await holePage(k, teeName, p, helpers, { ...o, satellite: style === 'sat' });
     const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, o) : null;
     return { hole: hp, green: gp };
   }
@@ -1163,7 +1226,7 @@ export function openBook(n, opts) {
       h('button', { class: 'bookbtn', 'aria-label': 'Close', onclick: close }, '✕'),
       h('button', { class: 'bookbtn', 'aria-label': 'Previous hole', onclick: () => go(-1) }, '‹'), title,
       h('button', { class: 'bookbtn', 'aria-label': 'Next hole', onclick: () => go(1) }, '›'),
-      teeSel,
+      teeSel, styleSel,
       h('button', { class: 'bookbtn', onclick: () => { opts_.hidden = !opts_.hidden; } }, '☰ Show'),
       layoutSel,
       h('button', { class: 'bookbtn', onclick: () => makePdf(false) }, '⎙ Hole'),
