@@ -103,16 +103,15 @@ other session starts it too; when it's live, move it to Done.
 Done: Lantana (OSM had no hole lines; routed from the scorecard), Lake Park
 Championship and Executive, Texas Star, Iron Horse, Indian Creek Creek and Lakes,
 Fields Ranch East and West (two courses: holes told apart by OSM course boundary),
-Cedar Crest.
+Cedar Crest, Stevens Park, Tierra Verde, Riverside (#13 and #18 share a double
+green: `pinAtLineEnd` in the config).
 
 Public, complete:
 - Tenison Park (Dallas; two courses, East and Glen, like Fields Ranch)
-- Stevens Park (Dallas) (building, 2026-11-18)
 - Maridoe (Carrollton): GolfPass has the pre-renovation card (pars and yards fit
   no OSM hole); needs the current card from the club
 - Texas Rangers Golf Club (Arlington): OSM's holes 1-9 are GolfPass's 10-18 and the
   other way round; check the club's current card before building
-- Tierra Verde (Arlington) (building, 2026-11-18)
 - Cottonwood Valley (Irving)
 - The Tribute (The Colony)
 - Old American (The Colony)
@@ -127,7 +126,6 @@ Public, complete:
 - The Resort (Fort Worth)
 - Hawks Creek (Westworth Village)
 - Sky Creek Ranch (Keller)
-- Riverside (Grand Prairie) (building, 2026-11-18)
 - Oak Hollow (McKinney)
 
 Private, complete: TPC Craig Ranch, TPC Four Seasons Las Colinas, Stonebriar,
