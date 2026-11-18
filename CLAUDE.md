@@ -82,3 +82,58 @@ of each green in the imagery); see `tools/sherrillpark2` as the model.
 - Check by eye on an overlay and in the app (GPS Overview), and commit the
   book PDF next to the scripts so the course can be rebuilt. The build takes
   several minutes: run it in the background.
+
+# Courses OpenStreetMap already has (no yardage book needed)
+
+A survey of OpenStreetMap (Nov 2026) found these DFW courses mapped with all 18
+hole lines plus greens, tee boxes, bunkers and fairways, so they can be built
+without a book, the way Lake Park, Texas Star, Iron Horse and Fields Ranch were.
+The recipe: download the course with the plain OSM API (`api/0.6/map.json?bbox=...`;
+Overpass is often down), convert it with a small `tools/<id>/osm_to_geom.py` (copy
+`tools/texasstar/`), then `build_course.py`, measure the shift by fitting the
+bunkers to the sand in the zoom-19 imagery, drop practice greens (`drop`), check the
+bunkers (`hazards_from_imagery.py` + `bunkers_from_imagery.py`, then look: shade and
+dormant grass fool it), `add_ob.py`, `trees_from_imagery.py`, `soften_shapes.py`,
+`elevation.py`. Scorecard from the club or GolfPass; check its pars against OSM's
+hole tags and match ratings to tees by total yards. Send the owner pictures first.
+
+Keep this list current: when you start one, mark it `(building, <date>)` so no
+other session starts it too; when it's live, move it to Done.
+
+Done: Lantana (OSM had no hole lines; routed from the scorecard), Lake Park
+Championship and Executive, Texas Star, Iron Horse, Indian Creek Creek and Lakes,
+Fields Ranch East and West (two courses: holes told apart by OSM course boundary).
+Cedar Crest (Dallas): built, waiting for the owner's go.
+
+Public, complete:
+- Tenison Park (Dallas; two courses, East and Glen, like Fields Ranch)
+- Stevens Park (Dallas)
+- Maridoe (Carrollton)
+- Texas Rangers Golf Club (Arlington)
+- Tierra Verde (Arlington)
+- Cottonwood Valley (Irving)
+- The Tribute (The Colony)
+- Old American (The Colony)
+- Trails of Frisco (Frisco)
+- The Golf Club at Twin Creeks (Allen)
+- Woodbridge (Sachse)
+- Buffalo Creek (Heath)
+- Rockwall Golf & Athletic Club (Rockwall)
+- Pecan Valley (Fort Worth; two courses)
+- The Golf Club at Fossil Creek (Fort Worth)
+- White Stone (Fort Worth)
+- The Resort (Fort Worth)
+- Hawks Creek (Westworth Village)
+- Sky Creek Ranch (Keller)
+- Riverside (Grand Prairie)
+- Oak Hollow (McKinney)
+
+Private, complete: TPC Craig Ranch, TPC Four Seasons Las Colinas, Stonebriar,
+Dallas Athletic Club, Dallas National, Colonial, Northwood, Prestonwood Creeks,
+Hackberry Creek, Mira Vista, Eldorado, Oakmont, Shady Oaks.
+
+Mapped with gaps (better from a book, or fill the gaps from the imagery):
+- tee boxes or fairways missing: Pecan Hollow, Mesquite Municipal, Luna Vista, Lake Arlington
+- hole lines but little else: Mansfield National, Thorntree
+- some holes missing: Timarron (17), Ridgeview Ranch (17), Stonebridge Ranch (17), Heritage Ranch (11)
+- shapes but no hole lines: Waterview, Timberlinks
