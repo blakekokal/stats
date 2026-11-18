@@ -31,6 +31,7 @@ export const BOOK_OPTIONS = [
   ['ob', 'Out of bounds', 'Hole page', true],
   ['onlyHole', 'Only this hole (saves ink)', 'Hole page', true],
   ['otherHoles', 'Neighbouring holes', 'Hole page', true],
+  ['teeInset', 'Tees in a box (the map starts at the fairway)', 'Hole page', true],
   ['allTees', 'Every tee box', 'Hole page', true],
   ['centre', 'Centre line', 'Hole page', true],
   ['layup', 'Centre numbers (100 · 150 · 200 · 250 · 300)', 'Hole page', true],
@@ -357,11 +358,18 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   const ownFair = F.own.filter(x => x.t === 'fairway').map(x => closeRing(ringOf(x)).map(f.fwd));
   const teeBoxesL = F.boxes.map(b => ({ b, r: closeRing(ringOf(b)).map(f.fwd) }));
 
+  // Like a tour book, the map can start just short of the fairway, with the
+  // tee boxes in a small box instead (par 4s and 5s whose fairway starts well
+  // out): the hole is then drawn bigger.
+  const fairYs = ownFair.flat().map(p => p[1]).filter(y => y > 20);
+  const startY = prefs.teeInset && ch.par > 3 && fairYs.length && teeBoxesL.length ? Math.min(...fairYs) - 20 : null;
+  const cropped = startY != null && startY > 50;
   // What has to fit: the line, the hole's fairways, green and tee boxes.
-  const keep = [...L, ...ownFair.flat(), ...(greenL || []), ...teeBoxesL.flatMap(t => t.r)];
+  const keep = cropped ? [...L.filter(p => p[1] >= startY), ...ownFair.flat().filter(p => p[1] >= startY), ...(greenL || [])]
+    : [...L, ...ownFair.flat(), ...(greenL || []), ...teeBoxesL.flatMap(t => t.r)];
   let [minX, maxX] = [Math.min(...keep.map(p => p[0])), Math.max(...keep.map(p => p[0]))];
   let [minY, maxY] = [Math.min(...keep.map(p => p[1])), Math.max(...keep.map(p => p[1]))];
-  minX = Math.min(minX - 32, -45); maxX = Math.max(maxX + 32, 45); minY -= 14; maxY += 18;
+  minX = Math.min(minX - 32, -45); maxX = Math.max(maxX + 32, 45); minY = cropped ? startY : minY - 14; maxY += 18;
   const top = 86, bottom = H - 28, left = 14, right = W - 14;
   const s = Math.min((right - left) / (maxX - minX), (bottom - top) / (maxY - minY), 4.2, MAX_UNITS_PER_YD);
   const cx = (left + right) / 2 - ((minX + maxX) / 2) * s, cy = (top + bottom) / 2 + ((minY + maxY) / 2) * s;
@@ -454,6 +462,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     return { perp, l: [w.p[0] + perp[0] * l, w.p[1] + perp[1] * l], r: [w.p[0] + perp[0] * r, w.p[1] + perp[1] * r], width: r - l };
   };
 
+  if (cropped) teeInset(); // first, so the numbers keep out of its way
   // Numbers in pairs, tour-book style: a dot on the spot, the yards to the
   // front of the green above (red) and the yards from the tee below (black),
   // off to the side on a short straight line. Beside each, in blue, how many
@@ -511,6 +520,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   const signed = v => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0');
   for (const { q, front, tee, side, dFront, dTee } of pairs) {
     const [x, y] = P(q);
+    if (y > bottom - 6 || y < top + 6) continue; // off the map (short of where it starts)
     // Four rows: blue up/down to the green, red to the front, black from the
     // tee, blue up/down from the tee. The labeller boxes them from 32 above
     // the anchor's y to 10 below; their middle (my) is level with the spot.
@@ -538,7 +548,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
 
   // Tee boxes: the chosen one marked, each with its yards to the front.
   const teeFront = Math.round(toFront(f.fwd(tee)));
-  for (const { b, r } of teeBoxesL) {
+  for (const { b, r } of cropped ? [] : teeBoxesL) {
     const chosen = b === F.teeBox;
     if (!chosen && !prefs.allTees) continue;
     const c = P(centroid(r));
@@ -549,7 +559,38 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const spot = lab.place([[c[0] + 9, c[1] + 3, 'start'], [c[0] - 9, c[1] + 3, 'end'], [c[0] + 9, c[1] + 12, 'start'], [c[0] - 9, c[1] + 12, 'end']], textW(label, size), size, bounds);
     if (spot) labG.append(txt(spot[0], spot[1], label, { 'font-size': size, 'font-weight': chosen ? 700 : 400, fill: chosen ? INK : SOFT, 'text-anchor': spot[2] }));
   }
-  if (!F.teeBox) { const [x, y] = P(f.fwd(tee)); labG.append(el('circle', { cx: x, cy: y, r: 3, fill: INK })); }
+  if (!F.teeBox && !cropped) { const [x, y] = P(f.fwd(tee)); labG.append(el('circle', { cx: x, cy: y, r: 3, fill: INK })); }
+
+  // The tees, in a small box at the top left: the hole's tee boxes as they
+  // lie, each with its tees' names and yards to the front of the green.
+  function teeInset() {
+    const shown = teeBoxesL.filter(t => t.b === F.teeBox || prefs.allTees);
+    if (!shown.length) return;
+    const pts = shown.flatMap(t => t.r);
+    const bx0 = Math.min(...pts.map(p => p[0])), bx1 = Math.max(...pts.map(p => p[0]));
+    const by0 = Math.min(...pts.map(p => p[1])), by1 = Math.max(...pts.map(p => p[1]));
+    const rows = shown.map(({ b, r }) => {
+      const names = course.tees.filter(t => teeBoxFor(t.name, ch, F.boxes) === b).map(t => t.name);
+      return { b, r, label: `${names.join('/') || 'Tee'} ${Math.round(toFront(f.fwd(boxFront(b, ch.line[1]))))}`, chosen: b === F.teeBox };
+    });
+    const labW = Math.max(...rows.map(o => textW(o.label, 8.5))) + 4;
+    const shapeW = 34, boxH = Math.min(150, Math.max(60, rows.length * 13 + 26));
+    const si = Math.min(shapeW / Math.max(1, bx1 - bx0), (boxH - 26) / Math.max(1, by1 - by0), 2.5);
+    const bw = shapeW + labW + 16, x0 = left + 4, y0 = top + 4;
+    const Q = ([x, y]) => [x0 + 6 + shapeW / 2 + (x - (bx0 + bx1) / 2) * si, y0 + 18 + (boxH - 26) / 2 - (y - (by0 + by1) / 2) * si];
+    const g = el('g', { stroke: 'none' });
+    g.append(el('rect', { x: x0, y: y0, width: bw, height: boxH, rx: 3, fill: '#fff', stroke: '#9aa59e', 'stroke-width': 0.8 }),
+      txt(x0 + 6, y0 + 11, 'TEES', { 'font-size': 8, 'font-weight': 700, fill: SOFT, 'letter-spacing': 0.8 }));
+    let lastY = -Infinity;
+    for (const o of rows.sort((a, b2) => centroid(b2.r)[1] - centroid(a.r)[1])) {
+      g.append(el('path', { d: pathD(o.r.map(Q), true), fill: o.chosen ? '#9fd18b' : '#e4f3dc', stroke: '#5f9a50', 'stroke-width': 0.8 }));
+      const ly = Math.max(Q(centroid(o.r))[1] + 3, lastY + 11);
+      lastY = ly;
+      g.append(txt(x0 + 12 + shapeW, ly, o.label, { 'font-size': 8.5, 'font-weight': o.chosen ? 700 : 400, fill: o.chosen ? INK : SOFT }));
+    }
+    labG.append(g);
+    lab.block([x0, y0, x0 + bw, y0 + boxH]);
+  }
 
   // North arrow and a 50-yard scale.
   if (prefs.north) {

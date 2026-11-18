@@ -462,6 +462,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.6.14', ['Yardage book: on par 4s and 5s the hole page starts just short of the fairway, so the hole is drawn bigger, and the tee boxes go in a small box at the top left with each one’s tees and yards to the front, like a tour book (Show › Tees in a box turns it off). Par 3s still show the whole hole']],
   ['1.6.13', ['Yardage book printing starts on Fold · letter (cut once): two strips per sheet, cut once down the middle, fold each in half and staple along the folds. Each strip sits in the middle of its half with even margins, and its pages fill it (3¾ in wide; 5¼ in tall on letter, 6¾ on legal, folding to 4¼ × 7)', 'Yardage book: Double-sided · letter puts four cards on a sheet again (two big ones is its own option)', 'Yardage book: the dotted line down the hole stops at the front of the green, where the numbers are measured to, with a yellow dot']],
   ['1.6.12', ['Yardage book: printing starts on Double-sided · letter (8½ × 11, two cards per sheet, about 4 × 6.6 in each), the paper most printers and print shops use. Legal and the fold layouts are still in the menu']],
   ['1.6.11', ['Yardage book: printing no longer cuts off the top of the pages. Every layout keeps a quarter-inch margin round the sheet (printers and print shops can’t print to the edge), the cards shrink a little to fit (about 4 × 6.6 in on legal), and the dashed cut lines go round every card']],
