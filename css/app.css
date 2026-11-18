@@ -642,3 +642,4 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .holeview .bookgreen .booknote { top: auto; bottom: calc(76px + env(safe-area-inset-bottom)); }
 .holeview.bookmode .fab.cleanview { bottom: calc(70px + env(safe-area-inset-bottom)); }
 .holeview.bookmode .sheet.viewbox { bottom: calc(70px + env(safe-area-inset-bottom)); }
+.bookpages.adding .bookpage[data-page=hole] { cursor: crosshair; outline: 2px dashed #f3c623; outline-offset: 2px; }

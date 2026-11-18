@@ -7,7 +7,8 @@
 // picked with switches (kept on this device); Print makes a PDF / paper copy
 // of this hole or of the whole course.
 
-import { h, course, teePosition, teeBoxFor, boxCentre, partOf, TILE_URL } from './app.js';
+import { h, course, teePosition, teeBoxFor, boxCentre, partOf, TILE_URL, setActiveCourse, courseById } from './app.js';
+import { store } from './store.js';
 import { elevIndex, heightAt } from './elev.js';
 
 const M_PER_DEG = 111320, M_PER_YD = 0.9144, IN_PER_M = 39.3701;
@@ -34,7 +35,7 @@ export const BOOK_OPTIONS = [
   ['teeInset', 'Zoomed view (starts at the fairway, tees in a box)', 'Hole overview page', true],
   ['allTees', 'Every tee box', 'Hole overview page', true],
   ['centre', 'Center line', 'Hole overview page', true],
-  ['layup', 'Center numbers (50 · 100 · 150 · 200 · 250 · 300)', 'Hole overview page', true],
+  ['layup', 'Yardage markers', 'Hole overview page', true],
   ['hazards', 'Bunker & water numbers (start and end)', 'Hole overview page', true],
   ['contours', 'Contours & slope arrows', 'Hole overview page', true, true],
   ['deltas', 'Up/down yards by each number', 'Hole overview page', true, true],
@@ -58,7 +59,15 @@ function loadPrefs() {
   out.onlyHole = out.greenPage = out.hazards = out.deltas = true;
   // A new name (was gridYd, 3 to start): everyone starts on the 5-yard grid, like a tour book.
   out.gridYd = out.gridYards = [3, 5].includes(p.gridYards) ? p.gridYards : 5;
+  // Yardage markers: the distances to the front typed in (null: 50 · 100 · 150 · 200, and 250 · 300 on par 5s).
+  out.markers = cleanMarkers(p.markers);
   return out;
+}
+export const DEFAULT_MARKERS = 'Default: 50 · 100 · 150 · 200 (250 · 300 on par 5s)';
+function cleanMarkers(m) {
+  if (!Array.isArray(m)) return null;
+  const v = [...new Set(m.map(Number).filter(x => Number.isFinite(x) && x >= 5 && x <= 600).map(Math.round))].sort((a, b) => a - b);
+  return v.length ? v : null;
 }
 const savePrefs = p => { try { localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch { /* not kept */ } };
 
@@ -487,7 +496,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     lab.block([Math.min(...xs) - 1.5, Math.min(...ys) - 1.5, Math.max(...xs) + 1.5, Math.max(...ys) + 1.5]);
   }
   const pairs = [];
-  const pair = (q, front, tee, side) => pairs.push({ q, front, tee, side });
+  const pair = (q, front, tee, side, mine = false) => pairs.push({ q, front, tee, side, mine });
 
   // Bunkers and water: the start and the end of each (not greenside bunkers).
   if (prefs.hazards) {
@@ -544,11 +553,20 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   // Down the middle: 50, 100, 150 and 200 to the front of the green (and 250
   // and 300 on a par 5).
   if (prefs.layup && !opts.teeView && ch.par > 3) { // (they're on the map, not in the tees box; none on a par 3)
-    for (const yd of ch.par >= 5 ? [50, 100, 150, 200, 250, 300] : [50, 100, 150, 200]) {
+    for (const yd of prefs.markers || (ch.par >= 5 ? [50, 100, 150, 200, 250, 300] : [50, 100, 150, 200])) {
       const w = spotAt(yd);
       if (!w || w.fromTee < 40) continue;
       pair(w.p, yd, Math.round(w.fromTee), 1);
     }
+  }
+
+  // Points added by hand (Preview and edit > Add point): yards and up/down
+  // from the tee and to the front of the green, like the other numbers.
+  for (const pt of opts.points || []) {
+    const q = f.fwd(pt);
+    const nearLine = walk.reduce((b, w) => (dist(w.p, q) < dist(b.p, q) ? w : b), walk[0]);
+    const side = (q[0] - nearLine.p[0]) * nearLine.d[1] - (q[1] - nearLine.p[1]) * nearLine.d[0] >= 0 ? 1 : -1;
+    pair(q, Math.round(toFront(q)), Math.round(dist(q, [0, 0])), side, true);
   }
 
   // The rises and falls, in yards, from the height tiles.
@@ -563,7 +581,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     });
   }
   const signed = v => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0');
-  for (const { q, front, tee, side, dFront, dTee } of pairs) {
+  for (const { q, front, tee, side, dFront, dTee, mine } of pairs) {
     const [x, y] = P(q);
     if (y > bottom - 6 || y < top + 6) continue; // off the map (short of where it starts)
     if (opts.teeView && tee > 130) continue; // the tees box: just what's near the tees
@@ -571,7 +589,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     // tee, blue up/down from the tee. The labeller boxes them from 32 above
     // the anchor's y to 10 below; their middle (my) is level with the spot.
     const wdt = Math.max(textW(front, 10), textW(tee, 9.5), dFront != null ? textW(signed(dFront), 8) : 0, dTee != null ? textW(signed(dTee), 8) : 0) + 2, hgt = 40;
-    labG.append(el('circle', { cx: x, cy: y, r: 1.9, fill: INK }));
+    labG.append(mine ? el('circle', { cx: x, cy: y, r: 2.8, fill: '#f3c623', stroke: INK, 'stroke-width': 1 }) : el('circle', { cx: x, cy: y, r: 1.9, fill: INK }));
     // Level with the spot, so the line out to it is straight across; it may
     // run over the edge of its bunker.
     const cands = [];
@@ -719,7 +737,8 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     svg.dataset.teebox = [Math.min(...q.map(p => p[0])), Math.min(...q.map(p => p[1])), Math.max(...q.map(p => p[0])), Math.max(...q.map(p => p[1]))].map(v => v.toFixed(1)).join(' ');
   }
   // The map view: where the page's corners are on the ground.
-  svg.geo = { at: (u, v) => f.back([(u - cx) / s, (cy - v) / s]), rect: [left, top, right, bottom], up };
+  svg.geo = { at: (u, v) => f.back([(u - cx) / s, (cy - v) / s]), to: p => P(f.fwd(p)), rect: [left, top, right, bottom], up };
+  svg.dataset.page = 'hole';
   if (opts.satellite) {
     const url = await satelliteUnder(svg.geo.at, svg.geo.rect);
     if (url) mapG.parentNode.insertBefore(el('image', { href: url, x: left, y: top, width: right - left, height: bottom - top, preserveAspectRatio: 'none' }), mapG);
@@ -907,6 +926,64 @@ const LAYOUTS = [['duplex-letter', 'Double-sided · letter'], ['duplex-legal', '
 const getLayout = () => { let v = 'duplex-letter'; try { v = localStorage.getItem('gs:bookLayout5') || v; } catch { /* none */ } return LAYOUTS.some(([k]) => k === v) ? v : 'duplex-letter'; };
 const setLayout = v => { try { localStorage.setItem('gs:bookLayout5', v); } catch { /* not kept */ } };
 
+// ---------- saved yardage books ----------
+
+// A yardage book: the course and tee box, the style, print format and
+// switches, and points added by hand ({ hole: [[lat, lng], ...] }). Saved
+// ones are kept with the account (store 'ybook:<id>').
+export function newBook(teeName) {
+  return { id: null, name: '', courseId: course.id, courseName: course.name, teeName: teeName || course.tees[0]?.name,
+    style: getStyle(), layout: getLayout(), prefs: loadPrefs(), points: {}, updated: null };
+}
+export function saveBook(book) {
+  if (!book.id) book.id = `${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+  if (!book.name) book.name = `${book.courseName} · ${book.teeName} tees`;
+  book.updated = Date.now();
+  const { dirty, ...data } = book;
+  delete book.dirty;
+  store.set(`ybook:${book.id}`, JSON.parse(JSON.stringify(data)));
+  return book;
+}
+export const savedBooks = () => store.list('ybook:').filter(b => b && b.id).sort((a, b) => (b.updated || 0) - (a.updated || 0));
+// A saved book, ready to open: its course made the active one, its switches filled in.
+function openable(b) {
+  setActiveCourse(b.courseId);
+  return { ...JSON.parse(JSON.stringify(b)), prefs: { ...loadPrefs(), ...b.prefs, markers: cleanMarkers(b.prefs?.markers), onlyHole: true, greenPage: true, hazards: true, deltas: true }, points: b.points || {} };
+}
+
+// Saved yardage books (GPS Overview > Saved yardage books): open one to edit
+// and print it again, rename or delete it.
+export function openSavedBooks(opts) {
+  const list = h('div', { class: 'savedlist' });
+  const close = () => { ov.remove(); document.body.classList.remove('bookopen'); };
+  const fill = () => {
+    const books = savedBooks();
+    list.replaceChildren(...(books.length ? books.map(b => {
+      const pts = Object.values(b.points || {}).reduce((n, l) => n + l.length, 0);
+      const when = b.updated ? new Date(b.updated).toLocaleDateString() : '';
+      return h('div', { class: 'savedbook' },
+        h('button', { class: 'savedopen', onclick: () => {
+          if (!courseById(b.courseId)) { alert('That course isn’t in the app any more.'); return; }
+          close(); openBookSetup({ ...opts, book: openable(b) });
+        } }, h('b', {}, b.name || b.courseName), h('small', {}, `${b.courseName} · ${b.teeName} tees${pts ? ` · ${pts} point${pts > 1 ? 's' : ''}` : ''}${when ? ` · ${when}` : ''}`)),
+        h('div', { class: 'row' },
+          h('button', { class: 'setupplain', onclick: () => {
+            const name = prompt('Name this yardage book', b.name || '');
+            if (name == null || !name.trim()) return;
+            store.set(`ybook:${b.id}`, { ...b, name: name.trim(), updated: Date.now() }); fill();
+          } }, 'Rename'),
+          h('button', { class: 'setupdanger', onclick: () => { if (confirm(`Delete “${b.name}”?`)) { store.remove(`ybook:${b.id}`); fill(); } } }, 'Delete')));
+    }) : [h('div', { class: 'setuphint' }, 'No saved yardage books yet. Generate one, then Save it from Preview and edit.')]));
+  };
+  const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: close });
+  back.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
+  const ov = h('div', { class: 'cx top setupov' }, back, h('div', { style: 'font-size:22px;font-weight:800;' }, 'Saved Yardage Books'), list);
+  fill();
+  document.body.append(ov);
+  document.body.classList.add('bookopen');
+  return ov;
+}
+
 // ---------- the satellite picture ----------
 
 // The satellite picture under a page's map (the satellite book): the Esri tiles
@@ -996,11 +1073,17 @@ async function drawSvg(ctx, svg, x, y, w, hgt, css) {
 
 // Opens the yardage book over the hole screen on hole n.
 // opts: { teeName, tourney, holeFeatures, ownGreen, onHole(n) }
+// opts.book: the yardage book being looked at (its own tee, style, format,
+// switches and added points; see newBook). Save keeps it in Saved yardage books.
 export function openBook(n, opts) {
-  const saved = loadPrefs();
+  const book = opts.book || newBook(opts.teeName);
+  const saved = book.prefs;
+  let dirty = !!book.dirty;
+  // A change: kept in this book (and, for a book not saved yet, as the defaults for the next one).
+  const keep = () => { dirty = true; saveBtn.classList.toggle('primary', true); if (!book.id) { savePrefs(saved); setStyle(book.style); setLayout(book.layout); } };
   // In a tournament the switches marked so stay off (and aren't shown).
   const prefs = opts.tourney ? new Proxy(saved, { get: (o, k) => (BOOK_OPTIONS.some(r => r[0] === k && r[4]) ? false : o[k]) }) : saved;
-  let hole = n, teeName = opts.teeName;
+  let hole = n, teeName = book.teeName;
   const helpers = { holeFeatures: opts.holeFeatures, ownGreen: opts.ownGreen };
   const pages = h('div', { class: 'bookpages' });
   const title = h('b', {});
@@ -1030,7 +1113,7 @@ export function openBook(n, opts) {
     status.textContent = note;
   }
   async function drawHole(k, p) {
-    const hp = await holePage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat' });
+    const hp = await holePage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat', points: book.points[k] || [] });
     const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat' }) : null;
     return [...(gp ? [gp] : []), hp];
   }
@@ -1040,14 +1123,14 @@ export function openBook(n, opts) {
   for (const [k, label, grp, , needsElev] of BOOK_OPTIONS) {
     if ((needsElev && !elevOk) || HIDDEN.has(k)) continue;
     if (grp !== group) { group = grp; optRows.push(h('div', { class: 'bookgroup' }, grp)); }
-    const input = h('input', { type: 'checkbox', onchange: e => { prefs[k] = e.target.checked; savePrefs(saved); draw(); } });
+    const input = h('input', { type: 'checkbox', onchange: e => { prefs[k] = e.target.checked; keep(); draw(); } });
     input.checked = prefs[k];
     optRows.push(h('label', { class: 'bookopt' }, input, h('span', {}, label)));
   }
-  const gridSel = h('select', { onchange: e => { prefs.gridYd = prefs.gridYards = +e.target.value; savePrefs(saved); draw(); } },
+  const gridSel = h('select', { onchange: e => { prefs.gridYd = prefs.gridYards = +e.target.value; keep(); draw(); } },
     [3, 5].map(v => h('option', { value: v, selected: v === prefs.gridYd }, `${v}-yard grid`)));
-  const setAll = v => { for (const [k] of BOOK_OPTIONS) if (!HIDDEN.has(k)) prefs[k] = v; if (!v) prefs.fairway = prefs.bunkers = prefs.water = true; savePrefs(saved); syncInputs(); draw(); };
-  const zoomSel = h('select', { 'aria-label': 'Hole view', onchange: e => { prefs.teeInset = e.target.value === 'zoom'; savePrefs(saved); draw(); } },
+  const setAll = v => { for (const [k] of BOOK_OPTIONS) if (!HIDDEN.has(k)) prefs[k] = v; if (!v) prefs.fairway = prefs.bunkers = prefs.water = true; keep(); syncInputs(); draw(); };
+  const zoomSel = h('select', { 'aria-label': 'Hole view', onchange: e => { prefs.teeInset = e.target.value === 'zoom'; keep(); draw(); } },
     [['zoom', 'Zoomed view'], ['whole', 'Entire hole']].map(([v, t]) => h('option', { value: v, selected: (v === 'zoom') === !!prefs.teeInset }, t)));
   const allOn = h('button', { class: 'bookbtn', onclick: () => setAll(true) }, 'All on');
   const allOff = h('button', { class: 'bookbtn', onclick: () => setAll(false) }, 'Basic');
@@ -1059,13 +1142,42 @@ export function openBook(n, opts) {
   }
   // Style: the plain book, or the satellite picture with the book's outlines
   // and numbers on it (the hole pages; the green pages stay plain). Kept on this device.
-  let style = getStyle();
-  const styleSel = h('select', { 'aria-label': 'Style', onchange: e => { style = e.target.value; setStyle(style); draw(); } },
+  let style = book.style;
+  const styleSel = h('select', { 'aria-label': 'Style', onchange: e => { style = book.style = e.target.value; keep(); draw(); } },
     STYLES.map(([v, t]) => h('option', { value: v, selected: v === style }, t)));
-  const teeSel = h('select', { 'aria-label': 'Tee box', onchange: e => { teeName = e.target.value; draw(); } },
+  const teeSel = h('select', { 'aria-label': 'Tee box', onchange: e => { teeName = book.teeName = e.target.value; keep(); draw(); } },
     course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} tees`)));
   const go = d => { hole = ((hole - 1 + d + course.holes.length) % course.holes.length) + 1; draw(); };
-  const close = () => { ov.remove(); document.body.classList.remove('bookopen'); if (hole !== n) opts.onHole?.(hole); };
+  const close = () => {
+    if (dirty && !confirm('Leave without saving this yardage book?')) return;
+    ov.remove(); document.body.classList.remove('bookopen'); if (hole !== n) opts.onHole?.(hole);
+  };
+  // Save: into Saved yardage books (a new one is named after the course and tees).
+  const saveBtn = h('button', { class: 'bookbtn' + (dirty ? ' primary' : ''), onclick: () => {
+    saveBook(book); dirty = false; saveBtn.classList.remove('primary');
+    status.textContent = `Saved: ${book.name}`;
+  } }, 'Save');
+  // Add point: tap the hole page to put a point on it (tap one again to take it off).
+  let adding = false;
+  const addBtn = h('button', { class: 'bookbtn', onclick: () => {
+    adding = !adding; addBtn.classList.toggle('primary', adding); pages.classList.toggle('adding', adding);
+    status.textContent = adding ? 'Tap the hole page to add a point; tap a point to remove it' : '';
+  } }, '＋ Add point');
+  pages.addEventListener('click', e => {
+    if (!adding) return;
+    const svg = e.target.closest?.('svg.bookpage');
+    if (!svg || svg.dataset.page !== 'hole' || !svg.geo) return;
+    const pt = svg.createSVGPoint(); pt.x = e.clientX; pt.y = e.clientY;
+    const { x, y } = pt.matrixTransform(svg.getScreenCTM().inverse());
+    const [l, t, r, b] = svg.geo.rect;
+    if (x < l || x > r || y < t || y > b) return;
+    const list = book.points[hole] || (book.points[hole] = []);
+    const near = list.findIndex(p => { const [u, v] = svg.geo.to(p); return Math.hypot(u - x, v - y) < 8; });
+    if (near >= 0) list.splice(near, 1);
+    else { const [la, lo] = svg.geo.at(x, y); list.push([+la.toFixed(7), +lo.toFixed(7)]); }
+    if (!list.length) delete book.points[hole];
+    keep(); draw();
+  });
   // Print: the book is made into a PDF here on the device (phones, and the app
   // added to the home screen, won't print a page straight from the app), then
   // shared, opened or saved from the bar that comes up. Layouts:
@@ -1082,8 +1194,8 @@ export function openBook(n, opts) {
   //           hole's green on the back; cut apart, stack, bind at the top.
   //  single - one 4 1/4 x 7 page per sheet
   // A new key, so everyone starts on fold · letter: one cut, then fold.
-  let layout = getLayout();
-  const layoutSel = h('select', { 'aria-label': 'Print layout', onchange: e => { layout = e.target.value; setLayout(layout); } },
+  let layout = book.layout;
+  const layoutSel = h('select', { 'aria-label': 'Print layout', onchange: e => { layout = book.layout = e.target.value; keep(); } },
     LAYOUTS.map(([v, t]) => h('option', { value: v, selected: v === layout }, t)));
   const pdfBar = h('div', { class: 'bookpdf', hidden: true });
   let pdfUrl = null;
@@ -1220,7 +1332,7 @@ export function openBook(n, opts) {
   }
   async function drawHoleParts(k, p, pageH = PAGE_H) {
     const o = { ...opts, pageH };
-    const hp = await holePage(k, teeName, p, helpers, { ...o, satellite: style === 'sat' });
+    const hp = await holePage(k, teeName, p, helpers, { ...o, satellite: style === 'sat', points: book.points[k] || [] });
     const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, { ...o, satellite: style === 'sat' }) : null;
     return { hole: hp, green: gp };
   }
@@ -1252,7 +1364,7 @@ export function openBook(n, opts) {
       h('button', { class: 'bookbtn', 'aria-label': 'Close', onclick: close }, '✕'),
       h('button', { class: 'bookbtn', 'aria-label': 'Previous hole', onclick: () => go(-1) }, '‹'), title,
       h('button', { class: 'bookbtn', 'aria-label': 'Next hole', onclick: () => go(1) }, '›'),
-      teeSel, styleSel,
+      teeSel, styleSel, addBtn, saveBtn,
       h('button', { class: 'bookbtn', onclick: () => { opts_.hidden = !opts_.hidden; } }, '☰ Show'),
       layoutSel,
       h('button', { class: 'bookbtn', onclick: () => makePdf(false) }, '⎙ Hole'),
@@ -1271,8 +1383,11 @@ export function openBook(n, opts) {
 // Tournament, dropdowns like the tee box, full-width buttons).
 // opts: as openBook's (teeName is the one to start on).
 export function openBookSetup(opts) {
-  const prefs = loadPrefs();
-  let style = getStyle(), layout = getLayout(), teeName = opts.teeName || course.tees[0]?.name;
+  // A saved book being edited, or a new one (whose choices are also the defaults for the next).
+  const book = opts.book || newBook(opts.teeName);
+  const prefs = book.prefs;
+  let style = book.style, layout = book.layout, teeName = book.teeName;
+  const keep = () => { book.dirty = true; if (!book.id) { savePrefs(prefs); setStyle(book.style); setLayout(book.layout); } };
   // Two tiles, one picked (like Casual / Tournament).
   const tiles = (list, get, set) => {
     const row = h('div', { class: 'roundtypes' });
@@ -1282,48 +1397,70 @@ export function openBookSetup(opts) {
     return row;
   };
   const label = text => h('div', { class: 'ninesq setuplab' }, text);
-  const teeSel = h('select', { class: 'bigsel', 'aria-label': 'Tee box', onchange: e => { teeName = e.target.value; } },
+  const teeSel = h('select', { class: 'bigsel', 'aria-label': 'Tee box', onchange: e => { teeName = book.teeName = e.target.value; keep(); } },
     course.tees.map(t => {
       const yds = t.yards ? t.yards.slice(0, course.holes.length).reduce((x, y) => x + y, 0) : 0;
       return h('option', { value: t.name, selected: t.name === teeName }, `${t.name} tees${yds ? ` · ${yds} yds` : ''}`);
     }));
-  const formatSel = h('select', { class: 'bigsel', 'aria-label': 'Format', onchange: e => { layout = e.target.value; setLayout(layout); } },
+  const formatSel = h('select', { class: 'bigsel', 'aria-label': 'Format', onchange: e => { layout = book.layout = e.target.value; keep(); } },
     LAYOUTS.map(([v, t]) => h('option', { value: v, selected: v === layout }, t)));
   const zoomTiles = tiles([['zoom', 'Zoomed view', 'Starts at the fairway'], ['whole', 'Entire hole', 'Tee to green']],
-    () => (prefs.teeInset ? 'zoom' : 'whole'), v => { prefs.teeInset = v === 'zoom'; savePrefs(prefs); });
+    () => (prefs.teeInset ? 'zoom' : 'whole'), v => { prefs.teeInset = v === 'zoom'; keep(); });
   const elevOk = !opts.tourney;
   const inputs = {};
   // Satellite (on) or flat (off), at the top of the hole page's switches.
-  const satInput = h('input', { type: 'checkbox', onchange: e => { style = e.target.checked ? 'sat' : 'book'; setStyle(style); } });
+  const satInput = h('input', { type: 'checkbox', onchange: e => { style = book.style = e.target.checked ? 'sat' : 'book'; keep(); } });
   satInput.checked = style === 'sat';
   const satRow = h('label', { class: 'setupsw' }, h('span', {}, 'Satellite', h('small', { class: 'setupnote' }, 'Off: flat, like a tour book')), satInput, h('i', {}));
   const switchesFor = (grp, ...first) => h('div', { class: 'setupcard' }, ...first, ...BOOK_OPTIONS.filter(([k, , g, , needsElev]) => g === grp && !HIDDEN.has(k) && (elevOk || !needsElev)).map(([k, text]) => {
-    const input = inputs[k] = h('input', { type: 'checkbox', onchange: e => { prefs[k] = e.target.checked; savePrefs(prefs); } });
+    const input = inputs[k] = h('input', { type: 'checkbox', onchange: e => { prefs[k] = e.target.checked; keep(); if (k === 'layup') markersBox.hidden = !prefs.layup; } });
     input.checked = prefs[k];
     return h('label', { class: 'setupsw' }, h('span', {}, text), input, h('i', {}));
   }));
   const setAll = v => {
     for (const [k] of BOOK_OPTIONS) if (!HIDDEN.has(k)) prefs[k] = v;
     if (!v) prefs.fairway = prefs.bunkers = prefs.water = true;
-    savePrefs(prefs);
+    keep();
     for (const [k, inp] of Object.entries(inputs)) inp.checked = prefs[k];
+    markersBox.hidden = !prefs.layup;
   };
   const close = () => { ov.remove(); document.body.classList.remove('bookopen'); };
-  const go = autoPdf => { ov.remove(); openBook(1, { ...opts, teeName, autoPdf }); };
+  const go = autoPdf => { ov.remove(); openBook(1, { ...opts, book, teeName, autoPdf }); };
+  // Yardage markers: Edit opens a list of the distances (to the front of the
+  // green) to type in or take out.
+  const chips = h('div', { class: 'markerchips' });
+  const drawChips = () => {
+    const now = prefs.markers;
+    chips.replaceChildren(...(now ? now.map(v => h('button', { class: 'markerchip', 'aria-label': `Remove ${v}`, onclick: () => {
+      prefs.markers = cleanMarkers(now.filter(x => x !== v)) || null; keep(); drawChips();
+    } }, `${v} ✕`)) : [h('div', { class: 'setuphint' }, DEFAULT_MARKERS)]));
+  };
+  const addInput = h('input', { type: 'number', inputmode: 'numeric', min: 5, max: 600, placeholder: 'Yards, e.g. 25' });
+  const addMarker = () => {
+    const v = Math.round(+addInput.value);
+    if (!(v >= 5 && v <= 600)) return;
+    prefs.markers = cleanMarkers([...(prefs.markers || [50, 100, 150, 200]), v]); keep(); addInput.value = ''; drawChips();
+  };
+  addInput.addEventListener('keydown', e => { if (e.key === 'Enter') addMarker(); });
+  const editor = h('div', { class: 'markereditor', hidden: true }, chips,
+    h('div', { class: 'row' }, addInput, h('button', { class: 'setupplain', style: 'flex:0 0 72px;', onclick: addMarker }, 'Add')),
+    h('button', { class: 'linkbtn', onclick: () => { prefs.markers = null; keep(); drawChips(); } }, 'Back to the default'));
+  const markersBox = h('div', { class: 'markersbox', hidden: !prefs.layup },
+    h('button', { class: 'setupplain', onclick: () => { editor.hidden = !editor.hidden; if (!editor.hidden) drawChips(); } }, 'Edit yardage markers'), editor);
   const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: close });
   back.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
   const ov = h('div', { class: 'cx top setupov' }, back,
     h('div', { style: 'font-size:22px;font-weight:800;' }, 'Yardage Book'),
-    h('div', { class: 'setupsub' }, course.name),
+    h('div', { class: 'setupsub' }, book.id ? book.name : course.name),
     label('Tee box'), teeSel,
     label('Format'), formatSel,
     h('div', { class: 'setuphint' }, 'Double-sided: print at 100%, two-sided, flip on short edge, then cut the cards apart and stack them.'),
-    label('Hole overview page'), zoomTiles, switchesFor('Hole overview page', satRow),
+    label('Hole overview page'), zoomTiles, switchesFor('Hole overview page', satRow), markersBox,
     elevOk ? label('Green overview page') : null, elevOk ? switchesFor('Green overview page') : null,
     opts.tourney ? h('div', { class: 'setuphint' }, 'Tournament: no green page or contours (Rules of Golf 4.3)') : null,
     h('div', { class: 'row' }, h('button', { class: 'setupplain', onclick: () => setAll(true) }, 'All on'), h('button', { class: 'setupplain', onclick: () => setAll(false) }, 'Basic')),
     h('button', { class: 'holes9 genbook', onclick: () => go(true) }, 'MAKE PDF'),
-    h('button', { class: 'setupplain', onclick: () => go(false) }, 'Preview'));
+    h('button', { class: 'setupplain', onclick: () => go(false) }, 'Preview and edit'));
   document.body.append(ov);
   document.body.classList.add('bookopen');
   return ov;
