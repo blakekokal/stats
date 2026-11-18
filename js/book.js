@@ -564,7 +564,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const label = chosen ? `${names.length ? names.join('/') : teeName} ${v}` : `${names.join('/') || 'Tee'} ${v} · ${gap > 0 ? '+' : gap < 0 ? '−' : '±'}${Math.abs(gap)}`;
     if (opts.teeView) { // the tees box writes these beside its picture: just the yards (no tee names, to save space)
       const fp = P(f.fwd(boxFront(b, ch.line[1])));
-      teeInfo.push({ y: fp[1], label: chosen ? `${v}` : `${v} ${gap > 0 ? '+' : gap < 0 ? '−' : '±'}${Math.abs(gap)}`, chosen });
+      teeInfo.push({ y: fp[1], label: chosen ? `${v}` : `${v} ${gap > 0 ? '+' : gap < 0 ? '−' : '±'}${Math.abs(gap)}`, yards: v, gap: chosen ? null : gap, chosen });
       continue;
     }
     const size = chosen ? 10 : 8.5;
@@ -628,7 +628,10 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       const ly = Math.max(y0 + (t.y - ay) * zoom + 3, lastY + 10, y0 + 9);
       lastY = ly;
       g.append(el('path', { d: `M${(px + 2).toFixed(1)},${(y0 + (t.y - ay) * zoom).toFixed(1)}L${(px - 1).toFixed(1)},${(ly - 3).toFixed(1)}`, stroke: '#9aa59e', 'stroke-width': 0.5, fill: 'none' }),
-        txt(px - 3, ly, t.label, { 'font-size': t.chosen ? 9.5 : 8.5, 'font-weight': t.chosen ? 700 : 400, fill: t.chosen ? INK : SOFT, stroke: 'none', 'text-anchor': 'end' }));
+        // The gap from your tee: red when further back (+), green when forward (−).
+        el('text', { x: (px - 3).toFixed(1), y: ly.toFixed(1), 'font-size': t.chosen ? 9.5 : 8.5, 'font-weight': t.chosen ? 700 : 400, fill: t.chosen ? INK : SOFT, stroke: 'none', 'text-anchor': 'end' },
+          t.gap == null ? `${t.yards ?? t.label}` : [el('tspan', {}, `${t.yards} `),
+            el('tspan', { fill: t.gap > 0 ? '#c62f2f' : t.gap < 0 ? '#1f8a3f' : SOFT, 'font-weight': 700 }, `${t.gap > 0 ? '+' : t.gap < 0 ? '−' : '±'}${Math.abs(t.gap)}`)]));
     }
     svg.append(g); // on top of the map, under nothing
     lab.block([x0 - 2, y0 - 14, x0 + bw + 2, y0 + bh + 2]);
