@@ -539,7 +539,10 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     const features = dirty ? work.filter(f => f.p.length && f.p[0].length >= 4) : unpublishedEdits().features;
     const btn = finish ? finishBtn : saveBtn, label = btn.textContent;
     saveBtn.disabled = finishBtn.disabled = true; btn.textContent = 'Saving\u2026';
-    const msg = await saveCourseEdits(features, { publish: finish });
+    let msg;
+    try { msg = await saveCourseEdits(features, { publish: finish }); } catch (e) { msg = `Not saved: ${e.message || e}`; }
+    // Not kept anywhere: stay in the editor with the changes, buttons back on.
+    if (msg.startsWith('Not saved') || msg.startsWith('Couldn’t save')) { saveBtn.disabled = finishBtn.disabled = false; btn.textContent = label; toast(msg); return; }
     if (finish) { teardown(); toast(msg + ' Past rounds keep their lies.'); onClose(true); return; }
     dirty = false;
     saveBtn.disabled = finishBtn.disabled = false; btn.textContent = label;
