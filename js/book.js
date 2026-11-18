@@ -10,7 +10,7 @@
 import { h, course, teePosition, teeBoxFor, boxCentre, partOf } from './app.js';
 import { elevIndex, heightAt } from './elev.js';
 
-const M_PER_DEG = 111320, M_PER_YD = 0.9144, FT_PER_M = 3.28084, IN_PER_M = 39.3701;
+const M_PER_DEG = 111320, M_PER_YD = 0.9144, IN_PER_M = 39.3701;
 const SVGNS = 'http://www.w3.org/2000/svg';
 // One page, in SVG units: 4 1/4 x 7 inches at 100% (the USGA's size limit for
 // a yardage book, Rule 4.3 / Interpretation 4.3a(1)/1).
@@ -36,7 +36,6 @@ export const BOOK_OPTIONS = [
   ['layup', 'Centre numbers (100 · 150 · 200 · 250 · 300)', 'Hole page', true],
   ['hazards', 'Bunker & water numbers (start and end)', 'Hole page', true],
   ['contours', 'Contours & slope arrows', 'Hole page', true, true],
-  ['playsLike', 'Plays-like (height change)', 'Hole page', true, true],
   ['deltas', 'Up/down yards by each number', 'Hole page', true, true],
   ['north', 'North arrow & scale', 'Hole page', true],
   ['greenPage', 'Green page', 'Green page', true, true],
@@ -154,7 +153,7 @@ function labeller() {
 }
 const textW = (s, size) => String(s).length * size * 0.52;
 
-// ---------- heights (for plays-like and the green page) ----------
+// ---------- heights (for contours and the green page) ----------
 
 // Heights in metres at many points, once the height tiles are in (or null
 // where there are none). Waits for tiles up to ~6 s.
@@ -562,13 +561,6 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       txt(sx + len + 4, sy, '50 yd', { 'font-size': 8, fill: SOFT }));
   }
 
-  // Plays-like: the height change tee to green, as yards.
-  let plays = null;
-  if (prefs.playsLike && info && greenRing) {
-    const [a, b] = await heightsAt(elevId, info, [tee, centroid(greenRing)]);
-    if (a != null && b != null) plays = { ft: Math.round((b - a) * FT_PER_M), yd: Math.round((b - a) / M_PER_YD) };
-  }
-
   // Header and footer.
   svg.append(
     txt(16, 54, n, { 'font-size': 54, 'font-weight': 900, fill: INK }),
@@ -576,7 +568,6 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     txt(16 + textW(n, 54) + 10, 49, ch.hcp ? `HCP ${ch.hcp}` : '', { 'font-size': 12, fill: SOFT, 'letter-spacing': 1 }),
     txt(W - 16, 44, card ?? teeFront, { 'font-size': 36, 'font-weight': 900, fill: INK, 'text-anchor': 'end' }),
     txt(W - 16, 60, `${(teeSet?.name || teeName).toUpperCase()} TEES · ${teeFront} TO FRONT`, { 'font-size': 10.5, fill: SOFT, 'text-anchor': 'end', 'letter-spacing': 0.6 }),
-    plays ? txt(W - 16, 74, `PLAYS ${plays.yd >= 0 ? '+' : '−'}${Math.abs(plays.yd)} · ${Math.abs(plays.ft)} FT ${plays.ft >= 0 ? 'UP' : 'DOWN'}HILL`, { 'font-size': 10.5, 'font-weight': 700, fill: plays.ft >= 0 ? '#a0522d' : '#2f6f9a', 'text-anchor': 'end', 'letter-spacing': 0.6 }) : null,
     el('line', { x1: 14, x2: W - 14, y1: top - 4, y2: top - 4, stroke: '#d6dcd8', 'stroke-width': 0.8 }),
     el('line', { x1: 14, x2: W - 14, y1: bottom + 4, y2: bottom + 4, stroke: '#d6dcd8', 'stroke-width': 0.8 }),
     txt(16, bottom + 20, 'RED: YARDS TO THE FRONT OF THE GREEN', { 'font-size': 9, fill: RED, 'letter-spacing': 0.8, 'font-weight': 700 }),
@@ -808,7 +799,7 @@ export function openBook(n, opts) {
       // the hole without them rather than leave a blank screen.
       console.error('yardage book', e);
       note = 'Drawn without contours (they didn’t load on this device)';
-      try { pagesNow = await drawHole(hole, { ...prefs, contours: false, greenContours: false, slopes: false, deltas: false, playsLike: false }); } catch (e2) {
+      try { pagesNow = await drawHole(hole, { ...prefs, contours: false, greenContours: false, slopes: false, deltas: false }); } catch (e2) {
         console.error('yardage book', e2);
         if (my !== token) return;
         pages.replaceChildren(h('div', { class: 'bookerr' }, `Couldn’t draw hole ${hole}: ${e2.message || e2}`));
@@ -842,7 +833,7 @@ export function openBook(n, opts) {
   const allOn = h('button', { class: 'bookbtn', onclick: () => setAll(true) }, 'All on');
   const allOff = h('button', { class: 'bookbtn', onclick: () => setAll(false) }, 'Basic');
   const opts_ = h('div', { class: 'bookopts', hidden: true }, h('div', { class: 'bookrow' }, allOn, allOff, gridSel), ...optRows,
-    opts.tourney ? h('small', { class: 'muted' }, 'Tournament: no green page, contours or plays-like (Rules of Golf 4.3)') : null);
+    opts.tourney ? h('small', { class: 'muted' }, 'Tournament: no green page or contours (Rules of Golf 4.3)') : null);
   function syncInputs() {
     let i = 0;
     for (const [k, , , , needsElev] of BOOK_OPTIONS) { if (needsElev && !elevOk) continue; const inp = opts_.querySelectorAll('input')[i++]; if (inp) inp.checked = prefs[k]; }
@@ -874,7 +865,7 @@ export function openBook(n, opts) {
       await loadScript('vendor/jspdf/jspdf.umd.min.js');
       const css = await bookFontCss();
       const pagesFor = async k => {
-        try { return await drawHoleParts(k, prefs); } catch (e) { console.error('yardage book', e); return drawHoleParts(k, { ...prefs, contours: false, greenContours: false, slopes: false, deltas: false, playsLike: false }); }
+        try { return await drawHoleParts(k, prefs); } catch (e) { console.error('yardage book', e); return drawHoleParts(k, { ...prefs, contours: false, greenContours: false, slopes: false, deltas: false }); }
       };
       const parts = {};
       for (const k of holes) { status.textContent = `Drawing hole ${k}${all ? ` of ${holes.length}` : ''}…`; parts[k] = await pagesFor(k); }
