@@ -10,7 +10,7 @@ import { checkCoachingDot } from './coaching/index.js';
 import { VERSION } from './version.js';
 import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting, firstHoleOf, activeRound, pauseRound, resumeRound, holeCountOf } from './rounds.js';
 import { downloadRoundCsv } from './dashboard.js';
-import { openBookSetup } from './book.js';
+import { openBookSetup, openSavedBooks } from './book.js';
 import { holeFeatures, ownGreen } from './hole.js';
 
 const PREF_LABEL = { Pro: 'Tour Pro', Scratch: 'Scratch (0)' };
@@ -89,7 +89,7 @@ export function renderHome(view) {
           h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' }, '❓'),
           h('div', { style: 'display:flex;gap:4px;' }, search,
             h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, '⚙️')))),
-      go('🛰️', 'GPS Overview', '#1a4a8a', '#/scout'),
+      go('🛰️', 'GPS Overview / Yardage Books', '#1a4a8a', '#/scout'),
       go('⛳', 'New Round', '#007a52', '#/new'),
       go('📋', 'Round History', '#00402c', '#/history'),
       divider(),
@@ -179,7 +179,9 @@ export function renderNewRound(view, { scout = false } = {}) {
     if (!chosen) { err.textContent = 'Select a course.'; return; }
     err.textContent = '';
     openBookSetup({ teeName: tee.value, tourney: type.value === 'Tournament', holeFeatures, ownGreen });
-  } }, 'GEN BOOK');
+  } }, 'GENERATE YARDAGE BOOK');
+  // The yardage books saved from Preview and edit: open one to edit and print it again.
+  const savedBooksBtn = h('button', { class: 'holes9 savedbooks', onclick: () => openSavedBooks({ tourney: false, holeFeatures, ownGreen }) }, 'SAVED YARDAGE BOOKS');
 
   // Course: a blank box to type in; the courses matching what's typed are listed
   // below it to tap. Picking one fills in its tee boxes.
@@ -234,9 +236,9 @@ export function renderNewRound(view, { scout = false } = {}) {
   const courseBox = h('div', { style: 'width:100%;max-width:320px;position:relative;z-index:10;' }, search, results);
   if (scout) {
     view.replaceChildren(page('top', backBtn(),
-      h('div', { style: 'font-size:22px;font-weight:800;' }, 'GPS Overview'),
+      h('div', { style: 'font-size:20px;font-weight:800;padding:0 44px;line-height:1.2;' }, 'GPS Overview / Yardage Books'),
       h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:-4px;' }, `${COURSES.length} courses added`),
-      courseBox, ninesBox, tee, teeInfo, typeRow, typeNote, confirm, genBook, err));
+      courseBox, ninesBox, tee, teeInfo, typeRow, typeNote, confirm, genBook, savedBooksBtn, err));
     return;
   }
   view.replaceChildren(page('top', backBtn(),
@@ -461,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.9.0', ['GPS Overview is now GPS Overview / Yardage Books. GEN BOOK is GENERATE YARDAGE BOOK, and under it SAVED YARDAGE BOOKS lists the books you’ve saved: open one to edit it and print it again, rename or delete it', 'Yardage book: Preview and edit has Add point. Tap the hole page to put a point on it with its yards and up/down from the tee and to the front of the green (tap it again to take it off); Save keeps it in that yardage book only', 'Yardage book: Center numbers are now Yardage markers, with Edit yardage markers to type in your own distances to the front (25, 48, whatever you like) or go back to the default', 'Yardage book setup: the switches sit two to a row']],
   ['1.8.11', ['Yardage book: the tees box no longer has an empty white strip down its right side; the picture of the tees runs to the edge']],
   ['1.8.10', ['GEN BOOK setup: Satellite is a switch at the top of the hole page’s list, above Fairways (off is the flat book). Bunker & water numbers and the up/down yards by each number are always on, so their switches are gone']],
   ['1.8.9', ['GEN BOOK setup page looks like GPS Overview: Flat / Satellite and Zoomed view / Entire hole as tiles like Casual / Tournament, the tee box and format as the same dropdowns, on/off switches for what to show on the hole and green pages, then MAKE PDF or Preview']],

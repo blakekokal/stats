@@ -179,15 +179,31 @@ body.coach { background: #1e1e1e; }
 .cx .setupsub { font-size: 12px; color: #606060; margin-top: -4px; }
 .cx .setuplab { margin-top: 10px; font-size: 13px; color: #bdbdbd; }
 .cx .setuphint { width: 100%; max-width: 320px; font-size: 12px; color: #8a8a8a; line-height: 1.35; }
-.cx .setupcard { width: 100%; max-width: 320px; background: #282828; border-radius: 10px; padding: 4px 12px; text-align: left; }
-.cx .setupsw { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; font-size: 14px; color: #fff; cursor: pointer; border-bottom: 1px solid #333; }
-.cx .setupsw:last-child { border-bottom: 0; }
+.cx .setupcard { width: 100%; max-width: 320px; background: #282828; border-radius: 10px; padding: 4px 10px; text-align: left; display: grid; grid-template-columns: 1fr 1fr; column-gap: 12px; }
+.cx .setupsw { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 8px 0; font-size: 13px; line-height: 1.2; color: #fff; cursor: pointer; border-bottom: 1px solid #333; }
+.cx .setupsw:nth-last-child(-n+2):nth-child(odd), .cx .setupsw:last-child { border-bottom: 0; }
 .cx .setupsw input { position: absolute; opacity: 0; width: 1px; height: 1px; padding: 0; }
-.cx .setupsw i { flex: none; width: 44px; height: 26px; border-radius: 999px; background: #444; position: relative; transition: background .15s; }
-.cx .setupsw i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.cx .setupsw i { flex: none; width: 38px; height: 22px; border-radius: 999px; background: #444; position: relative; transition: background .15s; }
+.cx .setupsw i::after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: transform .15s; }
 .cx .setupsw input:checked + i { background: #2d7abc; }
-.cx .setupsw input:checked + i::after { transform: translateX(18px); }
+.cx .setupsw input:checked + i::after { transform: translateX(16px); }
 .cx .setupsw input:focus-visible + i { outline: 2px solid #fff; outline-offset: 2px; }
 .cx .setupplain { background: #333; }
 .cx.setupov .holes9.genbook { margin-top: 14px; }
 .cx .setupnote { display: block; font-size: 11px; color: #8a8a8a; }
+/* Yardage markers' editor and the saved books' list. */
+.cx .markersbox { width: 100%; max-width: 320px; display: grid; gap: 6px; }
+.cx .markersbox[hidden], .cx .markereditor[hidden] { display: none; }
+.cx .markersbox > button { width: 100%; max-width: none; }
+.cx .markereditor { background: #282828; border-radius: 10px; padding: 10px; display: grid; gap: 8px; justify-items: center; }
+.cx .markerchips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.cx .markerchip { width: auto; height: 32px; padding: 0 12px; background: #333; border: 1px solid #3d3d3d; border-radius: 999px; font-size: 14px; }
+.cx .markereditor .row { max-width: none; }
+.cx .markereditor input { background: #1e1e1e; }
+.cx .savedlist { width: 100%; max-width: 320px; display: grid; gap: 8px; margin-top: 8px; }
+.cx .savedbook { background: #282828; border-radius: 10px; padding: 10px; display: grid; gap: 8px; text-align: left; }
+.cx .savedopen { height: auto; max-width: none; background: transparent; text-align: left; display: grid; gap: 2px; white-space: normal; }
+.cx .savedopen b { font-size: 15px; } .cx .savedopen small { font-size: 12px; color: #9a9a9a; font-weight: 400; }
+.cx .savedbook .row { max-width: none; } .cx .savedbook .row button { height: 36px; }
+.cx .setupdanger { background: #3a2222; color: #f0a0a0; }
+.cx .holes9.savedbooks { background: #333; }
