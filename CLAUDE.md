@@ -75,6 +75,9 @@ of each green in the imagery); see `tools/sherrillpark2` as the model.
   `tools/elevation.py <course>` writes `data/elev/` (no book needed, the course
   file isn't touched). Every course has it; run it for each new course. The
   USGS server throws the odd 502: just run it again.
+- Outlines are soft, rounded shapes: run `tools/soften_shapes.py data/<course>.json`
+  as the last step of a build (pass the published `doc` too if the course has
+  live edits; it starts from them and sets `builtAt`).
 - Scorecard (tees, ratings, pars, handicaps) still comes from the club.
 - Check by eye on an overlay and in the app (GPS Overview), and commit the
   book PDF next to the scripts so the course can be rebuilt. The build takes
