@@ -548,7 +548,8 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   }
 
   const teeFrontYd = Math.round(toFront(f.fwd(tee)));
-  const teeMarks = []; // labels and the ruler round the tees (page units), for the tees box
+  const teeMarks = []; // the ruler round the tees (page units), for the tees box
+  const teeInfo = []; // the tees' labels, for the tees box: { y (page units), label, chosen }
   // Tee boxes: the chosen one marked, each with its yards to the front.
   const teeFront = Math.round(toFront(f.fwd(tee)));
   for (const { b, r } of cropped ? [] : teeBoxesL) {
@@ -561,7 +562,12 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     // than yours: add it to the black (from the tee) numbers when playing them.
     const gap = v - teeFrontYd;
     const label = chosen ? `${names.length ? names.join('/') : teeName} ${v}` : `${names.join('/') || 'Tee'} ${v} · ${gap > 0 ? '+' : gap < 0 ? '−' : '±'}${Math.abs(gap)}`;
-    const size = opts.teeView ? (chosen ? 13 : 12) : chosen ? 10 : 8.5; // bigger when seen in the tees box
+    if (opts.teeView) { // the tees box writes these beside its picture
+      const fp = P(f.fwd(boxFront(b, ch.line[1])));
+      teeInfo.push({ y: fp[1], label, chosen });
+      continue;
+    }
+    const size = chosen ? 10 : 8.5;
     const spot = lab.place([[c[0] + 9, c[1] + 3, 'start'], [c[0] - 9, c[1] + 3, 'end'], [c[0] + 9, c[1] + 12, 'start'], [c[0] - 9, c[1] + 12, 'end']], textW(label, size), size, bounds);
     if (spot) {
       labG.append(txt(spot[0], spot[1], label, { 'font-size': size, 'font-weight': chosen ? 700 : 400, fill: chosen ? INK : SOFT, 'text-anchor': spot[2] }));
@@ -589,34 +595,41 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   }
   if (!F.teeBox && !cropped) { const [x, y] = P(f.fwd(tee)); labG.append(el('circle', { cx: x, cy: y, r: 3, fill: INK })); }
 
-  // The tees, in a box in a top corner: the tee area exactly as it's drawn
+  // The tees, in a small box at the top left: the tee area exactly as it's drawn
   // when the hole is shown whole (the same page, drawn uncropped, seen through
   // a window), with each tee's yards to the front and its distance from yours.
   async function teeInset() {
     const full = await holePage(n, teeName, prefs, helpers, { ...opts, teeView: true });
     const tb = full.dataset.teebox?.split(' ').map(Number);
     if (!tb) return;
-    // Narrow and tall, like the tee boxes' row: the window fits the tees,
-    // their labels and the ruler, at the box's shape.
-    const bw = 112, bh = 176, pad = 10;
-    let [ax, ay, bx2, by2] = [tb[0] - pad, tb[1] - pad, tb[2] + pad, tb[3] + pad];
-    let vw = bx2 - ax, vh = by2 - ay;
-    if (vw / vh > bw / bh) vh = (vw * bh) / bw; else vw = (vh * bw) / bh;
-    ax = (ax + bx2) / 2 - vw / 2; ay = (ay + by2) / 2 - vh / 2;
-    ay = Math.max(top, Math.min(ay, bottom - vh)); // keep the window on the drawn map (same page size)
-    // The corner away from the green (under the north arrow on the right).
-    const gx = greenL ? P(centroid(greenL))[0] : W / 2;
-    const onRight = gx < W / 2;
-    const x0 = onRight ? right - bw - 4 : left + 4, y0 = onRight ? top + 38 : top + 4;
-    const win = el('svg', { x: x0, y: y0, width: bw, height: bh, viewBox: `${ax.toFixed(1)} ${ay.toFixed(1)} ${vw.toFixed(1)} ${vh.toFixed(1)}`, preserveAspectRatio: 'xMidYMid meet' });
+    // A narrow picture of just the tee markers (and the ruler, and a little
+    // in front of them), with each tee's name, yards to the front and
+    // distance from yours written beside it at a readable size.
+    const pad = 3, ahead = 10; // page units; "ahead" is towards the green (up)
+    const ax = tb[0] - pad, ay = tb[1] - pad - ahead, vw = tb[2] - tb[0] + 2 * pad, vh = tb[3] - tb[1] + 2 * pad + ahead;
+    const zoom = Math.min(1.1, 130 / vh, 40 / vw);
+    const pw = vw * zoom, ph = Math.max(40, vh * zoom);
+    const tees = JSON.parse(full.dataset.tees || '[]').sort((p1, p2) => p1.y - p2.y);
+    const labW = Math.max(30, ...tees.map(t => textW(t.label, t.chosen ? 9 : 8.5) + 2));
+    const bw = pw + labW + 10, bh = ph;
+    // Top left, like a tour book (its TEES tab just above it).
+    const x0 = left + 4, y0 = top + 16;
+    const win = el('svg', { x: x0, y: y0, width: pw, height: ph, viewBox: `${ax.toFixed(1)} ${ay.toFixed(1)} ${vw.toFixed(1)} ${(ph / zoom).toFixed(1)}`, preserveAspectRatio: 'xMidYMin meet' });
     win.append(...full.childNodes);
     const g = el('g', {});
     g.append(el('rect', { x: x0 - 1, y: y0 - 1, width: bw + 2, height: bh + 2, fill: '#fff', stroke: 'none' }), win,
       el('rect', { x: x0, y: y0, width: bw, height: bh, fill: 'none', stroke: '#6b746e', 'stroke-width': 1 }),
-      el('rect', { x: x0, y: y0, width: 30, height: 12, fill: '#6b746e' }),
-      txt(x0 + 15, y0 + 9, 'TEES', { 'font-size': 8, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle', 'letter-spacing': 0.6, stroke: 'none' }));
+      el('rect', { x: x0, y: y0 - 12, width: 30, height: 12, fill: '#6b746e' }),
+      txt(x0 + 15, y0 - 3, 'TEES', { 'font-size': 8, 'font-weight': 700, fill: '#fff', 'text-anchor': 'middle', 'letter-spacing': 0.6, stroke: 'none' }));
+    let lastY = -Infinity;
+    for (const t of tees) {
+      const ly = Math.max(y0 + (t.y - ay) * zoom + 3, lastY + 10, y0 + 9);
+      lastY = ly;
+      g.append(el('path', { d: `M${(x0 + pw - 2).toFixed(1)},${(y0 + (t.y - ay) * zoom).toFixed(1)}L${(x0 + pw + 4).toFixed(1)},${(ly - 3).toFixed(1)}`, stroke: '#9aa59e', 'stroke-width': 0.5, fill: 'none' }),
+        txt(x0 + pw + 6, ly, t.label, { 'font-size': t.chosen ? 9 : 8.5, 'font-weight': t.chosen ? 700 : 400, fill: t.chosen ? INK : SOFT, stroke: 'none' }));
+    }
     svg.append(g); // on top of the map, under nothing
-    lab.block([x0 - 2, y0 - 2, x0 + bw + 2, y0 + bh + 2]);
+    lab.block([x0 - 2, y0 - 14, x0 + bw + 2, y0 + bh + 2]);
   }
 
   // North arrow and a 50-yard scale.
@@ -652,6 +665,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   // Where the tee boxes are on this page (for the tees box of a cropped page).
   if (teeBoxesL.length) {
     const q = [...teeBoxesL.flatMap(t => t.r.map(P)), ...teeMarks.flatMap(m => [[m[0], m[1]], [m[2], m[3]]])];
+    svg.dataset.tees = JSON.stringify(teeInfo);
     svg.dataset.teebox = [Math.min(...q.map(p => p[0])), Math.min(...q.map(p => p[1])), Math.max(...q.map(p => p[0])), Math.max(...q.map(p => p[1]))].map(v => v.toFixed(1)).join(' ');
   }
   return svg;
