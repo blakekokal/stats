@@ -10,7 +10,7 @@ import { checkCoachingDot } from './coaching/index.js';
 import { VERSION } from './version.js';
 import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting, firstHoleOf, activeRound, pauseRound, resumeRound, holeCountOf } from './rounds.js';
 import { downloadRoundCsv } from './dashboard.js';
-import { openBook } from './book.js';
+import { openBookSetup } from './book.js';
 import { holeFeatures, ownGreen } from './hole.js';
 
 const PREF_LABEL = { Pro: 'Tour Pro', Scratch: 'Scratch (0)' };
@@ -177,9 +177,8 @@ export function renderNewRound(view, { scout = false } = {}) {
   // picked (it opens on hole 1; ‹ › go round the holes, Print does the lot).
   const genBook = h('button', { class: 'holes9 genbook', onclick: () => {
     if (!chosen) { err.textContent = 'Select a course.'; return; }
-    if (!tee.value) { err.textContent = 'Select a tee box.'; return; }
     err.textContent = '';
-    openBook(1, { teeName: tee.value, tourney: type.value === 'Tournament', holeFeatures, ownGreen });
+    openBookSetup({ teeName: tee.value, tourney: type.value === 'Tournament', holeFeatures, ownGreen });
   } }, 'GEN BOOK');
 
   // Course: a blank box to type in; the courses matching what's typed are listed
