@@ -369,7 +369,12 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   const { ch, line, tee, pin, greenRing } = F;
   const teeSet = course.tees.find(t => t.name === teeName) || course.tees[0];
   const card = teeSet?.yards[n - 1];
-  const up = bearingOf(tee, greenRing ? centroid(greenRing) : pin, frame(tee, 0));
+  // Turned so the tee shot goes straight up the page, as you see it standing on
+  // the tee: from the tee to the landing zone (the hole line's first bend at
+  // least 150 yd out); straight holes and par 3s, to the middle of the green.
+  const f0 = frame(tee, 0);
+  const land = line.slice(1, -1).find(p => Math.hypot(...f0.loc(p)) >= 150);
+  const up = bearingOf(tee, land || (greenRing ? centroid(greenRing) : pin), f0);
   const f = frame(tee, up);
   const toFront = frontFn(f, greenRing, pin);
   const L = line.map(f.fwd);
@@ -488,6 +493,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     return { perp, l: [w.p[0] + perp[0] * l, w.p[1] + perp[1] * l], r: [w.p[0] + perp[0] * r, w.p[1] + perp[1] * r], width: r - l };
   };
 
+  let insetRight = false;
   if (cropped) await teeInset(); // first, so the numbers keep out of its way
   // Numbers in pairs, tour-book style: a dot on the spot, the yards to the
   // front of the green above (red) and the yards from the tee below (black),
@@ -710,8 +716,15 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const tees = JSON.parse(full.dataset.tees || '[]').sort((p1, p2) => p1.y - p2.y);
     const labW = Math.max(18, ...tees.map(t => textW(t.label, t.chosen ? 9.5 : 8.5) + 2));
     const bw = labW + 6 + pw, bh = ph; // the picture runs to the right edge of the box
-    // Top left, like a tour book (its TEES tab just above it).
-    const x0 = left + 4, y0 = top + 16;
+    // Top left, like a tour book (its TEES tab just above it); top right when
+    // the green or fairway is under the top left (a hole turned up its tee shot
+    // can bend that way). The north arrow then goes top left.
+    const y0 = top + 16;
+    const under = x => [...(greenL || []), ...ownFair.flat()].map(P)
+      .filter(([u, v]) => u > x - 8 && u < x + bw + 8 && v > y0 - 20 && v < y0 + bh + 8).length;
+    const xL = left + 4, xR = right - 4 - bw;
+    insetRight = under(xR) < under(xL);
+    const x0 = insetRight ? xR : xL;
     // The numbers on the left, by the ruler; the tee markers' picture right of them.
     const px = x0 + labW + 6;
     const win = el('svg', { x: px, y: y0, width: pw, height: ph, viewBox: `${ax.toFixed(1)} ${ay.toFixed(1)} ${vw.toFixed(1)} ${(ph / zoom).toFixed(1)}`, preserveAspectRatio: 'xMidYMin meet' });
@@ -737,7 +750,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
 
   // North arrow and a 50-yard scale.
   if (prefs.north) {
-    const nx = right - 18, ny = top + 20, nv = f.rotV([0, 1]);
+    const nx = insetRight ? left + 18 : right - 18, ny = top + 20, nv = f.rotV([0, 1]);
     const tip = [nx + nv[0] * 11, ny - nv[1] * 11], tail = [nx - nv[0] * 9, ny + nv[1] * 9];
     labG.append(el('circle', { cx: nx, cy: ny, r: 14, fill: '#fff', stroke: '#c9d0cb', 'stroke-width': 0.8 }),
       el('path', { d: pathD([tail, tip]), stroke: INK, 'stroke-width': 1.2, 'marker-end': `url(#${id}-arr)` }),
