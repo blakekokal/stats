@@ -998,11 +998,12 @@ export function openSavedBooks(opts) {
       const pts = Object.values(b.points || {}).reduce((n, l) => n + l.length, 0);
       const when = b.updated ? new Date(b.updated).toLocaleDateString() : '';
       return h('div', { class: 'savedbook' },
-        h('button', { class: 'savedopen', onclick: () => {
-          if (!courseById(b.courseId)) { alert('That course isn’t in the app any more.'); return; }
-          close(); openBookSetup({ ...opts, book: openable(b) });
-        } }, h('b', {}, b.name || b.courseName), h('small', {}, `${b.courseName} · ${b.teeName} tees${pts ? ` · ${pts} point${pts > 1 ? 's' : ''}` : ''}${when ? ` · ${when}` : ''}`)),
+        h('div', { class: 'savedopen' }, h('b', {}, b.name || b.courseName), h('small', {}, `${b.courseName} · ${b.teeName} tees${pts ? ` · ${pts} point${pts > 1 ? 's' : ''}` : ''}${when ? ` · ${when}` : ''}`)),
         h('div', { class: 'row' },
+          h('button', { class: 'savededit', onclick: () => {
+            if (!courseById(b.courseId)) { alert('That course isn’t in the app any more.'); return; }
+            close(); openBookSetup({ ...opts, book: openable(b) });
+          } }, 'Edit'),
           h('button', { class: 'setupplain', onclick: () => {
             const name = prompt('Name this yardage book', b.name || '');
             if (name == null || !name.trim()) return;
