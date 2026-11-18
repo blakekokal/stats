@@ -656,7 +656,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const pw = vw * zoom, ph = Math.max(40, vh * zoom);
     const tees = JSON.parse(full.dataset.tees || '[]').sort((p1, p2) => p1.y - p2.y);
     const labW = Math.max(18, ...tees.map(t => textW(t.label, t.chosen ? 9.5 : 8.5) + 2));
-    const bw = pw + labW + 10, bh = ph;
+    const bw = labW + 6 + pw, bh = ph; // the picture runs to the right edge of the box
     // Top left, like a tour book (its TEES tab just above it).
     const x0 = left + 4, y0 = top + 16;
     // The numbers on the left, by the ruler; the tee markers' picture right of them.
