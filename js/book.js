@@ -614,7 +614,9 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const bw = pw + labW + 10, bh = ph;
     // Top left, like a tour book (its TEES tab just above it).
     const x0 = left + 4, y0 = top + 16;
-    const win = el('svg', { x: x0, y: y0, width: pw, height: ph, viewBox: `${ax.toFixed(1)} ${ay.toFixed(1)} ${vw.toFixed(1)} ${(ph / zoom).toFixed(1)}`, preserveAspectRatio: 'xMidYMin meet' });
+    // The numbers on the left, by the ruler; the tee markers' picture right of them.
+    const px = x0 + labW + 6;
+    const win = el('svg', { x: px, y: y0, width: pw, height: ph, viewBox: `${ax.toFixed(1)} ${ay.toFixed(1)} ${vw.toFixed(1)} ${(ph / zoom).toFixed(1)}`, preserveAspectRatio: 'xMidYMin meet' });
     win.append(...full.childNodes);
     const g = el('g', {});
     g.append(el('rect', { x: x0 - 1, y: y0 - 1, width: bw + 2, height: bh + 2, fill: '#fff', stroke: 'none' }), win,
@@ -625,8 +627,8 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     for (const t of tees) {
       const ly = Math.max(y0 + (t.y - ay) * zoom + 3, lastY + 10, y0 + 9);
       lastY = ly;
-      g.append(el('path', { d: `M${(x0 + pw - 2).toFixed(1)},${(y0 + (t.y - ay) * zoom).toFixed(1)}L${(x0 + pw + 4).toFixed(1)},${(ly - 3).toFixed(1)}`, stroke: '#9aa59e', 'stroke-width': 0.5, fill: 'none' }),
-        txt(x0 + pw + 6, ly, t.label, { 'font-size': t.chosen ? 9.5 : 8.5, 'font-weight': t.chosen ? 700 : 400, fill: t.chosen ? INK : SOFT, stroke: 'none' }));
+      g.append(el('path', { d: `M${(px + 2).toFixed(1)},${(y0 + (t.y - ay) * zoom).toFixed(1)}L${(px - 1).toFixed(1)},${(ly - 3).toFixed(1)}`, stroke: '#9aa59e', 'stroke-width': 0.5, fill: 'none' }),
+        txt(px - 3, ly, t.label, { 'font-size': t.chosen ? 9.5 : 8.5, 'font-weight': t.chosen ? 700 : 400, fill: t.chosen ? INK : SOFT, stroke: 'none', 'text-anchor': 'end' }));
     }
     svg.append(g); // on top of the map, under nothing
     lab.block([x0 - 2, y0 - 14, x0 + bw + 2, y0 + bh + 2]);
