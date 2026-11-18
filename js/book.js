@@ -956,11 +956,21 @@ const STYLES = [['book', 'Flat'], ['sat', 'Satellite']];
 const getStyle = () => { try { return localStorage.getItem('gs:bookStyle') === 'sat' ? 'sat' : 'book'; } catch { return 'book'; } };
 const setStyle = v => { try { localStorage.setItem('gs:bookStyle', v); } catch { /* not kept */ } };
 // Print layouts, double-sided letter first (and to start), then legal.
-const LAYOUTS = [['duplex-letter', 'Double-sided · letter'], ['duplex-legal', 'Double-sided · legal'], ['duplex-letter-2', 'Double-sided · letter, 2 big cards'],
-  ['letter', 'Fold · letter (cut once)'], ['legal', 'Fold · legal (cut once)'], ['single', 'Single pages']];
+const LAYOUTS = [['book-letter', 'Booklet · letter (one cut, staple, fold)'], ['book-legal', 'Booklet · legal (one cut, staple, fold)'],
+  ['duplex-letter', 'Cards · double-sided · letter'], ['duplex-legal', 'Cards · double-sided · legal'], ['duplex-letter-2', 'Cards · double-sided · letter, 2 big'],
+  ['letter', 'Fold each strip · letter (one-sided)'], ['legal', 'Fold each strip · legal (one-sided)'], ['single', 'Single pages']];
 // A new key, so everyone starts on double-sided letter.
-const getLayout = () => { let v = 'duplex-letter'; try { v = localStorage.getItem('gs:bookLayout5') || v; } catch { /* none */ } return LAYOUTS.some(([k]) => k === v) ? v : 'duplex-letter'; };
-const setLayout = v => { try { localStorage.setItem('gs:bookLayout5', v); } catch { /* not kept */ } };
+// How to put each layout together (the setup page and the PDF bar).
+export const layoutHelp = v => ({
+  'book-letter': 'Print at 100% on letter paper, two-sided, flip on short edge. Cut once down the middle, lay the strips flat in a stack in order (strip 1 on top, printing up), staple across the middle on the STAPLE · FOLD line, then fold the top half back on the staples.',
+  'book-legal': 'Print at 100% on legal paper (8½ × 14), two-sided, flip on short edge. Cut once down the middle, lay the strips flat in a stack in order (strip 1 on top, printing up), staple across the middle on the STAPLE · FOLD line, then fold the top half back on the staples.',
+  letter: 'Print at 100%, one side. Cut once down the middle, fold each strip on its FOLD line with the printing outside, stack them (1 on top) and staple along the folds.',
+  legal: 'Print at 100% on legal paper, one side. Cut once down the middle, fold each strip on its FOLD line with the printing outside, stack them (1 on top) and staple along the folds.',
+  single: 'One 4¼ × 7 page per sheet. Print at 100%.',
+}[v] || 'Print at 100%, two-sided, flip on short edge. Cut out each card on its CUT lines, stack them (1 on top) and staple along the top.');
+// (A new key again: everyone starts on the booklet.)
+const getLayout = () => { let v = 'book-letter'; try { v = localStorage.getItem('gs:bookLayout6') || v; } catch { /* none */ } return LAYOUTS.some(([k]) => k === v) ? v : 'book-letter'; };
+const setLayout = v => { try { localStorage.setItem('gs:bookLayout6', v); } catch { /* not kept */ } };
 
 // ---------- saved yardage books ----------
 
@@ -1273,8 +1283,9 @@ export function openBook(n, opts) {
       await loadScript('vendor/jspdf/jspdf.umd.min.js');
       const css = await bookFontCss();
       // Fold layouts: the pages are as tall as half the strip, as wide as it.
-      const MARGIN = 0.25, fold = layout === 'letter' || layout === 'legal';
-      const sheetH = layout === 'legal' || layout === 'duplex-legal' ? 14 : 11;
+      const booklet = layout.startsWith('book-');
+      const MARGIN = 0.25, fold = layout === 'letter' || layout === 'legal' || booklet;
+      const sheetH = layout === 'legal' || layout === 'duplex-legal' || layout === 'book-legal' ? 14 : 11;
       const pageWIn = 4.25 - 2 * MARGIN, pageHIn = sheetH / 2 - MARGIN;
       const pageH = fold ? Math.round((W * pageHIn) / pageWIn) : PAGE_H;
       const pagesFor = async k => {
@@ -1290,7 +1301,7 @@ export function openBook(n, opts) {
       let leaves;
       if (!all) leaves = [[parts[hole].green || blank(), parts[hole].hole]];
       else {
-        leaves = [[parts[holes[0]].green || blank(), coverPage(teeName, layout.startsWith('duplex') ? 'Printed two-sided: flip on short edge' : '', pageH)]];
+        leaves = [[parts[holes[0]].green || blank(), coverPage(teeName, layout.startsWith('duplex') || booklet ? 'Printed two-sided: flip on short edge' : '', pageH)]];
         holes.forEach((k, i) => leaves.push([i + 1 < holes.length ? parts[holes[i + 1]].green || blank() : notesPage(pageH), parts[k].hole]));
       }
       status.textContent = 'Making the PDF…';
@@ -1338,7 +1349,56 @@ export function openBook(n, opts) {
         mark(ctx, '✂ CUT', x + w / 2, y); mark(ctx, '✂ CUT', x + w / 2, y + hh);
         mark(ctx, 'CUT', x, y + hh / 2, true); mark(ctx, 'CUT', x + w, y + hh / 2, true);
       };
-      if (layout.startsWith('duplex')) {
+      if (booklet) {
+        // A stapled booklet, like a tour book: the strips (two to a sheet,
+        // printed two-sided, flip on short edge) are cut apart once, laid flat
+        // in a stack (strip 1 on top), stapled across the middle and folded
+        // there, top halves to the back. Each spread is the back of the leaf
+        // flipped up (above the staples) over the front of the next leaf.
+        // A strip's halves: its lower half (L) and upper half (U), each with
+        // an outside face (the side printed first) and an inside one.
+        const spreads = holes.map(k => [parts[k].green || blank(), parts[k].hole]);
+        const N = Math.max(1, Math.ceil((spreads.length + 1) / 2));
+        while (spreads.length < 2 * N - 1) spreads.push([notesPage(pageH), blank()]);
+        const Lout = [coverPage(teeName, 'Stack the strips, staple, fold', pageH)], Lin = [], Uout = [notesPage(pageH)], Uin = [];
+        spreads.forEach(([top, bottom], i) => {
+          const sp = i + 1; // spread 1 is just inside the cover
+          if (sp <= N) Lin[sp - 1] = top; else Uout[2 * N - sp] = top;
+          if (sp < N) Lout[sp] = bottom; else Uin[2 * N - 1 - sp] = bottom;
+        });
+        const sw = 8.5, sh = sheetH, half = (sw / 2) * DPI, pw = pageWIn * DPI, ph = pageHIn * DPI, px0 = (half - pw) / 2, fy = (sh / 2) * DPI;
+        const nSheets = Math.ceil(N / 2);
+        for (let i = 0; i < N; i += 2) {
+          status.textContent = `Making sheet ${i / 2 + 1} of ${nSheets}…`;
+          const cols = [i, i + 1].filter(c => c < N);
+          // Front: the outside faces (upper half on top).
+          await sheet(sw, sh, async ctx => {
+            for (const [j, c] of cols.entries()) {
+              const x = j * half + px0;
+              await drawSvg(ctx, Uout[c], x, fy - ph, pw, ph, css);
+              await drawSvg(ctx, Lout[c], x, fy, pw, ph, css);
+              // The staple line: dash-dot across the strip, with where the staples go.
+              ctx.strokeStyle = '#999'; ctx.lineWidth = 2; ctx.setLineDash([24, 8, 4, 8]);
+              ctx.beginPath(); ctx.moveTo(j * half + 0.04 * DPI, fy); ctx.lineTo((j + 1) * half - 0.04 * DPI, fy); ctx.stroke(); ctx.setLineDash([]);
+              ctx.strokeStyle = '#555'; ctx.lineWidth = 3;
+              for (const t of [0.25, 0.75]) { const sx = x + pw * t; ctx.beginPath(); ctx.moveTo(sx - 0.1 * DPI, fy); ctx.lineTo(sx + 0.1 * DPI, fy); ctx.stroke(); }
+              mark(ctx, 'STAPLE · FOLD', x + pw / 2, fy);
+              // Its place in the stack (1 on top), in the bottom margin.
+              mark(ctx, `STRIP ${c + 1} OF ${N}`, x + pw / 2, sh * DPI - 0.13 * DPI);
+            }
+            cutBox(ctx, [half], [], sw * DPI, sh * DPI);
+            mark(ctx, '✂ CUT', half, 0.35 * DPI, true); mark(ctx, '✂ CUT', half, sh * DPI - 0.35 * DPI, true);
+          });
+          // Back (flip on short edge: the same columns, the halves swapped top for bottom).
+          await sheet(sw, sh, async ctx => {
+            for (const [j, c] of cols.entries()) {
+              const x = j * half + px0;
+              await drawSvg(ctx, Lin[c], x, fy - ph, pw, ph, css);
+              await drawSvg(ctx, Uin[c], x, fy, pw, ph, css);
+            }
+          });
+        }
+      } else if (layout.startsWith('duplex')) {
         // Fronts (hole pages) then backs (greens) for each sheet. Printed
         // two-sided flipping on the short edge, a card's back sits in the
         // same column and the mirrored row, and reads the right way up when
@@ -1402,10 +1462,10 @@ export function openBook(n, opts) {
       const file = (() => { try { return new File([blob], name, { type: 'application/pdf' }); } catch { return null; } })();
       const canShare = file && navigator.canShare?.({ files: [file] });
       pdfBar.replaceChildren(...[
-        h('b', {}, `PDF ready · ${{ 'duplex-legal': 'double-sided, legal paper, 4 cards per sheet', 'duplex-letter': 'double-sided, letter paper, 4 cards per sheet', 'duplex-letter-2': 'double-sided, letter paper, 2 big cards per sheet', legal: 'fold, legal paper, 2 strips per sheet', letter: 'fold, letter paper, 2 strips per sheet', single: '4¼ × 7 pages' }[layout]}`),
+        h('b', {}, `PDF ready · ${{ 'book-letter': 'booklet, letter paper, two-sided', 'book-legal': 'booklet, legal paper, two-sided', 'duplex-legal': 'double-sided, legal paper, 4 cards per sheet', 'duplex-letter': 'double-sided, letter paper, 4 cards per sheet', 'duplex-letter-2': 'double-sided, letter paper, 2 big cards per sheet', legal: 'fold, legal paper, 2 strips per sheet', letter: 'fold, letter paper, 2 strips per sheet', single: '4¼ × 7 pages' }[layout]}`),
         canShare ? h('button', { class: 'bookbtn primary', onclick: () => navigator.share({ files: [file], title: name }).catch(() => {}) }, 'Share / Print') : null,
         h('a', { class: 'bookbtn', href: pdfUrl, target: '_blank', download: name }, 'Open PDF'),
-        h('small', {}, layout === 'single' ? 'Print at 100% (actual size, not “fit to page”).'
+        h('small', {}, booklet ? layoutHelp(layout) : layout === 'single' ? 'Print at 100% (actual size, not “fit to page”).'
           : layout.startsWith('duplex') ? `Print at 100% on ${layout === 'duplex-legal' ? 'legal (8½ × 14)' : 'letter (8½ × 11)'} paper (at a print shop, ask for ${layout === 'duplex-legal' ? 'legal 8½ × 14' : 'letter 8½ × 11'}, actual size), two-sided, flip on short edge. Cut along the dashed lines (trimming off the margin)${all ? ', stack them by the number at the foot of each (1 on top)' : ''} and staple or clip along the top.`
           : `Print at 100% on ${layout === 'legal' ? 'legal (8½ × 14)' : 'letter (8½ × 11)'} paper, one side. Cut once down the dashed line, fold each strip in half at the marks with the printing outside (${layout === 'legal' ? '4¼ × 7' : '4¼ × 5½'}), stack them${all ? ' by the number at the foot of each (1 on top)' : ''} with the folds at the top, and staple along the folds.`)].filter(Boolean));
       pdfBar.hidden = false;
@@ -1489,7 +1549,8 @@ export function openBookSetup(opts) {
       const yds = t.yards ? t.yards.slice(0, course.holes.length).reduce((x, y) => x + y, 0) : 0;
       return h('option', { value: t.name, selected: t.name === teeName }, `${t.name} tees${yds ? ` · ${yds} yds` : ''}`);
     }));
-  const formatSel = h('select', { class: 'bigsel', 'aria-label': 'Format', onchange: e => { layout = book.layout = e.target.value; keep(); } },
+  const formatHint = h('div', { class: 'setuphint' }, layoutHelp(layout));
+  const formatSel = h('select', { class: 'bigsel', 'aria-label': 'Format', onchange: e => { layout = book.layout = e.target.value; formatHint.textContent = layoutHelp(layout); keep(); } },
     LAYOUTS.map(([v, t]) => h('option', { value: v, selected: v === layout }, t)));
   const zoomTiles = tiles([['zoom', 'Zoomed view', 'Starts at the fairway'], ['whole', 'Entire hole', 'Tee to green']],
     () => (prefs.teeInset ? 'zoom' : 'whole'), v => { prefs.teeInset = v === 'zoom'; keep(); });
@@ -1546,7 +1607,7 @@ export function openBookSetup(opts) {
     h('div', { class: 'setupsub' }, book.id ? book.name : course.name),
     label('Tee box'), teeSel,
     label('Format'), formatSel,
-    h('div', { class: 'setuphint' }, 'Double-sided: print at 100%, two-sided, flip on short edge, then cut the cards apart and stack them.'),
+    formatHint,
     label('Hole overview page'), zoomTiles, switchesFor('Hole overview page', satRow), markersBox,
     elevOk ? label('Green overview page') : null, elevOk ? switchesFor('Green overview page') : null,
     opts.tourney ? h('div', { class: 'setuphint' }, 'Tournament: no green page or contours (Rules of Golf 4.3)') : null,
