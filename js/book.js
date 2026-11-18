@@ -34,7 +34,6 @@ export const BOOK_OPTIONS = [
   ['otherHoles', 'Neighboring holes', 'Hole overview page', true],
   ['teeInset', 'Zoomed view (starts at the fairway, tees in a box)', 'Hole overview page', true],
   ['allTees', 'Every tee box', 'Hole overview page', true],
-  ['centre', 'Center line', 'Hole overview page', true],
   ['layup', 'Yardage markers', 'Hole overview page', true],
   ['hazards', 'Bunker & water numbers (start and end)', 'Hole overview page', true],
   ['contours', 'Contours & slope arrows', 'Hole overview page', true, true],
@@ -493,14 +492,9 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     }
   }
 
-  // Centre line, tee to the front of the green (where every number is
-  // measured to), with a yellow dot there.
-  if (prefs.centre) {
-    const end = greenL ? frontPointFn(f, greenRing, pin)(L.at(-2)) : L.at(-1);
-    mapG.append(el('path', { d: pathD([...L.slice(0, -1), end].map(P)), fill: 'none', stroke: lines ? '#fff' : SOFT, 'stroke-width': 0.8, 'stroke-dasharray': '3 3' }));
-    for (const p of L.slice(1, -1)) { const [x, y] = P(p); mapG.append(el('circle', { cx: x, cy: y, r: 1.8, fill: '#fff', stroke: SOFT, 'stroke-width': 0.8 })); }
-    if (greenL) { const [x, y] = P(end); labG.append(el('circle', { cx: x, cy: y, r: 2.4, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.6 })); }
-  }
+  // The front of the green (where every number is measured to): a yellow dot.
+  // (No dotted centre line from the tee: the numbers say it all.)
+  if (greenL) { const [x, y] = P(frontPointFn(f, greenRing, pin)(L.at(-2))); labG.append(el('circle', { cx: x, cy: y, r: 2.4, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.6 })); }
   if (greenL) { const [x, y] = P(centroid(greenL)); lab.block([x - 6, y - 6, x + 6, y + 6]); }
 
   // Walk the hole's line in 1-yard steps: each step's point, direction and yards to the front.
