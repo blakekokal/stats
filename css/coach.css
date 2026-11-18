@@ -207,3 +207,11 @@ body.coach { background: #1e1e1e; }
 .cx .savedbook .row { max-width: none; } .cx .savedbook .row button { height: 36px; }
 .cx .setupdanger { background: #3a2222; color: #f0a0a0; }
 .cx .holes9.savedbooks { background: #333; }
+.cx .markerpar { width: 100%; display: grid; gap: 6px; padding: 4px 0 10px; border-bottom: 1px solid #333; }
+.cx .markerpar:last-child { border-bottom: 0; padding-bottom: 0; }
+.cx .markerhead { display: flex; align-items: center; justify-content: space-between; }
+.cx .markerhead b { font-size: 14px; } .cx .markerhead small { font-size: 12px; color: #8a8a8a; }
+.cx .markerhead .linkbtn { padding: 0; font-size: 12px; }
+.cx .markerpar .markerchips { justify-content: flex-start; }
+.cx .markernone { font-size: 13px; color: #8a8a8a; }
+.cx .markereditor { justify-items: stretch; }
