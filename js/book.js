@@ -764,6 +764,14 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   svg.append(el('rect', { width: W, height: H, fill: '#fff' }));
   const mapG = el('g', { 'clip-path': `url(#${id}-clip)` });
   svg.append(mapG);
+  // The satellite book: the green over the satellite picture (zoom 19), outlines only.
+  const sat = !!opts.satellite;
+  if (sat) {
+    const [l, t, r, b] = [left - 16, top, right + 16, bottom];
+    const url = await satelliteUnder((u, v) => f.back([(u - cx) / s, (cy - v) / s]), [l, t, r, b], 3, 19);
+    if (url) svg.insertBefore(el('image', { href: url, x: l, y: t, width: r - l, height: b - t, preserveAspectRatio: 'none' }), mapG);
+  }
+  const SAT_LINE = { water: '#5cc8ff', fairway: '#a6f08a', bunker: '#ffe7a8', tee: '#ffffff', green: '#ffffff' };
 
   // What's around the green, plainly drawn like a tour book's green page:
   // bunkers pale yellow with a dark edge, the green white with a heavy line.
@@ -771,6 +779,7 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   for (const x of course.features) {
     if (x.t === 'ob' || x === F.greenF) continue;
     if (x.t === 'fairway' && !prefs.fairway) continue;
+    if (x.t === 'trees' && sat) continue;
     if (x.t === 'bunker' && !prefs.bunkers) continue;
     if (x.t === 'water' && !prefs.water) continue;
     if (x.t === 'trees' && !prefs.trees) continue;
@@ -780,9 +789,9 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
     const style = { fairway: { fill: '#f1f8f1', stroke: '#a9c9ad', 'stroke-width': 0.7 }, bunker: { fill: '#efe6a2', stroke: '#2b2b2b', 'stroke-width': 1.2 },
       water: { fill: '#d6e9f5', stroke: '#2b2b2b', 'stroke-width': 1.2 }, trees: { fill: '#e2efdc', stroke: '#9dbf92', 'stroke-width': 0.6 },
       tee: { fill: '#a7aca9', stroke: '#6d7370', 'stroke-width': 0.6 }, green: { fill: '#f1f8f1', stroke: '#a9c9ad', 'stroke-width': 0.6 } }[x.t];
-    if (style && x.t !== 'bunker' && x.t !== 'water') mapG.append(el('path', { d: pathD(r.map(P), true), ...style }));
+    if (style && x.t !== 'bunker' && x.t !== 'water') mapG.append(el('path', { d: pathD(r.map(P), true), ...(sat ? { fill: 'none', stroke: SAT_LINE[x.t] || '#fff', 'stroke-width': 0.9 } : style) }));
   }
-  mapG.append(el('path', { d: gPath, fill: '#ffffff' }));
+  if (!sat) mapG.append(el('path', { d: gPath, fill: '#ffffff' }));
 
   // The yard grid over the whole map, lined up on the front of the green and
   // its middle.
@@ -791,10 +800,10 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
     let d = '';
     for (let y = frontY - Math.ceil((frontY - view[2]) / gridStep) * gridStep; y <= view[3]; y += gridStep) { const a = P([view[0], y]), b = P([view[1], y]); d += `M${a[0].toFixed(1)},${a[1].toFixed(1)}H${b[0].toFixed(1)}`; }
     for (let x = Math.ceil(view[0] / gridStep) * gridStep; x <= view[1]; x += gridStep) { if (Math.abs(x) < 0.01) continue; const a = P([x, view[2]]), b = P([x, view[3]]); d += `M${a[0].toFixed(1)},${a[1].toFixed(1)}V${b[1].toFixed(1)}`; }
-    mapG.append(el('path', { d, stroke: '#8d949a', 'stroke-width': 0.5, 'stroke-opacity': 0.7 }));
+    mapG.append(el('path', { d, stroke: sat ? '#fff' : '#8d949a', 'stroke-width': 0.5, 'stroke-opacity': sat ? 0.45 : 0.7 }));
   }
   // The line up the middle, through the front and the back of the green.
-  { const a = P([0, view[2]]), b = P([0, view[3]]); mapG.append(el('path', { d: `M${a[0].toFixed(1)},${a[1].toFixed(1)}V${b[1].toFixed(1)}`, stroke: '#3d4fb0', 'stroke-width': 0.7 })); }
+  { const a = P([0, view[2]]), b = P([0, view[3]]); mapG.append(el('path', { d: `M${a[0].toFixed(1)},${a[1].toFixed(1)}V${b[1].toFixed(1)}`, stroke: sat ? '#8fb8ff' : '#3d4fb0', 'stroke-width': 0.7 })); }
 
   // Heights, tour-book style: contour lines around the green (not on it, and
   // not over bunkers or water) and small downhill arrows on and around it.
@@ -819,19 +828,19 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
       if (prefs.greenContours) {
         let iv = 2;
         while ((R.hi - R.lo) / iv > 40) iv *= 2;
-        reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => pathD(sg.map(P))).join(''), ...RELIEF_LINE, 'stroke-width': 0.5, mask: `url(#${id}-lines)` }));
+        reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => pathD(sg.map(P))).join(''), ...RELIEF_LINE, ...(sat ? { stroke: '#fff', 'stroke-opacity': 0.75 } : {}), 'stroke-width': 0.5, mask: `url(#${id}-lines)` }));
         slopeNote = `Contours every ${iv}" around the green`;
       }
       if (prefs.slopes) {
-        reliefG.append(el('path', { d: slopeArrows(R, area, 3.6, P, (x, y) => !flat.some(o => inside([x, y], o.r)), 0.7), ...RELIEF_ARROW, 'stroke-width': 0.6 }));
+        reliefG.append(el('path', { d: slopeArrows(R, area, 3.6, P, (x, y) => !flat.some(o => inside([x, y], o.r)), 0.7), ...RELIEF_ARROW, ...(sat ? { stroke: '#fff' } : {}), 'stroke-width': 0.6 }));
         slopeNote += `${slopeNote ? ' · ' : ''}arrows point downhill, longer = steeper`;
       }
     }
   }
   mapG.append(reliefG);
   // Bunkers and water on top, plain.
-  for (const { x, r } of flat) mapG.append(el('path', { d: pathD(r.map(P), true), ...(x.t === 'bunker' ? { fill: '#efe6a2' } : { fill: '#d6e9f5' }), stroke: '#2b2b2b', 'stroke-width': 1.2 }));
-  mapG.append(el('path', { d: gPath, fill: 'none', stroke: '#111', 'stroke-width': 2 }));
+  for (const { x, r } of flat) mapG.append(el('path', { d: pathD(r.map(P), true), ...(sat ? { fill: 'none', stroke: SAT_LINE[x.t] } : { fill: x.t === 'bunker' ? '#efe6a2' : '#d6e9f5', stroke: '#2b2b2b' }), 'stroke-width': 1.2 }));
+  mapG.append(el('path', { d: gPath, fill: 'none', stroke: sat ? '#fff' : '#111', 'stroke-width': 2 }));
   // Front and back of the green, with the depth at the back.
   if (depth.length >= 2) {
     const [ax, ay] = P([0, depth[0]]), [bx, by] = P([0, depth.at(-1)]);
@@ -1005,7 +1014,7 @@ export function openBook(n, opts) {
   }
   async function drawHole(k, p) {
     const hp = await holePage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat' });
-    const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, opts) : null;
+    const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat' }) : null;
     return [...(gp ? [gp] : []), hp];
   }
   const elevOk = !opts.tourney;
@@ -1195,7 +1204,7 @@ export function openBook(n, opts) {
   async function drawHoleParts(k, p, pageH = PAGE_H) {
     const o = { ...opts, pageH };
     const hp = await holePage(k, teeName, p, helpers, { ...o, satellite: style === 'sat' });
-    const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, o) : null;
+    const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, { ...o, satellite: style === 'sat' }) : null;
     return { hole: hp, green: gp };
   }
   const coverPage = (tn, note = '', H = PAGE_H) => {
