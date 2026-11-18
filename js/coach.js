@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.9.0', ['GPS Overview is now GPS Overview / Yardage Books. GEN BOOK is GENERATE YARDAGE BOOK, and under it SAVED YARDAGE BOOKS lists the books you’ve saved: open one to edit it and print it again, rename or delete it', 'Yardage book: Preview and edit has Add point. Tap the hole page to put a point on it with its yards and up/down from the tee and to the front of the green (tap it again to take it off); Save keeps it in that yardage book only', 'Yardage book: Center numbers are now Yardage markers, with Edit yardage markers to type in your own distances to the front (25, 48, whatever you like) or go back to the default', 'Yardage book setup: the switches sit two to a row']],
   ['1.8.11', ['Yardage book: the tees box no longer has an empty white strip down its right side; the picture of the tees runs to the edge']],
   ['1.8.10', ['GEN BOOK setup: Satellite is a switch at the top of the hole page’s list, above Fairways (off is the flat book). Bunker & water numbers and the up/down yards by each number are always on, so their switches are gone']],
   ['1.8.9', ['GEN BOOK setup page looks like GPS Overview: Flat / Satellite and Zoomed view / Entire hole as tiles like Casual / Tournament, the tee box and format as the same dropdowns, on/off switches for what to show on the hole and green pages, then MAKE PDF or Preview']],
