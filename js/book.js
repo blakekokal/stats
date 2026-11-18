@@ -1266,38 +1266,38 @@ export function openBook(n, opts) {
 }
 
 // GEN BOOK's first page: pick everything, then preview the book or make the PDF.
+// Built from the same parts as GPS Overview (.cx: tiles like Casual /
+// Tournament, dropdowns like the tee box, full-width buttons).
 // opts: as openBook's (teeName is the one to start on).
 export function openBookSetup(opts) {
   const prefs = loadPrefs();
   let style = getStyle(), layout = getLayout(), teeName = opts.teeName || course.tees[0]?.name;
-  const radios = (name, list, get, set) => h('div', { class: 'setupchoices' }, list.map(([v, label, note]) => {
-    const input = h('input', { type: 'radio', name, value: v, onchange: () => set(v) });
-    input.checked = get() === v;
-    return h('label', { class: 'bookopt' }, input, h('span', {}, label, note ? h('small', { class: 'muted' }, ` ${note}`) : null));
-  }));
-  const tees = radios('setuptee', course.tees.map(t => {
-    const yds = t.yards ? t.yards.slice(0, course.holes.length).reduce((a, b) => a + b, 0) : 0;
-    return [t.name, `${t.name} tees`, yds ? `· ${yds} yds` : ''];
-  }), () => teeName, v => { teeName = v; });
-  const styles = radios('setupstyle', STYLES.map(([v, t]) => [v, t, v === 'sat' ? '· the satellite picture with the outlines and numbers' : '· drawn like a tour book']), () => style, v => { style = v; setStyle(v); });
-  const formats = radios('setupformat', LAYOUTS, () => layout, v => { layout = v; setLayout(v); });
+  // Two tiles, one picked (like Casual / Tournament).
+  const tiles = (list, get, set) => {
+    const row = h('div', { class: 'roundtypes' });
+    const sync = () => row.querySelectorAll('button').forEach(b => { const on = b.dataset.v === get(); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
+    row.append(...list.map(([v, text, sub]) => h('button', { 'data-v': v, onclick: () => { set(v); sync(); } }, h('b', {}, text), h('small', {}, sub))));
+    sync();
+    return row;
+  };
+  const label = text => h('div', { class: 'ninesq setuplab' }, text);
+  const styleTiles = tiles([['book', 'Flat', 'Drawn like a tour book'], ['sat', 'Satellite', 'Outlines on the picture']], () => style, v => { style = v; setStyle(v); });
+  const teeSel = h('select', { class: 'bigsel', 'aria-label': 'Tee box', onchange: e => { teeName = e.target.value; } },
+    course.tees.map(t => {
+      const yds = t.yards ? t.yards.slice(0, course.holes.length).reduce((x, y) => x + y, 0) : 0;
+      return h('option', { value: t.name, selected: t.name === teeName }, `${t.name} tees${yds ? ` · ${yds} yds` : ''}`);
+    }));
+  const formatSel = h('select', { class: 'bigsel', 'aria-label': 'Format', onchange: e => { layout = e.target.value; setLayout(layout); } },
+    LAYOUTS.map(([v, t]) => h('option', { value: v, selected: v === layout }, t)));
+  const zoomTiles = tiles([['zoom', 'Zoomed view', 'Starts at the fairway'], ['whole', 'Entire hole', 'Tee to green']],
+    () => (prefs.teeInset ? 'zoom' : 'whole'), v => { prefs.teeInset = v === 'zoom'; savePrefs(prefs); });
   const elevOk = !opts.tourney;
   const inputs = {};
-  const optRows = [];
-  let group = '';
-  // Zoomed view (from the fairway, with the tees in a box) or the entire hole.
-  const zoom = radios('setupzoom', [['zoom', 'Zoomed view', '· starts at the fairway, tees in a box (par 4s and 5s)'], ['whole', 'Entire hole', '· tee to green']],
-    () => (prefs.teeInset ? 'zoom' : 'whole'), v => { prefs.teeInset = v === 'zoom'; savePrefs(prefs); });
-  for (const [k, label, grp, , needsElev] of BOOK_OPTIONS) {
-    if ((needsElev && !elevOk) || HIDDEN.has(k)) continue;
-    if (grp !== group) {
-      group = grp; optRows.push(h('div', { class: 'bookgroup' }, grp));
-      if (grp === 'Hole overview page') optRows.push(h('div', { class: 'setupwide' }, zoom));
-    }
+  const switchesFor = grp => h('div', { class: 'setupcard' }, BOOK_OPTIONS.filter(([k, , g, , needsElev]) => g === grp && !HIDDEN.has(k) && (elevOk || !needsElev)).map(([k, text]) => {
     const input = inputs[k] = h('input', { type: 'checkbox', onchange: e => { prefs[k] = e.target.checked; savePrefs(prefs); } });
     input.checked = prefs[k];
-    optRows.push(h('label', { class: 'bookopt' }, input, h('span', {}, label)));
-  }
+    return h('label', { class: 'setupsw' }, h('span', {}, text), input, h('i', {}));
+  }));
   const setAll = v => {
     for (const [k] of BOOK_OPTIONS) if (!HIDDEN.has(k)) prefs[k] = v;
     if (!v) prefs.fairway = prefs.bunkers = prefs.water = true;
@@ -1306,21 +1306,21 @@ export function openBookSetup(opts) {
   };
   const close = () => { ov.remove(); document.body.classList.remove('bookopen'); };
   const go = autoPdf => { ov.remove(); openBook(1, { ...opts, teeName, autoPdf }); };
-  const section = (title, ...kids) => h('section', { class: 'setupsec' }, h('div', { class: 'bookgroup' }, title), ...kids);
-  const ov = h('div', { class: 'bookov setupov' },
-    h('div', { class: 'booktop' },
-      h('button', { class: 'bookbtn', 'aria-label': 'Close', onclick: close }, '✕'),
-      h('b', {}, 'Yardage book'), h('small', { class: 'muted' }, course.name)),
-    h('div', { class: 'booksetup' },
-      section('Style', styles),
-      section('Tee box', tees),
-      section('Format', formats, h('small', { class: 'muted' }, 'Double-sided: print at 100%, two-sided, flip on short edge, then cut the cards apart and stack them.')),
-      section('Show', h('div', { class: 'bookrow' }, h('button', { class: 'bookbtn', onclick: () => setAll(true) }, 'All on'), h('button', { class: 'bookbtn', onclick: () => setAll(false) }, 'Basic')),
-        h('div', { class: 'setupopts' }, ...optRows),
-        opts.tourney ? h('small', { class: 'muted' }, 'Tournament: no green page or contours (Rules of Golf 4.3)') : null),
-      h('div', { class: 'setupgo' },
-        h('button', { class: 'bookbtn', onclick: () => go(false) }, 'Preview'),
-        h('button', { class: 'bookbtn primary', onclick: () => go(true) }, 'Make PDF'))));
+  const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: close });
+  back.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
+  const ov = h('div', { class: 'cx top setupov' }, back,
+    h('div', { style: 'font-size:22px;font-weight:800;' }, 'Yardage Book'),
+    h('div', { class: 'setupsub' }, course.name),
+    label('Style'), styleTiles,
+    label('Tee box'), teeSel,
+    label('Format'), formatSel,
+    h('div', { class: 'setuphint' }, 'Double-sided: print at 100%, two-sided, flip on short edge, then cut the cards apart and stack them.'),
+    label('Hole overview page'), zoomTiles, switchesFor('Hole overview page'),
+    elevOk ? label('Green overview page') : null, elevOk ? switchesFor('Green overview page') : null,
+    opts.tourney ? h('div', { class: 'setuphint' }, 'Tournament: no green page or contours (Rules of Golf 4.3)') : null,
+    h('div', { class: 'row' }, h('button', { class: 'setupplain', onclick: () => setAll(true) }, 'All on'), h('button', { class: 'setupplain', onclick: () => setAll(false) }, 'Basic')),
+    h('button', { class: 'holes9 genbook', onclick: () => go(true) }, 'MAKE PDF'),
+    h('button', { class: 'setupplain', onclick: () => go(false) }, 'Preview'));
   document.body.append(ov);
   document.body.classList.add('bookopen');
   return ov;

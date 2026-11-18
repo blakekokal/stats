@@ -642,25 +642,3 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .holeview .bookgreen .booknote { top: auto; bottom: calc(76px + env(safe-area-inset-bottom)); }
 .holeview.bookmode .fab.cleanview { bottom: calc(70px + env(safe-area-inset-bottom)); }
 .holeview.bookmode .sheet.viewbox { bottom: calc(70px + env(safe-area-inset-bottom)); }
-/* GEN BOOK's setup page: style, tee box, format and what to show, then Preview / Make PDF. */
-.booksetup { flex: 1; overflow: auto; padding: 4px 14px calc(24px + env(safe-area-inset-bottom)); display: grid; gap: 6px; align-content: start; max-width: 640px; width: 100%; margin: 0 auto; box-sizing: border-box; }
-.setupsec { background: #fff; border: 1px solid #d6dcd8; border-radius: 12px; padding: 4px 12px 10px; display: grid; gap: 2px; }
-.setupsec > small { margin-top: 4px; }
-.setupchoices { display: grid; gap: 0; }
-.setupchoices .bookopt small { font-size: 12px; }
-.setupopts { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 14px; }
-.setupsec .bookrow { display: flex; gap: 6px; margin: 4px 0; }
-.setupgo { display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0; }
-.setupgo .bookbtn { height: 44px; padding: 0 20px; font-size: 16px; }
-/* The setup page in the app's own colours (the book itself stays on white paper). */
-.bookov.setupov { background: var(--bg); color: var(--text); }
-.setupov .booktop { background: var(--surface); border-bottom-color: var(--line); }
-.setupov .bookbtn { background: var(--surface2); color: var(--text); border-color: var(--line); }
-.setupov .bookbtn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.setupov .setupsec { background: var(--surface); border-color: var(--line); }
-.setupov .bookgroup { color: var(--muted); }
-.setupov .muted { color: var(--muted); }
-.setupov .bookopt input { accent-color: var(--accent); color-scheme: dark; }
-.setupov .setupopts > .bookgroup { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--line); }
-.setupov .setupopts > .bookgroup:first-child { margin-top: 4px; padding-top: 0; border-top: 0; }
-.setupwide { grid-column: 1 / -1; margin-bottom: 4px; }
