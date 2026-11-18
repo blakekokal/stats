@@ -106,6 +106,9 @@ Fields Ranch East and West (two courses: holes told apart by OSM course boundary
 Cedar Crest, Stevens Park, Tierra Verde, Riverside (#13 and #18 share a double
 green: `pinAtLineEnd` in the config).
 
+Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, every shape
+traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).
+
 Public, complete:
 - Tenison Park (Dallas; two courses, East and Glen, like Fields Ranch)
 - Maridoe (Carrollton): GolfPass has the pre-renovation card (pars and yards fit

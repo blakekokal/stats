@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.12.0', ['New course: Prairie Lakes Golf Course (Grand Prairie), all three nines (Red, White and Blue): play any nine, or any two as 18. Traced from the satellite picture (greens, fairways, ponds, bunkers, trees), routed from the club\u2019s course map, with out-of-bounds line and elevation (contours and plays-like yardages). Each hole has one tee box (the back one); the shorter tees use the card yardages']],
   ['1.11.4', ['Yardage book: Add point is now Edit. In Edit, tap the hole page to add a point, or tap any point to delete it, including the book’s own (yardage markers, bunker and green numbers). Deleted book points stay gone in that yardage book; Bring back under the page restores them. Tap Done to finish']],
   ['1.11.3', ['Yardage book: written in your device’s own system font, and every outline (greens, fairways, bunkers, water, trees) and contour is drawn as a smooth, rounded curve instead of short straight pieces. The PDF is printed at 300 dpi (was 200), so lines stay sharp on paper']],
   ['1.11.2', ['Yardage book: each hole page is turned so your tee shot goes straight up the page, as you see it from the tee (to the landing zone, the hole line’s first bend), not tee-to-green; on a dogleg the rest of the hole bends off to the side. The TEES box moves to the top right (and the north arrow to the top left) when the green or fairway would be under it']],
