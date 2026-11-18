@@ -403,7 +403,8 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   if (prefs.trees) for (const o of feats.filter(o => o.x.t === 'trees')) draw(o, { fill: '#cfe5c4', stroke: '#7fae70', 'stroke-width': 0.6, 'fill-opacity': 0.9 });
   for (const o of feats.filter(o => o.x.t === 'tee' && (own(o) || others))) {
     if (own(o) && !prefs.allTees && o.x !== F.teeBox) continue;
-    draw(o, { fill: o.x === F.teeBox ? '#9fd18b' : '#e4f3dc', stroke: '#5f9a50', 'stroke-width': 0.9, ...faint(o) });
+    // Tee boxes in dark grey (yours darkest).
+    draw(o, { fill: o.x === F.teeBox ? '#3f4442' : '#6d7370', stroke: '#2b2f2d', 'stroke-width': 0.9, ...faint(o) });
   }
   if (prefs.bunkers) for (const o of feats.filter(o => o.x.t === 'bunker')) draw(o, { fill: `url(#${id}-sand)`, stroke: '#b8954e', 'stroke-width': 0.9 });
   for (const o of feats.filter(o => o.x.t === 'green' && (own(o) || others))) draw(o, { fill: own(o) ? '#a6dc94' : '#cdeac2', stroke: '#3f8a3a', 'stroke-width': own(o) ? 1.3 : 0.8, ...faint(o) });
@@ -733,7 +734,7 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
     if (x.t === 'bunker' || x.t === 'water') flat.push({ x, r });
     const style = { fairway: { fill: '#f1f8f1', stroke: '#a9c9ad', 'stroke-width': 0.7 }, bunker: { fill: '#efe6a2', stroke: '#2b2b2b', 'stroke-width': 1.2 },
       water: { fill: '#d6e9f5', stroke: '#2b2b2b', 'stroke-width': 1.2 }, trees: { fill: '#e2efdc', stroke: '#9dbf92', 'stroke-width': 0.6 },
-      tee: { fill: '#f1f8f1', stroke: '#a9c9ad', 'stroke-width': 0.6 }, green: { fill: '#f1f8f1', stroke: '#a9c9ad', 'stroke-width': 0.6 } }[x.t];
+      tee: { fill: '#6d7370', stroke: '#2b2f2d', 'stroke-width': 0.6 }, green: { fill: '#f1f8f1', stroke: '#a9c9ad', 'stroke-width': 0.6 } }[x.t];
     if (style && x.t !== 'bunker' && x.t !== 'water') mapG.append(el('path', { d: pathD(r.map(P), true), ...style }));
   }
   mapG.append(el('path', { d: gPath, fill: '#ffffff' }));
