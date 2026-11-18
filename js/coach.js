@@ -462,6 +462,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.6.8', ['Yardage book: the hole is drawn across about 90% of the page’s width, the key text at the foot of the hole and green pages is gone (the maps are bigger; the cover still explains the colours), and each strip of the printed flip book has a number at its foot so you know the order to stack them in (1, the cover, on top)']],
   ['1.6.7', ['Yardage book: Print now makes a PDF on your phone, then Share / Print or Open PDF. Pick the layout beside the print buttons: Flip book · legal (two strips per 8½ × 14 sheet: cut down the middle, fold each strip in half with the printing outside, stack them with the folds at the top, and each hole’s green sits above its hole page, like a tour book), Flip book · letter (the same at 79%), or Single pages (4¼ × 7). Print at 100%']],
   ['1.6.6', ['Yardage book: the plays-like line (PLAYS +N · N FT UPHILL) is gone from the top of each hole page, and from Show']],
   ['1.6.5', ['Yardage book: only the hole is drawn, like the live view’s spotlight. Contours, arrows, trees and other holes stop about 46 yards either side of the line of play and fade out, which saves ink (Show › Only this hole turns it off)', 'Yardage book: the downhill arrows are steadier. Each one is checked against the slope over a short and a longer distance, and left out where they disagree, so none point against the way the ground falls']],

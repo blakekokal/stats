@@ -328,13 +328,13 @@ function frontPointFn(f, greenRing, pin) {
 // fairways, green and tee boxes, fading out at the edge. A mask: white strokes
 // along the line and round the shapes, softened. Labels sit outside it.
 const LINE_YD = 46, SHAPE_YD = 23;
-function onlyHole(svg, mapG, id, P, s, line, shapes) {
+function onlyHole(svg, mapG, id, P, s, line, shapes, lineYd = LINE_YD, shapeYd = SHAPE_YD) {
   const mid = `${id}-only`;
   const soft = el('filter', { id: `${mid}-soft`, filterUnits: 'userSpaceOnUse', x: 0, y: 0, width: W, height: H }, el('feGaussianBlur', { stdDeviation: (5 * s).toFixed(1) }));
   const mask = el('mask', { id: mid, maskUnits: 'userSpaceOnUse', x: 0, y: 0, width: W, height: H },
     el('g', { filter: `url(#${mid}-soft)`, fill: '#fff', stroke: '#fff', 'stroke-linecap': 'round', 'stroke-linejoin': 'round' },
-      el('path', { d: pathD(line.map(P)), fill: 'none', 'stroke-width': (2 * LINE_YD * s).toFixed(1) }),
-      ...shapes.map(r => el('path', { d: pathD(r.map(P), true), 'stroke-width': (2 * SHAPE_YD * s).toFixed(1) }))));
+      el('path', { d: pathD(line.map(P)), fill: 'none', 'stroke-width': (2 * lineYd * s).toFixed(1) }),
+      ...shapes.map(r => el('path', { d: pathD(r.map(P), true), 'stroke-width': (2 * shapeYd * s).toFixed(1) }))));
   svg.append(el('defs', {}, soft, mask));
   const g = el('g', { mask: `url(#${mid})` });
   g.append(...mapG.childNodes);
@@ -361,7 +361,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   let [minX, maxX] = [Math.min(...keep.map(p => p[0])), Math.max(...keep.map(p => p[0]))];
   let [minY, maxY] = [Math.min(...keep.map(p => p[1])), Math.max(...keep.map(p => p[1]))];
   minX = Math.min(minX - 32, -45); maxX = Math.max(maxX + 32, 45); minY -= 14; maxY += 18;
-  const top = 86, bottom = H - 72, left = 14, right = W - 14;
+  const top = 86, bottom = H - 28, left = 14, right = W - 14;
   const s = Math.min((right - left) / (maxX - minX), (bottom - top) / (maxY - minY), 4.2, MAX_UNITS_PER_YD);
   const cx = (left + right) / 2 - ((minX + maxX) / 2) * s, cy = (top + bottom) / 2 + ((minY + maxY) / 2) * s;
   const P = ([x, y]) => [cx + x * s, cy - y * s];
@@ -570,14 +570,13 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     txt(W - 16, 60, `${(teeSet?.name || teeName).toUpperCase()} TEES · ${teeFront} TO FRONT`, { 'font-size': 10.5, fill: SOFT, 'text-anchor': 'end', 'letter-spacing': 0.6 }),
     el('line', { x1: 14, x2: W - 14, y1: top - 4, y2: top - 4, stroke: '#d6dcd8', 'stroke-width': 0.8 }),
     el('line', { x1: 14, x2: W - 14, y1: bottom + 4, y2: bottom + 4, stroke: '#d6dcd8', 'stroke-width': 0.8 }),
-    txt(16, bottom + 20, 'RED: YARDS TO THE FRONT OF THE GREEN', { 'font-size': 9, fill: RED, 'letter-spacing': 0.8, 'font-weight': 700 }),
-    txt(16, bottom + 32, `Black: yards from the tee${prefs.deltas && info ? ' · Blue: yards up (+) / down (−), to the green above, from the tee below' : ''}`, { 'font-size': 9, fill: SOFT }),
-    reliefNote ? txt(16, bottom + 44, reliefNote, { 'font-size': 9, fill: SOFT }) : null,
     txt(16, H - 12, course.name.toUpperCase(), { 'font-size': 9, fill: '#9aa59e', 'letter-spacing': 1 }),
     txt(W - 16, H - 12, `HOLE ${n} OF ${course.holes.length}`, { 'font-size': 9, fill: '#9aa59e', 'text-anchor': 'end', 'letter-spacing': 1 }));
   if (prefs.onlyHole) {
     const tail = greenL ? centroid(greenL) : L.at(-1);
-    onlyHole(svg, mapG, id, P, s, [...L.slice(0, -1), tail], [...ownFair, ...(greenL ? [greenL] : []), ...teeBoxesL.map(t => t.r)]);
+    // The band takes up about 90% of the page's width (never narrower than LINE_YD each side).
+    const band = Math.max(LINE_YD, (0.45 * (right - left)) / s);
+    onlyHole(svg, mapG, id, P, s, [...L.slice(0, -1), tail], [...ownFair, ...(greenL ? [greenL] : []), ...teeBoxesL.map(t => t.r)], band, Math.max(SHAPE_YD, band / 2));
   }
   return svg;
 }
@@ -604,7 +603,7 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   const widthYd = width.length >= 2 ? Math.round(width.at(-1) - width[0]) : Math.round(maxX - minX);
   const frontY = depth.length ? depth[0] : minY;
 
-  const top = 86, bottom = prefs.notes ? 520 : H - 70, left = 18, right = W - 18;
+  const top = 86, bottom = prefs.notes ? 552 : H - 28, left = 18, right = W - 18;
   // Zoomed in on the green as far as the USGA allows (3/8 inch to 5 yards),
   // or until it fills the map; any room left over shows the approach below it.
   const pad = 5;
@@ -727,14 +726,11 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
     txt(W - 16, 52, `WIDTH ${widthYd} YDS`, { 'font-size': 15, 'font-weight': 700, fill: INK, 'text-anchor': 'end', 'letter-spacing': 0.6 }),
     relief != null ? txt(W - 16, 68, `${(relief / 12).toFixed(1)} FT FROM HIGH TO LOW`, { 'font-size': 10, fill: SOFT, 'text-anchor': 'end', 'letter-spacing': 0.6 }) : null,
     el('line', { x1: 14, x2: W - 14, y1: top - 4, y2: top - 4, stroke: '#d6dcd8', 'stroke-width': 0.8 }),
-    txt(16, bottom + 18, `${prefs.grid ? `${prefs.gridYd}-YD GRID · ` : ''}NUMBERS DOWN THE LEFT ARE YARDS FROM THE FRONT`, { 'font-size': 8.5, fill: SOFT, 'letter-spacing': 0.6 }),
-    txt(16, bottom + 42, `USGA Rule 4.3: green at 3/8" to 5 yd or smaller, page 4¼ × 7" when printed at 100%`, { 'font-size': 8, fill: SOFT }),
-    slopeNote ? txt(16, bottom + 30, `${slopeNote} · USGS lidar`, { 'font-size': 8.5, fill: SOFT }) : null,
     txt(16, H - 12, course.name.toUpperCase(), { 'font-size': 9, fill: '#9aa59e', 'letter-spacing': 1 }),
     txt(W - 16, H - 12, `HOLE ${n} · GREEN`, { 'font-size': 9, fill: '#9aa59e', 'text-anchor': 'end', 'letter-spacing': 1 }));
   if (prefs.notes) {
-    svg.append(txt(16, bottom + 64, 'NOTES', { 'font-size': 10, 'font-weight': 700, fill: INK, 'letter-spacing': 1.2 }));
-    for (let y = bottom + 84; y < H - 28; y += 22) svg.append(el('line', { x1: 16, x2: W - 16, y1: y, y2: y, stroke: '#d6dcd8', 'stroke-width': 0.8 }));
+    svg.append(txt(16, bottom + 20, 'NOTES', { 'font-size': 10, 'font-weight': 700, fill: INK, 'letter-spacing': 1.2 }));
+    for (let y = bottom + 42; y < H - 24; y += 22) svg.append(el('line', { x1: 16, x2: W - 16, y1: y, y2: y, stroke: '#d6dcd8', 'stroke-width': 0.8 }));
   }
   if (prefs.onlyHole) {
     const own = F.own.filter(x => x.t === 'fairway' || x.t === 'tee').map(x => closeRing(ringOf(x)).map(f.fwd));
@@ -905,6 +901,13 @@ export function openBook(n, opts) {
               const [top, bottom] = leaves[i + j], x = x0 + j * stripW;
               await drawSvg(ctx, top, x, 0, stripW, stripH / 2, css);
               await drawSvg(ctx, bottom, x, stripH / 2, stripW, stripH / 2, css);
+              // Its place in the stack (1 on top), at the foot of the strip.
+              if (leaves.length > 1) {
+                const r = 0.12 * k * DPI, cxN = x + stripW / 2, cyN = stripH - 0.2 * k * DPI;
+                ctx.setLineDash([]); ctx.fillStyle = '#1c2a22'; ctx.beginPath(); ctx.arc(cxN, cyN, r, 0, Math.PI * 2); ctx.fill();
+                ctx.fillStyle = '#fff'; ctx.font = `700 ${Math.round(r * 1.25)}px 'Barlow Condensed', Arial, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillText(String(i + j + 1), cxN, cyN + r * 0.06);
+              }
               // Fold marks at the strip's edges, half way down.
               ctx.strokeStyle = '#999'; ctx.lineWidth = 2; ctx.setLineDash([]);
               ctx.beginPath(); ctx.moveTo(x, stripH / 2); ctx.lineTo(x + 0.12 * DPI, stripH / 2); ctx.moveTo(x + stripW, stripH / 2); ctx.lineTo(x + stripW - 0.12 * DPI, stripH / 2); ctx.stroke();
@@ -926,7 +929,7 @@ export function openBook(n, opts) {
         canShare ? h('button', { class: 'bookbtn primary', onclick: () => navigator.share({ files: [file], title: name }).catch(() => {}) }, 'Share / Print') : null,
         h('a', { class: 'bookbtn', href: pdfUrl, target: '_blank', download: name }, 'Open PDF'),
         h('small', {}, layout === 'single' ? 'Print at 100% (actual size).'
-          : `Print at 100% on ${layout === 'legal' ? 'legal (8½ × 14)' : 'letter'} paper. Cut along the dashed lines, fold each strip in half at the marks with the printing outside, and stack them in order with the folds at the top${all ? ' (cover on top)' : ''}.`)].filter(Boolean));
+          : `Print at 100% on ${layout === 'legal' ? 'legal (8½ × 14)' : 'letter'} paper. Cut along the dashed lines, fold each strip in half at the marks with the printing outside, and stack them in order${all ? ' by the number at the foot of each strip (1 on top)' : ''}, folds at the top, then staple or clip along the fold.`)].filter(Boolean));
       pdfBar.hidden = false;
       status.textContent = '';
     } catch (e) {
