@@ -101,8 +101,9 @@ def main(src, cfg_path, dst):
         line = lines[n]
         end = line[-1]
         g = min(greens, key=lambda r: (centroid(r)[0] - end[0]) ** 2 + (centroid(r)[1] - end[1]) ** 2)
+        pin = end if n in cfg.get("pinAtLineEnd", []) else centroid(g)  # double greens: the hole's own end
         out_holes.append({"n": n, "par": cfg["par"][n - 1], "hcp": cfg["hcp"][n - 1],
-                          "line": line, "tee": line[0], "pin": centroid(g)})
+                          "line": line, "tee": line[0], "pin": pin})
     course = {k: cfg[k] for k in ("id", "name", "location", "tees")}
     course["holes"] = out_holes
     course["features"] = feats

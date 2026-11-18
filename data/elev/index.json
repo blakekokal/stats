@@ -373,5 +373,50 @@
    582
   ],
   "source": "USGS 3DEP"
+ },
+ "stevenspark": {
+  "bounds": [
+   -96.859832,
+   32.752824,
+   -96.843332,
+   32.764094
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   427,
+   573
+  ],
+  "source": "USGS 3DEP"
+ },
+ "tierraverde": {
+  "bounds": [
+   -97.190009,
+   32.618187,
+   -97.173941,
+   32.628718
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   641,
+   705
+  ],
+  "source": "USGS 3DEP"
+ },
+ "riverside": {
+  "bounds": [
+   -97.067959,
+   32.792385,
+   -97.053628,
+   32.815911
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   424,
+   537
+  ],
+  "source": "USGS 3DEP"
  }
 }
