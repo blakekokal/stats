@@ -115,10 +115,20 @@ function refreshPublished() {
   return (publishedLoad = fetchPublishedCourses().then(p => {
     if (!p) return false;
     const changed = JSON.stringify(p) !== JSON.stringify(published);
-    published = p; cachePublished();
+    published = p; cachePublished(); dropPublishedCopies();
     return changed;
   }).catch(() => false));
 }
+// This device's own copy of a course's edits, once the same (or newer) ones are
+// published, is only taking up room: phones allow a few MB in all, and a few
+// courses' outlines fill that, after which nothing more can be saved.
+function dropPublishedCopies() {
+  for (const [id, pub] of Object.entries(published)) {
+    const mine = store.get('course:' + id);
+    if (mine && (mine.savedAt || 0) <= (pub.updated || 0)) { try { store.remove('course:' + id); } catch { /* left as it is */ } }
+  }
+}
+try { dropPublishedCopies(); } catch { /* not yet */ }
 
 // The outlines in use: the published ones, or for an admin, this device's own
 // edits when they're newer (saved but not yet published, say).
@@ -194,19 +204,28 @@ export function complexHoles() {
 // An admin saving outline edits: kept on this device, and published for
 // everyone unless `publish` is false (Save in the hole editor keeps editing;
 // Save & finish publishes). Returns what happened, to show the admin.
+// Never throws: what happened comes back as the message to show.
 export async function saveCourseEdits(features, { publish = true } = {}) {
-  const savedAt = Date.now(), doc = { features, ob: true };
-  store.set('course:' + course.id, { ...doc, savedAt });
-  if (!publish) { await loadCourse(true); return 'Saved on this device. Save & finish publishes it for everyone.'; }
+  const savedAt = Date.now(), doc = { features, ob: true }, key = 'course:' + course.id;
+  // Kept on this device: false if its storage is full.
+  const keepHere = () => { try { store.set(key, { ...doc, savedAt }); return true; } catch { try { dropPublishedCopies(); store.set(key, { ...doc, savedAt }); return true; } catch { return false; } } };
   let msg;
-  try {
-    await publishCourse(course.id, doc, savedAt);
-    published = { ...published, [course.id]: { ...doc, updated: savedAt } }; cachePublished();
-    msg = 'Saved and published: everyone now sees these outlines.';
-  } catch (e) {
-    msg = `Saved on this device only: publishing for everyone failed (${e.message}).`;
+  if (!publish) {
+    msg = keepHere() ? 'Saved on this device. Save & finish publishes it for everyone.'
+      : 'Couldn’t save on this device: its storage is full. Save & finish publishes it for everyone instead.';
+  } else {
+    // Published first; then this device needs no copy of its own.
+    try {
+      await Promise.race([publishCourse(course.id, doc, savedAt), new Promise((_, no) => setTimeout(() => no(new Error('no answer after 30 s')), 30000))]);
+      published = { ...published, [course.id]: { ...doc, updated: savedAt } }; cachePublished();
+      try { if (store.get(key)) store.remove(key); } catch { /* left as it is */ }
+      msg = 'Saved and published: everyone now sees these outlines.';
+    } catch (e) {
+      msg = keepHere() ? `Saved on this device only: publishing for everyone failed (${e.message}).`
+        : `Not saved: publishing failed (${e.message}) and this device’s storage is full. Your changes are still on screen; try again.`;
+    }
   }
-  await loadCourse(true);
+  try { await loadCourse(true); } catch (e) { console.error('reload course', e); }
   return msg;
 }
 // Outline edits saved on this device but not yet published.
