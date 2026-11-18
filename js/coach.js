@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.10.4', ['Cowboys: trees added along every hole (935 round trees on the tree canopy in the satellite picture, none in OB or on greens, fairways, tees, bunkers or water); everything else, including your published edits, is unchanged']],
   ['1.10.3', ['Hole editor: Save and Save & finish no longer get stuck on Saving…. The phone’s storage had filled up with copies of every course’s edits; Save & finish now publishes first and keeps no copy of its own, copies already published are cleared when the app opens, and if saving fails it says why and leaves your changes on screen to try again (publishing gives up after 30 s)']],
   ['1.10.2', ['Cowboys: greens redrawn on the putting surface only (the brighter fringe round them is now fairway) on 16 holes, and the fairway round every green follows the mown grass: #1 has the fairway left of the green, #2 the fringe round it, #12 the approach no longer part of the green']],
   ['1.10.1', ['Cowboys: the fairway round every green follows the dark, mown grass in the satellite picture (a clean ring round the green and the approach into it, no more peninsulas out into the rough), and the greens on #2, #4, #5, #6, #8, #10, #11 and #18 are redrawn on the putting surface']],
