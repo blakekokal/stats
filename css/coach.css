@@ -190,3 +190,4 @@ body.coach { background: #1e1e1e; }
 .cx .setupsw input:focus-visible + i { outline: 2px solid #fff; outline-offset: 2px; }
 .cx .setupplain { background: #333; }
 .cx.setupov .holes9.genbook { margin-top: 14px; }
+.cx .setupnote { display: block; font-size: 11px; color: #8a8a8a; }

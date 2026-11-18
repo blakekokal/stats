@@ -47,14 +47,15 @@ export const BOOK_OPTIONS = [
 ];
 // Not switches on the screen: Only this hole and the green page are always on,
 // and Zoomed view is its own choice (Zoomed or Entire hole).
-const HIDDEN = new Set(['onlyHole', 'greenPage', 'teeInset']);
+// Bunker & water numbers and the up/down yards are always on too.
+const HIDDEN = new Set(['onlyHole', 'greenPage', 'teeInset', 'hazards', 'deltas']);
 const PREFS_KEY = 'gs:bookPrefs';
 function loadPrefs() {
   let p = {};
   try { p = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'); } catch { p = {}; }
   const out = {};
   for (const [k, , , d] of BOOK_OPTIONS) out[k] = typeof p[k] === 'boolean' ? p[k] : d;
-  out.onlyHole = out.greenPage = true;
+  out.onlyHole = out.greenPage = out.hazards = out.deltas = true;
   // A new name (was gridYd, 3 to start): everyone starts on the 5-yard grid, like a tour book.
   out.gridYd = out.gridYards = [3, 5].includes(p.gridYards) ? p.gridYards : 5;
   return out;
@@ -1281,7 +1282,6 @@ export function openBookSetup(opts) {
     return row;
   };
   const label = text => h('div', { class: 'ninesq setuplab' }, text);
-  const styleTiles = tiles([['book', 'Flat', 'Drawn like a tour book'], ['sat', 'Satellite', 'Outlines on the picture']], () => style, v => { style = v; setStyle(v); });
   const teeSel = h('select', { class: 'bigsel', 'aria-label': 'Tee box', onchange: e => { teeName = e.target.value; } },
     course.tees.map(t => {
       const yds = t.yards ? t.yards.slice(0, course.holes.length).reduce((x, y) => x + y, 0) : 0;
@@ -1293,7 +1293,11 @@ export function openBookSetup(opts) {
     () => (prefs.teeInset ? 'zoom' : 'whole'), v => { prefs.teeInset = v === 'zoom'; savePrefs(prefs); });
   const elevOk = !opts.tourney;
   const inputs = {};
-  const switchesFor = grp => h('div', { class: 'setupcard' }, BOOK_OPTIONS.filter(([k, , g, , needsElev]) => g === grp && !HIDDEN.has(k) && (elevOk || !needsElev)).map(([k, text]) => {
+  // Satellite (on) or flat (off), at the top of the hole page's switches.
+  const satInput = h('input', { type: 'checkbox', onchange: e => { style = e.target.checked ? 'sat' : 'book'; setStyle(style); } });
+  satInput.checked = style === 'sat';
+  const satRow = h('label', { class: 'setupsw' }, h('span', {}, 'Satellite', h('small', { class: 'setupnote' }, 'Off: flat, like a tour book')), satInput, h('i', {}));
+  const switchesFor = (grp, ...first) => h('div', { class: 'setupcard' }, ...first, ...BOOK_OPTIONS.filter(([k, , g, , needsElev]) => g === grp && !HIDDEN.has(k) && (elevOk || !needsElev)).map(([k, text]) => {
     const input = inputs[k] = h('input', { type: 'checkbox', onchange: e => { prefs[k] = e.target.checked; savePrefs(prefs); } });
     input.checked = prefs[k];
     return h('label', { class: 'setupsw' }, h('span', {}, text), input, h('i', {}));
@@ -1311,11 +1315,10 @@ export function openBookSetup(opts) {
   const ov = h('div', { class: 'cx top setupov' }, back,
     h('div', { style: 'font-size:22px;font-weight:800;' }, 'Yardage Book'),
     h('div', { class: 'setupsub' }, course.name),
-    label('Style'), styleTiles,
     label('Tee box'), teeSel,
     label('Format'), formatSel,
     h('div', { class: 'setuphint' }, 'Double-sided: print at 100%, two-sided, flip on short edge, then cut the cards apart and stack them.'),
-    label('Hole overview page'), zoomTiles, switchesFor('Hole overview page'),
+    label('Hole overview page'), zoomTiles, switchesFor('Hole overview page', satRow),
     elevOk ? label('Green overview page') : null, elevOk ? switchesFor('Green overview page') : null,
     opts.tourney ? h('div', { class: 'setuphint' }, 'Tournament: no green page or contours (Rules of Golf 4.3)') : null,
     h('div', { class: 'row' }, h('button', { class: 'setupplain', onclick: () => setAll(true) }, 'All on'), h('button', { class: 'setupplain', onclick: () => setAll(false) }, 'Basic')),
