@@ -900,58 +900,69 @@ export function openBook(n, opts) {
         ctx.fillStyle = '#fff'; ctx.font = `700 ${Math.round(r * 1.25)}px 'Barlow Condensed', Arial, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(String(num), cxN, cyN + r * 0.06);
       };
+      // Printers (and print shops) can't print the outer edge of a sheet,
+      // so everything sits inside a quarter-inch margin: the cards shrink a
+      // little to fit (still within the USGA's size and green-scale limits),
+      // and the dashed cut lines go round every card.
+      const MARGIN = 0.25;
+      const cutBox = (ctx, xs, ys, wPx, hPx) => {
+        ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2; ctx.setLineDash([18, 12]); ctx.beginPath();
+        for (const x of xs) { ctx.moveTo(x, 0); ctx.lineTo(x, hPx); }
+        for (const y of ys) { ctx.moveTo(0, y); ctx.lineTo(wPx, y); }
+        ctx.stroke(); ctx.setLineDash([]);
+      };
       if (layout.startsWith('duplex')) {
         // Fronts (hole pages) then backs (greens) for each sheet. Printed
         // two-sided flipping on the short edge, a card's back sits in the
         // same column and the mirrored row, and reads the right way up when
-        // the card is flipped up over the top, like a tour book.
+        // the card is flipped up over the top, like a tour book. The cards
+        // are centred on the sheet, so the two sides line up.
         const legal = layout === 'duplex-legal', sw = 8.5, sh = legal ? 14 : 11, rows = legal ? 2 : 1, per = 2 * rows;
-        const cw = 4.25 * DPI, chh = 7 * DPI, y0 = ((sh - 7 * rows) / 2) * DPI;
+        const k = Math.min((sw - 2 * MARGIN) / 8.5, (sh - 2 * MARGIN) / (7 * rows), 1);
+        const cw = 4.25 * k * DPI, chh = 7 * k * DPI, x0 = (sw * DPI - 2 * cw) / 2, y0 = (sh * DPI - rows * chh) / 2;
         const nSheets = Math.ceil(leaves.length / per);
         for (let i = 0; i < leaves.length; i += per) {
           const group = leaves.slice(i, i + per);
           status.textContent = `Making sheet ${i / per + 1} of ${nSheets}…`;
           await sheet(sw, sh, async ctx => {
             for (const [j, [, front]] of group.entries()) {
-              const x = (j % 2) * cw, y = y0 + Math.floor(j / 2) * chh;
+              const x = x0 + (j % 2) * cw, y = y0 + Math.floor(j / 2) * chh;
               await drawSvg(ctx, front, x, y, cw, chh, css);
-              if (leaves.length > 1) numberAt(ctx, x + cw / 2, y + chh - 0.2 * DPI, 0.12 * DPI, i + j + 1);
+              if (leaves.length > 1) numberAt(ctx, x + cw / 2, y + chh - 0.2 * k * DPI, 0.12 * k * DPI, i + j + 1);
             }
-            ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2; ctx.setLineDash([18, 12]); ctx.beginPath();
-            ctx.moveTo(cw, y0); ctx.lineTo(cw, y0 + rows * chh);
-            for (let r = 0; r <= rows; r++) { if (r === 0 && !y0) continue; if (r === rows && y0 + rows * chh >= sh * DPI - 1) continue; ctx.moveTo(0, y0 + r * chh); ctx.lineTo(sw * DPI, y0 + r * chh); }
-            ctx.stroke();
+            cutBox(ctx, [x0, x0 + cw, x0 + 2 * cw], Array.from({ length: rows + 1 }, (_, r) => y0 + r * chh), sw * DPI, sh * DPI);
           });
           await sheet(sw, sh, async ctx => {
             for (const [j, [back]] of group.entries()) {
-              const x = (j % 2) * cw, y = y0 + (rows - 1 - Math.floor(j / 2)) * chh;
+              const x = x0 + (j % 2) * cw, y = y0 + (rows - 1 - Math.floor(j / 2)) * chh;
               await drawSvg(ctx, back, x, y, cw, chh, css);
             }
           });
         }
       } else if (layout === 'single') {
         const flat = all ? holes.flatMap(k => [parts[k].green, parts[k].hole].filter(Boolean)) : [parts[hole].green, parts[hole].hole].filter(Boolean);
-        for (const [i, svg] of flat.entries()) { status.textContent = `Making page ${i + 1} of ${flat.length}…`; await sheet(4.25, 7, ctx => drawSvg(ctx, svg, 0, 0, 4.25 * DPI, 7 * DPI, css)); }
+        const k = Math.min((4.25 - 2 * MARGIN) / 4.25, (7 - 2 * MARGIN) / 7);
+        const pw = 4.25 * k * DPI, ph = 7 * k * DPI, x0 = (4.25 * DPI - pw) / 2, y0 = (7 * DPI - ph) / 2;
+        for (const [i, svg] of flat.entries()) { status.textContent = `Making page ${i + 1} of ${flat.length}…`; await sheet(4.25, 7, ctx => drawSvg(ctx, svg, x0, y0, pw, ph, css)); }
       } else {
-        const legal = layout === 'legal', sw = 8.5, sh = legal ? 14 : 11, k = sh / 14; // strips are 4 1/4 x 14 at k
-        const stripW = 4.25 * k * DPI, stripH = 14 * k * DPI, x0 = ((sw * DPI) - 2 * stripW) / 2;
+        const legal = layout === 'legal', sw = 8.5, sh = legal ? 14 : 11;
+        const k = Math.min((sw - 2 * MARGIN) / 8.5, (sh - 2 * MARGIN) / 14); // strips are 4 1/4 x 14 at k
+        const stripW = 4.25 * k * DPI, stripH = 14 * k * DPI, x0 = (sw * DPI - 2 * stripW) / 2, y0 = (sh * DPI - stripH) / 2;
         for (let i = 0; i < leaves.length; i += 2) {
           status.textContent = `Making sheet ${i / 2 + 1} of ${Math.ceil(leaves.length / 2)}…`;
           await sheet(sw, sh, async ctx => {
             for (let j = 0; j < 2 && i + j < leaves.length; j++) {
               const [top, bottom] = leaves[i + j], x = x0 + j * stripW;
-              await drawSvg(ctx, top, x, 0, stripW, stripH / 2, css);
-              await drawSvg(ctx, bottom, x, stripH / 2, stripW, stripH / 2, css);
+              await drawSvg(ctx, top, x, y0, stripW, stripH / 2, css);
+              await drawSvg(ctx, bottom, x, y0 + stripH / 2, stripW, stripH / 2, css);
               // Its place in the stack (1 on top), at the foot of the strip.
-              if (leaves.length > 1) numberAt(ctx, x + stripW / 2, stripH - 0.2 * k * DPI, 0.12 * k * DPI, i + j + 1);
+              if (leaves.length > 1) numberAt(ctx, x + stripW / 2, y0 + stripH - 0.2 * k * DPI, 0.12 * k * DPI, i + j + 1);
               // Fold marks at the strip's edges, half way down.
+              const fy = y0 + stripH / 2;
               ctx.strokeStyle = '#999'; ctx.lineWidth = 2; ctx.setLineDash([]);
-              ctx.beginPath(); ctx.moveTo(x, stripH / 2); ctx.lineTo(x + 0.12 * DPI, stripH / 2); ctx.moveTo(x + stripW, stripH / 2); ctx.lineTo(x + stripW - 0.12 * DPI, stripH / 2); ctx.stroke();
+              ctx.beginPath(); ctx.moveTo(x, fy); ctx.lineTo(x + 0.12 * DPI, fy); ctx.moveTo(x + stripW, fy); ctx.lineTo(x + stripW - 0.12 * DPI, fy); ctx.stroke();
             }
-            // Cut lines: down the middle (and the outer edges on letter).
-            ctx.strokeStyle = '#aaa'; ctx.lineWidth = 2; ctx.setLineDash([18, 12]);
-            const cuts = legal ? [x0 + stripW] : [x0, x0 + stripW, x0 + 2 * stripW];
-            ctx.beginPath(); for (const cx of cuts) { ctx.moveTo(cx, 0); ctx.lineTo(cx, stripH); } ctx.stroke();
+            cutBox(ctx, [x0, x0 + stripW, x0 + 2 * stripW], [y0, y0 + stripH], sw * DPI, sh * DPI);
           });
         }
       }
@@ -964,8 +975,8 @@ export function openBook(n, opts) {
         h('b', {}, `PDF ready · ${{ 'duplex-legal': 'double-sided, legal paper, 4 cards per sheet', 'duplex-letter': 'double-sided, letter paper, 2 cards per sheet', legal: 'fold, legal paper, 2 per sheet', letter: 'fold, letter paper, 2 per sheet', single: '4¼ × 7 pages' }[layout]}`),
         canShare ? h('button', { class: 'bookbtn primary', onclick: () => navigator.share({ files: [file], title: name }).catch(() => {}) }, 'Share / Print') : null,
         h('a', { class: 'bookbtn', href: pdfUrl, target: '_blank', download: name }, 'Open PDF'),
-        h('small', {}, layout === 'single' ? 'Print at 100% (actual size).'
-          : layout.startsWith('duplex') ? `Print at 100% on ${layout === 'duplex-legal' ? 'legal (8½ × 14)' : 'letter'} paper, two-sided, flip on short edge. Cut along the dashed lines into 4¼ × 7 cards${all ? ', stack them by the number at the foot of each (1 on top)' : ''} and staple or clip along the top.`
+        h('small', {}, layout === 'single' ? 'Print at 100% (actual size, not “fit to page”).'
+          : layout.startsWith('duplex') ? `Print at 100% on ${layout === 'duplex-legal' ? 'legal (8½ × 14)' : 'letter'} paper (at a print shop, ask for legal 8½ × 14, actual size), two-sided, flip on short edge. Cut along the dashed lines (trimming off the margin)${all ? ', stack them by the number at the foot of each (1 on top)' : ''} and staple or clip along the top.`
           : `Print at 100% on ${layout === 'legal' ? 'legal (8½ × 14)' : 'letter'} paper. Cut along the dashed lines, fold each strip in half at the marks with the printing outside, and stack them in order${all ? ' by the number at the foot of each strip (1 on top)' : ''}, folds at the top, then staple or clip along the fold.`)].filter(Boolean));
       pdfBar.hidden = false;
       status.textContent = '';
