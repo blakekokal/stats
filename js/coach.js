@@ -10,7 +10,7 @@ import { checkCoachingDot } from './coaching/index.js';
 import { VERSION } from './version.js';
 import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting, firstHoleOf, activeRound, pauseRound, resumeRound, holeCountOf } from './rounds.js';
 import { downloadRoundCsv } from './dashboard.js';
-import { openBook } from './book.js';
+import { openBookSetup } from './book.js';
 import { holeFeatures, ownGreen } from './hole.js';
 
 const PREF_LABEL = { Pro: 'Tour Pro', Scratch: 'Scratch (0)' };
@@ -177,9 +177,8 @@ export function renderNewRound(view, { scout = false } = {}) {
   // picked (it opens on hole 1; ‹ › go round the holes, Print does the lot).
   const genBook = h('button', { class: 'holes9 genbook', onclick: () => {
     if (!chosen) { err.textContent = 'Select a course.'; return; }
-    if (!tee.value) { err.textContent = 'Select a tee box.'; return; }
     err.textContent = '';
-    openBook(1, { teeName: tee.value, tourney: type.value === 'Tournament', holeFeatures, ownGreen });
+    openBookSetup({ teeName: tee.value, tourney: type.value === 'Tournament', holeFeatures, ownGreen });
   } }, 'GEN BOOK');
 
   // Course: a blank box to type in; the courses matching what's typed are listed
@@ -462,6 +461,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.8.7', ['GEN BOOK opens a page to set the book up first: Style (Flat or Satellite), the tee box, the Format (Double-sided · letter to start, then Double-sided · legal, then the others) and what to show. Then Preview to look through it, or Make PDF for the whole book. Your picks are kept on this device']],
   ['1.8.6', ['GEN BOOK: in the Satellite style the green pages are on the satellite picture too: the green, bunkers and water outlined, with the yard grid, the yards from the front, and white contours and downhill arrows on top']],
   ['1.8.5', ['GEN BOOK: a Style choice beside the tee box. Satellite draws each hole page like Satellite book view, the satellite picture with the book’s outlines and numbers on it, on screen and in the printed PDF; the green pages stay as they are. Book is the plain book. Your pick is kept on this device']],
   ['1.8.4', ['GPS Overview: Satellite book view (was Yardage book + satellite) is the satellite picture with the yardage book’s outlines and numbers drawn on it, like Course lines view with all the book’s yardages: greens, tee boxes, fairways, bunkers and water outlined, not filled in, and no contours']],

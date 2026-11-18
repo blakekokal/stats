@@ -608,7 +608,7 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .bookopts .bookrow select { height: 34px; border-radius: 8px; border: 1px solid #c9d0cb; background: #fff; color: #1c2a22; width: auto; }
 .bookgroup { grid-column: 1 / -1; font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: #5d6b62; margin-top: 8px; }
 .bookopt { display: flex; align-items: center; gap: 8px; font-size: 14px; padding: 4px 0; cursor: pointer; }
-.bookopt input { width: 18px; height: 18px; margin: 0; accent-color: #2f6f35; }
+.bookopt input { width: 18px; height: 18px; min-height: 0; padding: 0; border: 0; background: none; margin: 0; flex: none; accent-color: #2f6f35; color-scheme: light; }
 .bookpages { flex: 1; overflow: auto; display: flex; flex-wrap: wrap; gap: 16px; justify-content: center; align-items: flex-start; padding: 16px 12px calc(24px + env(safe-area-inset-bottom)); }
 .bookpage { display: block; width: min(420px, 100%); height: auto; aspect-ratio: 400 / 658; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.15); border-radius: 4px; }
 .flipbook { display: flex; flex-direction: column; width: min(420px, 100%); box-shadow: 0 2px 12px rgba(0,0,0,.18); }
@@ -642,3 +642,13 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .holeview .bookgreen .booknote { top: auto; bottom: calc(76px + env(safe-area-inset-bottom)); }
 .holeview.bookmode .fab.cleanview { bottom: calc(70px + env(safe-area-inset-bottom)); }
 .holeview.bookmode .sheet.viewbox { bottom: calc(70px + env(safe-area-inset-bottom)); }
+/* GEN BOOK's setup page: style, tee box, format and what to show, then Preview / Make PDF. */
+.booksetup { flex: 1; overflow: auto; padding: 4px 14px calc(24px + env(safe-area-inset-bottom)); display: grid; gap: 6px; align-content: start; max-width: 640px; width: 100%; margin: 0 auto; box-sizing: border-box; }
+.setupsec { background: #fff; border: 1px solid #d6dcd8; border-radius: 12px; padding: 4px 12px 10px; display: grid; gap: 2px; }
+.setupsec > small { margin-top: 4px; }
+.setupchoices { display: grid; gap: 0; }
+.setupchoices .bookopt small { font-size: 12px; }
+.setupopts { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0 14px; }
+.setupsec .bookrow { display: flex; gap: 6px; margin: 4px 0; }
+.setupgo { display: flex; gap: 8px; justify-content: flex-end; padding: 8px 0; }
+.setupgo .bookbtn { height: 44px; padding: 0 20px; font-size: 16px; }

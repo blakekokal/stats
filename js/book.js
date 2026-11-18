@@ -890,6 +890,18 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   return svg;
 }
 
+// ---------- style and print layout (kept on this device) ----------
+
+const STYLES = [['book', 'Flat'], ['sat', 'Satellite']];
+const getStyle = () => { try { return localStorage.getItem('gs:bookStyle') === 'sat' ? 'sat' : 'book'; } catch { return 'book'; } };
+const setStyle = v => { try { localStorage.setItem('gs:bookStyle', v); } catch { /* not kept */ } };
+// Print layouts, double-sided letter first (and to start), then legal.
+const LAYOUTS = [['duplex-letter', 'Double-sided · letter'], ['duplex-legal', 'Double-sided · legal'], ['duplex-letter-2', 'Double-sided · letter, 2 big cards'],
+  ['letter', 'Fold · letter (cut once)'], ['legal', 'Fold · legal (cut once)'], ['single', 'Single pages']];
+// A new key, so everyone starts on double-sided letter.
+const getLayout = () => { let v = 'duplex-letter'; try { v = localStorage.getItem('gs:bookLayout5') || v; } catch { /* none */ } return LAYOUTS.some(([k]) => k === v) ? v : 'duplex-letter'; };
+const setLayout = v => { try { localStorage.setItem('gs:bookLayout5', v); } catch { /* not kept */ } };
+
 // ---------- the satellite picture ----------
 
 // The satellite picture under a page's map (the satellite book): the Esri tiles
@@ -1040,9 +1052,9 @@ export function openBook(n, opts) {
   }
   // Style: the plain book, or the satellite picture with the book's outlines
   // and numbers on it (the hole pages; the green pages stay plain). Kept on this device.
-  let style = (() => { try { return localStorage.getItem('gs:bookStyle') === 'sat' ? 'sat' : 'book'; } catch { return 'book'; } })();
-  const styleSel = h('select', { 'aria-label': 'Style', onchange: e => { style = e.target.value; try { localStorage.setItem('gs:bookStyle', style); } catch { /* not kept */ } draw(); } },
-    [['book', 'Book'], ['sat', 'Satellite']].map(([v, t]) => h('option', { value: v, selected: v === style }, t)));
+  let style = getStyle();
+  const styleSel = h('select', { 'aria-label': 'Style', onchange: e => { style = e.target.value; setStyle(style); draw(); } },
+    STYLES.map(([v, t]) => h('option', { value: v, selected: v === style }, t)));
   const teeSel = h('select', { 'aria-label': 'Tee box', onchange: e => { teeName = e.target.value; draw(); } },
     course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} tees`)));
   const go = d => { hole = ((hole - 1 + d + course.holes.length) % course.holes.length) + 1; draw(); };
@@ -1063,10 +1075,8 @@ export function openBook(n, opts) {
   //           hole's green on the back; cut apart, stack, bind at the top.
   //  single - one 4 1/4 x 7 page per sheet
   // A new key, so everyone starts on fold · letter: one cut, then fold.
-  const LAYOUTS = [['letter', 'Fold · letter (cut once)'], ['legal', 'Fold · legal (cut once)'], ['duplex-letter', 'Double-sided · letter'], ['duplex-letter-2', 'Double-sided · letter, 2 big cards'], ['duplex-legal', 'Double-sided · legal'], ['single', 'Single pages']];
-  let layout = (() => { try { return localStorage.getItem('gs:bookLayout4') || 'letter'; } catch { return 'letter'; } })();
-  if (!LAYOUTS.some(([v]) => v === layout)) layout = 'letter';
-  const layoutSel = h('select', { 'aria-label': 'Print layout', onchange: e => { layout = e.target.value; try { localStorage.setItem('gs:bookLayout4', layout); } catch { /* not kept */ } } },
+  let layout = getLayout();
+  const layoutSel = h('select', { 'aria-label': 'Print layout', onchange: e => { layout = e.target.value; setLayout(layout); } },
     LAYOUTS.map(([v, t]) => h('option', { value: v, selected: v === layout }, t)));
   const pdfBar = h('div', { class: 'bookpdf', hidden: true });
   let pdfUrl = null;
@@ -1245,6 +1255,62 @@ export function openBook(n, opts) {
   document.body.append(ov);
   document.body.classList.add('bookopen');
   draw();
+  if (opts.autoPdf) makePdf(true); // from the setup page's Make PDF: the whole book
+  return ov;
+}
+
+// GEN BOOK's first page: pick everything, then preview the book or make the PDF.
+// opts: as openBook's (teeName is the one to start on).
+export function openBookSetup(opts) {
+  const prefs = loadPrefs();
+  let style = getStyle(), layout = getLayout(), teeName = opts.teeName || course.tees[0]?.name;
+  const radios = (name, list, get, set) => h('div', { class: 'setupchoices' }, list.map(([v, label, note]) => {
+    const input = h('input', { type: 'radio', name, value: v, onchange: () => set(v) });
+    input.checked = get() === v;
+    return h('label', { class: 'bookopt' }, input, h('span', {}, label, note ? h('small', { class: 'muted' }, ` ${note}`) : null));
+  }));
+  const tees = radios('setuptee', course.tees.map(t => {
+    const yds = t.yards ? t.yards.slice(0, course.holes.length).reduce((a, b) => a + b, 0) : 0;
+    return [t.name, `${t.name} tees`, yds ? `· ${yds} yds` : ''];
+  }), () => teeName, v => { teeName = v; });
+  const styles = radios('setupstyle', STYLES.map(([v, t]) => [v, t, v === 'sat' ? '· the satellite picture with the outlines and numbers' : '· drawn like a tour book']), () => style, v => { style = v; setStyle(v); });
+  const formats = radios('setupformat', LAYOUTS, () => layout, v => { layout = v; setLayout(v); });
+  const elevOk = !opts.tourney;
+  const inputs = {};
+  const optRows = [];
+  let group = '';
+  for (const [k, label, grp, , needsElev] of BOOK_OPTIONS) {
+    if (needsElev && !elevOk) continue;
+    if (grp !== group) { group = grp; optRows.push(h('div', { class: 'bookgroup' }, grp)); }
+    const input = inputs[k] = h('input', { type: 'checkbox', onchange: e => { prefs[k] = e.target.checked; savePrefs(prefs); } });
+    input.checked = prefs[k];
+    optRows.push(h('label', { class: 'bookopt' }, input, h('span', {}, label)));
+  }
+  const setAll = v => {
+    for (const [k] of BOOK_OPTIONS) prefs[k] = v;
+    if (!v) prefs.fairway = prefs.bunkers = prefs.water = prefs.greenPage = true;
+    savePrefs(prefs);
+    for (const [k, inp] of Object.entries(inputs)) inp.checked = prefs[k];
+  };
+  const close = () => { ov.remove(); document.body.classList.remove('bookopen'); };
+  const go = autoPdf => { ov.remove(); openBook(1, { ...opts, teeName, autoPdf }); };
+  const section = (title, ...kids) => h('section', { class: 'setupsec' }, h('div', { class: 'bookgroup' }, title), ...kids);
+  const ov = h('div', { class: 'bookov' },
+    h('div', { class: 'booktop' },
+      h('button', { class: 'bookbtn', 'aria-label': 'Close', onclick: close }, '✕'),
+      h('b', {}, 'Yardage book'), h('small', { class: 'muted' }, course.name)),
+    h('div', { class: 'booksetup' },
+      section('Style', styles),
+      section('Tee box', tees),
+      section('Format', formats, h('small', { class: 'muted' }, 'Double-sided: print at 100%, two-sided, flip on short edge, then cut the cards apart and stack them.')),
+      section('Show', h('div', { class: 'bookrow' }, h('button', { class: 'bookbtn', onclick: () => setAll(true) }, 'All on'), h('button', { class: 'bookbtn', onclick: () => setAll(false) }, 'Basic')),
+        h('div', { class: 'setupopts' }, ...optRows),
+        opts.tourney ? h('small', { class: 'muted' }, 'Tournament: no green page or contours (Rules of Golf 4.3)') : null),
+      h('div', { class: 'setupgo' },
+        h('button', { class: 'bookbtn', onclick: () => go(false) }, 'Preview'),
+        h('button', { class: 'bookbtn primary', onclick: () => go(true) }, 'Make PDF'))));
+  document.body.append(ov);
+  document.body.classList.add('bookopen');
   return ov;
 }
 
