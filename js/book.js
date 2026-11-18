@@ -501,7 +501,20 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     lab.block([Math.min(...xs) - 1.5, Math.min(...ys) - 1.5, Math.max(...xs) + 1.5, Math.max(...ys) + 1.5]);
   }
   const pairs = [];
-  const pair = (q, front, tee, side, mine = false) => pairs.push({ q, front, tee, side, mine });
+  const pair = (q, front, tee, side, mine = false, teeOnly = false) => pairs.push({ q, front, tee, side, mine, teeOnly });
+  // Par 3s: the front and the back of the green, along the line to its middle,
+  // always, first (so they get the room): yards from the front of the tee and
+  // up/down, like the other numbers but with no yards to the front.
+  if (ch.par === 3 && greenL && !opts.teeView) {
+    const c = centroid(greenL), cl = Math.hypot(c[0], c[1]) || 1, d = [c[0] / cl, c[1] / cl];
+    const hits = crossings(c, d, closeRing(greenL), 120);
+    const fr = hits.filter(v => v < 0), bk = hits.filter(v => v > 0);
+    for (const v of [fr.length ? Math.max(...fr) : null, bk.length ? Math.max(...bk) : null]) {
+      if (v == null) continue;
+      const q = [c[0] + d[0] * v, c[1] + d[1] * v];
+      pair(q, 0, Math.round(cl + v), 1, false, true);
+    }
+  }
 
   // Bunkers and water: the start and the end of each (not greenside bunkers).
   if (prefs.hazards) {
@@ -585,35 +598,16 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       if (ht != null) pr.dTee = Math.round((hp - ht) / M_PER_YD);
     });
   }
-  // Par 3s: the yards from the front of the tee to the front and the back of
-  // the green, along the line to its middle, always.
-  if (ch.par === 3 && greenL && !opts.teeView) {
-    const c = centroid(greenL), cl = Math.hypot(c[0], c[1]) || 1, d = [c[0] / cl, c[1] / cl];
-    const hits = crossings(c, d, closeRing(greenL), 120);
-    const fr = hits.filter(v => v < 0), bk = hits.filter(v => v > 0);
-    const ends = [];
-    if (fr.length) ends.push(['F', Math.max(...fr)]);
-    if (bk.length) ends.push(['B', Math.max(...bk)]);
-    for (const [tag, v] of ends) {
-      const q = [c[0] + d[0] * v, c[1] + d[1] * v], [x, y] = P(q), yd = Math.round(cl + v), text = `${tag} ${yd}`;
-      const w = textW(text, 11) + 2, dy = tag === 'B' ? -4 : 12;
-      const spot = lab.place([[x + 8, y + dy, 'start'], [x - 8, y + dy, 'end'], [x + 8, y + 4, 'start'], [x - 8, y + 4, 'end'], [x + 14, y + dy + (tag === 'B' ? -8 : 8), 'start']], w, 12, bounds)
-        || [x + 8, y + dy, 'start'];
-      labG.append(el('circle', { cx: x, cy: y, r: 2, fill: INK }),
-        el('path', { d: pathD([[x, y], [spot[2] === 'start' ? spot[0] - 2 : spot[0] + 2, spot[1] - 4]]), stroke: INK, 'stroke-width': 0.6, fill: 'none' }),
-        txt(spot[0], spot[1], text, { 'font-size': 11, 'font-weight': 700, fill: INK, 'text-anchor': spot[2] }));
-    }
-  }
-
   const signed = v => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0');
-  for (const { q, front, tee, side, dFront, dTee, mine } of pairs) {
+  for (const { q, front, tee, side, dFront, dTee, mine, teeOnly } of pairs) {
     const [x, y] = P(q);
     if (y > bottom - 6 || y < top + 6) continue; // off the map (short of where it starts)
     if (opts.teeView && tee > 130) continue; // the tees box: just what's near the tees
     // Four rows: blue up/down to the green, red to the front, black from the
     // tee, blue up/down from the tee. The labeller boxes them from 32 above
     // the anchor's y to 10 below; their middle (my) is level with the spot.
-    const wdt = Math.max(textW(front, 10), textW(tee, 9.5), dFront != null ? textW(signed(dFront), 8) : 0, dTee != null ? textW(signed(dTee), 8) : 0) + 2, hgt = 40;
+    // (Par 3s' front and back of the green: just the two rows from the tee.)
+    const wdt = Math.max(teeOnly ? 0 : textW(front, 10), textW(tee, 9.5), dFront != null && !teeOnly ? textW(signed(dFront), 8) : 0, dTee != null ? textW(signed(dTee), 8) : 0) + 2, hgt = teeOnly ? 22 : 40;
     labG.append(mine ? el('circle', { cx: x, cy: y, r: 2.8, fill: '#f3c623', stroke: INK, 'stroke-width': 1 }) : el('circle', { cx: x, cy: y, r: 1.9, fill: INK }));
     // Level with the spot, so the line out to it is straight across; it may
     // run over the edge of its bunker.
@@ -628,8 +622,13 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const x0 = anc === 'start' ? sx : sx - wdt, my = sy - 10;
     const ex = anc === 'start' ? x0 - 2 : x0 + wdt + 2;
     const knee = anc === 'start' ? ex - 4 : ex + 4;
-    labG.append(el('path', { d: Math.abs(my - y) < 1 ? pathD([[x, y], [ex, y]]) : pathD([[x, y], [knee, y], [ex, my]]), stroke: INK, 'stroke-width': 0.6, fill: 'none' }),
-      txt(x0, my - 3, front, { 'font-size': 10, 'font-weight': 700, fill: RED }),
+    labG.append(el('path', { d: Math.abs(my - y) < 1 ? pathD([[x, y], [ex, y]]) : pathD([[x, y], [knee, y], [ex, my]]), stroke: INK, 'stroke-width': 0.6, fill: 'none' }));
+    if (teeOnly) {
+      labG.append(txt(x0, my + 3, tee, { 'font-size': 9.5, fill: INK }));
+      if (dTee != null) labG.append(txt(x0, my + 12, signed(dTee), { 'font-size': 8, fill: BLUE, 'font-weight': 700 }));
+      continue;
+    }
+    labG.append(txt(x0, my - 3, front, { 'font-size': 10, 'font-weight': 700, fill: RED }),
       txt(x0, my + 8, tee, { 'font-size': 9.5, fill: INK }));
     if (dFront != null) labG.append(txt(x0, my - 13, signed(dFront), { 'font-size': 8, fill: BLUE, 'font-weight': 700 }));
     if (dTee != null) labG.append(txt(x0, my + 17, signed(dTee), { 'font-size': 8, fill: BLUE, 'font-weight': 700 }));
