@@ -527,27 +527,30 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       if (pts.length < 2) continue;
       const fr = pts.map(toFront);
       let iS = fr.indexOf(Math.max(...fr)), iE = fr.indexOf(Math.min(...fr));
-      if (x.t === 'water') { // the nearest point from the tee (to reach it) and the farthest (to carry it all)
+      // Greenside bunkers: left off, except on par 3s (where they're what's in
+      // play), with their reach and carry from the tee like the green's numbers.
+      const greenside = x.t === 'bunker' && fr[iE] < 10;
+      if (greenside && ch.par !== 3) continue;
+      if (x.t === 'water' || greenside) { // the nearest point from the tee (to reach it) and the farthest (to carry it all)
         const dt = pts.map(q => dist(q, [0, 0]));
         iS = dt.indexOf(Math.min(...dt)); iE = dt.indexOf(Math.max(...dt));
       }
       if (fr[iS] > 440) continue; // behind the tee
-      if (x.t === 'bunker' && fr[iE] < 10) continue; // greenside
       const nearTee = q => dist(q, [0, 0]) < 25; // beside the tee: no number there
       if (nearTee(pts[iS]) && (x.t !== 'water' || nearTee(pts[iE]))) continue;
       const c = centroid(pts);
       const nearLine = walk.reduce((b, w) => (dist(w.p, c) < dist(b.p, c) ? w : b), walk[0]);
       const side = (c[0] - nearLine.p[0]) * nearLine.d[1] - (c[1] - nearLine.p[1]) * nearLine.d[0] >= 0 ? 1 : -1;
       // Water by the tee still gets its far end (the carry).
-      if (!nearTee(pts[iS])) pair(pts[iS], Math.round(fr[iS]), Math.round(dist(pts[iS], [0, 0])), side);
-      if (Math.abs(fr[iS] - fr[iE]) >= 3 || dist(pts[iE], pts[iS]) >= 3 || nearTee(pts[iS])) pair(pts[iE], Math.round(fr[iE]), Math.round(dist(pts[iE], [0, 0])), side);
+      if (!nearTee(pts[iS])) pair(pts[iS], Math.round(fr[iS]), Math.round(dist(pts[iS], [0, 0])), side, false, greenside);
+      if (Math.abs(fr[iS] - fr[iE]) >= 3 || dist(pts[iE], pts[iS]) >= 3 || nearTee(pts[iS])) pair(pts[iE], Math.round(fr[iE]), Math.round(dist(pts[iE], [0, 0])), side, false, greenside);
     }
   }
 
   // Water across the line of play: where the centre line, and lines 20 yards
   // either side of it, go into the water and come out of it (the carry).
   if (prefs.hazards && prefs.water) {
-    const near = (q, d) => pairs.some(pr => dist(pr.q, q) < d);
+    const near = (q, d) => pairs.some(pr => !pr.teeOnly && dist(pr.q, q) < d); // (the green's and greenside bunkers' numbers don't count)
     for (const x of F.own.filter(x => x.t === 'water')) {
       const r = closeRing(ringOf(x)).map(f.fwd);
       for (const off of [0, -20, 20]) {
@@ -599,6 +602,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     });
   }
   const signed = v => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0');
+  const bunkerRings = feats.filter(o => o.x.t === 'bunker' && prefs.bunkers).map(o => o.r.map(P));
   for (const { q, front, tee, side, dFront, dTee, mine, teeOnly } of pairs) {
     const [x, y] = P(q);
     if (y > bottom - 6 || y < top + 6) continue; // off the map (short of where it starts)
@@ -617,7 +621,14 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     // straight out and then a short step to the numbers.
     const more = [];
     for (const dy of [-14, 14, -26, 26]) for (const dir of [side, -side]) for (const dx of [14, 24, 34, 46]) more.push([x + dir * dx, y + 10 + dy, dir > 0 ? 'start' : 'end']);
-    const spot = lab.place(cands, wdt, hgt, bounds) || lab.place(more, wdt, hgt, bounds) || [x + side * 10, y + 10, side > 0 ? 'start' : 'end'];
+    // Spots whose line out would run through a bunker come last.
+    const clear = ([sx, sy, anc]) => {
+      const x0 = anc === 'start' ? sx : sx - wdt, my = sy - 10, ex = anc === 'start' ? x0 - 2 : x0 + wdt + 2, knee = anc === 'start' ? ex - 4 : ex + 4;
+      const segs = Math.abs(my - y) < 1 ? [[[x, y], [ex, y]]] : [[[x, y], [knee, y]], [[knee, y], [ex, my]]];
+      return !segs.some(([a, b]) => bunkerRings.some(r => { const t = firstCross(a, b, r); return t != null && t > 0.04; }));
+    };
+    const byClear = l => [...l.filter(clear), ...l.filter(c => !clear(c))];
+    const spot = lab.place(byClear(cands), wdt, hgt, bounds) || lab.place(byClear(more), wdt, hgt, bounds) || [x + side * 10, y + 10, side > 0 ? 'start' : 'end'];
     const [sx, sy, anc] = spot;
     const x0 = anc === 'start' ? sx : sx - wdt, my = sy - 10;
     const ex = anc === 'start' ? x0 - 2 : x0 + wdt + 2;
