@@ -13,6 +13,7 @@ import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast, complexHol
 import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, drawnRing, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
+import { bookPages } from './book.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js';
 import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, submitRound, isScouting, isTourneyScout, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
@@ -899,6 +900,36 @@ export function renderHole(view, n) {
   const sgtRow = viewSwitch('SG map view', () => showSgt, setSgt, 'From the tee only');
   const linesRow = viewSwitch('Course lines view', () => showOutlines, setOutlines);
   const cleanRow = viewSwitch('Clean view', () => cleanView, setClean);
+  // Yardage book view (GPS Overview only): the hole drawn as its yardage book
+  // pages (green page over the hole page), with no tools or crosshair; the hole
+  // pill still goes round the holes. Stays on from hole to hole this visit.
+  let bookView = scouting && sessionStorage.getItem('gs:bookView') === '1';
+  const bookEl = h('div', { class: 'bookview', hidden: true });
+  let bookToken = 0;
+  const drawBookView = async () => {
+    const my = ++bookToken;
+    bookEl.replaceChildren(h('small', { class: 'bookstatus' }, 'Drawing…'));
+    const helpers = { holeFeatures, ownGreen };
+    let pages;
+    try { pages = await bookPages(n, teeName, {}, helpers, { tourney }); } catch (e) {
+      console.error('yardage book view', e);
+      try { pages = await bookPages(n, teeName, { contours: false, greenContours: false, slopes: false, deltas: false }, helpers, { tourney }); } catch (e2) {
+        if (my === bookToken) bookEl.replaceChildren(h('div', { class: 'bookerr' }, `Couldn’t draw hole ${n}: ${e2.message || e2}`));
+        return;
+      }
+    }
+    if (my !== bookToken || !bookView) return;
+    bookEl.replaceChildren(h('div', { class: 'flipbook' }, ...pages.reverse()));
+  };
+  const setBookView = v => {
+    bookView = v;
+    if (v) sessionStorage.setItem('gs:bookView', '1'); else sessionStorage.removeItem('gs:bookView');
+    bookEl.hidden = !v;
+    holeEl()?.classList.toggle('bookmode', v);
+    viewBtn.classList.toggle('on', v || cleanView);
+    if (v) drawBookView(); else bookEl.replaceChildren();
+  };
+  const bookRow = viewSwitch('Yardage book view', () => bookView, setBookView);
   // Elevation (courses built with tools/elevation.py): contour lines with a
   // row of intervals, and plays-like yardages by the crosshair.
   let styleReady = false; // the map's load event has run (sources can be added)
@@ -941,9 +972,9 @@ export function renderHole(view, n) {
   const playsWrap = h('div', { class: 'playswrap', hidden: true }, playsBtn, playsOpts);
   const elevBox = h('div', { class: 'viewelev', hidden: true }, contourRow, contourChips);
   elevIndex().then(ix => { elevInfo = ix[elevId] || null; elevBox.hidden = !elevInfo; playsWrap.hidden = tourney || !elevInfo; if (elevInfo && elevPrefs.playsLike && map === m) update(); });
-  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), tourney ? null : sgtRow, tourney ? null : linesRow, cleanRow, elevBox);
+  const viewBox = h('div', { class: 'sheet viewbox', hidden: true }, h('strong', {}, 'View'), scouting ? bookRow : null, tourney ? null : sgtRow, tourney ? null : linesRow, cleanRow, elevBox);
   const drawViewBox = () => {
-    sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync();
+    sgtRow.sync(stage() !== 'pin' && stage() !== 'putt' && !planShots().length); linesRow.sync(); cleanRow.sync(); bookRow.sync();
     contourRow.sync(); contourChips.sync();
     contourChips.classList.toggle('off', !contoursOn());
   };
@@ -1445,7 +1476,7 @@ export function renderHole(view, n) {
   liveUnsub = onLiveStatus(() => { if (!liveBox.hidden) openLiveBox(); });
   if (!scouting && !watching && !viewing()) shareCurrent();
 
-  view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (wi && !wi.id.startsWith('sv-') ? ' watchlive' : '') + (toolsBtn.open ? ' toolsopen' : '') + (sgBtn.open ? ' sgopen' : '') }, mapEl,
+  view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (wi && !wi.id.startsWith('sv-') ? ' watchlive' : '') + (toolsBtn.open ? ' toolsopen' : '') + (sgBtn.open ? ' sgopen' : '') + (bookView ? ' bookmode' : '') }, mapEl, bookEl,
     watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') + (tourney ? ' tourney' : '') }, scouting ? `GPS Overview${tourney ? ' · Tournament' : ''}` : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, playsWrap, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { closeView(); menu.hidden = !menu.hidden; } }, '☰'),
@@ -1455,6 +1486,7 @@ export function renderHole(view, n) {
       h('div', {}, pillSmall, pillStrong),
       h('a', { href: `#/hole/${nextHole}`, 'aria-label': 'Next hole' }, '›'))));
 
+  if (bookView) { bookEl.hidden = false; viewBtn.classList.add('on'); drawBookView(); }
   // The score box is as wide as the hole pill, whatever the pill says.
   if (window.ResizeObserver) new ResizeObserver(() => { if (holePill.offsetWidth) chips.style.width = `${holePill.offsetWidth}px`; }).observe(holePill);
   const m = map = new maplibregl.Map({

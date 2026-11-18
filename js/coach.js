@@ -462,6 +462,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.8.0', ['GPS Overview: Yardage book view in the View box. Switch it on and the hole turns into its yardage book pages (the green page over the hole page, from your tee box), with no tools or crosshair; ‹ › on the hole pill still go round the holes, and it stays on until you switch it off']],
   ['1.7.2', ['Yardage book: tee boxes are grey instead of green, and the one you’re playing from is dark with a heavy outline so it stands out']],
   ['1.7.1', ['Yardage book: the tees box is small and top left. It shows just the tee markers as they’re drawn on the map (with a little ground in front), a yellow dot on the front of each and lines out to a ruler, so the gaps are measured front to front. Beside the ruler, each tee’s yards to the front and how far it is from yours: red + for further back (add it to the black numbers from that tee), green − for further forward']],
   ['1.7.0', ['New course: Cedar Crest Golf Course (Dallas), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the sand in the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],

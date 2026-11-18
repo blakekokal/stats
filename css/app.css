@@ -628,3 +628,11 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .bookpdf small { width: 100%; color: #4a5a50; font-size: 12px; line-height: 1.4; }
 .bookpdf a.bookbtn { display: inline-flex; align-items: center; text-decoration: none; }
 .bookbtn.primary { background: #1c3a5e; color: #fff; border-color: #1c3a5e; }
+/* Yardage book view (GPS Overview > View): the hole's book pages fill the
+   screen; only the hole pill, View, the menu and their boxes stay. */
+.holeview.bookmode > :not(.bookview):not(.holepill):not(.menu):not(.cleanview):not(.sheet):not(.leave) { display: none !important; }
+.holeview .bookview { position: absolute; inset: 0; overflow: auto; -webkit-overflow-scrolling: touch; background: #e9ebef; display: flex; justify-content: center; align-items: flex-start; padding: calc(12px + env(safe-area-inset-top)) 12px calc(90px + env(safe-area-inset-bottom)); box-sizing: border-box; }
+.holeview .bookview[hidden] { display: none; }
+.holeview .bookview .bookstatus { margin-top: 40vh; color: #555; }
+.holeview.bookmode .fab.cleanview { bottom: calc(70px + env(safe-area-inset-bottom)); }
+.holeview.bookmode .sheet.viewbox { bottom: calc(70px + env(safe-area-inset-bottom)); }
