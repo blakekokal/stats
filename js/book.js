@@ -59,16 +59,21 @@ function loadPrefs() {
   out.onlyHole = out.greenPage = out.hazards = out.deltas = true;
   // A new name (was gridYd, 3 to start): everyone starts on the 5-yard grid, like a tour book.
   out.gridYd = out.gridYards = [3, 5].includes(p.gridYards) ? p.gridYards : 5;
-  // Yardage markers: the distances to the front typed in (null: 50 · 100 · 150 · 200, and 250 · 300 on par 5s).
+  // Yardage markers: the distances to the front of the green, a list for each par ({ 3: [], 4: [...], 5: [...] }).
   out.markers = cleanMarkers(p.markers);
   return out;
 }
-export const DEFAULT_MARKERS = 'Default: 50 · 100 · 150 · 200 (250 · 300 on par 5s)';
+export const DEFAULT_MARKERS = { 3: [], 4: [50, 100, 150, 200], 5: [50, 100, 150, 200, 250, 300] };
+const cleanList = l => [...new Set((Array.isArray(l) ? l : []).map(Number).filter(x => Number.isFinite(x) && x >= 5 && x <= 600).map(Math.round))].sort((a, b) => a - b);
 function cleanMarkers(m) {
-  if (!Array.isArray(m)) return null;
-  const v = [...new Set(m.map(Number).filter(x => Number.isFinite(x) && x >= 5 && x <= 600).map(Math.round))].sort((a, b) => a - b);
-  return v.length ? v : null;
+  // (Before 1.9.1 one list was used on par 4s and 5s.)
+  if (Array.isArray(m)) return { 3: [], 4: cleanList(m), 5: cleanList(m) };
+  const out = {};
+  for (const par of [3, 4, 5]) out[par] = m && Array.isArray(m[par]) ? cleanList(m[par]) : [...DEFAULT_MARKERS[par]];
+  return out;
 }
+// The markers on a hole of this par (a par 6 uses the par 5 list).
+const markersFor = (prefs, par) => (prefs.markers || DEFAULT_MARKERS)[Math.min(5, Math.max(3, par))] || [];
 const savePrefs = p => { try { localStorage.setItem(PREFS_KEY, JSON.stringify(p)); } catch { /* not kept */ } };
 
 // ---------- geometry ----------
@@ -552,8 +557,8 @@ async function holePage(n, teeName, prefs, helpers, opts) {
 
   // Down the middle: 50, 100, 150 and 200 to the front of the green (and 250
   // and 300 on a par 5).
-  if (prefs.layup && !opts.teeView && ch.par > 3) { // (they're on the map, not in the tees box; none on a par 3)
-    for (const yd of prefs.markers || (ch.par >= 5 ? [50, 100, 150, 200, 250, 300] : [50, 100, 150, 200])) {
+  if (prefs.layup && !opts.teeView) { // (they're on the map, not in the tees box; par 3s have none to start)
+    for (const yd of markersFor(prefs, ch.par)) {
       const w = spotAt(yd);
       if (!w || w.fromTee < 40) continue;
       pair(w.p, yd, Math.round(w.fromTee), 1);
@@ -1426,25 +1431,30 @@ export function openBookSetup(opts) {
   };
   const close = () => { ov.remove(); document.body.classList.remove('bookopen'); };
   const go = autoPdf => { ov.remove(); openBook(1, { ...opts, book, teeName, autoPdf }); };
-  // Yardage markers: Edit opens a list of the distances (to the front of the
-  // green) to type in or take out.
-  const chips = h('div', { class: 'markerchips' });
+  // Yardage markers: Edit opens the markers in use on par 3s, 4s and 5s (yards
+  // to the front of the green); tap one to take it off, or type one in to add it.
+  const editor = h('div', { class: 'markereditor', hidden: true });
   const drawChips = () => {
-    const now = prefs.markers;
-    chips.replaceChildren(...(now ? now.map(v => h('button', { class: 'markerchip', 'aria-label': `Remove ${v}`, onclick: () => {
-      prefs.markers = cleanMarkers(now.filter(x => x !== v)) || null; keep(); drawChips();
-    } }, `${v} ✕`)) : [h('div', { class: 'setuphint' }, DEFAULT_MARKERS)]));
+    prefs.markers = cleanMarkers(prefs.markers);
+    editor.replaceChildren(...[3, 4, 5].map(par => {
+      const now = prefs.markers[par];
+      const input = h('input', { type: 'number', inputmode: 'numeric', min: 5, max: 600, placeholder: 'Add yards, e.g. 25' });
+      const add = () => {
+        const v = Math.round(+input.value);
+        if (!(v >= 5 && v <= 600)) return;
+        prefs.markers[par] = cleanList([...now, v]); keep(); drawChips();
+      };
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') add(); });
+      const same = now.join() === DEFAULT_MARKERS[par].join();
+      return h('div', { class: 'markerpar' },
+        h('div', { class: 'markerhead' }, h('b', {}, `Par ${par}s`),
+          same ? h('small', {}, 'default') : h('button', { class: 'linkbtn', onclick: () => { prefs.markers[par] = [...DEFAULT_MARKERS[par]]; keep(); drawChips(); } }, 'Reset')),
+        h('div', { class: 'markerchips' }, ...(now.length ? now.map(v => h('button', { class: 'markerchip', 'aria-label': `Remove ${v} on par ${par}s`, onclick: () => {
+          prefs.markers[par] = now.filter(x => x !== v); keep(); drawChips();
+        } }, `${v} ✕`)) : [h('small', { class: 'markernone' }, 'None')])),
+        h('div', { class: 'row' }, input, h('button', { class: 'setupplain', style: 'flex:0 0 64px;', onclick: add }, 'Add')));
+    }));
   };
-  const addInput = h('input', { type: 'number', inputmode: 'numeric', min: 5, max: 600, placeholder: 'Yards, e.g. 25' });
-  const addMarker = () => {
-    const v = Math.round(+addInput.value);
-    if (!(v >= 5 && v <= 600)) return;
-    prefs.markers = cleanMarkers([...(prefs.markers || [50, 100, 150, 200]), v]); keep(); addInput.value = ''; drawChips();
-  };
-  addInput.addEventListener('keydown', e => { if (e.key === 'Enter') addMarker(); });
-  const editor = h('div', { class: 'markereditor', hidden: true }, chips,
-    h('div', { class: 'row' }, addInput, h('button', { class: 'setupplain', style: 'flex:0 0 72px;', onclick: addMarker }, 'Add')),
-    h('button', { class: 'linkbtn', onclick: () => { prefs.markers = null; keep(); drawChips(); } }, 'Back to the default'));
   const markersBox = h('div', { class: 'markersbox', hidden: !prefs.layup },
     h('button', { class: 'setupplain', onclick: () => { editor.hidden = !editor.hidden; if (!editor.hidden) drawChips(); } }, 'Edit yardage markers'), editor);
   const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: close });
