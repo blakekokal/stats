@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.11.1', ['Cowboys #14–18: the fairway now runs under the green with a collar round it (no more cut-out for the green), like #10–13; bunkers stay cut out']],
   ['1.11.0', ['New courses: Stevens Park Golf Course (Dallas), Tierra Verde Golf Club (Arlington) and Riverside Golf Club (Grand Prairie), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the sand in the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)', 'Riverside: #13 and #18 share one big double green, so each hole measures to its own end of it']],
   ['1.10.4', ['Cowboys: trees added along every hole (935 round trees on the tree canopy in the satellite picture, none in OB or on greens, fairways, tees, bunkers or water); everything else, including your published edits, is unchanged']],
   ['1.10.3', ['Hole editor: Save and Save & finish no longer get stuck on Saving…. The phone’s storage had filled up with copies of every course’s edits; Save & finish now publishes first and keeps no copy of its own, copies already published are cleared when the app opens, and if saving fails it says why and leaves your changes on screen to try again (publishing gives up after 30 s)']],
