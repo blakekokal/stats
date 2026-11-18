@@ -425,11 +425,13 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     }
   }
 
-  // Centre line, tee to the middle of the green.
+  // Centre line, tee to the front of the green (where every number is
+  // measured to), with a yellow dot there.
   if (prefs.centre) {
-    const end = greenL ? centroid(greenL) : L.at(-1);
+    const end = greenL ? frontPointFn(f, greenRing, pin)(L.at(-2)) : L.at(-1);
     mapG.append(el('path', { d: pathD([...L.slice(0, -1), end].map(P)), fill: 'none', stroke: SOFT, 'stroke-width': 0.8, 'stroke-dasharray': '3 3' }));
     for (const p of L.slice(1, -1)) { const [x, y] = P(p); mapG.append(el('circle', { cx: x, cy: y, r: 1.8, fill: '#fff', stroke: SOFT, 'stroke-width': 0.8 })); }
+    if (greenL) { const [x, y] = P(end); labG.append(el('circle', { cx: x, cy: y, r: 2.4, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.6 })); }
   }
   if (greenL) { const [x, y] = P(centroid(greenL)); lab.block([x - 6, y - 6, x + 6, y + 6]); }
 
