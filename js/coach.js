@@ -462,6 +462,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.6.7', ['Yardage book: Print now makes a PDF on your phone, then Share / Print or Open PDF. Pick the layout beside the print buttons: Flip book · legal (two strips per 8½ × 14 sheet: cut down the middle, fold each strip in half with the printing outside, stack them with the folds at the top, and each hole’s green sits above its hole page, like a tour book), Flip book · letter (the same at 79%), or Single pages (4¼ × 7). Print at 100%']],
   ['1.6.6', ['Yardage book: the plays-like line (PLAYS +N · N FT UPHILL) is gone from the top of each hole page, and from Show']],
   ['1.6.5', ['Yardage book: only the hole is drawn, like the live view’s spotlight. Contours, arrows, trees and other holes stop about 46 yards either side of the line of play and fade out, which saves ink (Show › Only this hole turns it off)', 'Yardage book: the downhill arrows are steadier. Each one is checked against the slope over a short and a longer distance, and left out where they disagree, so none point against the way the ground falls']],
   ['1.6.4', ['Yardage book: the green page looks like a tour book’s. It zooms in on the green as far as the USGA allows (3/8 inch to 5 yards when printed at 100%), with a 5-yard grid over the whole map, yards from the front down the left edge of the green, a blue line up the middle through the front and back marks, small downhill arrows on the green, contour lines around it, and plain bunkers and water with nothing drawn over them']],

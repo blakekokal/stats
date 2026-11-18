@@ -623,3 +623,8 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
   body.bookprinting .bookprint .bookpage { display: block; width: 4.25in; height: 7in; margin: 0; box-shadow: none; border-radius: 0; page-break-after: always; break-after: page; }
   @page { size: 4.25in 7in; margin: 0; }
 }
+.bookpdf { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 10px 12px; background: #eef7ef; border-bottom: 1px solid #c9dccb; color: #1c2a22; }
+.bookpdf b { font-size: 14px; width: 100%; }
+.bookpdf small { width: 100%; color: #4a5a50; font-size: 12px; line-height: 1.4; }
+.bookpdf a.bookbtn { display: inline-flex; align-items: center; text-decoration: none; }
+.bookbtn.primary { background: #1c3a5e; color: #fff; border-color: #1c3a5e; }
