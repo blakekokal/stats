@@ -461,6 +461,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.8.10', ['GEN BOOK setup: Satellite is a switch at the top of the hole page’s list, above Fairways (off is the flat book). Bunker & water numbers and the up/down yards by each number are always on, so their switches are gone']],
   ['1.8.9', ['GEN BOOK setup page looks like GPS Overview: Flat / Satellite and Zoomed view / Entire hole as tiles like Casual / Tournament, the tee box and format as the same dropdowns, on/off switches for what to show on the hole and green pages, then MAKE PDF or Preview']],
   ['1.8.8', ['GEN BOOK setup page: in the app’s dark colours, with Show split into Hole overview page and Green overview page. Hole overview page starts with Zoomed view (from the fairway, tees in a box) or Entire hole, in place of Tees in a box. The Green page and Only this hole switches are gone (both always on), and Center line / Center numbers / Neighboring holes are spelled the US way']],
   ['1.8.7', ['GEN BOOK opens a page to set the book up first: Style (Flat or Satellite), the tee box, the Format (Double-sided · letter to start, then Double-sided · legal, then the others) and what to show. Then Preview to look through it, or Make PDF for the whole book. Your picks are kept on this device']],
