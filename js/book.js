@@ -380,7 +380,9 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   const id = `bk${n}p${Math.random().toString(36).slice(2, 7)}`;
   const svg = el('svg', { viewBox: `0 0 ${W} ${H}`, class: 'bookpage', xmlns: SVGNS, 'font-family': FONT });
   svg.append(defs(id), el('clipPath', { id: `${id}-clip` }, el('rect', { x: left, y: top, width: right - left, height: bottom - top })));
-  svg.append(el('rect', { width: W, height: H, fill: '#fff' }));
+  // Lines (the book over the satellite picture): no paper, just outlines and numbers.
+  const lines = !!opts.lines;
+  if (!lines) svg.append(el('rect', { width: W, height: H, fill: '#fff' }));
   const mapG = el('g', { 'clip-path': `url(#${id}-clip)` });
   // Labels get a white halo so they read over the contours and arrows.
   const labG = el('g', { stroke: '#fff', 'stroke-width': 2.6, 'stroke-linejoin': 'round', 'paint-order': 'stroke' });
@@ -395,12 +397,15 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   // The course's shapes, near ones first.
   const feats = course.features.filter(x => x.t !== 'ob').map(x => ({ x, r: closeRing(ringOf(x)).map(f.fwd) })).filter(o => inView(o.r));
   const own = o => F.ownSet.has(o.x);
-  const draw = (o, attrs) => mapG.append(el('path', { d: pathD(o.r.map(P), true), ...attrs }));
+  const LINE_COLOR = { water: '#5cc8ff', fairway: '#a6f08a', green: '#ffffff', bunker: '#ffe7a8', tee: '#ffffff' };
+  const draw = (o, attrs) => mapG.append(el('path', { d: pathD(o.r.map(P), true), ...(lines
+    ? { fill: 'none', stroke: LINE_COLOR[o.x.t] || '#fff', 'stroke-width': o.x === F.teeBox ? 1.6 : 0.9, ...(attrs.opacity ? { opacity: 0.6 } : {}) }
+    : attrs) }));
   const faint = o => (!own(o) ? { opacity: 0.45 } : {});
   const others = prefs.otherHoles;
   if (prefs.water) for (const o of feats.filter(o => o.x.t === 'water')) draw(o, { fill: `url(#${id}-water)`, stroke: '#4f97c7', 'stroke-width': 0.9 });
   if (prefs.fairway) for (const o of feats.filter(o => o.x.t === 'fairway' && (own(o) || others))) draw(o, { fill: '#d9f0cf', stroke: '#6aa65a', 'stroke-width': 0.9, ...faint(o) });
-  if (prefs.trees) for (const o of feats.filter(o => o.x.t === 'trees')) draw(o, { fill: '#cfe5c4', stroke: '#7fae70', 'stroke-width': 0.6, 'fill-opacity': 0.9 });
+  if (prefs.trees && !lines) for (const o of feats.filter(o => o.x.t === 'trees')) draw(o, { fill: '#cfe5c4', stroke: '#7fae70', 'stroke-width': 0.6, 'fill-opacity': 0.9 });
   for (const o of feats.filter(o => o.x.t === 'tee' && (own(o) || others))) {
     if (own(o) && !prefs.allTees && o.x !== F.teeBox) continue;
     // Tee boxes in grey; yours dark with a heavy outline.
@@ -413,14 +418,14 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       for (const r of x.p.length > 1 ? x.p.slice(1) : x.p) {
         const pts = r.map(f.fwd);
         if (!inView(pts)) continue;
-        mapG.append(el('path', { d: pathD(pts.map(P)), fill: 'none', stroke: INK, 'stroke-width': 1.1, 'stroke-dasharray': '1.2 4.5', 'stroke-linecap': 'round' }));
+        mapG.append(el('path', { d: pathD(pts.map(P)), fill: 'none', stroke: lines ? '#fff' : INK, 'stroke-width': 1.1, 'stroke-dasharray': '1.2 4.5', 'stroke-linecap': 'round' }));
       }
     }
   }
 
   // Contour lines and a field of small downhill arrows over the whole hole,
   // like a tour book (not in bunkers, water or on the green: that's the green page).
-  if (prefs.contours && info) {
+  if (prefs.contours && info && !lines) {
     const area = [viewYd[0], viewYd[2], viewYd[1], viewYd[3]];
     const R = await reliefGrid(elevId, info, f, area, 1.5, 2);
     if (R.ok) {
@@ -438,7 +443,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   // measured to), with a yellow dot there.
   if (prefs.centre) {
     const end = greenL ? frontPointFn(f, greenRing, pin)(L.at(-2)) : L.at(-1);
-    mapG.append(el('path', { d: pathD([...L.slice(0, -1), end].map(P)), fill: 'none', stroke: SOFT, 'stroke-width': 0.8, 'stroke-dasharray': '3 3' }));
+    mapG.append(el('path', { d: pathD([...L.slice(0, -1), end].map(P)), fill: 'none', stroke: lines ? '#fff' : SOFT, 'stroke-width': 0.8, 'stroke-dasharray': '3 3' }));
     for (const p of L.slice(1, -1)) { const [x, y] = P(p); mapG.append(el('circle', { cx: x, cy: y, r: 1.8, fill: '#fff', stroke: SOFT, 'stroke-width': 0.8 })); }
     if (greenL) { const [x, y] = P(end); labG.append(el('circle', { cx: x, cy: y, r: 2.4, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.6 })); }
   }
@@ -1175,6 +1180,7 @@ export function openBook(n, opts) {
 // whole hole page (no tees box), as a picture with its four corners on the
 // ground [lng, lat] (top left, top right, bottom right, bottom left) and the
 // bearing that's up the page (degrees).
+// opts.lines: outlines and numbers only, on a see-through picture (to lay over the satellite map).
 export async function bookMapImage(n, teeName, helpers, opts = {}, scale = 6) {
   const prefs = { ...loadPrefs(), teeInset: false };
   let svg;
@@ -1185,7 +1191,7 @@ export async function bookMapImage(n, teeName, helpers, opts = {}, scale = 6) {
   const [l, t, r, b] = svg.geo.rect, H = +svg.getAttribute('viewBox').split(' ')[3];
   const cv = document.createElement('canvas');
   cv.width = Math.round((r - l) * scale); cv.height = Math.round((b - t) * scale);
-  const ctx = cv.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height);
+  const ctx = cv.getContext('2d'); if (!opts.lines) { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, cv.width, cv.height); }
   await drawSvg(ctx, svg, -l * scale, -t * scale, W * scale, H * scale, await bookFontCss());
   const url = await new Promise(ok => cv.toBlob(bl => ok(URL.createObjectURL(bl)), 'image/png'));
   const corners = [[l, t], [r, t], [r, b], [l, b]].map(([u, v]) => { const [la, lo] = svg.geo.at(u, v); return [lo, la]; });
