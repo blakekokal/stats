@@ -107,10 +107,10 @@ Cedar Crest.
 
 Public, complete:
 - Tenison Park (Dallas; two courses, East and Glen, like Fields Ranch)
-- Stevens Park (Dallas)
-- Maridoe (Carrollton)
+- Stevens Park (Dallas) (building, 2026-11-18)
+- Maridoe (Carrollton) (building, 2026-11-18)
 - Texas Rangers Golf Club (Arlington)
-- Tierra Verde (Arlington)
+- Tierra Verde (Arlington) (building, 2026-11-18)
 - Cottonwood Valley (Irving)
 - The Tribute (The Colony)
 - Old American (The Colony)
