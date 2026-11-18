@@ -4,7 +4,8 @@
 #   sh tools/cowboys/rebuild_greens.sh
 set -e
 T=$(mktemp -d)
-python3 tools/greens_from_imagery.py data/cowboys.json "$T/new.json" "$T/check" "$T/tiles"
+git show 753e3c6:data/cowboys.json > "$T/osm.json"   # start from the OpenStreetMap outlines
+python3 tools/greens_from_imagery.py "$T/osm.json" "$T/new.json" "$T/check" "$T/tiles"
 python3 - "$T" <<'PY'
 import json, subprocess, sys
 T = sys.argv[1]
