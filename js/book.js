@@ -506,9 +506,33 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     }
   }
 
+  // Water across the line of play: where the centre line, and lines 20 yards
+  // either side of it, go into the water and come out of it (the carry).
+  if (prefs.hazards && prefs.water) {
+    const near = (q, d) => pairs.some(pr => dist(pr.q, q) < d);
+    for (const x of F.own.filter(x => x.t === 'water')) {
+      const r = closeRing(ringOf(x)).map(f.fwd);
+      for (const off of [0, -20, 20]) {
+        let inW = false, prev = null;
+        for (const w of walk) {
+          const q = off ? [w.p[0] + w.d[1] * off, w.p[1] - w.d[0] * off] : w.p;
+          const now = inside(q, r);
+          const mark = now !== inW ? (now ? q : prev) : null;
+          inW = now; prev = q;
+          if (!mark) continue;
+          const tee = dist(mark, [0, 0]), front = toFront(mark);
+          if (tee < 25 || front < 3) continue;
+          if (off && now) continue; // beside the line: only where it comes out (the carry)
+          if (near(mark, off ? 14 : 8)) continue;
+          pair(mark, Math.round(front), Math.round(tee), off < 0 ? -1 : 1);
+        }
+      }
+    }
+  }
+
   // Down the middle: 50, 100, 150 and 200 to the front of the green (and 250
   // and 300 on a par 5).
-  if (prefs.layup && !opts.teeView) { // (they're on the map; not in the tees box)
+  if (prefs.layup && !opts.teeView && ch.par > 3) { // (they're on the map, not in the tees box; none on a par 3)
     for (const yd of ch.par >= 5 ? [50, 100, 150, 200, 250, 300] : [50, 100, 150, 200]) {
       const w = spotAt(yd);
       if (!w || w.fromTee < 40) continue;
