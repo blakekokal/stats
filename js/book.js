@@ -846,13 +846,14 @@ export function openBook(n, opts) {
   //           in half (printing outside) and stack them, folds at the top
   //  letter - the same on 8 1/2 x 11, at 79%
   //  duplex-letter (the default) / duplex-legal - printed on both sides:
-  //           4 1/4 x 7 cards, four to a legal sheet (two to a letter one),
+  //           cards four to a sheet (2 x 2; on letter at 75%, about 3.2 x
+  //           5.25 in), or two big ones to a letter sheet (duplex-letter-2),
   //           the hole page on the front and the next hole's green on the
   //           back; cut apart, stack, bind at the top. No folding.
   //  single - one 4 1/4 x 7 page per sheet
   // A new key, so everyone starts on double-sided letter (8 1/2 x 11, what
   // most printers and print shops use).
-  const LAYOUTS = [['duplex-letter', 'Double-sided · letter'], ['duplex-legal', 'Double-sided · legal'], ['letter', 'Fold · letter'], ['legal', 'Fold · legal'], ['single', 'Single pages']];
+  const LAYOUTS = [['duplex-letter', 'Double-sided · letter'], ['duplex-letter-2', 'Double-sided · letter, 2 big cards'], ['duplex-legal', 'Double-sided · legal'], ['letter', 'Fold · letter'], ['legal', 'Fold · legal'], ['single', 'Single pages']];
   let layout = (() => { try { return localStorage.getItem('gs:bookLayout3') || 'duplex-letter'; } catch { return 'duplex-letter'; } })();
   if (!LAYOUTS.some(([v]) => v === layout)) layout = 'duplex-letter';
   const layoutSel = h('select', { 'aria-label': 'Print layout', onchange: e => { layout = e.target.value; try { localStorage.setItem('gs:bookLayout3', layout); } catch { /* not kept */ } } },
@@ -918,7 +919,7 @@ export function openBook(n, opts) {
         // same column and the mirrored row, and reads the right way up when
         // the card is flipped up over the top, like a tour book. The cards
         // are centred on the sheet, so the two sides line up.
-        const legal = layout === 'duplex-legal', sw = 8.5, sh = legal ? 14 : 11, rows = legal ? 2 : 1, per = 2 * rows;
+        const legal = layout === 'duplex-legal', sw = 8.5, sh = legal ? 14 : 11, rows = layout === 'duplex-letter-2' ? 1 : 2, per = 2 * rows; // four cards a sheet (two big ones on letter-2)
         const k = Math.min((sw - 2 * MARGIN) / 8.5, (sh - 2 * MARGIN) / (7 * rows), 1);
         const cw = 4.25 * k * DPI, chh = 7 * k * DPI, x0 = (sw * DPI - 2 * cw) / 2, y0 = (sh * DPI - rows * chh) / 2;
         const nSheets = Math.ceil(leaves.length / per);
@@ -973,11 +974,11 @@ export function openBook(n, opts) {
       const file = (() => { try { return new File([blob], name, { type: 'application/pdf' }); } catch { return null; } })();
       const canShare = file && navigator.canShare?.({ files: [file] });
       pdfBar.replaceChildren(...[
-        h('b', {}, `PDF ready · ${{ 'duplex-legal': 'double-sided, legal paper, 4 cards per sheet', 'duplex-letter': 'double-sided, letter paper, 2 cards per sheet', legal: 'fold, legal paper, 2 per sheet', letter: 'fold, letter paper, 2 per sheet', single: '4¼ × 7 pages' }[layout]}`),
+        h('b', {}, `PDF ready · ${{ 'duplex-legal': 'double-sided, legal paper, 4 cards per sheet', 'duplex-letter': 'double-sided, letter paper, 4 cards per sheet', 'duplex-letter-2': 'double-sided, letter paper, 2 big cards per sheet', legal: 'fold, legal paper, 2 per sheet', letter: 'fold, letter paper, 2 per sheet', single: '4¼ × 7 pages' }[layout]}`),
         canShare ? h('button', { class: 'bookbtn primary', onclick: () => navigator.share({ files: [file], title: name }).catch(() => {}) }, 'Share / Print') : null,
         h('a', { class: 'bookbtn', href: pdfUrl, target: '_blank', download: name }, 'Open PDF'),
         h('small', {}, layout === 'single' ? 'Print at 100% (actual size, not “fit to page”).'
-          : layout.startsWith('duplex') ? `Print at 100% on ${layout === 'duplex-legal' ? 'legal (8½ × 14)' : 'letter'} paper (at a print shop, ask for legal 8½ × 14, actual size), two-sided, flip on short edge. Cut along the dashed lines (trimming off the margin)${all ? ', stack them by the number at the foot of each (1 on top)' : ''} and staple or clip along the top.`
+          : layout.startsWith('duplex') ? `Print at 100% on ${layout === 'duplex-legal' ? 'legal (8½ × 14)' : 'letter (8½ × 11)'} paper (at a print shop, ask for ${layout === 'duplex-legal' ? 'legal 8½ × 14' : 'letter 8½ × 11'}, actual size), two-sided, flip on short edge. Cut along the dashed lines (trimming off the margin)${all ? ', stack them by the number at the foot of each (1 on top)' : ''} and staple or clip along the top.`
           : `Print at 100% on ${layout === 'legal' ? 'legal (8½ × 14)' : 'letter'} paper. Cut along the dashed lines, fold each strip in half at the marks with the printing outside, and stack them in order${all ? ' by the number at the foot of each strip (1 on top)' : ''}, folds at the top, then staple or clip along the fold.`)].filter(Boolean));
       pdfBar.hidden = false;
       status.textContent = '';
