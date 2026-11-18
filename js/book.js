@@ -34,7 +34,7 @@ export const BOOK_OPTIONS = [
   ['teeInset', 'Tees in a box (the map starts at the fairway)', 'Hole page', true],
   ['allTees', 'Every tee box', 'Hole page', true],
   ['centre', 'Centre line', 'Hole page', true],
-  ['layup', 'Centre numbers (100 · 150 · 200 · 250 · 300)', 'Hole page', true],
+  ['layup', 'Centre numbers (50 · 100 · 150 · 200 · 250 · 300)', 'Hole page', true],
   ['hazards', 'Bunker & water numbers (start and end)', 'Hole page', true],
   ['contours', 'Contours & slope arrows', 'Hole page', true, true],
   ['deltas', 'Up/down yards by each number', 'Hole page', true, true],
@@ -483,24 +483,29 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     const hz = F.own.filter(x => (x.t === 'bunker' && prefs.bunkers) || (x.t === 'water' && prefs.water));
     for (const x of hz) {
       // Only the part near the line of play (a lake can be huge).
-      const pts = ringOf(x).map(f.fwd).filter(p => walk.some(w => Math.abs(w.p[1] - p[1]) < 3 && Math.abs(w.p[0] - p[0]) < 45));
+      // Water reaches further: a pond well off the line is still worth its numbers.
+      const reach = x.t === 'water' ? 80 : 45;
+      const pts = ringOf(x).map(f.fwd).filter(p => walk.some(w => Math.abs(w.p[1] - p[1]) < 3 && Math.abs(w.p[0] - p[0]) < reach));
       if (pts.length < 2) continue;
       const fr = pts.map(toFront);
       const iS = fr.indexOf(Math.max(...fr)), iE = fr.indexOf(Math.min(...fr));
-      if (fr[iS] > 440 || dist(pts[iS], [0, 0]) < 25) continue; // behind or beside the tee
+      if (fr[iS] > 440) continue; // behind the tee
       if (x.t === 'bunker' && fr[iE] < 10) continue; // greenside
+      const nearTee = q => dist(q, [0, 0]) < 25; // beside the tee: no number there
+      if (nearTee(pts[iS]) && (x.t !== 'water' || nearTee(pts[iE]))) continue;
       const c = centroid(pts);
       const nearLine = walk.reduce((b, w) => (dist(w.p, c) < dist(b.p, c) ? w : b), walk[0]);
       const side = (c[0] - nearLine.p[0]) * nearLine.d[1] - (c[1] - nearLine.p[1]) * nearLine.d[0] >= 0 ? 1 : -1;
-      pair(pts[iS], Math.round(fr[iS]), Math.round(dist(pts[iS], [0, 0])), side);
-      if (fr[iS] - fr[iE] >= 3) pair(pts[iE], Math.round(fr[iE]), Math.round(dist(pts[iE], [0, 0])), side);
+      // Water by the tee still gets its far end (the carry).
+      if (!nearTee(pts[iS])) pair(pts[iS], Math.round(fr[iS]), Math.round(dist(pts[iS], [0, 0])), side);
+      if (fr[iS] - fr[iE] >= 3 || nearTee(pts[iS])) pair(pts[iE], Math.round(fr[iE]), Math.round(dist(pts[iE], [0, 0])), side);
     }
   }
 
-  // Down the middle: 100, 150 and 200 to the front of the green (and 250 and
-  // 300 on a par 5).
+  // Down the middle: 50, 100, 150 and 200 to the front of the green (and 250
+  // and 300 on a par 5).
   if (prefs.layup && !opts.teeView) { // (they're on the map; not in the tees box)
-    for (const yd of ch.par >= 5 ? [100, 150, 200, 250, 300] : [100, 150, 200]) {
+    for (const yd of ch.par >= 5 ? [50, 100, 150, 200, 250, 300] : [50, 100, 150, 200]) {
       const w = spotAt(yd);
       if (!w || w.fromTee < 40) continue;
       pair(w.p, yd, Math.round(w.fromTee), 1);
