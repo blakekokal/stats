@@ -905,7 +905,7 @@ export function renderHole(view, n) {
   // yardage book page, still zoomable and turnable, with no tools or
   // crosshair; tap the green for the green page. The hole pill still goes
   // round the holes. Stays on from hole to hole this visit.
-  // '' off, 'book' the plain book, 'sat' the book over the satellite picture at half strength.
+  // '' off, 'book' the plain book, 'sat' the satellite picture with the book's outlines and numbers on it.
   let bookView = scouting ? ({ 1: 'book', book: 'book', sat: 'sat' }[sessionStorage.getItem('gs:bookView')] || '') : '';
   const bookMapEl = h('div', { class: 'bookmap' });
   const bookNote = h('small', { class: 'booknote' }, 'Drawing…');
@@ -924,7 +924,7 @@ export function renderHole(view, n) {
     const my = ++bookToken;
     bookNote.textContent = 'Drawing…'; bookNote.hidden = false;
     let img;
-    try { img = await bookMapImage(n, teeName, bookHelpers, { tourney }); } catch (e) {
+    try { img = await bookMapImage(n, teeName, bookHelpers, { tourney, lines: bookView === 'sat' }); } catch (e) {
       console.error('yardage book view', e);
       if (my === bookToken) bookNote.textContent = `Couldn’t draw hole ${n}: ${e.message || e}`;
       return;
@@ -943,7 +943,7 @@ export function renderHole(view, n) {
       style: { version: 8,
         sources: { book: { type: 'image', url: img.url, coordinates: img.corners }, ...(bookView === 'sat' ? { sat: { type: 'raster', tiles: [TILE_URL], tileSize: 256, maxzoom: 19 } } : {}) },
         layers: [bookView === 'sat' ? { id: 'sat', type: 'raster', source: 'sat' } : { id: 'bg', type: 'background', paint: { 'background-color': '#fff' } },
-          { id: 'book', type: 'raster', source: 'book', paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear', 'raster-opacity': bookView === 'sat' ? 0.5 : 1 } }] },
+          { id: 'book', type: 'raster', source: 'book', paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear', 'raster-opacity': 1 } }] },
       center: [lng, lat], zoom, bearing: img.bearing, minZoom: zoom - 1.5, maxZoom: 21,
       pitchWithRotate: false, touchPitch: false, attributionControl: false,
     });
@@ -971,7 +971,7 @@ export function renderHole(view, n) {
     if (v) drawBookView(); else { ++bookToken; bookMap?.remove(); bookMap = null; bookGreen.hidden = true; }
   };
   const bookRow = viewSwitch('Yardage book view', () => bookView === 'book', v => setBookView(v ? 'book' : ''));
-  const bookSatRow = viewSwitch('Yardage book + satellite', () => bookView === 'sat', v => setBookView(v ? 'sat' : ''));
+  const bookSatRow = viewSwitch('Satellite book view', () => bookView === 'sat', v => setBookView(v ? 'sat' : ''));
   // Elevation (courses built with tools/elevation.py): contour lines with a
   // row of intervals, and plays-like yardages by the crosshair.
   let styleReady = false; // the map's load event has run (sources can be added)
