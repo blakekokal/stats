@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.9.6', ['Printed yardage book: the double-sided layouts have a dashed line marked CUT round every card (cut on it all round and no white margin is left on the cards), and the fold layouts have CUT down the middle and a FOLD line right across each strip']],
   ['1.9.5', ['Saved yardage books: each book has an Edit button (beside Rename and Delete) to open it, instead of tapping its name']],
   ['1.9.4', ['Yardage book: on par 3s the greenside bunkers have their numbers (yards from the tee to reach and to carry them, with up/down), like the front and back of the green', 'Yardage book: the line from a spot to its numbers no longer runs through a bunker when there’s another place for them']],
   ['1.9.3', ['Yardage book: on par 3s the front and back of the green look like the other numbers: a dot, a straight line out, the yards from the front of the tee in black and the blue up/down under it (no yards-to-the-front number, no F / B)']],
