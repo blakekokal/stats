@@ -1244,10 +1244,6 @@ export function openBook(n, opts) {
     // Like a tour book flipped open: the green page on top, the hole below the fold.
     pages.replaceChildren(h('div', { class: 'flipbook' }, ...pagesNow));
     applyZoom(); listPoints();
-    // Turned to another hole: the new pages come in from the way the finger went.
-    const fb = pages.querySelector('.flipbook');
-    if (turn && fb?.animate) fb.animate([{ transform: `translateY(${turn > 0 ? 35 : -35}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'ease-out' });
-    turn = 0;
     status.textContent = note;
     if (adding) { showSel(); if (note) status.textContent = note; }
   }
@@ -1286,15 +1282,9 @@ export function openBook(n, opts) {
     STYLES.map(([v, t]) => h('option', { value: v, selected: v === style }, t)));
   const teeSel = h('select', { 'aria-label': 'Tee box', onchange: e => { teeName = book.teeName = e.target.value; keep(); draw(); } },
     course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} tees`)));
-  let turn = 0; // the way the last page turn went (1 next, -1 back), for its slide in
-  const go = d => {
-    hole = ((hole - 1 + d + course.holes.length) % course.holes.length) + 1; turn = d;
-    const fb = pages.querySelector('.flipbook'); if (fb) fb.style.opacity = '0.4';
-    draw();
-  };
+  const go = d => { hole = ((hole - 1 + d + course.holes.length) % course.holes.length) + 1; draw(); };
   const close = () => {
     if (dirty && !confirm('Leave without saving this yardage book?')) return;
-    window.removeEventListener('resize', applyZoom); document.removeEventListener('keydown', onKey); fitObs?.disconnect();
     ov.remove(); document.body.classList.remove('bookopen'); if (hole !== n) opts.onHole?.(hole);
   };
   // Save: into Saved yardage books (a new one is named after the course and tees).
@@ -1302,70 +1292,14 @@ export function openBook(n, opts) {
     saveBook(book); dirty = false; saveBtn.classList.remove('primary');
     status.textContent = `Saved: ${book.name}`;
   } }, 'Save');
-  // Zoom: at 100% (Fit) the book lies open on the screen, the green page and
-  // the hole page both in full (one over the other like the book, or side by
-  // side when that's bigger, on a wide screen); bigger, up to 4 times, they scroll.
+  // Zoom: the pages drawn bigger (scroll round them), up to 4 times.
   let zoom = 1;
-  const zoomLabel = h('small', { class: 'bookzoom' }, 'Fit');
-  const fitWidth = fb => {
-    const cs = getComputedStyle(pages);
-    const aw = pages.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
-    const ah = pages.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
-    const rs = [...fb.querySelectorAll('svg.bookpage')].map(s => { const v = s.viewBox.baseVal; return v && v.width ? v.height / v.width : PAGE_H / W; });
-    if (!rs.length || aw <= 0 || ah <= 0) return { w: Math.min(420, Math.max(aw, 200)), side: false };
-    const gaps = 3 * (rs.length - 1);
-    const stack = Math.min(aw, (ah - gaps) / rs.reduce((a, b) => a + b, 0));
-    const side = Math.min((aw - gaps) / rs.length, ah / Math.max(...rs), 760);
-    return side > stack * 1.15 ? { w: side * rs.length + gaps, side: true } : { w: Math.min(stack, 760), side: false };
-  };
+  const zoomLabel = h('small', { class: 'bookzoom' }, '100%');
   const applyZoom = () => {
     const fb = pages.querySelector('.flipbook');
-    pages.classList.toggle('fit', zoom === 1);
-    if (fb) {
-      const f = fitWidth(fb);
-      fb.classList.toggle('side', f.side);
-      fb.style.width = `${Math.max(120, Math.floor(f.w * zoom))}px`; fb.style.maxWidth = 'none';
-    }
-    zoomLabel.textContent = zoom === 1 ? 'Fit' : `${Math.round(zoom * 100)}%`;
+    if (fb) { fb.style.width = `${Math.round(420 * zoom)}px`; fb.style.maxWidth = zoom > 1 ? 'none' : ''; }
+    zoomLabel.textContent = `${Math.round(zoom * 100)}%`;
   };
-  window.addEventListener('resize', applyZoom);
-  const fitObs = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { if (zoom === 1) applyZoom(); }) : null;
-  fitObs?.observe(pages);
-  // Turn the page like the book: swipe up for the next hole, down for the one
-  // before (at Fit; zoomed in, a swipe scrolls). The mouse wheel and the arrow
-  // keys do the same on a computer.
-  let swipe = null;
-  pages.addEventListener('touchstart', e => {
-    swipe = null;
-    if (zoom !== 1 || e.touches.length !== 1) return;
-    const t = e.touches[0];
-    const svg = e.target.closest?.('svg.bookpage');
-    // In Edit, a finger on a point drags it, not the page.
-    if (adding && svg?.geo) { const { x, y } = local(svg, t.clientX, t.clientY); if (hitAt(svg, x, y)) return; }
-    swipe = { x: t.clientX, y: t.clientY, t: Date.now() };
-  }, { passive: true });
-  pages.addEventListener('touchmove', e => { if (swipe && zoom === 1) e.preventDefault(); }, { passive: false });
-  pages.addEventListener('touchend', e => {
-    const s = swipe; swipe = null;
-    if (!s || zoom !== 1) return;
-    const t = e.changedTouches[0], dx = t.clientX - s.x, dy = t.clientY - s.y;
-    if (Math.abs(dy) > 50 && Math.abs(dy) > 1.5 * Math.abs(dx) && Date.now() - s.t < 900) go(dy < 0 ? 1 : -1);
-  });
-  let wheelAt = 0, wheelSum = 0;
-  pages.addEventListener('wheel', e => {
-    if (zoom !== 1 || e.ctrlKey) return;
-    e.preventDefault();
-    const now = Date.now();
-    if (now - wheelAt < 450) return;
-    wheelSum += e.deltaY;
-    if (Math.abs(wheelSum) > 60) { go(wheelSum > 0 ? 1 : -1); wheelSum = 0; wheelAt = now; }
-  }, { passive: false });
-  const onKey = e => {
-    if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
-    const d = { ArrowDown: 1, PageDown: 1, ArrowRight: 1, ArrowUp: -1, PageUp: -1, ArrowLeft: -1 }[e.key];
-    if (d && (zoom === 1 || e.key.startsWith('Page'))) { e.preventDefault(); go(d); }
-  };
-  document.addEventListener('keydown', onKey);
   const zoomBy = k => {
     const old = zoom; zoom = Math.min(4, Math.max(1, +(zoom * k).toFixed(2)));
     if (Math.abs(zoom - 1) < 0.05) zoom = 1;
@@ -1783,6 +1717,153 @@ export function openBook(n, opts) {
   return ov;
 }
 
+// Reader mode (GEN BOOK > Reader mode): the book read like an e-reader. Just
+// the pages, filling the screen: the green page and the hole page side by
+// side like the book lying open, or flipped up with the green on top. Swipe
+// to turn to the next hole (side by side: left; flipped up: up), or tap the
+// page's edge. The little arrow at the top pulls down the menu (close, hole,
+// satellite, side by side or flipped up) and tucks it away again.
+const READER_KEY = 'gs:readerMode';
+export function openReader(n, opts) {
+  const book = opts.book || newBook(opts.teeName);
+  const prefs = opts.tourney ? new Proxy(book.prefs, { get: (o, k) => (BOOK_OPTIONS.some(r => r[0] === k && r[4]) ? false : o[k]) }) : book.prefs;
+  const helpers = { holeFeatures: opts.holeFeatures, ownGreen: opts.ownGreen };
+  const teeName = book.teeName;
+  let hole = n, style = book.style;
+  let mode = 'side';
+  try { mode = localStorage.getItem(READER_KEY) === 'flip' ? 'flip' : 'side'; } catch { /* private window */ }
+  const N = course.holes.length;
+  const wrap = k => ((k - 1 + N) % N) + 1;
+  // Pages drawn once and kept (the next hole is drawn ahead, so turning is quick).
+  const cache = new Map();
+  const pagesFor = k => {
+    const key = `${k}|${style}`;
+    if (!cache.has(key)) cache.set(key, (async () => {
+      const o = { ...opts, satellite: style === 'sat', points: book.points?.[k] || [], removed: book.removed?.[k] || [], start: book.starts?.[k] || null };
+      const draw = async p => {
+        const hp = await holePage(k, teeName, p, helpers, o);
+        const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat' }) : null;
+        return [gp, hp].filter(Boolean);
+      };
+      try { return await draw(prefs); } catch (e) {
+        console.error('yardage book reader', e);
+        return draw({ ...prefs, contours: false, greenContours: false, slopes: false, deltas: false });
+      }
+    })().catch(e => { cache.delete(key); throw e; }));
+    return cache.get(key);
+  };
+  const stage = h('div', { class: 'readerstage' });
+  const note = h('div', { class: 'readernote' });
+  let token = 0, turn = 0;
+  async function show() {
+    const my = ++token;
+    holeLbl.textContent = `Hole ${hole} of ${N}`;
+    const old = stage.querySelector('.readerbook');
+    if (old) old.style.opacity = '0.35';
+    note.textContent = old ? '' : 'Drawing…';
+    let svgs;
+    try { svgs = await pagesFor(hole); } catch (e) {
+      if (my !== token) return;
+      stage.replaceChildren(h('div', { class: 'bookerr' }, `Couldn’t draw hole ${hole}: ${e.message || e}`)); note.textContent = '';
+      return;
+    }
+    if (my !== token) return;
+    note.textContent = '';
+    // The same drawing can't be in two places: a copy, so the cached one stays whole.
+    const fb = h('div', { class: `readerbook rd-${mode}` }, ...svgs.map(s => s.cloneNode(true)));
+    stage.replaceChildren(fb);
+    fit();
+    if (turn && fb.animate) {
+      const d = turn > 0 ? 30 : -30;
+      fb.animate([{ transform: mode === 'side' ? `translateX(${d}%)` : `translateY(${d}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'ease-out' });
+    }
+    turn = 0;
+    pagesFor(wrap(hole + 1)).catch(() => {}); // draw the next one ahead
+  }
+  // Both pages as big as the screen allows.
+  function fit() {
+    const fb = stage.querySelector('.readerbook');
+    if (!fb) return;
+    const aw = stage.clientWidth - 16, ah = stage.clientHeight - 16;
+    const rs = [...fb.children].map(s => { const v = s.viewBox?.baseVal; return v && v.width ? v.height / v.width : PAGE_H / W; });
+    const gap = 3 * (rs.length - 1);
+    const w = mode === 'side'
+      ? Math.min((aw - gap) / rs.length, ah / Math.max(...rs))
+      : Math.min(aw, (ah - gap) / rs.reduce((a, b) => a + b, 0));
+    [...fb.children].forEach((s, i) => { s.style.width = `${Math.floor(w)}px`; s.style.height = `${Math.floor(w * rs[i])}px`; });
+  }
+  const go = d => { hole = wrap(hole + d); turn = d; show(); };
+  // Swipe to turn; a tap on the page's far edge turns too (near edge: back).
+  let touch = null;
+  stage.addEventListener('touchstart', e => { touch = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() } : null; }, { passive: true });
+  stage.addEventListener('touchmove', e => { if (touch) e.preventDefault(); }, { passive: false });
+  stage.addEventListener('touchend', e => {
+    const s = touch; touch = null;
+    if (!s) return;
+    const t = e.changedTouches[0], dx = t.clientX - s.x, dy = t.clientY - s.y;
+    const [main, cross] = mode === 'side' ? [dx, dy] : [dy, dx];
+    if (Math.abs(main) > 40 && Math.abs(main) > 1.2 * Math.abs(cross) && Date.now() - s.t < 1000) { e.preventDefault(); go(main < 0 ? 1 : -1); }
+  });
+  stage.addEventListener('click', e => {
+    const r = stage.getBoundingClientRect();
+    const f = mode === 'side' ? (e.clientX - r.left) / r.width : (e.clientY - r.top) / r.height;
+    if (f > 0.85) go(1); else if (f < 0.15) go(-1);
+  });
+  let wheelAt = 0;
+  stage.addEventListener('wheel', e => {
+    e.preventDefault();
+    const d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
+    if (Math.abs(d) < 15 || Date.now() - wheelAt < 500) return;
+    wheelAt = Date.now(); go(d > 0 ? 1 : -1);
+  }, { passive: false });
+  const onKey = e => {
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    const d = { ArrowDown: 1, ArrowRight: 1, PageDown: 1, ' ': 1, ArrowUp: -1, ArrowLeft: -1, PageUp: -1 }[e.key];
+    if (d) { e.preventDefault(); go(d); } else if (e.key === 'Escape') close();
+  };
+  document.addEventListener('keydown', onKey);
+  window.addEventListener('resize', fit);
+  const close = () => {
+    document.removeEventListener('keydown', onKey); window.removeEventListener('resize', fit);
+    ov.remove(); document.body.classList.remove('bookopen'); if (hole !== n) opts.onHole?.(hole);
+  };
+  // The menu, pulled down by the little arrow.
+  const holeLbl = h('b', {});
+  const seg = (list, get, set) => {
+    const row = h('div', { class: 'readerseg' });
+    const sync = () => row.querySelectorAll('button').forEach(b => b.classList.toggle('on', b.dataset.v === get()));
+    row.append(...list.map(([v, t]) => h('button', { 'data-v': v, onclick: () => { set(v); sync(); } }, t)));
+    sync();
+    return row;
+  };
+  const styleSeg = seg(STYLES, () => style, v => {
+    if (v === style) return;
+    style = book.style = v; if (!book.id) setStyle(v); show();
+  });
+  const modeSeg = seg([['side', 'Side by side'], ['flip', 'Flip up']], () => mode, v => {
+    if (v === mode) return;
+    mode = v; try { localStorage.setItem(READER_KEY, v); } catch { /* private window */ }
+    show();
+  });
+  const menu = h('div', { class: 'readermenu' },
+    h('div', { class: 'readerrow' },
+      h('button', { class: 'bookbtn', 'aria-label': 'Close', onclick: close }, '✕'),
+      h('button', { class: 'bookbtn', 'aria-label': 'Previous hole', onclick: () => go(-1) }, '‹'), holeLbl,
+      h('button', { class: 'bookbtn', 'aria-label': 'Next hole', onclick: () => go(1) }, '›')),
+    styleSeg, modeSeg);
+  const tab = h('button', { class: 'readertab', 'aria-label': 'Menu', onclick: () => {
+    const open = ov.classList.toggle('menuopen');
+    tab.setAttribute('aria-expanded', String(open));
+    setTimeout(fit, 260);
+  } });
+  tab.innerHTML = '<svg viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>';
+  const ov = h('div', { class: 'readerov' }, h('div', { class: 'readertop' }, menu, tab), stage, note);
+  document.body.append(ov);
+  document.body.classList.add('bookopen');
+  show();
+  return ov;
+}
+
 // GEN BOOK's first page: pick everything, then preview the book or make the PDF.
 // Built from the same parts as GPS Overview (.cx: tiles like Casual /
 // Tournament, dropdowns like the tee box, full-width buttons).
@@ -1871,7 +1952,8 @@ export function openBookSetup(opts) {
     opts.tourney ? h('div', { class: 'setuphint' }, 'Tournament: no green page or contours (Rules of Golf 4.3)') : null,
     h('div', { class: 'row' }, h('button', { class: 'setupplain', onclick: () => setAll(true) }, 'All on'), h('button', { class: 'setupplain', onclick: () => setAll(false) }, 'Basic')),
     h('button', { class: 'holes9 genbook', onclick: () => go(true) }, 'MAKE PDF'),
-    h('button', { class: 'setupplain', onclick: () => go(false) }, 'Preview and edit'));
+    h('button', { class: 'setupplain', onclick: () => go(false) }, 'Preview and edit'),
+    h('button', { class: 'setupplain', onclick: () => { ov.remove(); openReader(1, { ...opts, book, teeName }); } }, 'Reader mode'));
   document.body.append(ov);
   document.body.classList.add('bookopen');
   return ov;

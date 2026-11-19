@@ -646,24 +646,32 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 /* Preview and edit: zoom (the pages scroll when bigger than the screen) and the hole's points. */
 .bookpages { justify-content: safe center; }
 .bookpages .flipbook { flex: none; }
-/* Fit: the book open on the screen, both pages in full, swiped to turn. */
-.bookpages.fit { overflow: hidden; align-items: center; align-content: center; touch-action: pinch-zoom; overscroll-behavior: contain; }
-.flipbook.side { flex-direction: row; align-items: flex-start; }
-.flipbook.side .bookpage { flex: none; width: calc((100% - 3px) / 2); }
-.flipbook.side .bookpage + .bookpage { width: calc((100% - 3px) / 2 + 3px); }
-.flipbook.side .bookpage + .bookpage { border-top: 0; border-left: 3px solid #1c2a4a; box-shadow: inset 10px 0 10px -8px rgba(0,0,0,.25); }
-.flipbook { transition: opacity .12s; }
 .bookzoom { min-width: 40px; text-align: center; font-size: 12px; color: #5d6b62; }
 .bookpoints { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding: 6px 10px; background: #fff8dc; border-bottom: 1px solid #e6d9a8; }
 .bookpoints[hidden] { display: none; }
 .bookpoints small { font-size: 12px; color: #5d6b62; font-weight: 600; }
 .bookpoints .bookbtn { height: 30px; font-size: 13px; }
 .bookzoomgrp { display: inline-flex; align-items: center; gap: 4px; }
-.flipbook.side .bookpage { box-sizing: border-box; aspect-ratio: auto; height: auto; }
-/* On a phone, the yardage book's buttons in one row (swipe it sideways), so the open book gets the screen. */
-@media (max-width: 700px) {
-  .bookov .booktop { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
-  .bookov .booktop::-webkit-scrollbar { display: none; }
-  .bookov .booktop > * { flex: none; }
-  .bookov .booktop .bookstatus { white-space: nowrap; }
-}
+/* Reader mode: the yardage book read like an e-reader. */
+.readerov { position: fixed; inset: 0; z-index: 50; background: #2b2f2c; color: #1c2a22; display: flex; flex-direction: column; overflow: hidden; }
+.readertop { position: relative; flex: none; z-index: 2; display: flex; flex-direction: column; align-items: center; padding-top: env(safe-area-inset-top); }
+.readermenu { width: 100%; box-sizing: border-box; background: #fff; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 14px; padding: 0 12px; max-height: 0; overflow: hidden; transition: max-height .25s ease, padding .25s ease; }
+.readerov.menuopen .readermenu { max-height: 220px; padding: 10px 12px; border-bottom: 1px solid #d6dcd8; }
+.readerrow { display: flex; align-items: center; gap: 6px; }
+.readerrow b { font-size: 16px; min-width: 104px; text-align: center; }
+.readerseg { display: inline-flex; border: 1px solid #c9d0cb; border-radius: 8px; overflow: hidden; }
+.readerseg button { height: 34px; width: auto; min-width: 0; max-width: none; padding: 0 12px; border: 0; border-radius: 0; background: #fff; color: #1c2a22; font-size: 14px; font-weight: 600; }
+.readerseg button + button { border-left: 1px solid #c9d0cb; }
+.readerseg button.on { background: #1c3a5e; color: #fff; }
+.readertab { width: 44px; min-width: 0; max-width: none; height: 22px; padding: 0; border: 0; border-radius: 0 0 10px 10px; background: rgba(255,255,255,.85); display: flex; align-items: center; justify-content: center; }
+.readertab svg { width: 18px; height: 18px; fill: none; stroke: #1c2a22; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s; }
+.readerov.menuopen .readertab svg { transform: rotate(180deg); }
+.readerstage { flex: 1; min-height: 0; margin-top: -22px; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: pinch-zoom; overscroll-behavior: contain; padding-bottom: env(safe-area-inset-bottom); user-select: none; -webkit-user-select: none; }
+.readerov.menuopen .readerstage { margin-top: 0; }
+.readerbook { display: flex; box-shadow: 0 4px 18px rgba(0,0,0,.45); transition: opacity .12s; }
+.readerbook.rd-flip { flex-direction: column; }
+.readerbook svg { display: block; flex: none; background: #fff; }
+.readerbook.rd-flip svg + svg { border-top: 3px solid #1c2a4a; }
+.readerbook.rd-side svg + svg { border-left: 3px solid #1c2a4a; }
+.readernote { position: absolute; left: 50%; bottom: calc(16px + env(safe-area-inset-bottom)); transform: translateX(-50%); color: #fff; font-size: 13px; pointer-events: none; }
+.readernote:empty { display: none; }
