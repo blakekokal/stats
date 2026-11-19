@@ -463,5 +463,35 @@
    505
   ],
   "source": "USGS 3DEP"
+ },
+ "cottonwood": {
+  "bounds": [
+   -96.979632,
+   32.857662,
+   -96.959011,
+   32.872959
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   422,
+   573
+  ],
+  "source": "USGS 3DEP"
+ },
+ "trailsfrisco": {
+  "bounds": [
+   -96.883416,
+   33.163073,
+   -96.862832,
+   33.179177
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   539,
+   605
+  ],
+  "source": "USGS 3DEP"
  }
 }

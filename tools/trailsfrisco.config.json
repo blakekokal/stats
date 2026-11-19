@@ -1,0 +1,18 @@
+{
+  "id": "trailsfrisco",
+  "name": "The Trails of Frisco Golf Club",
+  "location": "Frisco, TX",
+  "par": [5, 4, 3, 4, 4, 3, 5, 4, 4, 5, 3, 4, 4, 3, 4, 3, 4, 5],
+  "hcp": [7, 1, 9, 13, 3, 17, 11, 15, 5, 12, 18, 4, 16, 8, 2, 14, 6, 10],
+  "_comment_tees": "Scorecard from GolfPass (22710); its pars match OpenStreetMap's hole tags. GolfPass names the rated tees Championship, Back, Middle and Forward; matched by total yards to Black, Blue, White and Red.",
+  "tees": [
+    {"name": "Black", "rating": 74.0, "slope": 138, "yards": [562, 468, 208, 378, 453, 178, 555, 361, 420, 533, 157, 462, 351, 231, 431, 167, 468, 576]},
+    {"name": "Blue", "rating": 70.7, "slope": 124, "yards": [522, 430, 171, 342, 426, 147, 501, 333, 373, 491, 135, 435, 335, 204, 398, 141, 396, 537]},
+    {"name": "White", "rating": 68.3, "slope": 114, "yards": [486, 384, 147, 311, 394, 128, 448, 313, 342, 461, 114, 418, 305, 179, 370, 118, 361, 498]},
+    {"name": "Red", "rating": 65.0, "slope": 111, "yards": [436, 322, 110, 286, 359, 98, 428, 207, 307, 390, 87, 393, 273, 160, 358, 103, 327, 460]}
+  ],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting the greens to the overseeded greens in the winter imagery; the dormant fairways read as sand, so a bunker fit is off); every point is moved by it.",
+  "shift": {"east": -1.25, "north": -0.25},
+  "_comment_drop": "Polygons containing these points are not part of the course (three practice greens, a second, bigger outline OSM draws round #16's green, out over the creek, and one bunker on plain grass).",
+  "drop": [[33.165295, -96.865282], [33.168818, -96.87609], [33.164736, -96.865438], [33.166956, -96.867299], [33.166386, -96.870546]]
+}

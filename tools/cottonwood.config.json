@@ -1,0 +1,22 @@
+{
+  "id": "cottonwood",
+  "name": "Cottonwood Valley Golf Course",
+  "location": "Irving, TX",
+  "par": [4, 3, 5, 4, 4, 4, 4, 4, 3, 4, 5, 3, 4, 4, 4, 5, 3, 4],
+  "hcp": [3, 17, 15, 7, 1, 9, 13, 5, 11, 4, 14, 12, 8, 10, 2, 18, 16, 6],
+  "_comment_tees": "Scorecard from GolfPass (12713, listed as The Ritz-Carlton Dallas, Las Colinas - Cottonwood Valley); its pars match OpenStreetMap's hole tags. Ratings matched to tees by total yards; Silver and Orange have none published; Diamond and Red are rated for women only.",
+  "tees": [
+    {"name": "Black", "rating": 74.9, "slope": 136, "yards": [470, 170, 580, 440, 440, 390, 385, 395, 185, 435, 550, 200, 410, 420, 425, 530, 200, 435]},
+    {"name": "Silver", "rating": null, "slope": null, "yards": [470, 145, 540, 440, 405, 390, 385, 355, 185, 435, 550, 175, 410, 420, 425, 500, 200, 430]},
+    {"name": "Blue", "rating": 71.2, "slope": 134, "yards": [430, 145, 540, 390, 405, 360, 342, 355, 165, 390, 540, 175, 365, 380, 385, 500, 185, 430]},
+    {"name": "Gold", "rating": 70.3, "slope": 132, "yards": [400, 145, 540, 355, 370, 360, 342, 355, 135, 340, 540, 155, 355, 380, 370, 500, 185, 430]},
+    {"name": "White", "rating": 69.3, "slope": 130, "yards": [400, 135, 470, 355, 370, 310, 310, 335, 135, 340, 490, 155, 355, 330, 370, 490, 155, 410]},
+    {"name": "Diamond", "rating": 72.8, "slope": 127, "yards": [400, 105, 425, 285, 340, 310, 310, 290, 135, 340, 465, 155, 320, 330, 325, 450, 155, 370]},
+    {"name": "Red", "rating": 71.2, "slope": 125, "yards": [380, 105, 425, 285, 340, 280, 270, 290, 115, 305, 465, 125, 320, 300, 325, 450, 115, 370]},
+    {"name": "Orange", "rating": null, "slope": null, "yards": [380, 85, 350, 285, 315, 280, 270, 290, 115, 305, 375, 105, 255, 300, 265, 445, 115, 300]}
+  ],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting all bunkers to the sand); every point is moved by it.",
+  "shift": {"east": -0.75, "north": 0.75},
+  "_comment_drop": "Polygons containing these points are not part of the course (two practice greens, the practice fairway round one and its bunker; four bunkers OSM draws on trees, where the imagery has none).",
+  "drop": [[32.863586, -96.960916], [32.863035, -96.960929], [32.863583, -96.960737], [32.865459, -96.975329], [32.865714, -96.966717], [32.867353, -96.96815], [32.862504, -96.961486]]
+}
