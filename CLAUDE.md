@@ -115,10 +115,10 @@ Public, complete:
   no OSM hole); needs the current card from the club
 - Texas Rangers Golf Club (Arlington): OSM's holes 1-9 are GolfPass's 10-18 and the
   other way round; check the club's current card before building
-- Cottonwood Valley (Irving)
+- Cottonwood Valley (Irving) (building, 2026-11-19)
 - The Tribute (The Colony)
 - Old American (The Colony)
-- Trails of Frisco (Frisco)
+- Trails of Frisco (Frisco) (building, 2026-11-19)
 - The Golf Club at Twin Creeks (Allen)
 - Woodbridge (Sachse)
 - Buffalo Creek (Heath)
