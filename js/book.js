@@ -1758,6 +1758,7 @@ export function openReader(n, opts) {
   async function show() {
     const my = ++token;
     holeLbl.textContent = `Hole ${hole} of ${N}`;
+    const flip = mode === 'flip';
     const old = stage.querySelector('.readerbook');
     if (old) old.style.opacity = '0.35';
     note.textContent = old ? '' : 'Drawing…';
@@ -1770,7 +1771,11 @@ export function openReader(n, opts) {
     if (my !== token) return;
     note.textContent = '';
     // The same drawing can't be in two places: a copy, so the cached one stays whole.
-    const fb = h('div', { class: `readerbook rd-${mode}` }, ...svgs.map(s => s.cloneNode(true)));
+    // Flip up: one page at a time, the green page then the hole page.
+    if (flip) { if (page >= svgs.length) page = svgs.length - 1; if (page < 0) page = svgs.length - 1; }
+    const shown = flip ? [svgs[page]] : svgs;
+    if (flip && svgs.length > 1) holeLbl.textContent = `Hole ${hole} · ${page === 0 ? 'Green' : 'Overview'}`;
+    const fb = h('div', { class: `readerbook rd-${mode}` }, ...shown.map(s => s.cloneNode(true)));
     stage.replaceChildren(fb);
     fit();
     if (turn && fb.animate) {
@@ -1792,7 +1797,16 @@ export function openReader(n, opts) {
       : Math.min(aw, (ah - gap) / rs.reduce((a, b) => a + b, 0));
     [...fb.children].forEach((s, i) => { s.style.width = `${Math.floor(w)}px`; s.style.height = `${Math.floor(w * rs[i])}px`; });
   }
-  const go = d => { hole = wrap(hole + d); turn = d; show(); };
+  let page = 0; // Flip up: 0 the green page, 1 the hole page (-1: the last page, going back)
+  const go = d => { hole = wrap(hole + d); page = d < 0 && mode === 'flip' ? -1 : 0; turn = d; show(); };
+  // Flip up turns a page at a time (green, then the hole), side by side a hole at a time.
+  const turnPage = d => {
+    if (mode !== 'flip' || !course.holes.length) return go(d);
+    const two = !!prefs.greenPage;
+    if (two && d > 0 && page === 0) { page = 1; turn = d; return show(); }
+    if (two && d < 0 && page === 1) { page = 0; turn = d; return show(); }
+    go(d);
+  };
   // Swipe to turn; a tap on the page's far edge turns too (near edge: back).
   let touch = null;
   stage.addEventListener('touchstart', e => { touch = e.touches.length === 1 ? { x: e.touches[0].clientX, y: e.touches[0].clientY, t: Date.now() } : null; }, { passive: true });
@@ -1802,24 +1816,24 @@ export function openReader(n, opts) {
     if (!s) return;
     const t = e.changedTouches[0], dx = t.clientX - s.x, dy = t.clientY - s.y;
     const [main, cross] = mode === 'side' ? [dx, dy] : [dy, dx];
-    if (Math.abs(main) > 40 && Math.abs(main) > 1.2 * Math.abs(cross) && Date.now() - s.t < 1000) { e.preventDefault(); go(main < 0 ? 1 : -1); }
+    if (Math.abs(main) > 40 && Math.abs(main) > 1.2 * Math.abs(cross) && Date.now() - s.t < 1000) { e.preventDefault(); turnPage(main < 0 ? 1 : -1); }
   });
   stage.addEventListener('click', e => {
     const r = stage.getBoundingClientRect();
     const f = mode === 'side' ? (e.clientX - r.left) / r.width : (e.clientY - r.top) / r.height;
-    if (f > 0.85) go(1); else if (f < 0.15) go(-1);
+    if (f > 0.85) turnPage(1); else if (f < 0.15) turnPage(-1);
   });
   let wheelAt = 0;
   stage.addEventListener('wheel', e => {
     e.preventDefault();
     const d = Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX;
     if (Math.abs(d) < 15 || Date.now() - wheelAt < 500) return;
-    wheelAt = Date.now(); go(d > 0 ? 1 : -1);
+    wheelAt = Date.now(); turnPage(d > 0 ? 1 : -1);
   }, { passive: false });
   const onKey = e => {
     if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
     const d = { ArrowDown: 1, ArrowRight: 1, PageDown: 1, ' ': 1, ArrowUp: -1, ArrowLeft: -1, PageUp: -1 }[e.key];
-    if (d) { e.preventDefault(); go(d); } else if (e.key === 'Escape') close();
+    if (d) { e.preventDefault(); turnPage(d); } else if (e.key === 'Escape') close();
   };
   document.addEventListener('keydown', onKey);
   window.addEventListener('resize', fit);
@@ -1842,7 +1856,7 @@ export function openReader(n, opts) {
   });
   const modeSeg = seg([['side', 'Side by side'], ['flip', 'Flip up']], () => mode, v => {
     if (v === mode) return;
-    mode = v; try { localStorage.setItem(READER_KEY, v); } catch { /* private window */ }
+    mode = v; page = 0; try { localStorage.setItem(READER_KEY, v); } catch { /* private window */ }
     show();
   });
   const menu = h('div', { class: 'readermenu' },

@@ -663,11 +663,10 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 .readerseg button { height: 34px; width: auto; min-width: 0; max-width: none; padding: 0 12px; border: 0; border-radius: 0; background: #fff; color: #1c2a22; font-size: 14px; font-weight: 600; }
 .readerseg button + button { border-left: 1px solid #c9d0cb; }
 .readerseg button.on { background: #1c3a5e; color: #fff; }
-.readertab { width: 44px; min-width: 0; max-width: none; height: 22px; padding: 0; border: 0; border-radius: 0 0 10px 10px; background: rgba(255,255,255,.85); display: flex; align-items: center; justify-content: center; }
-.readertab svg { width: 18px; height: 18px; fill: none; stroke: #1c2a22; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s; }
+.readertab { width: 44px; min-width: 0; max-width: none; height: 26px; padding: 0; border: 0; border-radius: 0; background: none; box-shadow: none; display: flex; align-items: center; justify-content: center; }
+.readertab svg { width: 22px; height: 22px; fill: none; stroke: #fff; filter: drop-shadow(0 1px 2px rgba(0,0,0,.6)); stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; transition: transform .25s; }
 .readerov.menuopen .readertab svg { transform: rotate(180deg); }
-.readerstage { flex: 1; min-height: 0; margin-top: -22px; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: pinch-zoom; overscroll-behavior: contain; padding-bottom: env(safe-area-inset-bottom); user-select: none; -webkit-user-select: none; }
-.readerov.menuopen .readerstage { margin-top: 0; }
+.readerstage { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; touch-action: pinch-zoom; overscroll-behavior: contain; padding-bottom: env(safe-area-inset-bottom); user-select: none; -webkit-user-select: none; }
 .readerbook { display: flex; box-shadow: 0 4px 18px rgba(0,0,0,.45); transition: opacity .12s; }
 .readerbook.rd-flip { flex-direction: column; }
 .readerbook svg { display: block; flex: none; background: #fff; }
