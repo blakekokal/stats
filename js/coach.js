@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.13.0', ['New courses: Cottonwood Valley Golf Course (Irving) and The Trails of Frisco Golf Club (Frisco), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.12.4', ['Yardage book Edit: move the start, where every “from the tee” number is measured. Tap another tee box (on the map, or its yards in the TEES box) to measure from its front, or drag the yellow start dot anywhere; every number on the hole updates. ↺ Start from the … tee again under the page puts it back. Kept in that yardage book only']],
   ['1.12.3', ['Yardage book: no more dotted line from the tee to the green on the hole page (and the Center line switch is gone); the yellow dot at the front of the green, where every number is measured to, stays']],
   ['1.12.2', ['Yardage book Edit: tap any point (its dot or its numbers), including the book’s yardage markers and bunker numbers, to select it (a yellow ring), then Delete point; or drag a point to move it, and its yards update for where you put it. Tap the map to add a point, or to deselect']],

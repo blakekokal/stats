@@ -104,7 +104,9 @@ Done: Lantana (OSM had no hole lines; routed from the scorecard), Lake Park
 Championship and Executive, Texas Star, Iron Horse, Indian Creek Creek and Lakes,
 Fields Ranch East and West (two courses: holes told apart by OSM course boundary),
 Cedar Crest, Stevens Park, Tierra Verde, Riverside (#13 and #18 share a double
-green: `pinAtLineEnd` in the config).
+green: `pinAtLineEnd` in the config), Cottonwood Valley (TPC Four Seasons is
+next door: kept to its own boundary), Trails of Frisco (winter imagery: shift fitted
+to the greens, as dormant fairways fool the bunker fit).
 
 Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, every shape
 traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).
@@ -115,10 +117,8 @@ Public, complete:
   no OSM hole); needs the current card from the club
 - Texas Rangers Golf Club (Arlington): OSM's holes 1-9 are GolfPass's 10-18 and the
   other way round; check the club's current card before building
-- Cottonwood Valley (Irving) (building, 2026-11-19)
 - The Tribute (The Colony)
 - Old American (The Colony)
-- Trails of Frisco (Frisco) (building, 2026-11-19)
 - The Golf Club at Twin Creeks (Allen)
 - Woodbridge (Sachse)
 - Buffalo Creek (Heath)

@@ -85,6 +85,8 @@ export const COURSES = [
   { id: 'prairielakes-red', name: 'Prairie Lakes Golf Course – Red', file: 'data/prairielakes-red.json', nines: 'prairielakes' },
   { id: 'prairielakes-white', name: 'Prairie Lakes Golf Course – White', file: 'data/prairielakes-white.json', nines: 'prairielakes' },
   { id: 'prairielakes-blue', name: 'Prairie Lakes Golf Course – Blue', file: 'data/prairielakes-blue.json', nines: 'prairielakes' },
+  { id: 'cottonwood', name: 'Cottonwood Valley Golf Course', file: 'data/cottonwood.json' },
+  { id: 'trailsfrisco', name: 'The Trails of Frisco Golf Club', file: 'data/trailsfrisco.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 // Nine-hole courses at one club (the same `nines` tag) can be played together
