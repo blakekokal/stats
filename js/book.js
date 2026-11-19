@@ -1771,10 +1771,11 @@ export function openReader(n, opts) {
     if (my !== token) return;
     note.textContent = '';
     // The same drawing can't be in two places: a copy, so the cached one stays whole.
-    // Flip up: one page at a time, the green page then the hole page.
+    // Flip up: one page at a time, the hole overview then the green page.
     if (flip) { if (page >= svgs.length) page = svgs.length - 1; if (page < 0) page = svgs.length - 1; }
-    const shown = flip ? [svgs[page]] : svgs;
-    if (flip && svgs.length > 1) holeLbl.textContent = `Hole ${hole} · ${page === 0 ? 'Green' : 'Overview'}`;
+    const order = flip ? [...svgs].reverse() : svgs;
+    const shown = flip ? [order[page]] : svgs;
+    if (flip && svgs.length > 1) holeLbl.textContent = `Hole ${hole} · ${page === 0 ? 'Overview' : 'Green'}`;
     const fb = h('div', { class: `readerbook rd-${mode}` }, ...shown.map(s => s.cloneNode(true)));
     stage.replaceChildren(fb);
     fit();
@@ -1797,9 +1798,9 @@ export function openReader(n, opts) {
       : Math.min(aw, (ah - gap) / rs.reduce((a, b) => a + b, 0));
     [...fb.children].forEach((s, i) => { s.style.width = `${Math.floor(w)}px`; s.style.height = `${Math.floor(w * rs[i])}px`; });
   }
-  let page = 0; // Flip up: 0 the green page, 1 the hole page (-1: the last page, going back)
+  let page = 0; // Flip up: 0 the hole overview, 1 the green page (-1: the last page, going back)
   const go = d => { hole = wrap(hole + d); page = d < 0 && mode === 'flip' ? -1 : 0; turn = d; show(); };
-  // Flip up turns a page at a time (green, then the hole), side by side a hole at a time.
+  // Flip up turns a page at a time (the hole, then its green), side by side a hole at a time.
   const turnPage = d => {
     if (mode !== 'flip' || !course.holes.length) return go(d);
     const two = !!prefs.greenPage;
