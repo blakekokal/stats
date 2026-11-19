@@ -1244,6 +1244,10 @@ export function openBook(n, opts) {
     // Like a tour book flipped open: the green page on top, the hole below the fold.
     pages.replaceChildren(h('div', { class: 'flipbook' }, ...pagesNow));
     applyZoom(); listPoints();
+    // Turned to another hole: the new pages come in from the way the finger went.
+    const fb = pages.querySelector('.flipbook');
+    if (turn && fb?.animate) fb.animate([{ transform: `translateY(${turn > 0 ? 35 : -35}%)`, opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 220, easing: 'ease-out' });
+    turn = 0;
     status.textContent = note;
     if (adding) { showSel(); if (note) status.textContent = note; }
   }
@@ -1282,9 +1286,15 @@ export function openBook(n, opts) {
     STYLES.map(([v, t]) => h('option', { value: v, selected: v === style }, t)));
   const teeSel = h('select', { 'aria-label': 'Tee box', onchange: e => { teeName = book.teeName = e.target.value; keep(); draw(); } },
     course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} tees`)));
-  const go = d => { hole = ((hole - 1 + d + course.holes.length) % course.holes.length) + 1; draw(); };
+  let turn = 0; // the way the last page turn went (1 next, -1 back), for its slide in
+  const go = d => {
+    hole = ((hole - 1 + d + course.holes.length) % course.holes.length) + 1; turn = d;
+    const fb = pages.querySelector('.flipbook'); if (fb) fb.style.opacity = '0.4';
+    draw();
+  };
   const close = () => {
     if (dirty && !confirm('Leave without saving this yardage book?')) return;
+    window.removeEventListener('resize', applyZoom); document.removeEventListener('keydown', onKey); fitObs?.disconnect();
     ov.remove(); document.body.classList.remove('bookopen'); if (hole !== n) opts.onHole?.(hole);
   };
   // Save: into Saved yardage books (a new one is named after the course and tees).
@@ -1292,14 +1302,70 @@ export function openBook(n, opts) {
     saveBook(book); dirty = false; saveBtn.classList.remove('primary');
     status.textContent = `Saved: ${book.name}`;
   } }, 'Save');
-  // Zoom: the pages drawn bigger (scroll round them), up to 4 times.
+  // Zoom: at 100% (Fit) the book lies open on the screen, the green page and
+  // the hole page both in full (one over the other like the book, or side by
+  // side when that's bigger, on a wide screen); bigger, up to 4 times, they scroll.
   let zoom = 1;
-  const zoomLabel = h('small', { class: 'bookzoom' }, '100%');
+  const zoomLabel = h('small', { class: 'bookzoom' }, 'Fit');
+  const fitWidth = fb => {
+    const cs = getComputedStyle(pages);
+    const aw = pages.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+    const ah = pages.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+    const rs = [...fb.querySelectorAll('svg.bookpage')].map(s => { const v = s.viewBox.baseVal; return v && v.width ? v.height / v.width : PAGE_H / W; });
+    if (!rs.length || aw <= 0 || ah <= 0) return { w: Math.min(420, Math.max(aw, 200)), side: false };
+    const gaps = 3 * (rs.length - 1);
+    const stack = Math.min(aw, (ah - gaps) / rs.reduce((a, b) => a + b, 0));
+    const side = Math.min((aw - gaps) / rs.length, ah / Math.max(...rs), 760);
+    return side > stack * 1.15 ? { w: side * rs.length + gaps, side: true } : { w: Math.min(stack, 760), side: false };
+  };
   const applyZoom = () => {
     const fb = pages.querySelector('.flipbook');
-    if (fb) { fb.style.width = `${Math.round(420 * zoom)}px`; fb.style.maxWidth = zoom > 1 ? 'none' : ''; }
-    zoomLabel.textContent = `${Math.round(zoom * 100)}%`;
+    pages.classList.toggle('fit', zoom === 1);
+    if (fb) {
+      const f = fitWidth(fb);
+      fb.classList.toggle('side', f.side);
+      fb.style.width = `${Math.max(120, Math.floor(f.w * zoom))}px`; fb.style.maxWidth = 'none';
+    }
+    zoomLabel.textContent = zoom === 1 ? 'Fit' : `${Math.round(zoom * 100)}%`;
   };
+  window.addEventListener('resize', applyZoom);
+  const fitObs = typeof ResizeObserver === 'function' ? new ResizeObserver(() => { if (zoom === 1) applyZoom(); }) : null;
+  fitObs?.observe(pages);
+  // Turn the page like the book: swipe up for the next hole, down for the one
+  // before (at Fit; zoomed in, a swipe scrolls). The mouse wheel and the arrow
+  // keys do the same on a computer.
+  let swipe = null;
+  pages.addEventListener('touchstart', e => {
+    swipe = null;
+    if (zoom !== 1 || e.touches.length !== 1) return;
+    const t = e.touches[0];
+    const svg = e.target.closest?.('svg.bookpage');
+    // In Edit, a finger on a point drags it, not the page.
+    if (adding && svg?.geo) { const { x, y } = local(svg, t.clientX, t.clientY); if (hitAt(svg, x, y)) return; }
+    swipe = { x: t.clientX, y: t.clientY, t: Date.now() };
+  }, { passive: true });
+  pages.addEventListener('touchmove', e => { if (swipe && zoom === 1) e.preventDefault(); }, { passive: false });
+  pages.addEventListener('touchend', e => {
+    const s = swipe; swipe = null;
+    if (!s || zoom !== 1) return;
+    const t = e.changedTouches[0], dx = t.clientX - s.x, dy = t.clientY - s.y;
+    if (Math.abs(dy) > 50 && Math.abs(dy) > 1.5 * Math.abs(dx) && Date.now() - s.t < 900) go(dy < 0 ? 1 : -1);
+  });
+  let wheelAt = 0, wheelSum = 0;
+  pages.addEventListener('wheel', e => {
+    if (zoom !== 1 || e.ctrlKey) return;
+    e.preventDefault();
+    const now = Date.now();
+    if (now - wheelAt < 450) return;
+    wheelSum += e.deltaY;
+    if (Math.abs(wheelSum) > 60) { go(wheelSum > 0 ? 1 : -1); wheelSum = 0; wheelAt = now; }
+  }, { passive: false });
+  const onKey = e => {
+    if (/^(INPUT|SELECT|TEXTAREA)$/.test(e.target.tagName)) return;
+    const d = { ArrowDown: 1, PageDown: 1, ArrowRight: 1, ArrowUp: -1, PageUp: -1, ArrowLeft: -1 }[e.key];
+    if (d && (zoom === 1 || e.key.startsWith('Page'))) { e.preventDefault(); go(d); }
+  };
+  document.addEventListener('keydown', onKey);
   const zoomBy = k => {
     const old = zoom; zoom = Math.min(4, Math.max(1, +(zoom * k).toFixed(2)));
     if (Math.abs(zoom - 1) < 0.05) zoom = 1;
