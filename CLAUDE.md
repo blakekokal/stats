@@ -119,15 +119,15 @@ Public, complete:
   no OSM hole); needs the current card from the club
 - Texas Rangers Golf Club (Arlington): OSM's holes 1-9 are GolfPass's 10-18 and the
   other way round; check the club's current card before building
-- The Tribute (The Colony)
-- Old American (The Colony)
+- The Tribute (The Colony) (building, 2026-11-20)
+- Old American (The Colony) (building, 2026-11-20)
 - Rockwall Golf & Athletic Club (Rockwall)
 - Pecan Valley (Fort Worth; two courses)
 - The Golf Club at Fossil Creek (Fort Worth)
 - White Stone (Fort Worth)
 - The Resort (Fort Worth)
 - Hawks Creek (Westworth Village)
-- Sky Creek Ranch (Keller)
+- Sky Creek Ranch (Keller) (building, 2026-11-20)
 - Oak Hollow (McKinney)
 
 Private, complete: TPC Craig Ranch, TPC Four Seasons Las Colinas, Stonebriar,
