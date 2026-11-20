@@ -1,0 +1,18 @@
+{
+  "id": "twincreeks",
+  "name": "The Golf Club at Twin Creeks",
+  "location": "Allen, TX",
+  "par": [4, 3, 4, 5, 4, 3, 5, 4, 4, 5, 4, 3, 4, 4, 5, 3, 4, 4],
+  "hcp": [18, 16, 6, 14, 10, 12, 4, 8, 2, 5, 9, 15, 1, 17, 11, 3, 7, 13],
+  "_comment_tees": "Scorecard from GolfPass (2724), whose nines are the other way round from the club's current card (Greenskeeper's, which starts with the 336-yard par 4 and agrees with OpenStreetMap's hole tags): swapped here. Red is rated for women only.",
+  "_comment_drop": "Polygons containing these points are not part of the course (the last 11 are OSM bunkers with no sand under them in the imagery): two practice greens by the clubhouse.",
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting all bunkers to the sand; winter imagery, but the fairways are green, so the fit holds); every point is moved by it.",
+  "tees": [
+    {"name": "Gold", "rating": 73.2, "slope": 131, "yards": [336, 162, 439, 505, 352, 157, 548, 412, 421, 555, 383, 189, 470, 346, 530, 215, 413, 407]},
+    {"name": "Blue", "rating": 70.5, "slope": 123, "yards": [313, 149, 405, 458, 330, 133, 514, 381, 385, 516, 349, 176, 437, 315, 485, 190, 378, 374]},
+    {"name": "White", "rating": 67.3, "slope": 111, "yards": [274, 136, 384, 405, 277, 116, 491, 348, 330, 463, 309, 156, 396, 272, 436, 170, 357, 331]},
+    {"name": "Red", "rating": 66.5, "slope": 107, "yards": [218, 96, 303, 366, 232, 89, 369, 291, 289, 388, 252, 121, 304, 237, 369, 116, 303, 259]}
+  ],
+  "shift": {"east": -1.0, "north": 1.5},
+  "drop": [[33.104383, -96.712054], [33.104524, -96.712579], [33.104516, -96.715162], [33.11134, -96.726193], [33.11134, -96.72645], [33.110605, -96.725931], [33.110439, -96.725941], [33.103976, -96.720849], [33.102138, -96.713677], [33.102213, -96.713655], [33.102294, -96.713648], [33.102381, -96.713614], [33.102633, -96.713462]]
+}
