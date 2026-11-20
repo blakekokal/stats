@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.14.1', ['Yardage book, par 5s: like a tour book, two spreads instead of one. First the whole hole drawn across both pages (the green end on top, the tees on the bottom), then the green page over a close-up of the approach (the last 175 yards, drawn bigger). On the screen, in Reader mode and in every print layout']],
   ['1.14.0', ['New courses: The Golf Club at Twin Creeks (Allen), Woodbridge Golf Club (Sachse) and Buffalo Creek Golf Club (Heath), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.13.5', ['Yardage book, Satellite style: the hole overview page now has its contours and downhill arrows too (in white over the picture), like the flat book. In Reader mode, Preview and edit and the PDF; the Contours & slope arrows switch turns them off']],
   ['1.13.4', ['Yardage book Reader mode, Flip up: the hole overview comes first, then its green: swipe up from the overview to the green, then up again to the next hole’s overview']],
