@@ -87,7 +87,8 @@ def main(src, cfg_path, dst):
                 polys.append([o] + [i for i in inners if inside(i[0], o)])
         for p in polys:
             feats.append({"t": kind, "p": p})
-    feats = [f for f in feats if not any(inside(d, f["p"][0]) for d in cfg.get("drop", []))]
+    # a drop point may name a type ([lat, lng, "bunker"]) so a bunker inside a fairway goes but not the fairway
+    feats = [f for f in feats if not any(inside(d[:2], f["p"][0]) and (len(d) < 3 or d[2] == f["t"]) for d in cfg.get("drop", []))]
     lines = {}
     for ref, hs in holes.items():
         if len(hs) == 1:

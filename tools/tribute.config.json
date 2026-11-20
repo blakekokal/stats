@@ -1,0 +1,18 @@
+{
+  "id": "tribute",
+  "name": "The Tribute Golf Club",
+  "location": "The Colony, TX",
+  "par": [4, 4, 5, 4, 3, 4, 4, 3, 5, 4, 3, 5, 4, 3, 5, 4, 4, 4],
+  "hcp": [7, 5, 9, 1, 17, 11, 3, 13, 15, 4, 10, 12, 18, 14, 8, 6, 2, 16],
+  "_comment_tees": "Scorecard from GolfPass (22175); its pars match OpenStreetMap's hole tags. Men's ratings.",
+  "_comment_drop": "Polygons containing these points are not part of the course: the putting green by the clubhouse, and the practice area east of hole 1 (OSM draws it as a fairway with a green and three bunkers).",
+  "drop": [[33.100673, -96.933418], [33.098555, -96.929558], [33.099864, -96.928562], [33.100009, -96.928671], [33.099736, -96.928696], [33.099725, -96.928356], [33.104914, -96.935566, "bunker"], [33.0999, -96.939725, "bunker"], [33.101432, -96.933989, "bunker"], [33.101544, -96.933957, "bunker"], [33.101689, -96.93395, "bunker"], [33.101649, -96.933814, "bunker"], [33.101796, -96.933944, "bunker"], [33.102642, -96.933963, "bunker"], [33.103182, -96.933803, "bunker"], [33.102313, -96.934616, "bunker"], [33.102314, -96.935476, "bunker"], [33.102565, -96.935519, "bunker"], [33.097915, -96.940054, "bunker"], [33.096365, -96.937242, "bunker"], [33.103675, -96.937578, "bunker"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting all bunkers to the sand); every point is moved by it.",
+  "shift": {"east": -0.75, "north": 1.5},
+  "tees": [
+    {"name": "Green", "rating": 73.9, "slope": 130, "yards": [372, 421, 581, 431, 127, 423, 466, 201, 505, 456, 172, 522, 310, 201, 566, 418, 471, 359]},
+    {"name": "Blue", "rating": 71.6, "slope": 129, "yards": [362, 390, 532, 406, 116, 401, 441, 187, 480, 426, 165, 490, 287, 153, 526, 389, 446, 345]},
+    {"name": "White", "rating": 69.3, "slope": 115, "yards": [354, 365, 500, 379, 101, 365, 387, 169, 437, 394, 145, 455, 243, 130, 495, 347, 398, 338]},
+    {"name": "Red", "rating": 66.0, "slope": 110, "yards": [322, 306, 441, 341, 82, 328, 324, 150, 412, 370, 134, 421, 214, 107, 423, 313, 368, 296]}
+  ]
+}

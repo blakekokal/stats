@@ -90,6 +90,9 @@ export const COURSES = [
   { id: 'twincreeks', name: 'The Golf Club at Twin Creeks', file: 'data/twincreeks.json' },
   { id: 'woodbridge', name: 'Woodbridge Golf Club', file: 'data/woodbridge.json' },
   { id: 'buffalocreek', name: 'Buffalo Creek Golf Club', file: 'data/buffalocreek.json' },
+  { id: 'tribute', name: 'The Tribute Golf Club', file: 'data/tribute.json' },
+  { id: 'oldamerican', name: 'Old American Golf Club', file: 'data/oldamerican.json' },
+  { id: 'skycreek', name: 'Sky Creek Ranch Golf Club', file: 'data/skycreek.json' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 // Nine-hole courses at one club (the same `nines` tag) can be played together
