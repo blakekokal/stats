@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.13.5', ['Yardage book, Satellite style: the hole overview page now has its contours and downhill arrows too (in white over the picture), like the flat book. In Reader mode, Preview and edit and the PDF; the Contours & slope arrows switch turns them off']],
   ['1.13.4', ['Yardage book Reader mode, Flip up: the hole overview comes first, then its green: swipe up from the overview to the green, then up again to the next hole’s overview']],
   ['1.13.3', ['Yardage book Reader mode: Flip up now shows one page at a time, filling the screen: swipe up from the green page to the hole overview, then up again to the next hole’s green (down goes back). The menu arrow at the top is just the arrow now, no button behind it']],
   ['1.13.2', ['Yardage book: new Reader mode (GEN BOOK > Reader mode), the book read like an e-reader: just the pages, filling the screen. Side by side (green page left, hole page right; swipe left for the next hole) or Flip up (green page on top of the hole page; swipe up for the next hole). Tapping the edge of the page turns it too. The little arrow at the top pulls down a menu (close, hole, Flat or Satellite, Side by side or Flip up) and tucks it away again. Preview and edit is back the way it was']],

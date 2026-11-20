@@ -484,15 +484,17 @@ async function holePage(n, teeName, prefs, helpers, opts) {
 
   // Contour lines and a field of small downhill arrows over the whole hole,
   // like a tour book (not in bunkers, water or on the green: that's the green page).
-  if (prefs.contours && info && !lines) {
+  // On the satellite picture: in white, like the satellite green page.
+  if (prefs.contours && info && !opts.lines) {
+    const satC = !!opts.satellite;
     const area = [viewYd[0], viewYd[2], viewYd[1], viewYd[3]];
     const R = await reliefGrid(elevId, info, f, area, 1.5, 2);
     if (R.ok) {
       const iv = [12, 24, 36, 48, 72].find(v => (R.hi - R.lo) / v <= 22) || 120;
       const no = feats.filter(o => ['water', 'bunker'].includes(o.x.t) || (o.x.t === 'green' && own(o))).map(o => o.r);
       const reliefG = el('g', {});
-      reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => curveD(sg.map(P))).join(''), ...RELIEF_LINE, 'stroke-opacity': 0.5 }));
-      reliefG.append(el('path', { d: slopeArrows(R, area, 10.8, P, (x, y) => !no.some(r => inside([x, y], r)), 0.6), ...RELIEF_ARROW, 'stroke-opacity': 0.55 }));
+      reliefG.append(el('path', { d: R.lines(levelsOf(R.lo, R.hi, iv)).map(sg => curveD(sg.map(P))).join(''), ...RELIEF_LINE, ...(satC ? { stroke: '#fff', 'stroke-opacity': 0.6 } : { 'stroke-opacity': 0.5 }) }));
+      reliefG.append(el('path', { d: slopeArrows(R, area, 10.8, P, (x, y) => !no.some(r => inside([x, y], r)), 0.6), ...RELIEF_ARROW, ...(satC ? { stroke: '#fff', 'stroke-opacity': 0.75 } : { 'stroke-opacity': 0.55 }) }));
       mapG.append(reliefG);
       reliefNote = `Contours every ${iv >= 12 ? `${iv / 12} ft` : `${iv}"`} · arrows point downhill`;
     }
