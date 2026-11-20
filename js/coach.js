@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.15.0', ['New courses: The Tribute Golf Club and Old American Golf Club (The Colony) and Sky Creek Ranch Golf Club (Keller), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.14.3', ['Yardage book: the front and back of the green are now its earliest and furthest points as you come in (shown up the middle); the green page’s grid and depth start at the front, and every yardage to the front uses it. On a par 5’s approach page, a purple dot marks the back of the green, the same colour as the numbers to the back']],
   ['1.14.2', ['Yardage book, par 5s: the whole-hole spread now starts at the fairway (the tees in their box), turned to fill both pages, with the hole number, yards and par in the corner. The approach page fills its page with numbers every 25 yards: red to the front of the green and, in brackets, to the back']],
   ['1.14.1', ['Yardage book, par 5s: like a tour book, two spreads instead of one. First the whole hole drawn across both pages (the green end on top, the tees on the bottom), then the green page over a close-up of the approach (the last 175 yards, drawn bigger). On the screen, in Reader mode and in every print layout']],

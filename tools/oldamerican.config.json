@@ -1,0 +1,22 @@
+{
+  "id": "oldamerican",
+  "name": "Old American Golf Club",
+  "location": "The Colony, TX",
+  "par": [4, 4, 5, 3, 4, 3, 5, 3, 4, 4, 4, 3, 4, 5, 4, 4, 3, 5],
+  "hcp": [5, 8, 14, 16, 2, 10, 18, 12, 6, 4, 3, 7, 11, 9, 1, 15, 13, 17],
+  "_comment_tees": "Scorecard from GolfPass (25964), whose holes are one off the course's: its #1 (482-yd par 4) is the course's #2 and its #18 is #1, as OpenStreetMap's hole tags and Wikipedia's card have it, so GolfPass's yards and handicaps are moved down one hole. Men's ratings.",
+  "_comment_drop": "Polygons containing these points are not part of the course: the practice green south-west of hole 16.",
+  "drop": [[33.094759, -96.933969], [33.104564, -96.929717, "bunker"], [33.105507, -96.929853, "bunker"], [33.103568, -96.920009, "bunker"], [33.103531, -96.919838, "bunker"], [33.103464, -96.919003, "bunker"], [33.103388, -96.918888, "bunker"], [33.104112, -96.91776, "bunker"], [33.105015, -96.915977, "bunker"], [33.1051, -96.915974, "bunker"], [33.103128, -96.920948, "bunker"], [33.10302, -96.920801, "bunker"], [33.103004, -96.920706, "bunker"], [33.10295, -96.92071, "bunker"], [33.10297, -96.920636, "bunker"], [33.102683, -96.920057, "bunker"], [33.102802, -96.924112, "bunker"], [33.101236, -96.924368, "bunker"], [33.100738, -96.923224, "bunker"], [33.098858, -96.922447, "bunker"], [33.099248, -96.921898, "bunker"], [33.10047, -96.92523, "bunker"], [33.100542, -96.925046, "bunker"], [33.095824, -96.925852, "bunker"], [33.095957, -96.925934, "bunker"], [33.093343, -96.93042, "bunker"], [33.0925, -96.932848, "bunker"], [33.092438, -96.931656, "bunker"], [33.097017, -96.927423, "bunker"], [33.098743, -96.926488, "bunker"], [33.099037, -96.92693, "bunker"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting all bunkers to the sand); every point is moved by it.",
+  "shift": {"east": 7.0, "north": 0.25},
+  "tees": [
+    {"name": "Leonard", "rating": 75.2, "slope": 145, "yards": [441, 482, 556, 175, 469, 202, 500, 216, 368, 442, 484, 229, 409, 571, 489, 346, 154, 551]},
+    {"name": "Green", "rating": 74.1, "slope": 143, "yards": [432, 419, 539, 163, 448, 185, 500, 192, 368, 425, 468, 212, 400, 551, 476, 346, 154, 551]},
+    {"name": "Green/Blue", "rating": 73.8, "slope": 141, "yards": [432, 414, 539, 163, 448, 185, 500, 192, 368, 425, 468, 189, 400, 551, 476, 346, 154, 522]},
+    {"name": "Blue", "rating": 73.5, "slope": 139, "yards": [423, 414, 539, 163, 448, 185, 496, 192, 351, 419, 468, 189, 394, 551, 476, 335, 148, 522]},
+    {"name": "Blue/White", "rating": 73.0, "slope": 138, "yards": [423, 408, 539, 163, 420, 170, 496, 166, 351, 419, 434, 171, 394, 523, 454, 335, 148, 491]},
+    {"name": "White", "rating": 72.0, "slope": 133, "yards": [393, 408, 516, 153, 420, 170, 473, 166, 319, 398, 434, 171, 375, 523, 454, 299, 131, 491]},
+    {"name": "White/Red", "rating": 69.5, "slope": 124, "yards": [339, 342, 516, 153, 334, 156, 473, 129, 319, 398, 362, 171, 375, 448, 348, 299, 109, 491]},
+    {"name": "Red", "rating": 66.3, "slope": 120, "yards": [339, 342, 416, 135, 334, 156, 406, 129, 272, 311, 362, 127, 297, 448, 348, 266, 109, 389]}
+  ]
+}

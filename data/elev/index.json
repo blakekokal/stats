@@ -538,5 +538,50 @@
    565
   ],
   "source": "USGS 3DEP"
+ },
+ "tribute": {
+  "bounds": [
+   -96.944235,
+   33.093005,
+   -96.928601,
+   33.107152
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   521,
+   564
+  ],
+  "source": "USGS 3DEP"
+ },
+ "oldamerican": {
+  "bounds": [
+   -96.93668,
+   33.089028,
+   -96.912454,
+   33.108405
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   521,
+   567
+  ],
+  "source": "USGS 3DEP"
+ },
+ "skycreek": {
+  "bounds": [
+   -97.21903,
+   32.918261,
+   -97.188813,
+   32.928163
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   599,
+   718
+  ],
+  "source": "USGS 3DEP"
  }
 }

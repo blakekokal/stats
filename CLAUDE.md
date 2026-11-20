@@ -108,7 +108,10 @@ green: `pinAtLineEnd` in the config), Cottonwood Valley (TPC Four Seasons is
 next door: kept to its own boundary), Trails of Frisco (winter imagery: shift fitted
 to the greens, as dormant fairways fool the bunker fit). Twin Creeks (GolfPass has its nines swapped:
 the club's current card, as Greenskeeper has it, matches OSM), Woodbridge, Buffalo Creek
-(OSM draws its driving range as a fairway: dropped).
+(OSM draws its driving range as a fairway: dropped), The Tribute (OSM tags hole 5's green as a tee),
+Old American (GolfPass's card is one hole off: its #1 is #2; its tan waste bunkers fool the sand
+check, so they were judged by eye; a `drop` point can name its type, `[lat, lng, "bunker"]`, so a
+bunker inside a fairway goes without the fairway), Sky Creek Ranch.
 
 Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, every shape
 traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).
@@ -119,15 +122,12 @@ Public, complete:
   no OSM hole); needs the current card from the club
 - Texas Rangers Golf Club (Arlington): OSM's holes 1-9 are GolfPass's 10-18 and the
   other way round; check the club's current card before building
-- The Tribute (The Colony) (building, 2026-11-20)
-- Old American (The Colony) (building, 2026-11-20)
 - Rockwall Golf & Athletic Club (Rockwall)
 - Pecan Valley (Fort Worth; two courses)
 - The Golf Club at Fossil Creek (Fort Worth)
 - White Stone (Fort Worth)
 - The Resort (Fort Worth)
 - Hawks Creek (Westworth Village)
-- Sky Creek Ranch (Keller) (building, 2026-11-20)
 - Oak Hollow (McKinney)
 
 Private, complete: TPC Craig Ranch, TPC Four Seasons Las Colinas, Stonebriar,

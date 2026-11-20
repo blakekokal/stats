@@ -1,0 +1,18 @@
+{
+  "id": "skycreek",
+  "name": "Sky Creek Ranch Golf Club",
+  "location": "Keller, TX",
+  "par": [4, 4, 4, 3, 5, 4, 5, 3, 4, 4, 3, 5, 4, 3, 5, 4, 3, 5],
+  "hcp": [9, 7, 1, 15, 13, 5, 11, 17, 3, 6, 16, 8, 2, 10, 14, 4, 12, 18],
+  "_comment_tees": "Scorecard from GolfPass (12714); its pars match OpenStreetMap's hole tags. Its Professional rating is for 6953 yds though the hole yards add to 7029. Men's ratings, but Forward is rated for women only.",
+  "_comment_drop": "Polygons containing these points are not part of the course: the two practice greens by the clubhouse.",
+  "drop": [[32.924497, -97.208377], [32.924733, -97.208107]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting all bunkers to the sand); every point is moved by it.",
+  "shift": {"east": -0.25, "north": 2.25},
+  "tees": [
+    {"name": "Professional", "rating": 73.4, "slope": 136, "yards": [416, 442, 409, 168, 551, 374, 566, 171, 430, 401, 196, 526, 430, 211, 537, 442, 228, 531]},
+    {"name": "Championship", "rating": 70.8, "slope": 127, "yards": [384, 420, 364, 148, 496, 349, 515, 134, 390, 383, 171, 505, 381, 191, 482, 394, 183, 477]},
+    {"name": "Club", "rating": 69.4, "slope": 120, "yards": [362, 398, 340, 136, 470, 317, 489, 116, 370, 335, 160, 483, 344, 174, 463, 371, 162, 450]},
+    {"name": "Forward", "rating": 72.8, "slope": 132, "yards": [321, 373, 321, 120, 449, 260, 474, 88, 342, 295, 113, 437, 318, 130, 442, 348, 139, 420]}
+  ]
+}
