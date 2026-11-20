@@ -493,5 +493,50 @@
    605
   ],
   "source": "USGS 3DEP"
+ },
+ "twincreeks": {
+  "bounds": [
+   -96.728121,
+   33.100091,
+   -96.708154,
+   33.116617
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   588,
+   710
+  ],
+  "source": "USGS 3DEP"
+ },
+ "woodbridge": {
+  "bounds": [
+   -96.566152,
+   32.975827,
+   -96.551737,
+   32.995144
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   459,
+   527
+  ],
+  "source": "USGS 3DEP"
+ },
+ "buffalocreek": {
+  "bounds": [
+   -96.472441,
+   32.858323,
+   -96.446947,
+   32.87756
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   459,
+   565
+  ],
+  "source": "USGS 3DEP"
  }
 }
