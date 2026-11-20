@@ -394,8 +394,13 @@ function onlyHole(svg, mapG, id, P, s, line, shapes, lineYd = LINE_YD, shapeYd =
 
 // ---------- the hole page ----------
 
+// opts.approachYd (par 5s, like a tour book): just the approach, the last
+// that many yards to the green, drawn bigger and turned so the way in goes up
+// the page. opts.tall: the whole hole drawn two pages tall, to be split into
+// a spread (see splitTall).
 async function holePage(n, teeName, prefs, helpers, opts) {
-  const H = opts.pageH || PAGE_H;
+  const tall = !!opts.tall && !opts.teeView, appr = !!opts.approachYd && !opts.teeView && !tall;
+  const H = (opts.pageH || PAGE_H) * (tall ? 2 : 1);
   const F = holeFacts(n, teeName, helpers, opts.start);
   const { ch, line, tee, pin, greenRing } = F;
   const teeSet = course.tees.find(t => t.name === teeName) || course.tees[0];
@@ -405,7 +410,16 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   // least 150 yd out); straight holes and par 3s, to the middle of the green.
   const f0 = frame(tee, 0);
   const land = line.slice(1, -1).find(p => Math.hypot(...f0.loc(p)) >= 150);
-  const up = bearingOf(tee, land || (greenRing ? centroid(greenRing) : pin), f0);
+  let up = bearingOf(tee, land || (greenRing ? centroid(greenRing) : pin), f0);
+  if (appr) { // the approach page: up the page from the spot that far out (along the line) to the green
+    const g0 = f0.loc(greenRing ? centroid(greenRing) : pin), Lp = line.map(f0.loc), R = opts.approachYd + 12;
+    let sp = Lp[0];
+    find: for (let i = Lp.length - 1; i > 0; i--) {
+      const a = Lp[i], b = Lp[i - 1], seg = dist(a, b) || 1;
+      for (let t = 0; t <= seg; t += 1) { const q = [a[0] + ((b[0] - a[0]) * t) / seg, a[1] + ((b[1] - a[1]) * t) / seg]; if (dist(q, g0) >= R) { sp = q; break find; } }
+    }
+    up = Math.atan2(g0[0] - sp[0], g0[1] - sp[1]);
+  }
   const f = frame(tee, up);
   // The approach: from the hole line's last bend (the tee on a straight hole).
   const approach = f.fwd(line.length > 2 ? line.at(-2) : line[0]);
@@ -420,16 +434,26 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   // tee boxes in a small box instead (par 4s and 5s whose fairway starts well
   // out): the hole is then drawn bigger.
   const fairYs = ownFair.flat().map(p => p[1]).filter(y => y > 20);
-  const startY = prefs.teeInset && ch.par > 3 && fairYs.length && teeBoxesL.length ? Math.min(...fairYs) - 20 : null;
-  const cropped = !opts.teeView && startY != null && startY > 50;
+  let startY = !tall && prefs.teeInset && ch.par > 3 && fairYs.length && teeBoxesL.length ? Math.min(...fairYs) - 20 : null;
+  if (appr) { // where the approach starts: the line that far from the front of the green
+    const tf = frontFn(f, greenRing, pin, approach), ys = [];
+    for (let i = 0; i < L.length - 1; i++) {
+      const a = L[i], b = L[i + 1], seg = dist(a, b) || 1;
+      for (let t = 0; t <= seg; t += 1) { const q = [a[0] + ((b[0] - a[0]) * t) / seg, a[1] + ((b[1] - a[1]) * t) / seg]; if (tf(q) <= opts.approachYd) ys.push(q[1]); }
+    }
+    startY = ys.length ? Math.min(...ys) - 8 : null;
+  }
+  const cropped = !opts.teeView && startY != null && (appr || startY > 50);
   // What has to fit: the line, the hole's fairways, green and tee boxes.
   const keep = cropped ? [...L.filter(p => p[1] >= startY), ...ownFair.flat().filter(p => p[1] >= startY), ...(greenL || [])]
     : [...L, ...ownFair.flat(), ...(greenL || []), ...teeBoxesL.flatMap(t => t.r)];
   let [minX, maxX] = [Math.min(...keep.map(p => p[0])), Math.max(...keep.map(p => p[0]))];
   let [minY, maxY] = [Math.min(...keep.map(p => p[1])), Math.max(...keep.map(p => p[1]))];
-  minX = Math.min(minX - 32, -45); maxX = Math.max(maxX + 32, 45); minY = cropped ? startY : minY - 14; maxY += 18;
+  // (Centred on the tee's line, at least 45 yd either side; the approach page, on the approach.)
+  const midX = appr ? (minX + maxX) / 2 : 0;
+  minX = Math.min(minX - 32, midX - 45); maxX = Math.max(maxX + 32, midX + 45); minY = cropped ? startY : minY - 14; maxY += 18;
   const top = 86, bottom = H - 28, left = 14, right = W - 14;
-  const s = Math.min((right - left) / (maxX - minX), (bottom - top) / (maxY - minY), 4.2, MAX_UNITS_PER_YD);
+  const s = Math.min((right - left) / (maxX - minX), (bottom - top) / (maxY - minY), appr ? MAX_UNITS_PER_YD : 4.2, MAX_UNITS_PER_YD);
   const cx = (left + right) / 2 - ((minX + maxX) / 2) * s, cy = (top + bottom) / 2 + ((minY + maxY) / 2) * s;
   const P = ([x, y]) => [cx + x * s, cy - y * s];
   const viewYd = [(left - cx) / s, (cx - right) / -s, (cy - bottom) / s, (cy - top) / s]; // minX, maxX, minY, maxY in yards
@@ -448,6 +472,8 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   svg.append(mapG, labG);
   const lab = labeller();
   const bounds = [left + 2, top + 2, right - 2, bottom - 2];
+  // Two pages tall: no numbers across the fold.
+  if (tall) lab.block([0, H / 2 - 9, W, H / 2 + 9]);
 
   const elevId = partOf(course, n);
   const info = opts.tourney ? null : (await elevIndex())[elevId] || null;
@@ -554,7 +580,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   };
 
   let insetRight = false;
-  if (cropped) await teeInset(); // first, so the numbers keep out of its way
+  if (cropped && !appr) await teeInset(); // first, so the numbers keep out of its way
   // Numbers in pairs, tour-book style: a dot on the spot, the yards to the
   // front of the green above (red) and the yards from the tee below (black),
   // off to the side on a short straight line. Beside each, in blue, how many
@@ -679,6 +705,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   for (const { q, front, tee, side, dFront, dTee, mine, teeOnly, idx } of pairs) {
     const [x, y] = P(q);
     if (y > bottom - 6 || y < top + 6) continue; // off the map (short of where it starts)
+    if (tall && Math.abs(y - H / 2) < 5) continue; // on the fold
     if (opts.teeView && tee > 130) continue; // the tees box: just what's near the tees
     // Four rows: blue up/down to the green, red to the front, black from the
     // tee, blue up/down from the tee. The labeller boxes them from 32 above
@@ -848,7 +875,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     txt(16 + textW(n, 54) + 10, 32, `PAR ${ch.par}`, { 'font-size': 15, 'font-weight': 700, fill: INK, 'letter-spacing': 1 }),
     txt(16 + textW(n, 54) + 10, 49, ch.hcp ? `HCP ${ch.hcp}` : '', { 'font-size': 12, fill: SOFT, 'letter-spacing': 1 }),
     txt(W - 16, 44, card ?? teeFront, { 'font-size': 36, 'font-weight': 900, fill: INK, 'text-anchor': 'end' }),
-    txt(W - 16, 60, `${(teeSet?.name || teeName).toUpperCase()} TEES · ${teeFront} TO FRONT`, { 'font-size': 10.5, fill: SOFT, 'text-anchor': 'end', 'letter-spacing': 0.6 }),
+    txt(W - 16, 60, appr ? `APPROACH · LAST ${opts.approachYd} YD` : `${(teeSet?.name || teeName).toUpperCase()} TEES · ${teeFront} TO FRONT`, { 'font-size': 10.5, fill: SOFT, 'text-anchor': 'end', 'letter-spacing': 0.6 }),
     el('line', { x1: 14, x2: W - 14, y1: top - 4, y2: top - 4, stroke: '#d6dcd8', 'stroke-width': 0.8 }),
     el('line', { x1: 14, x2: W - 14, y1: bottom + 4, y2: bottom + 4, stroke: '#d6dcd8', 'stroke-width': 0.8 }),
     txt(16, H - 12, course.name.toUpperCase(), { 'font-size': 9, fill: '#9aa59e', 'letter-spacing': 1 }),
@@ -868,6 +895,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   // The map view: where the page's corners are on the ground.
   svg.geo = { at: (u, v) => f.back([(u - cx) / s, (cy - v) / s]), to: p => P(f.fwd(p)), rect: [left, top, right, bottom], up };
   svg.dataset.page = 'hole';
+  svg.dataset.uid = id;
   svg.points = pairs.filter(pr => pr.mine).map(pr => ({ front: pr.front, tee: pr.tee }));
   svg.drawnPoints = drawnPts;
   if (opts.satellite) {
@@ -875,6 +903,35 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     if (url) mapG.parentNode.insertBefore(el('image', { href: url, x: left, y: top, width: right - left, height: bottom - top, preserveAspectRatio: 'none' }), mapG);
   }
   return svg;
+}
+
+// The tall page (opts.tall) cut in two: the same drawing seen through its
+// top half and its bottom half, a spread with the hole running across the fold.
+function splitTall(svg) {
+  const vb = svg.getAttribute('viewBox').split(' ').map(Number), half = vb[3] / 2, uid = svg.dataset.uid;
+  return [0, half].map((y0, i) => {
+    const c = svg.cloneNode(true);
+    // The second copy's patterns, masks and clips get their own names.
+    if (i && uid) for (const e of [c, ...c.querySelectorAll('*')]) for (const a of [...e.attributes]) if (a.value.includes(uid)) e.setAttribute(a.name, a.value.split(uid).join(`${uid}b`));
+    c.setAttribute('viewBox', `0 ${y0} ${W} ${half}`);
+    // For Edit: the page's own coordinates are still the tall page's.
+    for (const k of ['geo', 'points', 'drawnPoints', 'startDot', 'startLL', 'teeBoxes', 'insetMap', 'insetRows']) c[k] = svg[k];
+    c.dataset.half = i ? 'bottom' : 'top';
+    return c;
+  });
+}
+
+// How far out a par 5's approach page starts (yards to the front of the green).
+const APPROACH_YD = 175;
+// A hole's spreads, each [top page, bottom page] (top null when there's no
+// green page), in the order they're read. Most holes have one: the green over
+// the hole. A par 5 has two, like a tour book: the whole hole drawn tall across
+// both pages, then the green over a close-up of the approach.
+async function holeSpreads(k, teeName, p, helpers, holeOpts, greenOpts) {
+  const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, greenOpts) : null;
+  if (!(course.holes[k - 1]?.par >= 5)) return [[gp, await holePage(k, teeName, p, helpers, holeOpts)]];
+  const whole = splitTall(await holePage(k, teeName, p, helpers, { ...holeOpts, tall: true }));
+  return [whole, [gp, await holePage(k, teeName, p, helpers, { ...holeOpts, approachYd: APPROACH_YD })]];
 }
 
 // ---------- the green page ----------
@@ -1243,17 +1300,16 @@ export function openBook(n, opts) {
       }
     }
     if (my !== token) return;
-    // Like a tour book flipped open: the green page on top, the hole below the fold.
-    pages.replaceChildren(h('div', { class: 'flipbook' }, ...pagesNow));
+    // Like a tour book flipped open: the green page on top, the hole below the
+    // fold (a par 5: the whole hole across a spread first, then that).
+    pages.replaceChildren(...pagesNow.map(sp => h('div', { class: 'flipbook' }, ...sp.filter(Boolean))));
     applyZoom(); listPoints();
     status.textContent = note;
     if (adding) { showSel(); if (note) status.textContent = note; }
   }
-  async function drawHole(k, p) {
-    const hp = await holePage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat', points: book.points[k] || [], removed: (book.removed ||= {})[k] || [], start: (book.starts ||= {})[k] || null });
-    const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat' }) : null;
-    return [...(gp ? [gp] : []), hp];
-  }
+  const drawHole = (k, p) => holeSpreads(k, teeName, p, helpers,
+    { ...opts, satellite: style === 'sat', points: book.points[k] || [], removed: (book.removed ||= {})[k] || [], start: (book.starts ||= {})[k] || null },
+    { ...opts, satellite: style === 'sat' });
   const elevOk = !opts.tourney;
   const optRows = [];
   let group = '';
@@ -1298,8 +1354,7 @@ export function openBook(n, opts) {
   let zoom = 1;
   const zoomLabel = h('small', { class: 'bookzoom' }, '100%');
   const applyZoom = () => {
-    const fb = pages.querySelector('.flipbook');
-    if (fb) { fb.style.width = `${Math.round(420 * zoom)}px`; fb.style.maxWidth = zoom > 1 ? 'none' : ''; }
+    for (const fb of pages.querySelectorAll('.flipbook')) { fb.style.width = `${Math.round(420 * zoom)}px`; fb.style.maxWidth = zoom > 1 ? 'none' : ''; }
     zoomLabel.textContent = `${Math.round(zoom * 100)}%`;
   };
   const zoomBy = k => {
@@ -1382,13 +1437,19 @@ export function openBook(n, opts) {
   const same = (p, q) => q && p.mine === q.mine && (p.mine ? p.idx === q.idx : Math.abs(p.ll[0] - q.ll[0]) < 1e-7 && Math.abs(p.ll[1] - q.ll[1]) < 1e-7);
   // A yellow ring round the selected point, and the Delete button.
   function showSel() {
-    const svg = holeSvg();
-    svg?.querySelectorAll('.bksel').forEach(n => n.remove());
-    const p = sel && sel.hole === hole && svg ? (svg.drawnPoints || []).find(q => same(q, sel)) : null;
-    if (!p) sel = null;
+    // (A par 5 has more than one hole page: the point is ringed on each it's drawn on.)
+    const svgs = [...pages.querySelectorAll('svg.bookpage[data-page=hole]')];
+    svgs.forEach(svg => svg.querySelectorAll('.bksel').forEach(n => n.remove()));
+    let any = false;
+    for (const svg of sel && sel.hole === hole ? svgs : []) {
+      const p = (svg.drawnPoints || []).find(q => same(q, sel));
+      if (!p) continue;
+      any = true;
+      svg.append(el('circle', { class: 'bksel', cx: p.dot[0], cy: p.dot[1], r: 7, fill: 'none', stroke: '#f3c623', 'stroke-width': 2.5 }),
+        el('rect', { class: 'bksel', x: p.box[0], y: p.box[1], width: p.box[2] - p.box[0], height: p.box[3] - p.box[1], rx: 3, fill: 'none', stroke: '#f3c623', 'stroke-width': 1.2, 'stroke-dasharray': '3 2' }));
+    }
+    if (!any) sel = null;
     delBtn.hidden = !sel;
-    if (p) svg.append(el('circle', { class: 'bksel', cx: p.dot[0], cy: p.dot[1], r: 7, fill: 'none', stroke: '#f3c623', 'stroke-width': 2.5 }),
-      el('rect', { class: 'bksel', x: p.box[0], y: p.box[1], width: p.box[2] - p.box[0], height: p.box[3] - p.box[1], rx: 3, fill: 'none', stroke: '#f3c623', 'stroke-width': 1.2, 'stroke-dasharray': '3 2' }));
     if (adding) status.textContent = sel ? 'Selected: Delete it, or drag it to move it · tap the map to deselect' : HINT;
   }
   let drag = null;
@@ -1491,12 +1552,15 @@ export function openBook(n, opts) {
       // spread for hole k is the back of leaf k-1 (its top page) over the
       // front of leaf k (its bottom page), so each leaf carries hole k's hole
       // page and hole k+1's green; the first leaf is the cover.
+      // A par 5 has two spreads (the whole hole across both pages, then the
+      // green over the approach), so the same goes spread by spread.
       const blank = () => blankPage(pageH);
+      const allSpreads = holes.flatMap(k => parts[k].map(([t, b]) => [t || blank(), b]));
       let leaves;
-      if (!all) leaves = [[parts[hole].green || blank(), parts[hole].hole]];
+      if (!all) leaves = allSpreads;
       else {
-        leaves = [[parts[holes[0]].green || blank(), coverPage(teeName, layout.startsWith('duplex') || booklet ? 'Printed two-sided: flip on short edge' : '', pageH)]];
-        holes.forEach((k, i) => leaves.push([i + 1 < holes.length ? parts[holes[i + 1]].green || blank() : notesPage(pageH), parts[k].hole]));
+        leaves = [[allSpreads[0][0], coverPage(teeName, layout.startsWith('duplex') || booklet ? 'Printed two-sided: flip on short edge' : '', pageH)]];
+        allSpreads.forEach((sp, i) => leaves.push([i + 1 < allSpreads.length ? allSpreads[i + 1][0] : notesPage(pageH), sp[1]]));
       }
       status.textContent = 'Making the PDF…';
       const { jsPDF } = window.jspdf;
@@ -1551,7 +1615,7 @@ export function openBook(n, opts) {
         // flipped up (above the staples) over the front of the next leaf.
         // A strip's halves: its lower half (L) and upper half (U), each with
         // an outside face (the side printed first) and an inside one.
-        const spreads = holes.map(k => [parts[k].green || blank(), parts[k].hole]);
+        const spreads = allSpreads.map(sp => [...sp]);
         const N = Math.max(1, Math.ceil((spreads.length + 1) / 2));
         while (spreads.length < 2 * N - 1) spreads.push([notesPage(pageH), blank()]);
         const Lout = [coverPage(teeName, 'Stack the strips, staple, fold', pageH)], Lin = [], Uout = [notesPage(pageH)], Uin = [];
@@ -1622,7 +1686,7 @@ export function openBook(n, opts) {
           });
         }
       } else if (layout === 'single') {
-        const flat = all ? holes.flatMap(k => [parts[k].green, parts[k].hole].filter(Boolean)) : [parts[hole].green, parts[hole].hole].filter(Boolean);
+        const flat = holes.flatMap(k => parts[k].flat().filter(Boolean));
         const k = Math.min((4.25 - 2 * MARGIN) / 4.25, (7 - 2 * MARGIN) / 7);
         const pw = 4.25 * k * DPI, ph = 7 * k * DPI, x0 = (4.25 * DPI - pw) / 2, y0 = (7 * DPI - ph) / 2;
         for (const [i, svg] of flat.entries()) { status.textContent = `Making page ${i + 1} of ${flat.length}…`; await sheet(4.25, 7, ctx => drawSvg(ctx, svg, x0, y0, pw, ph, css)); }
@@ -1669,11 +1733,12 @@ export function openBook(n, opts) {
       status.textContent = `Couldn’t make the PDF: ${e.message || e}`;
     }
   }
-  async function drawHoleParts(k, p, pageH = PAGE_H) {
+  // A hole's spreads for the PDF, [top, bottom] each (see holeSpreads).
+  function drawHoleParts(k, p, pageH = PAGE_H) {
     const o = { ...opts, pageH };
-    const hp = await holePage(k, teeName, p, helpers, { ...o, satellite: style === 'sat', points: book.points[k] || [], removed: (book.removed ||= {})[k] || [], start: (book.starts ||= {})[k] || null });
-    const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, { ...o, satellite: style === 'sat' }) : null;
-    return { hole: hp, green: gp };
+    return holeSpreads(k, teeName, p, helpers,
+      { ...o, satellite: style === 'sat', points: book.points[k] || [], removed: (book.removed ||= {})[k] || [], start: (book.starts ||= {})[k] || null },
+      { ...o, satellite: style === 'sat' });
   }
   const coverPage = (tn, note = '', H = PAGE_H) => {
     const fy = y => (y * H) / PAGE_H; // laid out for a 658-high page
@@ -1742,11 +1807,8 @@ export function openReader(n, opts) {
     const key = `${k}|${style}`;
     if (!cache.has(key)) cache.set(key, (async () => {
       const o = { ...opts, satellite: style === 'sat', points: book.points?.[k] || [], removed: book.removed?.[k] || [], start: book.starts?.[k] || null };
-      const draw = async p => {
-        const hp = await holePage(k, teeName, p, helpers, o);
-        const gp = p.greenPage ? await greenPage(k, teeName, p, helpers, { ...opts, satellite: style === 'sat' }) : null;
-        return [gp, hp].filter(Boolean);
-      };
+      // Its spreads (a par 5 has two: the whole hole, then the green over the approach).
+      const draw = p => holeSpreads(k, teeName, p, helpers, o, { ...opts, satellite: style === 'sat' }).then(sps => sps.map(sp => sp.filter(Boolean)));
       try { return await draw(prefs); } catch (e) {
         console.error('yardage book reader', e);
         return draw({ ...prefs, contours: false, greenContours: false, slopes: false, deltas: false });
@@ -1764,8 +1826,8 @@ export function openReader(n, opts) {
     const old = stage.querySelector('.readerbook');
     if (old) old.style.opacity = '0.35';
     note.textContent = old ? '' : 'Drawing…';
-    let svgs;
-    try { svgs = await pagesFor(hole); } catch (e) {
+    let spreads;
+    try { spreads = await pagesFor(hole); } catch (e) {
       if (my !== token) return;
       stage.replaceChildren(h('div', { class: 'bookerr' }, `Couldn’t draw hole ${hole}: ${e.message || e}`)); note.textContent = '';
       return;
@@ -1773,11 +1835,17 @@ export function openReader(n, opts) {
     if (my !== token) return;
     note.textContent = '';
     // The same drawing can't be in two places: a copy, so the cached one stays whole.
-    // Flip up: one page at a time, the hole overview then the green page.
-    if (flip) { if (page >= svgs.length) page = svgs.length - 1; if (page < 0) page = svgs.length - 1; }
-    const order = flip ? [...svgs].reverse() : svgs;
-    const shown = flip ? [order[page]] : svgs;
-    if (flip && svgs.length > 1) holeLbl.textContent = `Hole ${hole} · ${page === 0 ? 'Overview' : 'Green'}`;
+    // Flip up: one page at a time, each spread's bottom page then its top (the
+    // hole overview then the green page). Side by side: a spread at a time.
+    const units = flip ? spreads.flatMap(sp => [...sp].reverse().map(s => [s])) : spreads;
+    count = units.length;
+    if (page >= count || page < 0) page = count - 1;
+    const shown = units[page];
+    if (count > 1) {
+      const names = flip ? spreads.flatMap(sp => (spreads.length > 1 && sp === spreads[0] ? ['Hole (tee end)', 'Hole (green end)'] : sp.length > 1 ? [spreads.length > 1 ? 'Approach' : 'Overview', 'Green'] : [spreads.length > 1 ? 'Approach' : 'Overview']))
+        : spreads.map((sp, i) => (spreads.length > 1 && i === 0 ? 'Whole hole' : 'Green & approach'));
+      holeLbl.textContent = `Hole ${hole} · ${names[page] || ''}`;
+    }
     const fb = h('div', { class: `readerbook rd-${mode}` }, ...shown.map(s => s.cloneNode(true)));
     stage.replaceChildren(fb);
     fit();
@@ -1800,14 +1868,15 @@ export function openReader(n, opts) {
       : Math.min(aw, (ah - gap) / rs.reduce((a, b) => a + b, 0));
     [...fb.children].forEach((s, i) => { s.style.width = `${Math.floor(w)}px`; s.style.height = `${Math.floor(w * rs[i])}px`; });
   }
-  let page = 0; // Flip up: 0 the hole overview, 1 the green page (-1: the last page, going back)
-  const go = d => { hole = wrap(hole + d); page = d < 0 && mode === 'flip' ? -1 : 0; turn = d; show(); };
-  // Flip up turns a page at a time (the hole, then its green), side by side a hole at a time.
+  // The page (flip up) or spread (side by side) shown, of `count` for this hole (-1: the last, going back).
+  let page = 0, count = 1;
+  const go = d => { hole = wrap(hole + d); page = d < 0 ? -1 : 0; turn = d; show(); };
+  // Flip up turns a page at a time (the hole, then its green), side by side a
+  // spread at a time (one a hole, two on a par 5).
   const turnPage = d => {
-    if (mode !== 'flip' || !course.holes.length) return go(d);
-    const two = !!prefs.greenPage;
-    if (two && d > 0 && page === 0) { page = 1; turn = d; return show(); }
-    if (two && d < 0 && page === 1) { page = 0; turn = d; return show(); }
+    if (!course.holes.length) return;
+    const next = page + d;
+    if (next >= 0 && next < count) { page = next; turn = d; return show(); }
     go(d);
   };
   // Swipe to turn; a tap on the page's far edge turns too (near edge: back).
@@ -2009,5 +2078,5 @@ export async function bookGreenPage(n, teeName, helpers, opts = {}) {
 // For tests and tools: draw a hole's pages without the screen.
 export const bookPages = async (n, teeName, prefs, helpers, opts = {}) => {
   const p = { ...loadPrefs(), ...prefs };
-  return [await holePage(n, teeName, p, helpers, opts), p.greenPage ? await greenPage(n, teeName, p, helpers, opts) : null].filter(Boolean);
+  return (await holeSpreads(n, teeName, p, helpers, opts, opts)).flat().filter(Boolean);
 };
