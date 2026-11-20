@@ -1,0 +1,21 @@
+{
+  "id": "woodbridge",
+  "name": "Woodbridge Golf Club",
+  "location": "Sachse, TX",
+  "par": [4, 3, 5, 3, 4, 4, 5, 4, 4, 4, 3, 4, 5, 4, 5, 3, 4, 4],
+  "hcp": [3, 11, 9, 13, 7, 1, 15, 17, 5, 6, 18, 10, 8, 2, 14, 12, 16, 4],
+  "_comment_tees": "Scorecard from GolfPass (1553); its pars match OpenStreetMap's hole tags. GolfPass's Combo rating (6127 yds) is Blue/White's; Black/Blue and White/Red have none published; Red's rating is the women's.",
+  "_comment_drop": "Polygons containing these points are not part of the course (the last 18 are OSM bunkers with no sand under them in the imagery): two practice greens by the clubhouse, their four bunkers and the driving range tee.",
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (measured by fitting all bunkers to the sand); every point is moved by it.",
+  "tees": [
+    {"name": "Black", "rating": 74.8, "slope": 133, "yards": [431, 196, 573, 177, 426, 483, 527, 317, 420, 432, 149, 424, 614, 443, 521, 210, 293, 452]},
+    {"name": "Black/Blue", "rating": null, "slope": null, "yards": [391, 196, 541, 177, 394, 460, 487, 317, 420, 432, 149, 371, 525, 443, 511, 210, 293, 428]},
+    {"name": "Blue", "rating": 71.9, "slope": 128, "yards": [391, 168, 541, 144, 394, 460, 487, 304, 391, 383, 124, 371, 525, 393, 511, 178, 281, 428]},
+    {"name": "Blue/White", "rating": 70.1, "slope": 124, "yards": [391, 168, 496, 144, 353, 426, 447, 304, 351, 383, 124, 328, 504, 338, 483, 178, 281, 428]},
+    {"name": "White", "rating": 68.4, "slope": 120, "yards": [352, 127, 496, 124, 353, 426, 447, 278, 351, 346, 101, 328, 504, 338, 483, 115, 262, 390]},
+    {"name": "White/Red", "rating": null, "slope": null, "yards": [352, 127, 409, 124, 324, 383, 412, 278, 351, 346, 101, 272, 443, 289, 396, 115, 189, 349]},
+    {"name": "Red", "rating": 71.2, "slope": 130, "yards": [316, 92, 409, 95, 324, 383, 412, 216, 314, 316, 74, 272, 443, 289, 396, 92, 189, 349]}
+  ],
+  "shift": {"east": -1.0, "north": 0.5},
+  "drop": [[32.987989, -96.561409], [32.987972, -96.560761], [32.988072, -96.561063], [32.988052, -96.560658], [32.987864, -96.561059], [32.987761, -96.56056], [32.987206, -96.561384], [32.980262, -96.557714], [32.980432, -96.55767], [32.980658, -96.557206], [32.97819, -96.55753], [32.984044, -96.553789], [32.986233, -96.557469], [32.985833, -96.560788], [32.988924, -96.558424], [32.990909, -96.558378], [32.990697, -96.558339], [32.990384, -96.55853], [32.98968, -96.55751], [32.988914, -96.557814], [32.992526, -96.557065], [32.992992, -96.558153], [32.993065, -96.562146], [32.989971, -96.562673], [32.989959, -96.562589]]
+}

@@ -54,7 +54,7 @@ def main(src, extra, cfg_path, dst):
         if t.get("highway") in ROADS and len(pts) >= 2:
             cut.append(LineString(pts).buffer(ROADS[t["highway"]], cap_style=2))
         elif "building" in t and len(pts) >= 4 and not any(n in t.get("name", "").lower() for n in SKIP_NAMES):
-            cut.append(Polygon(pts).buffer(HOUSE_PAD, join_style=2))
+            cut.append(Polygon(pts).simplify(0.3).buffer(HOUSE_PAD, join_style=2))  # simplify: a doubled corner would turn the mitred pad into a long spike
     xy_app = lambda q: (q[1] * M * k, q[0] * M)
     golf = [Polygon([xy_app(q) for q in f["p"][0]]).buffer(0) for f in course["features"] if f["t"] in ("fairway", "green", "tee")]
     left = inside.difference(unary_union(cut).buffer(3).buffer(-3)).buffer(-2).buffer(2)  # tidy slivers
