@@ -1065,11 +1065,9 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   if (gridStep) {
     let d = '';
     for (let y = frontY - Math.ceil((frontY - view[2]) / gridStep) * gridStep; y <= view[3]; y += gridStep) { const a = P([view[0], y]), b = P([view[1], y]); d += `M${a[0].toFixed(1)},${a[1].toFixed(1)}H${b[0].toFixed(1)}`; }
-    for (let x = Math.ceil(view[0] / gridStep) * gridStep; x <= view[1]; x += gridStep) { if (Math.abs(x) < 0.01) continue; const a = P([x, view[2]]), b = P([x, view[3]]); d += `M${a[0].toFixed(1)},${a[1].toFixed(1)}V${b[1].toFixed(1)}`; }
+    for (let x = Math.ceil(view[0] / gridStep) * gridStep; x <= view[1]; x += gridStep) { const a = P([x, view[2]]), b = P([x, view[3]]); d += `M${a[0].toFixed(1)},${a[1].toFixed(1)}V${b[1].toFixed(1)}`; }
     mapG.append(el('path', { d, stroke: sat ? '#fff' : '#8d949a', 'stroke-width': 0.5, 'stroke-opacity': sat ? 0.45 : 0.7 }));
   }
-  // The line up the middle, through the front and the back of the green.
-  { const a = P([0, view[2]]), b = P([0, view[3]]); mapG.append(el('path', { d: `M${a[0].toFixed(1)},${a[1].toFixed(1)}V${b[1].toFixed(1)}`, stroke: sat ? '#8fb8ff' : '#3d4fb0', 'stroke-width': 0.7 })); }
 
   // Heights, tour-book style: contour lines around the green (not on it, and
   // not over bunkers or water) and small downhill arrows on and around it.
