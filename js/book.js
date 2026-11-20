@@ -612,31 +612,6 @@ async function holePage(n, teeName, prefs, helpers, opts) {
     return inF(q) ? q : p;
   };
 
-  // The same for a number off the tee: across the fairway (square to the
-  // line, direction d) to its middle, kept `yd` from the tee.
-  const midFairwayFromTee = (p, d, yd) => {
-    if (!ownFair.length) return p;
-    const inF = q => ownFair.some(r => inside(q, r));
-    const perp = [d[1], -d[0]];
-    let q = p;
-    for (let k = 0; k < 2; k++) {
-      const at = o => [q[0] + perp[0] * o, q[1] + perp[1] * o];
-      const runs = []; let start = null;
-      for (let o = -60; o <= 60.01; o += 0.5) {
-        if (inF(at(o))) { if (start == null) start = o; } else if (start != null) { runs.push([start, o - 0.5]); start = null; }
-      }
-      if (start != null) runs.push([start, 60]);
-      if (!runs.length) return p;
-      const gap = ([a, b]) => (a <= 0 && b >= 0 ? 0 : Math.min(Math.abs(a), Math.abs(b)));
-      const run = runs.sort((r1, r2) => gap(r1) - gap(r2))[0];
-      if (gap(run) > 30) return p;
-      q = at((run[0] + run[1]) / 2);
-      const l = Math.hypot(q[0], q[1]) || 1;
-      q = [(q[0] * yd) / l, (q[1] * yd) / l]; // back onto the yd arc round the tee
-    }
-    return inF(q) ? q : p;
-  };
-
   let insetRight = false;
   if (cropped && !appr) await teeInset(); // first, so the numbers keep out of its way
   // Numbers in pairs, tour-book style: a dot on the spot, the yards to the
@@ -724,18 +699,12 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   // Down the middle: 50, 100, 150 and 200 to the front of the green (and 250
   // and 300 on a par 5).
   if (prefs.layup && !opts.teeView) { // (they're on the map, not in the tees box; par 3s have none to start)
-    // The approach page: every 25 yards in to the green.
-    const marks = appr ? Array.from({ length: Math.floor(opts.approachYd / 25) }, (_, i) => 25 * (i + 1)) : markersFor(prefs, ch.par);
-    // The whole-hole spread: every 25 yards off the tee instead (on the hole's
-    // line, out to 25 yards short of the green), with their yards to the front.
-    if (tall) {
-      for (let yd = 25; ; yd += 25) {
-        const w = walk.find(v => dist(v.p, [0, 0]) >= yd);
-        if (!w || w.front < 25) break;
-        const q = midFairwayFromTee(w.p, w.d, yd);
-        pair(q, Math.round(toFront(q)), yd, 1);
-      }
-    } else for (const yd of marks) {
+    // A par 5's approach page and whole-hole spread: every 25 yards to the
+    // front of the green (25, 50, 75 ...: round red numbers), all the way back
+    // to the tee on the spread (those off the map are left off).
+    const every25 = upTo => Array.from({ length: Math.floor(upTo / 25) }, (_, i) => 25 * (i + 1));
+    const marks = appr ? every25(opts.approachYd) : tall ? every25(walk.length ? walk[0].front : 0) : markersFor(prefs, ch.par);
+    for (const yd of marks) {
       const w = spotAt(yd);
       if (!w || w.fromTee < 40) continue;
       const q = midFairway(w.p, yd);
