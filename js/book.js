@@ -157,7 +157,8 @@ const curveD = (pts, close) => {
 // Shapes (closed) are drawn smooth; straight lines (hole line, leaders) stay straight.
 const pathD = (pts, close) => (close ? curveD(pts, true) : lineD(pts));
 const txt = (x, y, s, attrs = {}) => el('text', { x: x.toFixed(1), y: y.toFixed(1), ...attrs }, String(s));
-const INK = '#1c2a22', SOFT = '#5d6b62', FONT = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+const INK = '#1c2a22', SOFT = '#5d6b62', BACK = '#6a3fa0', // BACK: the approach page's back of the green (its dot and numbers)
+  FONT = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
 // The shared patterns: stippled sand, rippled water.
 function defs(id) {
@@ -353,7 +354,7 @@ function holeFacts(n, teeName, helpers, start) {
 function frontFn(f, greenRing, pin, from) {
   if (!greenRing) return p => dist(p, f.fwd(pin));
   const g = greenRing.map(f.fwd), c = centroid(g);
-  const fp = from && frontPointFn(f, greenRing, pin, null)(from);
+  const fp = from && greenEnds(f, greenRing, from).front;
   return p => {
     if (inside(p, g)) return 0;
     if (fp) return dist(p, fp);
@@ -366,12 +367,26 @@ function frontFn(f, greenRing, pin, from) {
 function frontPointFn(f, greenRing, pin, from) {
   if (!greenRing) return () => f.fwd(pin);
   const g = greenRing.map(f.fwd), c = centroid(g);
-  if (from) { const fp = frontPointFn(f, greenRing, pin)(from); return p => (inside(p, g) ? p : fp); }
+  if (from) { const fp = greenEnds(f, greenRing, from).front; return p => (inside(p, g) ? p : fp); }
   return p => {
     if (inside(p, g)) return p;
     const t = firstCross(p, c, g) ?? 1;
     return [p[0] + (c[0] - p[0]) * t, p[1] + (c[1] - p[1]) * t];
   };
+}
+
+// The front and the back of the green, as a tour book has them: the line of
+// play into the green (from `from`, the hole line's last bend, to the green's
+// middle), and on it the depth of the green's earliest point (the front) and
+// its furthest point (the back). The numbers are shown up the middle, but
+// measured to those depths; the green page's grid starts at the front.
+// In frame f; `from` in f too. { front, back, d (unit, the way in), lo, hi (depths from the middle) }.
+function greenEnds(f, greenRing, from) {
+  const g = greenRing.map(f.fwd), c = centroid(g);
+  const dl = dist(from, c) || 1, d = [(c[0] - from[0]) / dl, (c[1] - from[1]) / dl];
+  const along = g.map(p => (p[0] - c[0]) * d[0] + (p[1] - c[1]) * d[1]);
+  const lo = Math.min(...along), hi = Math.max(...along);
+  return { front: [c[0] + d[0] * lo, c[1] + d[1] * lo], back: [c[0] + d[0] * hi, c[1] + d[1] * hi], d, lo, hi };
 }
 
 // "Only this hole", like the live view's spotlight: everything on the map is
@@ -541,7 +556,10 @@ async function holePage(n, teeName, prefs, helpers, opts) {
 
   // The front of the green (where every number is measured to): a yellow dot.
   // (No dotted centre line from the tee: the numbers say it all.)
-  if (greenL) { const [x, y] = P(frontPointFn(f, greenRing, pin)(L.at(-2))); labG.append(el('circle', { cx: x, cy: y, r: 2.4, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.6 })); }
+  // (The approach page: the back too, in the colour of its numbers to the back.)
+  const ends = greenL ? greenEnds(f, greenRing, approach) : null;
+  if (ends) { const [x, y] = P(ends.front); labG.append(el('circle', { cx: x, cy: y, r: 2.4, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.6 })); }
+  if (ends && appr) { const [x, y] = P(ends.back); labG.append(el('circle', { cx: x, cy: y, r: 2.6, fill: BACK, stroke: '#fff', 'stroke-width': 0.8 })); }
   if (greenL) { const [x, y] = P(centroid(greenL)); lab.block([x - 6, y - 6, x + 6, y + 6]); }
 
   // Walk the hole's line in 1-yard steps: each step's point, direction and yards to the front.
@@ -717,17 +735,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   }
   // The approach page: yards to the back of the green instead of from the
   // tee, along the line through the front (in brackets, under the red).
-  const toBack = q => {
-    if (!greenL) return toFront(q);
-    const g = closeRing(greenL), fp = frontAt, dl = dist(q, fp);
-    if (dl < 0.5) return Math.max(0, ...crossings(q, [0, 1], g, 200));
-    const d = [(fp[0] - q[0]) / dl, (fp[1] - q[1]) / dl];
-    const far = crossings(q, d, g, dl + 200).filter(v => v > 0);
-    if (far.length) return Math.max(...far);
-    const c = centroid(greenL), dc = dist(q, c) || 1, d2 = [(c[0] - q[0]) / dc, (c[1] - q[1]) / dc];
-    const far2 = crossings(q, d2, g, dc + 200).filter(v => v > 0);
-    return far2.length ? Math.max(...far2) : toFront(q);
-  };
+  const toBack = q => (ends ? dist(q, ends.back) : toFront(q));
   const signed = v => (v > 0 ? `+${v}` : v < 0 ? `−${-v}` : '0');
   const bunkerRings = feats.filter(o => o.x.t === 'bunker' && prefs.bunkers).map(o => o.r.map(P));
   for (const { q, front, tee, side, dFront, dTee: dT, mine, teeOnly, idx } of pairs) {
@@ -769,7 +777,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       continue;
     }
     labG.append(txt(x0, my - 3, front, { 'font-size': 10, 'font-weight': 700, fill: RED }),
-      txt(x0, my + 8, lower, { 'font-size': 9.5, fill: INK }));
+      txt(x0, my + 8, lower, { 'font-size': 9.5, fill: appr ? BACK : INK, ...(appr ? { 'font-weight': 700 } : {}) }));
     if (dFront != null) labG.append(txt(x0, my - 13, signed(dFront), { 'font-size': 8, fill: BLUE, 'font-weight': 700 }));
     if (dTee != null) labG.append(txt(x0, my + 17, signed(dTee), { 'font-size': 8, fill: BLUE, 'font-weight': 700 }));
   }
@@ -991,10 +999,12 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   const minX = Math.min(...g.map(p => p[0])), maxX = Math.max(...g.map(p => p[0]));
   const minY = Math.min(...g.map(p => p[1])), maxY = Math.max(...g.map(p => p[1]));
   // Depth and width along the line of play and square to it, through the middle.
-  const depth = crossings([0, 0], [0, 1], g, 200), width = crossings([0, 0], [1, 0], g, 200);
-  const depthYd = depth.length >= 2 ? Math.round(depth.at(-1) - depth[0]) : Math.round(maxY - minY);
+  const width = crossings([0, 0], [1, 0], g, 200);
+  // Front and back: the green's earliest and furthest points on the way in
+  // (shown up the middle); the depth between them; the grid starts at the front.
+  const frontY = minY, backY = maxY;
+  const depthYd = Math.round(backY - frontY);
   const widthYd = width.length >= 2 ? Math.round(width.at(-1) - width[0]) : Math.round(maxX - minX);
-  const frontY = depth.length ? depth[0] : minY;
 
   const top = 86, bottom = prefs.notes ? H - 106 : H - 28, left = 18, right = W - 18;
   // Zoomed in on the green as far as the USGA allows (3/8 inch to 5 yards),
@@ -1093,8 +1103,8 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   for (const { x, r } of flat) mapG.append(el('path', { d: pathD(r.map(P), true), ...(sat ? { fill: 'none', stroke: SAT_LINE[x.t] } : { fill: x.t === 'bunker' ? '#efe6a2' : '#d6e9f5', stroke: '#2b2b2b' }), 'stroke-width': 1.2 }));
   mapG.append(el('path', { d: gPath, fill: 'none', stroke: sat ? '#fff' : '#111', 'stroke-width': 2 }));
   // Front and back of the green, with the depth at the back.
-  if (depth.length >= 2) {
-    const [ax, ay] = P([0, depth[0]]), [bx, by] = P([0, depth.at(-1)]);
+  {
+    const [ax, ay] = P([0, frontY]), [bx, by] = P([0, backY]);
     mapG.append(el('circle', { cx: ax, cy: ay, r: 3.2, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.7 }),
       el('circle', { cx: bx, cy: by, r: 3.2, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.7 }),
       txt(bx, by - 8, depthYd, { 'font-size': 13, 'font-weight': 700, fill: '#c62f2f', 'text-anchor': 'middle', stroke: '#fff', 'stroke-width': 3, 'paint-order': 'stroke' }));
