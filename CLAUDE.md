@@ -119,9 +119,9 @@ Public, complete:
   other way round; check the club's current card before building
 - The Tribute (The Colony)
 - Old American (The Colony)
-- The Golf Club at Twin Creeks (Allen)
-- Woodbridge (Sachse)
-- Buffalo Creek (Heath)
+- The Golf Club at Twin Creeks (Allen) (building, 2026-11-20)
+- Woodbridge (Sachse) (building, 2026-11-20)
+- Buffalo Creek (Heath) (building, 2026-11-20)
 - Rockwall Golf & Athletic Club (Rockwall)
 - Pecan Valley (Fort Worth; two courses)
 - The Golf Club at Fossil Creek (Fort Worth)
