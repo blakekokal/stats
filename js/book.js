@@ -157,8 +157,10 @@ const curveD = (pts, close) => {
 // Shapes (closed) are drawn smooth; straight lines (hole line, leaders) stay straight.
 const pathD = (pts, close) => (close ? curveD(pts, true) : lineD(pts));
 const txt = (x, y, s, attrs = {}) => el('text', { x: x.toFixed(1), y: y.toFixed(1), ...attrs }, String(s));
-const INK = '#1c2a22', SOFT = '#5d6b62', BACK = '#6a3fa0', // BACK: the approach page's back of the green (its dot and numbers)
-  FONT = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+const INK = '#1c2a22', SOFT = '#5d6b62',
+  // The green's front and back, the same on every page: the front a yellow dot
+  // (its yards in red), the back a purple dot (its yards, and the depth, in purple).
+  BACK = '#6a3fa0', FRONT_DOT = { fill: '#f3c623', stroke: '#6e5a10' }, BACK_DOT = { fill: BACK, stroke: '#3b1f63' }, FONT = "system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 
 // The shared patterns: stippled sand, rippled water.
 function defs(id) {
@@ -558,8 +560,8 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   // (No dotted centre line from the tee: the numbers say it all.)
   // (The approach page: the back too, in the colour of its numbers to the back.)
   const ends = greenL ? greenEnds(f, greenRing, approach) : null;
-  if (ends) { const [x, y] = P(ends.front); labG.append(el('circle', { cx: x, cy: y, r: 2.4, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.6 })); }
-  if (ends && appr) { const [x, y] = P(ends.back); labG.append(el('circle', { cx: x, cy: y, r: 2.6, fill: BACK, stroke: '#fff', 'stroke-width': 0.8 })); }
+  if (ends) { const [x, y] = P(ends.front); labG.append(el('circle', { cx: x, cy: y, r: 2.4, ...FRONT_DOT, 'stroke-width': 0.6 })); }
+  if (ends && appr) { const [x, y] = P(ends.back); labG.append(el('circle', { cx: x, cy: y, r: 2.4, ...BACK_DOT, 'stroke-width': 0.6 })); }
   if (greenL) { const [x, y] = P(centroid(greenL)); lab.block([x - 6, y - 6, x + 6, y + 6]); }
 
   // Walk the hole's line in 1-yard steps: each step's point, direction and yards to the front.
@@ -606,6 +608,31 @@ async function holePage(n, teeName, prefs, helpers, opts) {
       const off = toFront(q) - yd; // back onto the yd arc, along the way to the front
       const dl2 = dist(q, frontAt) || 1;
       q = [q[0] + ((frontAt[0] - q[0]) / dl2) * off, q[1] + ((frontAt[1] - q[1]) / dl2) * off];
+    }
+    return inF(q) ? q : p;
+  };
+
+  // The same for a number off the tee: across the fairway (square to the
+  // line, direction d) to its middle, kept `yd` from the tee.
+  const midFairwayFromTee = (p, d, yd) => {
+    if (!ownFair.length) return p;
+    const inF = q => ownFair.some(r => inside(q, r));
+    const perp = [d[1], -d[0]];
+    let q = p;
+    for (let k = 0; k < 2; k++) {
+      const at = o => [q[0] + perp[0] * o, q[1] + perp[1] * o];
+      const runs = []; let start = null;
+      for (let o = -60; o <= 60.01; o += 0.5) {
+        if (inF(at(o))) { if (start == null) start = o; } else if (start != null) { runs.push([start, o - 0.5]); start = null; }
+      }
+      if (start != null) runs.push([start, 60]);
+      if (!runs.length) return p;
+      const gap = ([a, b]) => (a <= 0 && b >= 0 ? 0 : Math.min(Math.abs(a), Math.abs(b)));
+      const run = runs.sort((r1, r2) => gap(r1) - gap(r2))[0];
+      if (gap(run) > 30) return p;
+      q = at((run[0] + run[1]) / 2);
+      const l = Math.hypot(q[0], q[1]) || 1;
+      q = [(q[0] * yd) / l, (q[1] * yd) / l]; // back onto the yd arc round the tee
     }
     return inF(q) ? q : p;
   };
@@ -699,7 +726,16 @@ async function holePage(n, teeName, prefs, helpers, opts) {
   if (prefs.layup && !opts.teeView) { // (they're on the map, not in the tees box; par 3s have none to start)
     // The approach page: every 25 yards in to the green.
     const marks = appr ? Array.from({ length: Math.floor(opts.approachYd / 25) }, (_, i) => 25 * (i + 1)) : markersFor(prefs, ch.par);
-    for (const yd of marks) {
+    // The whole-hole spread: every 25 yards off the tee instead (on the hole's
+    // line, out to 25 yards short of the green), with their yards to the front.
+    if (tall) {
+      for (let yd = 25; ; yd += 25) {
+        const w = walk.find(v => dist(v.p, [0, 0]) >= yd);
+        if (!w || w.front < 25) break;
+        const q = midFairwayFromTee(w.p, w.d, yd);
+        pair(q, Math.round(toFront(q)), yd, 1);
+      }
+    } else for (const yd of marks) {
       const w = spotAt(yd);
       if (!w || w.fromTee < 40) continue;
       const q = midFairway(w.p, yd);
@@ -823,7 +859,7 @@ async function holePage(n, teeName, prefs, helpers, opts) {
         const [fx, fy] = P(q), [tx, ty] = P([rx, q[1]]);
         labG.append(el('path', { d: `M${fx.toFixed(1)},${fy.toFixed(1)}L${tx.toFixed(1)},${ty.toFixed(1)}`, stroke: INK, 'stroke-width': 0.6, 'stroke-dasharray': '2 1.5', fill: 'none' }),
           el('path', { d: `M${(tx - 3).toFixed(1)},${ty.toFixed(1)}H${(tx + 3).toFixed(1)}`, stroke: INK, 'stroke-width': 1, fill: 'none' }),
-          el('circle', { cx: fx, cy: fy, r: 1.8, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.5 }));
+          el('circle', { cx: fx, cy: fy, r: 1.8, ...FRONT_DOT, 'stroke-width': 0.5 }));
         teeMarks.push([tx - 4, Math.min(fy, ty) - 2, Math.max(fx, tx) + 4, Math.max(fy, ty) + 2]);
       }
     }
@@ -1105,9 +1141,9 @@ async function greenPage(n, teeName, prefs, helpers, opts) {
   // Front and back of the green, with the depth at the back.
   {
     const [ax, ay] = P([0, frontY]), [bx, by] = P([0, backY]);
-    mapG.append(el('circle', { cx: ax, cy: ay, r: 3.2, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.7 }),
-      el('circle', { cx: bx, cy: by, r: 3.2, fill: '#f3c623', stroke: '#6e5a10', 'stroke-width': 0.7 }),
-      txt(bx, by - 8, depthYd, { 'font-size': 13, 'font-weight': 700, fill: '#c62f2f', 'text-anchor': 'middle', stroke: '#fff', 'stroke-width': 3, 'paint-order': 'stroke' }));
+    mapG.append(el('circle', { cx: ax, cy: ay, r: 3.2, ...FRONT_DOT, 'stroke-width': 0.7 }),
+      el('circle', { cx: bx, cy: by, r: 3.2, ...BACK_DOT, 'stroke-width': 0.7 }),
+      txt(bx, by - 8, depthYd, { 'font-size': 13, 'font-weight': 700, fill: BACK, 'text-anchor': 'middle', stroke: '#fff', 'stroke-width': 3, 'paint-order': 'stroke' }));
   }
 
   // Yards from the front, down the left edge of the green.
