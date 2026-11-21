@@ -93,6 +93,9 @@ export const COURSES = [
   { id: 'tribute', name: 'The Tribute Golf Club', file: 'data/tribute.json' },
   { id: 'oldamerican', name: 'Old American Golf Club', file: 'data/oldamerican.json' },
   { id: 'skycreek', name: 'Sky Creek Ranch Golf Club', file: 'data/skycreek.json' },
+  { id: 'isabella-nina', name: 'Isabella Golf Course – Nina', file: 'data/isabella-nina.json', nines: 'isabella' },
+  { id: 'isabella-pinta', name: 'Isabella Golf Course – Pinta', file: 'data/isabella-pinta.json', nines: 'isabella' },
+  { id: 'isabella-santamaria', name: 'Isabella Golf Course – Santa Maria', file: 'data/isabella-santamaria.json', nines: 'isabella' },
 ];
 const DEFAULT_COURSE = COURSES[0].id;
 // Nine-hole courses at one club (the same `nines` tag) can be played together

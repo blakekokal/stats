@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.16.0', ['New course: Isabella Golf Course (Hot Springs Village, Arkansas), all three nines (Nina, Pinta and Santa Maria): play any nine, or any two as 18. Greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.15.3', ['Yardage book, green page: no blue line down the middle of the green (the grid runs through as usual)']],
   ['1.15.2', ['Yardage book, par 5s: the whole-hole spread’s points are every 25 yards to the front of the green (25, 50, 75 …), so the red numbers are round, with the yards from the tee under each']],
   ['1.15.1', ['Yardage book: the back of the green is purple on every page (the green page’s back dot and depth too); the front stays a yellow dot with red yards. On a par 5’s whole-hole spread, a point every 25 yards off the tee, in the middle of the fairway, with its yards to the front']],

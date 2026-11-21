@@ -583,5 +583,50 @@
    718
   ],
   "source": "USGS 3DEP"
+ },
+ "isabella-nina": {
+  "bounds": [
+   -92.873722,
+   34.623572,
+   -92.855259,
+   34.635432
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   436,
+   585
+  ],
+  "source": "USGS 3DEP"
+ },
+ "isabella-pinta": {
+  "bounds": [
+   -92.884966,
+   34.62499,
+   -92.860829,
+   34.637895
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   465,
+   586
+  ],
+  "source": "USGS 3DEP"
+ },
+ "isabella-santamaria": {
+  "bounds": [
+   -92.862125,
+   34.623163,
+   -92.84304,
+   34.639477
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   440,
+   569
+  ],
+  "source": "USGS 3DEP"
  }
 }
