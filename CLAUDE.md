@@ -115,6 +115,8 @@ bunker inside a fairway goes without the fairway), Sky Creek Ranch.
 
 Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, every shape
 traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).
+Outside DFW: Isabella (Hot Springs Village, AR; three nines, Nina, Pinta and Santa Maria, all
+from OSM; OSM numbers Pinta 10-18, so `tools/isabella/course.py` names each nine's holes by way id).
 
 Public, complete:
 - Tenison Park (Dallas; two courses, East and Glen, like Fields Ranch)
