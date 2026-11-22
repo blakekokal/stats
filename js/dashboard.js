@@ -6,6 +6,7 @@ import { goBack, h, courseById } from './app.js';
 import { store, sync, levelFromPref } from './store.js';
 import { expected } from './sg.js';
 import { yards } from './geo.js';
+import { isDriver } from './model.js';
 import { historyRounds, setCurrentRound, firstHoleOf } from './rounds.js';
 
 const S = {}; // shared state for the ported dashboard code
@@ -67,7 +68,7 @@ export function toCoachRound(r) {
     P.forEach((s, i) => {
       const nxt = P[i + 1], isPutt = s.lie === 'green';
       const lie = nxt ? endLie(s, nxt, pin, i === 0) : 'HOLED';
-      shots.push({ shotNum: ++num, lie, isPutt,
+      shots.push({ shotNum: ++num, lie, isPutt, club: s.club || null,
         distanceBefore: isPutt ? feetOf(s, pin) : Math.round(yards(s.pos, pin)),
         distanceAfter: !nxt ? 0 : nxt.lie === 'green' ? feetOf(nxt, pin) : Math.round(yards(nxt.pos, pin)) });
       // Penalty strokes (water or OB): one entry each, so the next shot's number is right.
@@ -183,6 +184,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
     eagles:0, birdies:0, pars:0, bogeys:0, dblPlus:0,
     r18s:[], r18tp:[], r9s:[], r9tp:[],
     drives:[], longestDrive:0, shortestDrive:999,
+    drDrives:[], drLongest:0, drShortest:999,
     par3TeePen:0, par45TeePen:0, appPen:0, sgPen:0,
     missShort:0, missLong:0, missLeft:0, missRight:0,
     allPuttRanges: [{min:0,max:3,m:0,t:0,l:'0-3 ft'},{min:4,max:7,m:0,t:0,l:'4-7 ft'},{min:8,max:11,m:0,t:0,l:'8-11 ft'},{min:12,max:15,m:0,t:0,l:'12-15 ft'},{min:16,max:20,m:0,t:0,l:'16-20 ft'},{min:21,max:30,m:0,t:0,l:'21-30 ft'},{min:31,max:40,m:0,t:0,l:'31-40 ft'},{min:41,max:50,m:0,t:0,l:'41-50 ft'},{min:51,max:999,m:0,t:0,l:'50+ ft'}],
@@ -348,6 +350,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
         if ((h.par===4||h.par===5)&&s.shotNum===1&&s.distanceAfter!=null&&s.lie!=='PENALTY'&&s.lie!=='OB'&&s.lie!=='WATER'&&s.lie!=='RECOVERY') {
           var dd=h.yards-s.distanceAfter; A.drives.push(dd);
           if (dd>A.longestDrive) A.longestDrive=dd; if (dd<A.shortestDrive) A.shortestDrive=dd;
+          if (isDriver(s.club)) { A.drDrives.push(dd); if (dd>A.drLongest) A.drLongest=dd; if (dd<A.drShortest) A.drShortest=dd; }
         }
         if (s.lie==='PENALTY') { var prev5=shots[idx-1]; if(prev5){ if(prev5.shotNum===1){if(h.par===3)A.par3TeePen++;else A.par45TeePen++;}else if(prev5.distanceBefore>100)A.appPen++;else A.sgPen++;} }
         var _db=s.distanceBefore||0;var _isPar45Tee=s.shotNum===1&&(h.par===4||h.par===5);var _isAppAttempt=!s.isPutt&&_db>100&&!_isPar45Tee&&s.lie!=='PENALTY';
@@ -417,7 +420,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
   var avg9=A.r9s.length>0?avgF(A.r9s):'\u2013';
   var avg9tp=A.r9tp.length>0?A.r9tp.reduce(function(a,b){return a+b;},0)/A.r9tp.length:null;
   var bestStr=A.bestRound?A.bestRound.score+' ('+ftp(A.bestRound.to_par)+') \u2014 '+A.bestRound.course_name:'\u2013';
-  var avgDrv=davg(A.drives);
+  var avgDrv=davg(A.drives), avgDr=davg(A.drDrives);
   var avgFirstPutt=davg(A.firstPuttDists);
   // Rounds and holes that have fairway / green / putt stats (everything except score-only rounds)
   var nWithStats = data.filter(function(r){ var rd = r.round_data; return !rd || rd.entryMode !== 'simple' || rd.basicStats === true; }).length || 1;
@@ -506,10 +509,18 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+=row('Fairways Hit',pct(A.fwHit,A.fwOpp),A.fwHit+'/'+A.fwOpp);
   html+=row('Missed Left',A.fwLeft,pct(A.fwLeft,A.fwOpp));
   html+=row('Missed Right',A.fwRight,pct(A.fwRight,A.fwOpp));
-  html+=hdr('DRIVING DISTANCE');
-  html+=row('Average',avgDrv+' yds',A.drives.length+' drives');
-  html+=row('Longest',A.longestDrive+' yds');
-  html+=row('Shortest',A.shortestDrive+' yds');
+  html+=hdr('DRIVING DISTANCE \u00b7 DRIVER');
+  if (A.drDrives.length) {
+    html+=row('Average',avgDr+' yds',A.drDrives.length+' drives');
+    html+=row('Longest',A.drLongest+' yds');
+    html+=row('Shortest',A.drShortest+' yds');
+  } else html+=row('Average','\u2013','no tee shots logged with Driver');
+  html+=hdr('DRIVING DISTANCE \u00b7 ALL CLUBS (PAR 4s & 5s)');
+  html+=row('Average',(A.drives.length?avgDrv+' yds':'\u2013'),A.drives.length+' tee shots');
+  if (A.drives.length) {
+    html+=row('Longest',A.longestDrive+' yds');
+    html+=row('Shortest',A.shortestDrive+' yds');
+  }
   html+=hdr('PENALTIES OFF THE TEE');
   html+=row('Par 3 Tee Penalties',A.par3TeePen);
   html+=row('Par 4/5 Tee Penalties',A.par45TeePen);
