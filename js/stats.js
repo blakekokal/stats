@@ -2,7 +2,7 @@ import { h, courseById } from './app.js';
 import { store, sync } from './store.js';
 import { LEVELS } from './sg.js';
 import { levelName } from './account.js';
-import { analyzeRound, CATS, CAT_LABEL, fmtSg, fmtPar } from './model.js';
+import { analyzeRound, CATS, CAT_LABEL, fmtSg, fmtPar, isDriver } from './model.js';
 
 const pct = (n, d) => (d ? Math.round((100 * n) / d) + '%' : '–');
 
@@ -59,7 +59,9 @@ export function renderStats(view) {
   const sg = k => per18(set.reduce((t, x) => t + x.a.sg[k], 0));
   const full = set.filter(x => x.a.holes === 18);
   const shots = set.flatMap(x => x.a.shots);
-  const tee = shots.filter(s => s.cat === 'ott' && s.len != null);
+  const tee = shots.filter(s => s.cat === 'ott' && s.len != null); // par 4s and 5s only
+  const drv = tee.filter(s => isDriver(s.shot.club));
+  const avgLen = list => list.length ? Math.round(list.reduce((t, s) => t + s.len, 0) / list.length) + ' yd' : '–';
 
   const tile = (label, value, note) => h('div', { class: 'tile' }, h('span', { class: 'muted' }, label), h('strong', {}, value), note ? h('small', { class: 'muted' }, note) : null);
 
@@ -72,7 +74,8 @@ export function renderStats(view) {
       tile('Fairways', pct(sum('fir'), sum('firN'))),
       tile('Greens in reg', pct(sum('gir'), sum('girN'))),
       tile('Putts', per18(sum('putts')).toFixed(1), 'per 18 holes'),
-      tile('Avg drive', tee.length ? Math.round(tee.reduce((t, s) => t + s.len, 0) / tee.length) + ' yd' : '–', 'par 4s and 5s')),
+      tile('Avg drive · Driver', avgLen(drv), drv.length ? `${drv.length} drive${drv.length > 1 ? 's' : ''}, par 4s and 5s` : 'no tee shots with Driver yet'),
+      tile('Avg drive · All clubs', avgLen(tee), 'tee shots, par 4s and 5s')),
     h('div', { class: 'card' }, h('h3', {}, 'Strokes gained per 18 holes'),
       sgBars([...CATS.map(c => ({ label: CAT_LABEL[c], v: sg(c) })), { label: 'Total', v: sg('total'), total: true }])),
     h('div', { class: 'grid2' },

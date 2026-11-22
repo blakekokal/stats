@@ -6,6 +6,7 @@ import { _sb } from '../coaching/core.js';
 import { loadPerfCombineData } from './combines.js';
 import { historyRounds } from '../rounds.js';
 import { toCoachRound } from '../dashboard.js';
+import { isDriver } from '../model.js';
 import { getExpectedPutts, getExpectedStrokes } from '../coaching/sg-calc.js';
 
 // ═══════════════════════════════════════════════════════════════
@@ -131,6 +132,9 @@ export function computePerfAnalysis(rounds, displayHcp) {
     recentDriveTotal: 0, recentDriveCount: 0,
     priorDriveTotal: 0,  priorDriveCount: 0,
     longestDrive: 0, longestDriveHole: null, longestDriveCourse: null,
+    // Driver only (tee shots hit with Driver on par 4s and 5s)
+    drDistTotal: 0, drCount: 0, drRecentTotal: 0, drRecentCount: 0, drPriorTotal: 0, drPriorCount: 0,
+    drLongest: 0, drLongestHole: null, drLongestCourse: null,
     // Recent 3 vs prior OTT miss
     recentFwLeft: 0, recentFwRight: 0, recentFwOpp: 0,
     priorFwLeft: 0,  priorFwRight: 0,  priorFwOpp: 0,
@@ -257,6 +261,16 @@ export function computePerfAnalysis(rounds, displayHcp) {
               totals.longestDriveHole = h.hole || null;
               totals.longestDriveCourse = round.course_name || null;
             }
+            if (isDriver(s.club)) {
+              totals.drDistTotal += driveDist; totals.drCount++;
+              if (isRecent) { totals.drRecentTotal += driveDist; totals.drRecentCount++; }
+              else          { totals.drPriorTotal  += driveDist; totals.drPriorCount++;  }
+              if (driveDist > totals.drLongest) {
+                totals.drLongest = driveDist;
+                totals.drLongestHole = h.hole || null;
+                totals.drLongestCourse = round.course_name || null;
+              }
+            }
           }
         }
 
@@ -378,6 +392,9 @@ export function computePerfAnalysis(rounds, displayHcp) {
   totals.avgDrive      = totals.driveCount      > 0 ? Math.round(totals.driveDistTotal      / totals.driveCount)      : 0;
   totals.recentAvgDrive = totals.recentDriveCount > 0 ? Math.round(totals.recentDriveTotal / totals.recentDriveCount) : 0;
   totals.priorAvgDrive  = totals.priorDriveCount  > 0 ? Math.round(totals.priorDriveTotal  / totals.priorDriveCount)  : 0;
+  totals.drAvg       = totals.drCount       > 0 ? Math.round(totals.drDistTotal   / totals.drCount)       : 0;
+  totals.drRecentAvg = totals.drRecentCount > 0 ? Math.round(totals.drRecentTotal / totals.drRecentCount) : 0;
+  totals.drPriorAvg  = totals.drPriorCount  > 0 ? Math.round(totals.drPriorTotal  / totals.drPriorCount)  : 0;
   totals.fwPct    = totals.fwOpp > 0 ? Math.round(100 * totals.fwHit   / totals.fwOpp) : 0;
   totals.fwLeftPct  = totals.fwOpp > 0 ? Math.round(100 * totals.fwLeft  / totals.fwOpp) : 0;
   totals.fwRightPct = totals.fwOpp > 0 ? Math.round(100 * totals.fwRight / totals.fwOpp) : 0;
@@ -537,32 +554,40 @@ export function renderPerfAnalysis(a) {
     '<div style="flex:1;background:#0a3a20;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#00e08a;gap:4px;"><div>FW ' + a.fwPct + '%</div></div>' +
     '<div style="flex:0 0 ' + a.fwRightPct + '%;background:#2a0e0e;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#e8ede9;flex-direction:column;min-width:' + (a.fwRightPct > 0 ? '28px' : '0') + '"><div>R▶</div><div>' + a.fwRightPct + '%</div></div>' +
     '</div>' + ottTrend + '</div>' +
-    (a.avgDrive > 0 ? (function() {
-      var trendDiff = (a.recentAvgDrive > 0 && a.priorAvgDrive > 0) ? (a.recentAvgDrive - a.priorAvgDrive) : null;
+    driveCard('Avg Drive · Driver', a.drAvg, a.drCount, a.drRecentAvg, a.drPriorAvg, a.drLongest, a.drLongestHole, a.drLongestCourse, 'Longest Drive', 'No tee shots logged with Driver yet.') +
+    driveCard('Avg Drive · All Clubs', a.avgDrive, a.driveCount, a.recentAvgDrive, a.priorAvgDrive, a.longestDrive, a.longestDriveHole, a.longestDriveCourse, 'Longest Tee Shot', null);
+
+  // A driving-distance card: tee shots on par 4s and 5s (never par 3s).
+  function driveCard(title, avg, n, recent, prior, longest, ldHoleN, ldCourseName, longestLabel, emptyText) {
+      if (!(avg > 0)) return emptyText ? '<div style="background:#0f1513;border:1px solid #1c2120;border-radius:12px;padding:14px;margin-bottom:8px;">' +
+        '<div style="font-size:14px;font-weight:700;color:#e8ede9;">' + title + '</div>' +
+        '<div style="font-size:11px;color:#9aab9e;margin-top:4px;">' + emptyText + '</div></div>' : '';
+      var trendDiff = (recent > 0 && prior > 0) ? (recent - prior) : null;
       var trendHtml = '';
       if (trendDiff !== null) {
         var trendCol = trendDiff >= 0 ? '#00e08a' : '#ff5c5c';
         var trendIcon = trendDiff >= 0 ? '▲' : '▼';
-        trendHtml = '<div style="font-size:11px;color:' + trendCol + ';margin-top:4px;">' + trendIcon + ' ' + (trendDiff >= 0 ? '+' : '') + trendDiff + ' yds vs prior (last 3: ' + a.recentAvgDrive + ' · prior: ' + a.priorAvgDrive + ')</div>';
+        trendHtml = '<div style="font-size:11px;color:' + trendCol + ';margin-top:4px;">' + trendIcon + ' ' + (trendDiff >= 0 ? '+' : '') + trendDiff + ' yds vs prior (last 3: ' + recent + ' · prior: ' + prior + ')</div>';
       }
       var longestHtml = '';
-      if (a.longestDrive > 0) {
-        var ldCourse = a.longestDriveCourse ? a.longestDriveCourse : 'Unknown';
-        var ldHole   = a.longestDriveHole   ? ' Hole ' + a.longestDriveHole : '';
+      if (longest > 0) {
+        var ldCourse = ldCourseName ? ldCourseName : 'Unknown';
+        var ldHole   = ldHoleN   ? ' Hole ' + ldHoleN : '';
         longestHtml = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #1c2120;display:flex;justify-content:space-between;align-items:center;">' +
           '<div>' +
-          '<div style="font-size:11px;color:#5a6b60;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:2px;">Longest Drive</div>' +
+          '<div style="font-size:11px;color:#5a6b60;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:2px;">' + longestLabel + '</div>' +
           '<div style="font-size:11px;color:#9aab9e;">' + ldCourse + ldHole + '</div>' +
           '</div>' +
-          '<div style="font-size:22px;font-weight:800;color:#e8c840;">' + a.longestDrive + ' yds</div>' +
+          '<div style="font-size:22px;font-weight:800;color:#e8c840;">' + longest + ' yds</div>' +
           '</div>';
       }
       return '<div style="background:#0a2a18;border:1px solid #0d3a20;border-radius:12px;padding:14px;margin-bottom:8px;">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-        '<div style="font-size:14px;font-weight:700;color:#e8ede9;">Avg Drive Distance</div>' +
-        '<div style="font-size:22px;font-weight:800;color:#00e08a;">' + a.avgDrive + ' yds</div></div>' +
+        '<div><div style="font-size:14px;font-weight:700;color:#e8ede9;">' + title + '</div>' +
+        '<div style="font-size:11px;color:#9aab9e;">' + n + ' tee shot' + (n === 1 ? '' : 's') + ', par 4s and 5s</div></div>' +
+        '<div style="font-size:22px;font-weight:800;color:#00e08a;">' + avg + ' yds</div></div>' +
         trendHtml + longestHtml + '</div>';
-    })() : '');
+  }
 
   // ── Shared stat card renderer ───────────────────────────────
   // col = badge text color, bg = card background, border, badgeText, infoLine

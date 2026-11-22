@@ -34,6 +34,9 @@ export function distOf(shot, pin) {
   return shot.pos ? yards(shot.pos, pin) : 0;
 }
 
+// The club recorded for a shot is a driver ('Dr', 'Dr2' in My Bag, or 'Driver').
+export const isDriver = club => !!club && /^(dr\d*|driver.*)$/i.test(String(club).trim());
+
 export function category(shot, index, par, dist) {
   if (shot.lie === 'green') return 'putt';
   if (index === 0 && par >= 4) return 'ott';
