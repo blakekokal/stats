@@ -79,7 +79,7 @@ export function renderStats(view) {
     h('div', { class: 'card' }, h('h3', {}, 'Strokes gained per 18 holes'),
       sgBars([...CATS.map(c => ({ label: CAT_LABEL[c], v: sg(c) })), { label: 'Total', v: sg('total'), total: true }])),
     h('div', { class: 'grid2' },
-      bucketTable('Approach by distance', 'yd', shots.filter(s => s.cat === 'app'), [[30, 75], [75, 125], [125, 175], [175, 225], [225, Infinity]]),
+      bucketTable('Approach by distance', 'yd', shots.filter(s => s.cat === 'app'), [[30, 75], [75, 100], [100, 125], [125, 175], [175, 225], [225, Infinity]]),
       bucketTable('Putting by distance', 'ft', shots.filter(s => s.cat === 'putt'), [[0, 4], [4, 8], [8, 15], [15, 30], [30, Infinity]])),
     h('div', { class: 'card' }, h('h3', {}, 'By round'),
       h('div', { class: 'scroll' }, h('table', { class: 'data' },

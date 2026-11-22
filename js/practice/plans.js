@@ -152,8 +152,8 @@ async function ppLoadAndRender() {
           expBefore = s.shotNum === 1 ? getExpectedStrokes(db, 'TEE', hcp) : getExpectedStrokes(db, prevLie, hcp);
           expAfter = s.lie === 'GREEN' ? getExpectedPutts(da, hcp) : (da > 0 ? getExpectedStrokes(da, s.lie, hcp) : 2.5);
           sgVal = expBefore - expAfter - 1;
-          // Classify: around the green if <50 yards and not tee shot
-          if (s.shotNum > 1 && db <= 50 && !s.isPutt) hARG += sgVal;
+          // Classify: around the green if 30 yards or less and not a tee shot
+          if (s.shotNum > 1 && db <= 30 && !s.isPutt) hARG += sgVal;
           else hAPP += sgVal;
         }
       });

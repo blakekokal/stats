@@ -138,7 +138,7 @@ export function computePerfAnalysis(rounds, displayHcp) {
     // Recent 3 vs prior OTT miss
     recentFwLeft: 0, recentFwRight: 0, recentFwOpp: 0,
     priorFwLeft: 0,  priorFwRight: 0,  priorFwOpp: 0,
-    // Approach by bucket [50-75,75-100,100-125,125-150,150-175,175-200,200-225,225+]
+    // Approach by bucket (over 30 yards; 30 or less is around the green)
     appBuckets: {},
     // ARG by bucket
     argBuckets: { '1-15': {upDown:0,opp:0}, '15-30': {upDown:0,opp:0}, 'lt15rough': {upDown:0,opp:0}, '15-30rough': {upDown:0,opp:0}, bunker: {saves:0,opp:0} },
@@ -153,7 +153,7 @@ export function computePerfAnalysis(rounds, displayHcp) {
   };
 
   // Init approach buckets
-  var appBucketDefs = ['30-50','50-75','75-100','100-125','125-150','150-175','175-200','200-225','225+'];
+  var appBucketDefs = ['30-75','75-100','100-125','125-150','150-175','175-200','200-225','225+'];
   appBucketDefs.forEach(function(b){ totals.appBuckets[b] = {gir:0, opp:0, missLeft:0, missRight:0, missShort:0, missLong:0, proxTotal:0, proxCount:0}; });
 
   rounds.forEach(function(round, roundIdx) {
@@ -180,7 +180,7 @@ export function computePerfAnalysis(rounds, displayHcp) {
         var isTeeShotPar45 = s.shotNum === 1 && (h.par === 4 || h.par === 5);
         var isTeeShotPar3  = s.shotNum === 1 && h.par === 3;
         var isPutt = s.isPutt;
-        var isShortGame = !isPutt && db <= 50 && !isTeeShotPar45;
+        var isShortGame = !isPutt && db <= 30 && !isTeeShotPar45; // around the green: 30 yards or less
         var prevLie = idx > 0 ? (holeShots[idx-1].lie || 'FAIRWAY') : 'FAIRWAY';
         var sg = 0;
         if (isPutt) {
@@ -238,7 +238,7 @@ export function computePerfAnalysis(rounds, displayHcp) {
         // Approach: par3 tee shots + any non-putt shot into green from >30 yds
         var isApproachShot = !s.isPutt && (isPar3TeeShot || (!isPar45TeeShot && s.shotNum > 1 && db > 30));
         // ARG: chip/pitch shots close to the green, excludes all tee shots
-        var isARG = !s.isPutt && !isPar45TeeShot && !isPar3TeeShot && s.shotNum > 1 && db <= 75;
+        var isARG = !s.isPutt && !isPar45TeeShot && !isPar3TeeShot && s.shotNum > 1 && db <= 30;
 
         // ── OTT ─ drive distance only (fw/opp/left/right come from rd.stats) ──
         if (isPar45TeeShot && h.par >= 4) {
@@ -428,8 +428,7 @@ export function computePerfAnalysis(rounds, displayHcp) {
 }
 
 function appBucketFor(dist) {
-  if (dist >  30 && dist <= 50)  return '30-50';
-  if (dist >= 50  && dist < 75)  return '50-75';
+  if (dist >  30 && dist < 75)   return '30-75';
   if (dist >= 75  && dist < 100) return '75-100';
   if (dist >= 100 && dist < 125) return '100-125';
   if (dist >= 125 && dist < 150) return '125-150';
@@ -600,12 +599,16 @@ export function renderPerfAnalysis(a) {
   }
 
   // ── APP Detail ─────────────────────────────────────────────
-  var appBucketDefs = ['30-50','50-75','75-100','100-125','125-150','150-175','175-200','200-225','225+'];
+  var appBucketDefs = ['30-75','75-100','100-125','125-150','150-175','175-200','200-225','225+'];
   var appHtml = perfTabHeader('app', 'Approach · Detail', '#e8ede9');
   var worstBucket = appBucketDefs.reduce(function(worst, k){ var bk = a.appBuckets[k]; if(!bk.opp) return worst; var g=Math.round(100*bk.gir/bk.opp); return (!worst || g < worst.gir) ? {key:k,gir:g} : worst; }, null);
   appBucketDefs.forEach(function(bKey) {
     var b = a.appBuckets[bKey];
-    if (b.opp === 0) return;
+    if (b.opp === 0) {
+      // The short buckets always show, so there's a place for wedge approaches.
+      if (bKey === '30-75' || bKey === '75-100') appHtml += statCard(bKey + ' yds', '#8a9a8e', '#0f1513', '#1c2120', 'No shots', 'No approach shots from this distance yet');
+      return;
+    }
     var girP  = Math.round(100 * b.gir / b.opp);
     var col   = bucketGirColor(girP);
     var bg    = bucketGirBg(girP);
