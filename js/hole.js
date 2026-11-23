@@ -10,13 +10,13 @@
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast, complexHoles, partOf } from './app.js';
-import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity, saveStudentRound } from './store.js';
+import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity, saveStudentRound, updateRoundNotification } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, drawnRing, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
 import { bookMapImage, bookGreenPage } from './book.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS, isWater } from './model.js';
-import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, submitRound, isScouting, isTourneyScout, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
+import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, submitRound, scoreLine, isScouting, isTourneyScout, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
 import { liveLink, isLiveOn, setLiveOn, liveStatus, onLiveStatus, loadWatch, watchHole, shareCurrent } from './live.js';
 import { openBoundaryEditor, resumeEditAt, editFeatures } from './holeedit.js';
 import { elevIndex, elevPrefs, drawElevation, styleElevation, resetContourLook, heightAt, CONTOUR_YD } from './elev.js';
@@ -222,7 +222,8 @@ export function renderHole(view, n) {
   const coachSave = async (quiet = true) => {
     clearTimeout(coachTimer); coachTimer = null;
     const r = wi0.round; // the student's round, even if the hole screen has been left since
-    try { await saveStudentRound(wi0.studentId, { ...r }); coachDirty = false; window.dispatchEvent(new Event('gs:studentSaved')); if (!quiet) toast(`Saved to ${wi0.name || 'the student'}’s round`); return true; }
+    try { await saveStudentRound(wi0.studentId, { ...r }); coachDirty = false;
+      updateRoundNotification(wi0.studentId, r, scoreLine(r, course)).catch(e => console.warn('[coach edit] notification not updated:', e)); window.dispatchEvent(new Event('gs:studentSaved')); if (!quiet) toast(`Saved to ${wi0.name || 'the student'}’s round`); return true; }
     catch (e) { toast('Couldn’t save to the student’s round: ' + (e.message || e)); return false; }
   };
   const strokesIn = hl => Math.max(0, (hl.shots || []).length - (hl.done ? 0 : 1));

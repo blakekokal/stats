@@ -106,16 +106,20 @@ export function summarize(r, course, level) {
 
 // End a round where it is: it counts as finished with the holes played so far.
 // Their coach gets a "new round" notification with the score.
+// The score part of a New Round notification: " · 83 (+11) over 18 holes", or '' if none.
+export function scoreLine(r, course) {
+  try {
+    const s = summarize(r, course, r.level);
+    if (s.done) return ` · ${s.score} (${s.toPar === 0 ? 'E' : s.toPar > 0 ? '+' + s.toPar : '−' + -s.toPar}) over ${s.done} hole${s.done === 1 ? '' : 's'}`;
+  } catch { /* no score line */ }
+  return '';
+}
 export function submitRound(id, course) {
   const r = store.get(roundKeyOf(id));
   if (!r) return;
   store.set(roundKeyOf(id), { ...r, submitted: true, updated: Date.now() });
   if (r.submitted) return; // already posted
-  let line = '';
-  try {
-    const s = summarize(r, course, r.level);
-    if (s.done) line = ` · ${s.score} (${s.toPar === 0 ? 'E' : s.toPar > 0 ? '+' + s.toPar : '−' + -s.toPar}) over ${s.done} hole${s.done === 1 ? '' : 's'}`;
-  } catch { /* no score line */ }
+  const line = scoreLine(r, course);
   notifyCoach({ type: 'new_round', title: 'New round from {name}', message: `{name} posted a round at ${r.courseName || course?.name || 'a course'}${line}`, round_id: r.id });
 }
 
