@@ -184,7 +184,8 @@ async function loadCoachActivityFeed() {
         viewBtn += '<button onclick="coachWatchLive(\'' + String(n.round_id).replace(/[^a-z0-9]/gi, '') + '\')" style="' + bs + 'background:#c8102e;">Watch</button>';
       }
       if (n.type === 'new_round') {
-        var args = '\'' + n.student_id + '\',\'' + String(n.round_id || '').replace(/[^\w-]/g, '') + '\',' + (Date.parse(n.created_at) || 0);
+        var args = '\'' + n.student_id + '\',\'' + String(n.round_id || '').replace(/[^\w-]/g, '') + '\',' + (Date.parse(n.created_at) || 0)
+          + ',\'' + encodeURIComponent(n.message || '').replace(/'/g, '%27') + '\'';
         viewBtn += '<button onclick="coachActRound(' + args + ',\'view\')" style="' + bs + 'background:#007a52;">View round</button>'
           + '<button onclick="coachActRound(' + args + ',\'sg\')" style="' + bs + 'background:#6b4fbb;">Strokes gained</button>';
       }
@@ -352,15 +353,26 @@ function openStudentFromList(id) {
 
 // A round from Recent Activity: by its id, or else the student's round saved
 // nearest the time of the activity.
-async function coachActRound(studentId, roundId, at, mode) {
+async function coachActRound(studentId, roundId, at, msg, mode) {
+  if (mode === undefined) { mode = msg; msg = ''; }
   var st = (S.coachRosterData || []).find(function(x) { return x.student_id === studentId; }) || {};
   var name = st.student_name || 'Student';
   var rounds;
   try { rounds = await studentRounds(studentId); } catch (e) { alert('Couldn’t load ' + name + '’s rounds.'); return; }
   var i = rounds.findIndex(function(r) { return roundId && r._gps && r._gps.id === roundId; });
   if (i < 0 && rounds.length) {
-    i = 0;
-    rounds.forEach(function(r, k) { if (Math.abs(((r._gps || {}).updated || 0) - at) < Math.abs(((rounds[i]._gps || {}).updated || 0) - at)) i = k; });
+    // No round id (the notifications table has no round_id column): the round at
+    // the course the notification names, played closest to the day it was sent.
+    // Not the last-edited one: a round edited later would pull the match its way.
+    try { msg = decodeURIComponent(msg || ''); } catch (e) { msg = ''; }
+    var day = function(t) { var d = new Date(t); return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()); };
+    var sent = day(at);
+    var played = function(r) { return r.round_date ? Date.parse(r.round_date + 'T00:00:00Z') : day((r._gps || {}).updated || 0); };
+    var pool = rounds.map(function(r, k) { return k; });
+    var atCourse = pool.filter(function(k) { return rounds[k].course_name && msg.indexOf(rounds[k].course_name) !== -1; });
+    if (atCourse.length) pool = atCourse;
+    var cost = function(k) { return Math.abs(played(rounds[k]) - sent) * 1000 + Math.abs(((rounds[k]._gps || {}).updated || 0) - at) / 86400000; };
+    i = pool.reduce(function(b, k) { return cost(k) < cost(b) ? k : b; }, pool[0]);
   }
   if (i < 0) { alert('That round couldn’t be found.'); return; }
   if (mode === 'view') { viewRound(rounds[i]._gps, name); return; }

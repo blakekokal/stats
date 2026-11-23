@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.16.3', ['Coaching: View round and Strokes gained on a New Round notification open that round (the course it names, played that day), not the one the student edited most recently']],
   ['1.16.2', ['Around the green is 30 yards or less everywhere (Stats, the round dashboard, Performance and practice plans); approach is everything over 30. Approach by distance starts with 30–75 and 75–100 yards, shown even before you have shots there']],
   ['1.16.1', ['Average drive: a Driver figure (tee shots logged with Driver) and an All clubs figure, both from par 4s and 5s only, on the Stats page, the Off the Tee tab and Performance']],
   ['1.16.0', ['New course: Isabella Golf Course (Hot Springs Village, Arkansas), all three nines (Nina, Pinta and Santa Maria): play any nine, or any two as 18. Greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
