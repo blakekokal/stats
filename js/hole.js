@@ -10,12 +10,12 @@
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast, complexHoles, partOf } from './app.js';
-import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity } from './store.js';
+import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity, saveStudentRound } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, drawnRing, YD_PER_M } from './geo.js';
 import { VERSION } from './version.js';
 import { bookMapImage, bookGreenPage } from './book.js';
 import { expected, LEVELS } from './sg.js';
-import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS } from './model.js';
+import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS, isWater } from './model.js';
 import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, submitRound, isScouting, isTourneyScout, endScouting, isWatching, watchInfo, startHoleOf, playOrder } from './rounds.js';
 import { liveLink, isLiveOn, setLiveOn, liveStatus, onLiveStatus, loadWatch, watchHole, shareCurrent } from './live.js';
 import { openBoundaryEditor, resumeEditAt, editFeatures } from './holeedit.js';
@@ -46,7 +46,7 @@ export function clubName(n) {
 const clubShort = n => (n === 'Putter' ? 'Putt' : /^(\d)I$/.test(n) ? n[0] + 'i' : /^(\d)HY$/.test(n) ? n[0] + 'H' : /^\d\d$/.test(n) ? n + '°' : n);
 // The stroke number of the shot at index i: earlier penalty strokes count too
 // (a re-tee after OB is shot 3). Old rounds mark water with a 'water' lie.
-const strokeNo = (shots, i) => { let n = i + 1; for (let k = 0; k < i; k++) n += shots[k].pen || 0; for (let k = 1; k <= i; k++) if (shots[k].lie === 'water') n++; return n; };
+const strokeNo = (shots, i) => { let n = i + 1; for (let k = 0; k < i; k++) n += shots[k].pen || 0; for (let k = 1; k <= i; k++) if (isWater(shots[k])) n++; return n; };
 const SWING_NAME = { '3/4': '¾', '1/2': '½', punch: 'punch', recovery: 'recovery' };
 
 let watchTimer = null, liveUnsub = null;
@@ -213,6 +213,18 @@ export function renderHole(view, n) {
   const rp = watching && sessionStorage.getItem('gs:replay') === '1' ? (replay ||= { playing: true, speed: 1 }) : null;
   if (!rp) replay = null;
   else if (rp.hole !== n) { rp.hole = n; rp.step = 0; rp.done = false; }
+  // A coach viewing a student's past round (opened from Coaching) can Edit it:
+  // the changes are saved straight to the student's account (saveStudentRound).
+  const wi0 = watching ? watchInfo() : null;
+  const coachCan = !!(wi0 && wi0.studentId && wi0.id.startsWith('sv-') && !rp && sync.user);
+  const coachEditing = coachCan && sessionStorage.getItem('gs:coachEdit') === wi0.id;
+  let coachTimer = null, coachDirty = false;
+  const coachSave = async (quiet = true) => {
+    clearTimeout(coachTimer); coachTimer = null;
+    const r = wi0.round; // the student's round, even if the hole screen has been left since
+    try { await saveStudentRound(wi0.studentId, { ...r }); coachDirty = false; window.dispatchEvent(new Event('gs:studentSaved')); if (!quiet) toast(`Saved to ${wi0.name || 'the student'}’s round`); return true; }
+    catch (e) { toast('Couldn’t save to the student’s round: ' + (e.message || e)); return false; }
+  };
   const strokesIn = hl => Math.max(0, (hl.shots || []).length - (hl.done ? 0 : 1));
   const holeNow = () => {
     if (scouting || watching) {
@@ -226,10 +238,11 @@ export function renderHole(view, n) {
   // The shots to plan from: none once the hole is finished, so the tools work from the tee again.
   const planShots = () => (holeNow().done ? [] : shotsNow());
   function saveHole(patch) {
-    if (watching) return;
-    if (scouting) {
+    if (watching && !coachEditing) return;
+    if (scouting || watching) {
       const r = currentRound();
       r.holes = { ...r.holes, [n]: { pin: null, done: false, shots: [], ...r.holes[n], ...patch } }; r.updated = Date.now();
+      if (watching) { coachDirty = true; clearTimeout(coachTimer); coachTimer = setTimeout(coachSave, 800); }
       syncPin(); drawShots(); update();
       return;
     }
@@ -573,25 +586,39 @@ export function renderHole(view, n) {
 
   // Viewing a past round from Round History: holes open on the normal tee view
   // with the shots drawn and no recording controls, until Edit is tapped.
-  const viewing = () => watching || localStorage.getItem('gs:viewOnly') === '1';
+  const viewing = () => (watching ? !coachEditing : localStorage.getItem('gs:viewOnly') === '1');
   // Re-render this hole keeping the current view (zoom, position, rotation).
   const rerenderHere = () => {
     const c = m.getCenter();
     sessionStorage.setItem('gs:cam', JSON.stringify({ center: [c.lng, c.lat], zoom: m.getZoom(), bearing: m.getBearing() }));
     renderHole(view, n);
   };
-  const editBtn = h('button', { class: 'fab viewedit', hidden: !viewing() || watching, onclick: () => {
+  const editBtn = h('button', { class: 'fab viewedit', hidden: !viewing() || (watching && !coachCan), onclick: () => {
     const r = currentRound();
+    if (watching) { // a coach editing a student's round
+      sessionStorage.setItem('gs:coachSnap', JSON.stringify(r.holes || {}));
+      sessionStorage.setItem('gs:coachEdit', wi0.id); rerenderHere(); return;
+    }
     if (r) localStorage.setItem('gs:editSnap', JSON.stringify(r.holes || {})); // for Cancel
     localStorage.removeItem('gs:viewOnly'); localStorage.setItem('gs:editingPast', '1'); rerenderHere();
   } }, '✎ Edit');
   // Editing a past round: Save (beside Undo) goes back to view mode. Changes are
   // already stored as they're made; Save just finishes editing.
-  const editingPast = () => !watching && localStorage.getItem('gs:editingPast') === '1' && !viewing();
-  const finishEdit = () => { localStorage.removeItem('gs:editingPast'); localStorage.removeItem('gs:editSnap'); localStorage.setItem('gs:viewOnly', '1'); rerenderHere(); };
+  const editingPast = () => (watching ? coachEditing : localStorage.getItem('gs:editingPast') === '1' && !viewing());
+  const finishEdit = async () => {
+    if (watching) {
+      if (coachDirty && !(await coachSave(false))) return; // keep editing if it didn't save
+      sessionStorage.removeItem('gs:coachEdit'); sessionStorage.removeItem('gs:coachSnap'); rerenderHere(); return;
+    }
+    localStorage.removeItem('gs:editingPast'); localStorage.removeItem('gs:editSnap'); localStorage.setItem('gs:viewOnly', '1'); rerenderHere(); };
   const saveBtn = h('button', { class: 'fab savehole', hidden: !editingPast(), onclick: finishEdit }, '✓ Save');
   // Cancel puts every hole back the way it was when Edit was tapped.
   const cancelBtn = h('button', { class: 'fab cancelhole', hidden: !editingPast(), onclick: () => {
+    if (watching) {
+      const r = currentRound(), snap = sessionStorage.getItem('gs:coachSnap');
+      if (r && snap) { try { r.holes = JSON.parse(snap); r.updated = Date.now(); coachDirty = true; } catch { /* keep as is */ } }
+      finishEdit(); return;
+    }
     const r = currentRound(), snap = localStorage.getItem('gs:editSnap');
     if (r && snap) { try { store.set(roundKeyOf(r.id), { ...r, holes: JSON.parse(snap), updated: Date.now() }); } catch { /* keep as is */ } }
     finishEdit();
@@ -675,6 +702,7 @@ export function renderHole(view, n) {
   // box): { id, name, clubs }, kept until GPS Overview is left.
   let bagFor = null;
   if (scouting) { try { bagFor = JSON.parse(sessionStorage.getItem('gs:scoutBag') || 'null'); } catch { bagFor = null; } }
+  if (coachEditing) fetchBagOf(wi0.studentId).then(clubs => { bagFor = { id: wi0.studentId, name: wi0.name, clubs }; }, () => {});
   const bag = () => { const b = ((bagFor ? bagFor.clubs : sync.bag) || []).filter(c => c && c.name); return b.length ? b : DEFAULT_BAG; };
   const SWINGS = [['full', 'Full'], ['3/4', '¾'], ['1/2', '½'], ['punch', 'Punch'], ['recovery', 'Recovery']];
   let pickedClub = null;
@@ -1222,7 +1250,8 @@ export function renderHole(view, n) {
     if (!dropping) return;
     const { shots, n } = dropping;
     dropping = null; setDropBtn.hidden = true; holeEl()?.classList.remove('dropping');
-    saveShots([...shots, { pos: target, lie: lieOn(target, course.features), drop: true, penalty: n }]);
+    const at = lieOn(target, course.features); // a ball dropped by a pond or the boundary is played as from the rough
+    saveShots([...shots, { pos: target, lie: at === 'water' || at === 'ob' ? 'rough' : at, drop: true, penalty: n }]);
   } }, 'Set drop');
   function openPenalty(shots, kind, at) {
     const prev = shots[shots.length - 1], water = kind === 'water';
@@ -1248,6 +1277,11 @@ export function renderHole(view, n) {
   function openShotConfirm(at = target, gps = false) {
     const shots = shotsNow(), from = shots.length ? shots[shots.length - 1].pos : tee;
     let club = currentClub(), swing = 'full';
+    // The ball already marked (where the last shot finished) was lost or
+    // unplayable: the penalty goes on the shot that put it there and the ball
+    // is replaced by the re-tee or drop, with no stroke from where it lay.
+    const lie0 = shots[shots.length - 1];
+    const lostHere = !gps && shots.length >= 2 && lie0.lie !== 'green' && !lie0.drop && !lie0.replay;
     const draw = () => shotConfirm.replaceChildren(h('div', { class: 'clubbox' },
       h('div', { class: 'clubhead' }, h('strong', {}, `${gps ? '📍 ' : ''}Shot ${shots.length ? strokeNo(shots, shots.length - 1) : 1} · ${Math.round(yards(from, at))} yds`), h('button', { class: 'x', onclick: () => { shotConfirm.hidden = true; } }, '✕')),
       gps ? h('small', { class: 'muted' }, `Finishing where you are standing (${LIE_TAG[lieOn(at, course.features)] || ''}, GPS ±${Math.round(gpsFix.acc * YD_PER_M)} yd)`) : null,
@@ -1255,6 +1289,8 @@ export function renderHole(view, n) {
       h('div', { class: 'clubgrid' }, bag().map(c => h('button', { class: club === c.name ? 'on' : '', onclick: () => { club = c.name; draw(); } },
         h('b', {}, clubShort(c.name)), h('small', {}, clubYd(c) ? `${clubYd(c)}` : '')))),
       h('div', { class: 'swings' }, SWINGS.map(([k, label]) => h('button', { class: swing === k ? 'on' : '', onclick: () => { swing = k; draw(); } }, label))),
+      lostHere ? h('button', { class: 'lostball lostlast', title: 'The ball already marked was lost or unplayable: add the penalty there without a stroke', onclick: () => { shotConfirm.hidden = true; pickedClub = null; openPenalty(shots.slice(0, -1), 'penalty', shots[shots.length - 1].pos); } },
+        h('span', {}, 'Last ball lost / unplayable'), h('small', {}, 'No stroke · re-tee, drop +1 or +2, or free relief')) : null,
       h('div', { class: 'recordrow' },
         h('button', { class: 'lostball', title: 'The ball finished where the crosshair is and was re-teed, dropped (with a penalty) or given free relief', onclick: () => { shotConfirm.hidden = true; recordShot(club, swing, at, gps, true); } }, 'Penalty / drop'),
         h('button', { class: 'record', onclick: () => { shotConfirm.hidden = true; recordShot(club, swing, at, gps); } }, 'Record shot'))));
@@ -1817,7 +1853,7 @@ export function renderHole(view, n) {
   // Score chips at the top (total, and this hole with the round to par) and a
   // scorecard overlay when either is tapped. Only while a round is under way.
   const toPar = v => (v === 0 ? 'E' : v > 0 ? `+${v}` : `−${-v}`);
-  const strokesOf = hh => (hh.shots || []).reduce((t, x) => t + 1 + (x.lie === 'water' ? 1 : 0) + (x.pen || 0), 0);
+  const strokesOf = hh => (hh.shots || []).reduce((t, x) => t + 1 + (isWater(x) ? 1 : 0) + (x.pen || 0), 0);
   // The hole a round started on. Not stored, so it is worked out from the
   // holes played: the first one after the longest run of unplayed holes
   // (going round from 18 back to 1), e.g. 10 for a round started on the back.
