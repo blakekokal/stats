@@ -8,12 +8,15 @@ import { courseById } from '../app.js';
 import { summarize, startWatching, firstHoleOf } from '../rounds.js';
 
 const cache = new Map(); // student id -> { at, rounds }
+window.addEventListener('gs:studentSaved', () => cache.clear()); // a coach edited a round: fetch afresh
 // The student's rounds, newest first: coaching-format rounds, each with `_gps`
 // (the round as this app saved it). Kept for a minute so tabs don't refetch.
 export async function studentRounds(studentId, fresh = false) {
   const hit = cache.get(studentId);
   if (!fresh && hit && Date.now() - hit.at < 60000) return hit.rounds;
   const raw = (await fetchStudentRounds(studentId)).filter(r => r && r.courseName);
+  // Each round remembers whose it is (not saved with it), so a coach can edit it.
+  raw.forEach(r => Object.defineProperty(r, '_student', { value: studentId, enumerable: false, configurable: true }));
   const rounds = raw.map(r => ({ ...toCoachRound(r), _gps: r })).filter(r => r.holes > 0)
     .sort((a, b) => (a.round_date < b.round_date ? 1 : a.round_date > b.round_date ? -1 : (b._gps.updated || 0) - (a._gps.updated || 0)));
   cache.set(studentId, { at: Date.now(), rounds });
@@ -38,7 +41,7 @@ export function watchLive(shareId) { backToCoaching(); location.hash = '#/live/'
 // hole they played. Replay plays it back one shot at a time.
 export function viewRound(round, name, replay = false) {
   backToCoaching();
-  startWatching('sv-' + round.id, { round, live: false, name: name || round.player || '', at: null, sent: round.updated });
+  startWatching('sv-' + round.id, { round, studentId: round._student || null, live: false, name: name || round.player || '', at: null, sent: round.updated });
   try { replay ? sessionStorage.setItem('gs:replay', '1') : sessionStorage.removeItem('gs:replay'); } catch { /* ignore */ }
   location.hash = '#/hole/' + firstHoleOf(round, courseById(round.course));
 }

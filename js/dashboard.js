@@ -39,7 +39,7 @@ function endLie(from, to, pin, isTeeShot) {
   const lie = to.lie;
   if (from.pen) return from.penKind === 'water' ? 'WATER' : 'OB';
   if (lie === 'green') return 'GREEN';
-  if (lie === 'water') return 'WATER';
+  if (lie === 'water' && !to.drop && !to.replay) return 'WATER';
   if (lie === 'recovery') return 'RECOVERY';
   const near = yards(to.pos, pin) <= 30;
   if (lie === 'bunker') return near ? 'GS BUNKER' : 'FW BUNKER';

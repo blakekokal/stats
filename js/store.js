@@ -355,7 +355,19 @@ create or replace function coach_live_rounds()
         where (l.doc->>'live')::boolean is true
           and l.updated > (extract(epoch from now()) * 1000)::bigint - 6 * 3600 * 1000
           and exists (select 1 from coach_students cs where cs.coach_id = auth.uid() and cs.student_id = l.user_id) $$;
-grant execute on function coach_live_rounds() to authenticated;`;
+grant execute on function coach_live_rounds() to authenticated;
+create or replace function coach_save_student_doc(student uuid, doc_key text, doc jsonb, doc_updated bigint)
+  returns void language plpgsql security definer set search_path = public
+  as $$ begin
+    if doc_key not like 'round:%' then raise exception 'only rounds can be edited'; end if;
+    if not exists (select 1 from coach_students cs where cs.coach_id = auth.uid() and cs.student_id = student)
+      then raise exception 'not your student'; end if;
+    update shot_tracker_docs set doc = coach_save_student_doc.doc, updated = doc_updated
+      where user_id = student and key = doc_key;
+    if not found then raise exception 'round not found'; end if;
+  end $$;
+grant execute on function coach_save_student_doc(uuid, text, jsonb, bigint) to authenticated;
+alter table notifications add column if not exists round_id text;`;
 // Tell the signed-in player's coach about something new (e.g. a round they
 // just finished), as a notification in the coach's Recent Activity. Finds the
 // coach from the profile, or from coach_students. Quietly does nothing offline
@@ -417,6 +429,18 @@ export async function fetchStudentRounds(studentId) {
   const { data, error } = await c.rpc('coach_student_docs', { student: studentId });
   if (error) throw new Error(error.message);
   return (data || []).filter(r => r.doc && !r.doc.deleted && r.doc.data).map(r => r.doc.data);
+}
+// A coach saving an edited round back to their student's account (only an
+// existing round of a student on their roster). Their devices pick it up on
+// the next sync, as it's newer.
+export async function saveStudentRound(studentId, round) {
+  const c = getClient();
+  if (!c || !sync.user) throw new Error('not signed in');
+  const updated = Date.now();
+  const data = { ...round, updated };
+  const { error } = await c.rpc('coach_save_student_doc', { student: studentId, doc_key: 'round:' + round.id, doc: { data, deleted: false }, doc_updated: updated });
+  if (error) throw new Error(/coach_save_student_doc/.test(error.message) ? 'the database needs the coach-edit function (COACHING_SQL in store.js)' : error.message);
+  round.updated = updated;
 }
 // The coach's students who are playing right now: [{ id (share id), student_id, doc, updated }].
 export async function fetchStudentsLive() {

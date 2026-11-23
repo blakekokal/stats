@@ -46,7 +46,10 @@ export function category(shot, index, par, dist) {
 
 // Per-shot analysis for one hole. Strokes gained are only known once the next
 // position is known, so the last shot of an unfinished hole has sg = null.
-const isWater = s => s.lie === 'water';
+// A ball found in water costs a stroke (old rounds mark it this way). A drop or
+// re-hit already carries its penalty on the shot that went in, so a drop that
+// lands on a pond's edge (or a re-hit from it) isn't charged again.
+export const isWater = s => s.lie === 'water' && !s.drop && !s.replay;
 const expLie = lie => (lie === 'tee' ? 'tee' : lie === 'water' ? 'rough' : lie);
 
 export function analyzeHole(hole, courseHole, level = 'Pro') {

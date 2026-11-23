@@ -463,6 +463,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.17.0', ['Last ball lost / unplayable: when the ball you already marked was lost or unplayable, tap + and choose it to re-tee or drop with the penalty and no extra stroke (before, Penalty / drop there added a stroke from where the ball lay)', 'A drop placed on the edge of a pond is played as from the rough and isn’t charged a second penalty; rounds that already had one are corrected', 'Coaching: Edit on a student’s round (opened from Coaching) to fix their shots; changes are saved to the student’s account']],
   ['1.16.3', ['Coaching: View round and Strokes gained on a New Round notification open that round (the course it names, played that day), not the one the student edited most recently']],
   ['1.16.2', ['Around the green is 30 yards or less everywhere (Stats, the round dashboard, Performance and practice plans); approach is everything over 30. Approach by distance starts with 30–75 and 75–100 yards, shown even before you have shots there']],
   ['1.16.1', ['Average drive: a Driver figure (tee shots logged with Driver) and an All clubs figure, both from par 4s and 5s only, on the Stats page, the Off the Tee tab and Performance']],
