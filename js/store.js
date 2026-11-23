@@ -442,6 +442,31 @@ export async function saveStudentRound(studentId, round) {
   if (error) throw new Error(/coach_save_student_doc/.test(error.message) ? 'the database needs the coach-edit function (COACHING_SQL in store.js)' : error.message);
   round.updated = updated;
 }
+// After a coach edits a round: the New Round notification for it (in the
+// coach's own Recent Activity) gets the new score line. The notification is the
+// one with the round's id, or, for those sent before notifications had one, the
+// student's New Round at that course sent on the day played or the next two.
+export async function updateRoundNotification(studentId, round, line) {
+  const c = getClient();
+  if (!c || !sync.user || !line) return;
+  let { data, error } = await c.from('notifications').select('id, message, created_at, round_id')
+    .eq('user_id', sync.user.id).eq('student_id', studentId).eq('type', 'new_round');
+  if (error) throw new Error(error.message);
+  const day = Date.parse((round.date || '') + 'T00:00:00');
+  const at = n => Date.parse(n.created_at);
+  let rows = (data || []).filter(n => n.round_id === round.id);
+  if (!rows.length && round.courseName && day) {
+    rows = (data || []).filter(n => !n.round_id && n.message.includes(` at ${round.courseName}`) && at(n) >= day && at(n) < day + 3 * 86400000)
+      .sort((a, b) => at(a) - at(b)).slice(0, 1);
+  }
+  for (const n of rows) {
+    const base = n.message.replace(/ · \d+ \([^)]*\) over \d+ holes?$/, '');
+    const message = base + line;
+    if (message === n.message && n.round_id === round.id) continue;
+    const { error: e2 } = await c.from('notifications').update({ message, round_id: round.id }).eq('id', n.id);
+    if (e2) throw new Error(e2.message);
+  }
+}
 // The coach's students who are playing right now: [{ id (share id), student_id, doc, updated }].
 export async function fetchStudentsLive() {
   const c = getClient();
