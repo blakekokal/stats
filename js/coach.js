@@ -279,7 +279,7 @@ export function renderNewRound(view, { scout = false } = {}) {
 export function renderHistory(view) {
   if (needLogin(view)) return;
   const level = profileLevel();
-  const sel = (opts, def) => h('select', { class: 'minisel', onchange: () => draw() }, opts.map(([v, l]) => h('option', { value: v, selected: v === def }, l)));
+  const sel = (opts, def) => h('select', { class: 'minisel', style: 'flex:1;max-width:190px;height:36px;font-size:13px;background:#333333;border-color:#3d3d3d;border-radius:8px;', onchange: () => draw() }, opts.map(([v, l]) => h('option', { value: v, selected: v === def }, l)));
   const fType = sel([['all', 'All Types'], ['Casual', 'Casual'], ['Tournament', 'Tournament']]);
   const fHoles = sel([['all', 'All Holes'], ['9', '9 Holes'], ['18', '18 Holes']]);
   const fTime = sel([['all', 'All Time'], ['1', 'Last Month'], ['3', 'Last 3 Months'], ['6', 'Last 6 Months']]);
@@ -307,6 +307,9 @@ export function renderHistory(view) {
     }).sort((x, y) => ({ 'date-desc': y.r.date.localeCompare(x.r.date) || y.r.updated - x.r.updated, 'date-asc': x.r.date.localeCompare(y.r.date),
       'score-asc': x.s.score - y.s.score, 'score-desc': y.s.score - x.s.score })[sort.value]);
     msg.textContent = `${shown.length} of ${all.length} round(s)`;
+    const n = [fType, fHoles, fTime, fStatus].filter(f => f.value !== 'all').length + (sort.value !== 'date-desc' ? 1 : 0);
+    filterBtn.lastChild.textContent = n ? `Filter · ${n}` : 'Filter';
+    filterBtn.style.background = n ? '#2d7abc' : '#282828';
     filtMsg.textContent = shown.length < all.length ? 'Filters active' : '';
     if (!shown.length) { list.replaceChildren(h('div', { style: 'text-align:center;color:#606060;padding:16px;font-size:13px;' }, 'No rounds match your filters')); return; }
     list.replaceChildren(...shown.map(({ r, s }) => card(r, s)));
@@ -343,12 +346,28 @@ export function renderHistory(view) {
           del(50, 30)]));
   }
 
-  view.replaceChildren(page('top', backBtn(),
+  // One Filter button; tapping it drops down the filters and the sort order.
+  const filterRow = (label, el) => h('div', { style: 'display:flex;align-items:center;justify-content:space-between;gap:10px;' },
+    h('span', { style: 'font-size:13px;font-weight:600;color:#9a9a9a;' }, label), el);
+  const panel = h('div', { hidden: true, style: 'position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:20;background:#282828;border:1px solid #3d3d3d;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5);text-align:left;' },
+    filterRow('Type', fType), filterRow('Holes', fHoles), filterRow('Time', fTime), filterRow('Status', fStatus), filterRow('Sort', sort),
+    h('div', { style: 'display:flex;gap:8px;margin-top:4px;' },
+      h('button', { style: 'flex:1;max-width:none;height:36px;font-size:13px;background:#333333;color:#9a9a9a;border-radius:8px;', onclick: () => {
+        [fType, fHoles, fTime, fStatus].forEach(f => { f.value = 'all'; }); sort.value = 'date-desc'; draw();
+      } }, 'Clear'),
+      h('button', { style: 'flex:1;max-width:none;height:36px;font-size:13px;background:#2d7abc;border-radius:8px;', onclick: () => { panel.hidden = true; } }, 'Done')));
+  const filterBtn = h('button', { 'aria-expanded': 'false', style: 'max-width:none;height:40px;font-size:14px;background:#282828;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;',
+    onclick: e => { e.stopPropagation(); panel.hidden = !panel.hidden; filterBtn.setAttribute('aria-expanded', String(!panel.hidden)); } },
+    h('span', { style: 'font-size:15px;line-height:1;' }, '\u2630'), h('span', {}, 'Filter'));
+  const filterWrap = h('div', { style: 'position:relative;margin-bottom:8px;' }, filterBtn, panel);
+  // Tapping anywhere else closes it.
+  const root = page('top', backBtn(),
     h('div', { style: 'width:100%;max-width:360px;' },
       h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;' }, icEl('scorecard'), ' Round History'),
-      search,
-      h('div', { style: 'display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;' }, fType, fHoles, fTime, fStatus, sort),
-      msg, list, filtMsg)));
+      search, filterWrap,
+      msg, list, filtMsg));
+  root.addEventListener('click', e => { if (!panel.hidden && !filterWrap.contains(e.target)) { panel.hidden = true; filterBtn.setAttribute('aria-expanded', 'false'); } });
+  view.replaceChildren(root);
   draw();
 }
 const ordinal = n => (n % 100 >= 11 && n % 100 <= 13 ? n + 'th' : n + ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th'));
@@ -504,6 +523,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.18.12', ['Round History: one Filter button instead of five boxes. Tap it for a menu with Type, Holes, Time, Status and Sort (Clear resets them); it turns blue and shows how many are on']],
   ['1.18.11', ['Strokes Gained Explained: the same font as the rest of the app (the worked sums were in a typewriter font), with the app’s title size and weights and no text smaller than 11']],
   ['1.18.10', ['Home: the ? opens Strokes Gained Explained', 'Home: Search finds pages, courses, drills, combines and Learn tools and videos; tap one to go there (a course opens in GPS Overview)', 'Home: the ?, search and settings buttons sit in a row above the title, so they no longer cover it']],
   ['1.18.9', ['Drills: every drill tile and category tab is blue (Short Game and Full Swing were green and yellow)']],
