@@ -40,7 +40,7 @@ function ppCustomRenderSaved() {
     html += '</div>';
     html += '<div style="display:flex;gap:10px;align-items:center;">';
     html += '<button onclick="ppCustomEditPlan(' + i + ')" style="background:none;border:none;color:#44b8f0;font-size:11px;font-weight:700;cursor:pointer;padding:0;height:auto;max-width:none;width:auto;">Edit</button>';
-    html += '<button onclick="ppCustomDeletePlan(' + i + ')" style="background:none;border:none;color:#555;font-size:11px;cursor:pointer;padding:0;height:auto;max-width:none;width:auto;">Delete</button>';
+    html += '<button onclick="ppCustomDeletePlan(' + i + ')" style="background:none;border:none;color:#606060;font-size:11px;cursor:pointer;padding:0;height:auto;max-width:none;width:auto;">Delete</button>';
     html += '</div></div>';
   });
   container.innerHTML = html;
@@ -66,7 +66,7 @@ function ppCustomRenderCategories() {
     html += '<option value="Putting"' + (selVal === 'Putting' ? ' selected' : '') + '>Putting</option>';
     html += '<option value="Custom"' + (selVal === 'Custom' ? ' selected' : '') + '>Custom</option>';
     html += '</select>';
-    html += '<button onclick="ppCustomRemoveCat(' + ci + ')" style="background:none;border:none;color:#555;font-size:18px;cursor:pointer;padding:0 0 0 4px;height:auto;max-width:none;width:auto;">×</button>';
+    html += '<button onclick="ppCustomRemoveCat(' + ci + ')" style="background:none;border:none;color:#606060;font-size:18px;cursor:pointer;padding:0 0 0 4px;height:auto;max-width:none;width:auto;">×</button>';
     html += '</div>';
     if (selVal === 'Custom') {
       html += '<input type="text" value="' + escHtml(cat.title) + '" placeholder="Enter custom category name" onchange="ppCustomUpdateCatTitle(' + ci + ',this.value)" style="width:100%;height:34px;background:#1e1e1e;color:#fff;border:1px solid #3d3d3d;border-radius:8px;padding:0 10px;font-size:13px;box-sizing:border-box;margin-bottom:10px;">';
@@ -74,10 +74,10 @@ function ppCustomRenderCategories() {
     cat.items.forEach(function(item, ii) {
       html += '<div style="display:flex;gap:6px;margin-bottom:6px;">';
       html += '<input type="text" value="' + escHtml(item) + '" placeholder="Drill or activity" onchange="ppCustomUpdateItem(' + ci + ',' + ii + ',this.value)" style="flex:1;height:34px;background:#1e1e1e;color:#fff;border:1px solid #3d3d3d;border-radius:8px;padding:0 10px;font-size:12px;box-sizing:border-box;">';
-      html += '<button onclick="ppCustomRemoveItem(' + ci + ',' + ii + ')" style="width:34px;height:34px;background:#333;border:none;border-radius:8px;color:#666;font-size:16px;cursor:pointer;padding:0;">×</button>';
+      html += '<button onclick="ppCustomRemoveItem(' + ci + ',' + ii + ')" style="width:34px;height:34px;background:#333;border:none;border-radius:8px;color:#606060;font-size:16px;cursor:pointer;padding:0;">×</button>';
       html += '</div>';
     });
-    html += '<button onclick="ppCustomAddItem(' + ci + ')" style="width:100%;height:32px;background:transparent;border:1px dashed #444;border-radius:8px;color:#666;font-size:12px;cursor:pointer;max-width:none;">+ Add drill</button>';
+    html += '<button onclick="ppCustomAddItem(' + ci + ')" style="width:100%;height:32px;background:transparent;border:1px dashed #3d3d3d;border-radius:8px;color:#606060;font-size:12px;cursor:pointer;max-width:none;">+ Add drill</button>';
     html += '</div>';
   });
   container.innerHTML = html;
@@ -168,7 +168,7 @@ function ppCustomUsePlan(idx) {
   document.getElementById('ppCustomUseView').style.display = '';
 
   var html = '<div style="font-size:18px;font-weight:800;text-align:center;margin-bottom:14px;">' + escHtml(p.name) + '</div>';
-  var colors = ['#e06666','#6fa8dc','#93c47d','#f6b26b','#b4a7d6','#e6a84d'];
+  var colors = ['#d4706e','#44b8f0','#00b87a','#f6b26b','#b4a7d6','#e6a84d'];
   p.categories.forEach(function(cat, ci) {
     var color = colors[ci % colors.length];
     html += '<div style="background:#222;border-radius:12px;padding:14px 16px;margin-bottom:8px;border-left:4px solid ' + color + ';">';
@@ -176,8 +176,8 @@ function ppCustomUsePlan(idx) {
     cat.items.forEach(function(item, ii) {
       var uid = 'ppCustomDrill_' + ci + '_' + ii;
       html += '<div style="display:flex;align-items:center;gap:10px;padding:5px 0;">';
-      html += '<div id="' + uid + '" onclick="ppToggleDrill(this,event)" style="width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid #555;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"></div>';
-      html += '<div style="flex:1;font-size:13px;color:#ccc;">' + escHtml(item) + '</div>';
+      html += '<div id="' + uid + '" onclick="ppToggleDrill(this,event)" style="width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid #3d3d3d;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"></div>';
+      html += '<div style="flex:1;font-size:13px;color:#9a9a9a;">' + escHtml(item) + '</div>';
       html += '</div>';
     });
     html += '</div>';

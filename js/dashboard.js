@@ -383,12 +383,12 @@ export function renderDashboard(data, hcp, targetId, opts) {
   
   // ===== HELPERS =====
   function ftp(v){if(v===null||v===undefined)return'\u2013';v=Math.round(v*10)/10;return v>0?'+'+v:v===0?'E':''+v;}
-  function ftpC(v){return v>0?'#d4706e':v<0?'#00a06d':'#9a9a9a';}
+  function ftpC(v){return v>0?'#d4706e':v<0?'#00b87a':'#9a9a9a';}
   function pct(nn,dd){return dd>0?Math.round(nn/dd*100)+'%':'\u2013';}
   function davg(arr){return arr.length>0?Math.round(arr.reduce(function(a,b){return a+b;},0)/arr.length):0;}
   function avgF(arr){return arr.length>0?(arr.reduce(function(a,b){return a+b;},0)/arr.length).toFixed(1):'\u2013';}
   function sgFmt(v){return v>=0?'+'+v.toFixed(2):v.toFixed(2);}
-  function sgC(v){return v>=0?'#00a06d':'#d4706e';}
+  function sgC(v){return v>=0?'#00b87a':'#d4706e';}
   function row(l,v,s){return'<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #282828;"><span style="color:#9a9a9a;">'+l+'</span><span style="font-weight:700;">'+v+(s?' <span style="font-size:11px;color:#606060;">'+s+'</span>':'')+'</span></div>';}
   function hdr(t){return'<div style="font-size:14px;font-weight:800;color:#00b87a;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:2px;">'+t+'</div>';}
   function tbl(headers,rows){var h='<div style="overflow-x:auto;margin:4px 0;"><table style="width:100%;font-size:12px;border-collapse:collapse;"><tr>';headers.forEach(function(c){h+='<td style="padding:4px 6px;font-weight:700;color:#9a9a9a;border-bottom:1px solid #3d3d3d;">'+c+'</td>';});h+='</tr>';rows.forEach(function(r){h+='<tr>';r.forEach(function(c){h+='<td style="padding:3px 6px;border-bottom:1px solid #282828;">'+c+'</td>';});h+='</tr>';});return h+'</table></div>';}
@@ -404,9 +404,9 @@ export function renderDashboard(data, hcp, targetId, opts) {
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">'
       +'<span style="'+(big?'font-size:15px;font-weight:700;color:#ffffff;':'font-size:14px;color:#c4c4c4;')+'">'+l+(go!=null?' <span style="color:#606060;font-weight:700;">›</span>':'')+'</span>'
       +'<span style="font-weight:800;font-variant-numeric:tabular-nums;font-size:'+(big?19:16)+'px;color:'+c+';">'+sgFmt(v)+'</span></div>'
-      +'<div style="position:relative;height:'+ht+'px;border-radius:'+(ht/2)+'px;background:#2a2a2a;">'
+      +'<div style="position:relative;height:'+ht+'px;border-radius:'+(ht/2)+'px;background:#282828;">'
       +'<div style="position:absolute;top:0;bottom:0;border-radius:'+(ht/2)+'px;background:'+c+';left:'+(v>=0?50:50+p)+'%;width:'+Math.abs(p)+'%;"></div>'
-      +'<div style="position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:#8a8a8a;"></div></div></div>';
+      +'<div style="position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:#9a9a9a;"></div></div></div>';
   }
   function sgScale(R){
     var f=function(x){return (x>0?'+':x<0?'\u2212':'')+Math.abs(x);};

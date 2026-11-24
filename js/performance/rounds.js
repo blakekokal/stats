@@ -49,8 +49,8 @@ export function setPerfPage(page) {
   document.getElementById('perfPageCombines').style.display = isRounds ? 'none' : '';
   var btnR = document.getElementById('perfTabBtnRounds');
   var btnC = document.getElementById('perfTabBtnCombines');
-  if (btnR) { btnR.style.background = isRounds ? '#2b3d50' : 'transparent'; btnR.style.color = isRounds ? '#e8ede9' : '#8a9a8e'; }
-  if (btnC) { btnC.style.background = isRounds ? 'transparent' : '#2b3d50'; btnC.style.color = isRounds ? '#8a9a8e' : '#e8ede9'; }
+  if (btnR) { btnR.style.background = isRounds ? '#2d7abc' : 'transparent'; btnR.style.color = isRounds ? '#ffffff' : '#9a9a9a'; }
+  if (btnC) { btnC.style.background = isRounds ? 'transparent' : '#2d7abc'; btnC.style.color = isRounds ? '#9a9a9a' : '#ffffff'; }
   if (!isRounds && !S.perfCombineLoaded) {
     S.perfCombineLoaded = true;
     loadPerfCombineData();
@@ -441,16 +441,16 @@ function appBucketFor(dist) {
 }
 
 function sgColor(val) {
-  if (val >= 0) return '#00e08a';
-  return '#ff5c5c';
+  if (val >= 0) return '#00b87a';
+  return '#d4706e';
 }
 
 function sgTrend(recent, prior) {
-  if (recent === null || prior === null) return { icon: '— steady', color: '#8a9a8e' };
+  if (recent === null || prior === null) return { icon: '— steady', color: '#9a9a9a' };
   var diff = recent - prior;
-  if (diff > 0.15)  return { icon: '▲ improving', color: '#00e08a' };
-  if (diff < -0.15) return { icon: '▼ declining', color: '#ff5c5c' };
-  return { icon: '— steady', color: '#8a9a8e' };
+  if (diff > 0.15)  return { icon: '▲ improving', color: '#00b87a' };
+  if (diff < -0.15) return { icon: '▼ declining', color: '#d4706e' };
+  return { icon: '— steady', color: '#9a9a9a' };
 }
 
 function pct(makes, att) {
@@ -463,19 +463,19 @@ function pctStr(makes, att, suffix) {
 }
 
 function bucketGirColor(girPct) {
-  if (girPct === null) return '#5a6b60';
-  if (girPct >= 55) return '#00e08a';
-  if (girPct >= 35) return '#e8c840';
+  if (girPct === null) return '#606060';
+  if (girPct >= 55) return '#00b87a';
+  if (girPct >= 35) return '#f0c830';
 
-  return '#ff5c5c';
+  return '#d4706e';
 }
 
 function bucketGirBg(girPct) {
-  if (girPct === null) return '#141817';
-  if (girPct >= 55) return '#0a2a18';
+  if (girPct === null) return '#1e1e1e';
+  if (girPct >= 55) return '#0a3020';
   if (girPct >= 35) return '#2a2508';
   if (girPct >= 20) return '#2a1510';
-  return '#2a0e0e';
+  return '#3a1515';
 }
 
 export function renderPerfAnalysis(a) {
@@ -488,14 +488,14 @@ export function renderPerfAnalysis(a) {
     ? 'Averaging <strong style="color:' + pcColor + ';">' + pc.val.toFixed(1) + ' per round</strong> vs ' + hcpCtx
     : 'Weakest category vs ' + hcpCtx + '. Room to improve.';
   document.getElementById('perfPriorityCard').innerHTML =
-    '<div style="background:linear-gradient(135deg,#2a0e0e,#2a0e0e);border:1px solid #3d1515;border-radius:12px;padding:16px;">' +
+    '<div style="background:linear-gradient(135deg,#3a1515,#3a1515);border:1px solid #3d1515;border-radius:12px;padding:16px;">' +
     '<div style="font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:' + pcColor + ';margin-bottom:8px;">' + pcBadge + '</div>' +
-    '<div style="font-size:17px;font-weight:800;color:#e8ede9;margin-bottom:4px;">' + pc.label + '</div>' +
-    '<div style="font-size:12px;color:#e8ede9;margin-bottom:10px;">' + pcMsg + '</div>' +
+    '<div style="font-size:17px;font-weight:800;color:#ffffff;margin-bottom:4px;">' + pc.label + '</div>' +
+    '<div style="font-size:12px;color:#ffffff;margin-bottom:10px;">' + pcMsg + '</div>' +
     '<div style="display:flex;gap:6px;">' +
-    '<div style="flex:1;background:rgba(255,255,255,0.05);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:18px;font-weight:800;color:' + pcColor + ';">' + (pc.val >= 0 ? '+' : '') + pc.val.toFixed(2) + '</div><div style="font-size:9px;color:#5a6b60;margin-top:2px;">SG/Round</div></div>' +
-    (pc.key === 'app' ? '<div style="flex:1;background:rgba(255,255,255,0.05);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:18px;font-weight:800;color:#e8ede9;">' + a.girPct + '%</div><div style="font-size:9px;color:#5a6b60;margin-top:2px;">GIR Rate</div></div>' : '') +
-    (pc.key === 'ott' ? '<div style="flex:1;background:rgba(255,255,255,0.05);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:18px;font-weight:800;color:#e8ede9;">' + a.fwPct + '%</div><div style="font-size:9px;color:#5a6b60;margin-top:2px;">FW Hit</div></div>' : '') +
+    '<div style="flex:1;background:rgba(255,255,255,0.05);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:18px;font-weight:800;color:' + pcColor + ';">' + (pc.val >= 0 ? '+' : '') + pc.val.toFixed(2) + '</div><div style="font-size:9px;color:#606060;margin-top:2px;">SG/Round</div></div>' +
+    (pc.key === 'app' ? '<div style="flex:1;background:rgba(255,255,255,0.05);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:18px;font-weight:800;color:#ffffff;">' + a.girPct + '%</div><div style="font-size:9px;color:#606060;margin-top:2px;">GIR Rate</div></div>' : '') +
+    (pc.key === 'ott' ? '<div style="flex:1;background:rgba(255,255,255,0.05);border-radius:8px;padding:8px;text-align:center;"><div style="font-size:18px;font-weight:800;color:#ffffff;">' + a.fwPct + '%</div><div style="font-size:9px;color:#606060;margin-top:2px;">FW Hit</div></div>' : '') +
     '</div></div>';
 
   // ── SG Cards ───────────────────────────────────────────────
@@ -503,16 +503,16 @@ export function renderPerfAnalysis(a) {
     var color  = sgColor(val);
     var trend  = sgTrend(recentPer, priorPer);
     var active = document.getElementById('perfTab-' + key).style.display !== 'none';
-    var stat2Html = stat2 ? '<span style="color:#9aab9e;margin:0 4px;">·</span><span style="color:#9aab9e;">' + stat2 + '</span>' : '';
-    return '<div style="font-size:10px;color:#e8ede9;font-weight:800;margin-bottom:6px;text-align:center;letter-spacing:0.3px;">' + label + '</div>' +
+    var stat2Html = stat2 ? '<span style="color:#9a9a9a;margin:0 4px;">·</span><span style="color:#9a9a9a;">' + stat2 + '</span>' : '';
+    return '<div style="font-size:10px;color:#ffffff;font-weight:800;margin-bottom:6px;text-align:center;letter-spacing:0.3px;">' + label + '</div>' +
       '<div style="text-align:center;margin-bottom:6px;">' +
       '<div style="font-size:26px;font-weight:800;color:' + color + ';line-height:1;">' + (val >= 0 ? '+' : '') + val.toFixed(2) + '</div>' +
       '<div style="font-size:10px;color:' + trend.color + ';margin-top:3px;">' + trend.icon + '</div>' +
       '</div>' +
-      '<div style="font-size:10px;text-align:center;color:#9aab9e;">' + stat1 + stat2Html + '</div>' +
+      '<div style="font-size:10px;text-align:center;color:#9a9a9a;">' + stat1 + stat2Html + '</div>' +
       '<div style="height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:8px;">' +
       '<div style="width:' + Math.max(5, Math.min(100, (val + 2) / 4 * 100)) + '%;height:3px;background:' + color + ';border-radius:2px;"></div></div>' +
-      '<div style="font-size:9px;color:#8a9a8e;margin-top:6px;text-align:right;">' + (active ? 'Close ▲' : 'View detail →') + '</div>';
+      '<div style="font-size:9px;color:#9a9a9a;margin-top:6px;text-align:right;">' + (active ? 'Close ▲' : 'View detail →') + '</div>';
   }
 
   var ottCard  = document.getElementById('perfCardOtt');
@@ -520,8 +520,8 @@ export function renderPerfAnalysis(a) {
   var argCard  = document.getElementById('perfCardArg');
   var puttCard = document.getElementById('perfCardPutt');
 
-  var cardBgPos = 'background:#0a2a18;border:1px solid #0d3a20;border-radius:11px;padding:12px;cursor:pointer;';
-  var cardBgNeg = 'background:#2a0e0e;border:1px solid #3d1515;border-radius:11px;padding:12px;cursor:pointer;';
+  var cardBgPos = 'background:#0a3020;border:1px solid #0a3020;border-radius:11px;padding:12px;cursor:pointer;';
+  var cardBgNeg = 'background:#3a1515;border:1px solid #3d1515;border-radius:11px;padding:12px;cursor:pointer;';
   ottCard.style.cssText  = a.sgOTTperRound  >= 0 ? cardBgPos : cardBgNeg;
   appCard.style.cssText  = a.sgAPPperRound  >= 0 ? cardBgPos : cardBgNeg;
   argCard.style.cssText  = a.sgARGperRound  >= 0 ? cardBgPos : cardBgNeg;
@@ -539,33 +539,33 @@ export function renderPerfAnalysis(a) {
   // ── OTT Detail ─────────────────────────────────────────────
   var ottTrend = '';
   if (a.recentFwRightPct > a.priorFwRightPct + 8)
-    ottTrend = '<div style="font-size:11px;color:#ff5c5c;margin-top:8px;line-height:1.5;">' + ic('warn') + ' Missing right more in last 3 rounds (' + a.recentFwRightPct + '%) vs prior avg (' + a.priorFwRightPct + '%)</div>';
+    ottTrend = '<div style="font-size:11px;color:#d4706e;margin-top:8px;line-height:1.5;">' + ic('warn') + ' Missing right more in last 3 rounds (' + a.recentFwRightPct + '%) vs prior avg (' + a.priorFwRightPct + '%)</div>';
   else if (a.recentFwLeftPct > a.priorFwLeftPct + 8)
-    ottTrend = '<div style="font-size:11px;color:#ff5c5c;margin-top:8px;line-height:1.5;">' + ic('warn') + ' Missing left more in last 3 rounds (' + a.recentFwLeftPct + '%) vs prior avg (' + a.priorFwLeftPct + '%)</div>';
+    ottTrend = '<div style="font-size:11px;color:#d4706e;margin-top:8px;line-height:1.5;">' + ic('warn') + ' Missing left more in last 3 rounds (' + a.recentFwLeftPct + '%) vs prior avg (' + a.priorFwLeftPct + '%)</div>';
 
   document.getElementById('perfTab-ott').innerHTML =
-    perfTabHeader('ott', 'Off the Tee · Detail', '#e8ede9') +
-    '<div style="background:#141817;border:1px solid #1c2120;border-radius:12px;padding:14px;margin-bottom:8px;">' +
+    perfTabHeader('ott', 'Off the Tee · Detail', '#ffffff') +
+    '<div style="background:#1e1e1e;border:1px solid #282828;border-radius:12px;padding:14px;margin-bottom:8px;">' +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
-    '<div style="font-size:14px;font-weight:700;color:#e8ede9;">Fairways Hit</div>' +
-    '<div style="font-size:14px;font-weight:800;color:#00e08a;">' + a.fwPct + '%</div></div>' +
+    '<div style="font-size:14px;font-weight:700;color:#ffffff;">Fairways Hit</div>' +
+    '<div style="font-size:14px;font-weight:800;color:#00b87a;">' + a.fwPct + '%</div></div>' +
     '<div style="display:flex;gap:2px;height:28px;border-radius:8px;overflow:hidden;margin-bottom:4px;">' +
-    '<div style="flex:0 0 ' + a.fwLeftPct + '%;background:#2a0e0e;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#ff5c5c;flex-direction:column;min-width:' + (a.fwLeftPct > 0 ? '28px' : '0') + '"><div>◀L</div><div>' + a.fwLeftPct + '%</div></div>' +
-    '<div style="flex:1;background:#0a3a20;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#00e08a;gap:4px;"><div>FW ' + a.fwPct + '%</div></div>' +
-    '<div style="flex:0 0 ' + a.fwRightPct + '%;background:#2a0e0e;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#e8ede9;flex-direction:column;min-width:' + (a.fwRightPct > 0 ? '28px' : '0') + '"><div>R▶</div><div>' + a.fwRightPct + '%</div></div>' +
+    '<div style="flex:0 0 ' + a.fwLeftPct + '%;background:#3a1515;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#d4706e;flex-direction:column;min-width:' + (a.fwLeftPct > 0 ? '28px' : '0') + '"><div>◀L</div><div>' + a.fwLeftPct + '%</div></div>' +
+    '<div style="flex:1;background:#0a3a20;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#00b87a;gap:4px;"><div>FW ' + a.fwPct + '%</div></div>' +
+    '<div style="flex:0 0 ' + a.fwRightPct + '%;background:#3a1515;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800;color:#ffffff;flex-direction:column;min-width:' + (a.fwRightPct > 0 ? '28px' : '0') + '"><div>R▶</div><div>' + a.fwRightPct + '%</div></div>' +
     '</div>' + ottTrend + '</div>' +
     driveCard('Avg Drive · Driver', a.drAvg, a.drCount, a.drRecentAvg, a.drPriorAvg, a.drLongest, a.drLongestHole, a.drLongestCourse, 'Longest Drive', 'No tee shots logged with Driver yet.') +
     driveCard('Avg Drive · All Clubs', a.avgDrive, a.driveCount, a.recentAvgDrive, a.priorAvgDrive, a.longestDrive, a.longestDriveHole, a.longestDriveCourse, 'Longest Tee Shot', null);
 
   // A driving-distance card: tee shots on par 4s and 5s (never par 3s).
   function driveCard(title, avg, n, recent, prior, longest, ldHoleN, ldCourseName, longestLabel, emptyText) {
-      if (!(avg > 0)) return emptyText ? '<div style="background:#0f1513;border:1px solid #1c2120;border-radius:12px;padding:14px;margin-bottom:8px;">' +
-        '<div style="font-size:14px;font-weight:700;color:#e8ede9;">' + title + '</div>' +
-        '<div style="font-size:11px;color:#9aab9e;margin-top:4px;">' + emptyText + '</div></div>' : '';
+      if (!(avg > 0)) return emptyText ? '<div style="background:#1e1e1e;border:1px solid #282828;border-radius:12px;padding:14px;margin-bottom:8px;">' +
+        '<div style="font-size:14px;font-weight:700;color:#ffffff;">' + title + '</div>' +
+        '<div style="font-size:11px;color:#9a9a9a;margin-top:4px;">' + emptyText + '</div></div>' : '';
       var trendDiff = (recent > 0 && prior > 0) ? (recent - prior) : null;
       var trendHtml = '';
       if (trendDiff !== null) {
-        var trendCol = trendDiff >= 0 ? '#00e08a' : '#ff5c5c';
+        var trendCol = trendDiff >= 0 ? '#00b87a' : '#d4706e';
         var trendIcon = trendDiff >= 0 ? '▲' : '▼';
         trendHtml = '<div style="font-size:11px;color:' + trendCol + ';margin-top:4px;">' + trendIcon + ' ' + (trendDiff >= 0 ? '+' : '') + trendDiff + ' yds vs prior (last 3: ' + recent + ' · prior: ' + prior + ')</div>';
       }
@@ -573,19 +573,19 @@ export function renderPerfAnalysis(a) {
       if (longest > 0) {
         var ldCourse = ldCourseName ? ldCourseName : 'Unknown';
         var ldHole   = ldHoleN   ? ' Hole ' + ldHoleN : '';
-        longestHtml = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #1c2120;display:flex;justify-content:space-between;align-items:center;">' +
+        longestHtml = '<div style="margin-top:10px;padding-top:10px;border-top:1px solid #282828;display:flex;justify-content:space-between;align-items:center;">' +
           '<div>' +
-          '<div style="font-size:11px;color:#5a6b60;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:2px;">' + longestLabel + '</div>' +
-          '<div style="font-size:11px;color:#9aab9e;">' + ldCourse + ldHole + '</div>' +
+          '<div style="font-size:11px;color:#606060;font-weight:600;letter-spacing:0.5px;text-transform:uppercase;margin-bottom:2px;">' + longestLabel + '</div>' +
+          '<div style="font-size:11px;color:#9a9a9a;">' + ldCourse + ldHole + '</div>' +
           '</div>' +
-          '<div style="font-size:22px;font-weight:800;color:#e8c840;">' + longest + ' yds</div>' +
+          '<div style="font-size:22px;font-weight:800;color:#f0c830;">' + longest + ' yds</div>' +
           '</div>';
       }
-      return '<div style="background:#0a2a18;border:1px solid #0d3a20;border-radius:12px;padding:14px;margin-bottom:8px;">' +
+      return '<div style="background:#0a3020;border:1px solid #0a3020;border-radius:12px;padding:14px;margin-bottom:8px;">' +
         '<div style="display:flex;justify-content:space-between;align-items:center;">' +
-        '<div><div style="font-size:14px;font-weight:700;color:#e8ede9;">' + title + '</div>' +
-        '<div style="font-size:11px;color:#9aab9e;">' + n + ' tee shot' + (n === 1 ? '' : 's') + ', par 4s and 5s</div></div>' +
-        '<div style="font-size:22px;font-weight:800;color:#00e08a;">' + avg + ' yds</div></div>' +
+        '<div><div style="font-size:14px;font-weight:700;color:#ffffff;">' + title + '</div>' +
+        '<div style="font-size:11px;color:#9a9a9a;">' + n + ' tee shot' + (n === 1 ? '' : 's') + ', par 4s and 5s</div></div>' +
+        '<div style="font-size:22px;font-weight:800;color:#00b87a;">' + avg + ' yds</div></div>' +
         trendHtml + longestHtml + '</div>';
   }
 
@@ -594,32 +594,32 @@ export function renderPerfAnalysis(a) {
   function statCard(label, col, bg, border, badgeText, infoLine) {
     return '<div style="background:' + bg + ';border:1px solid ' + border + ';border-radius:11px;padding:12px 14px;margin-bottom:7px;min-height:62px;display:flex;flex-direction:column;justify-content:center;">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">' +
-      '<div style="font-size:14px;font-weight:700;color:#e8ede9;">' + label + '</div>' +
+      '<div style="font-size:14px;font-weight:700;color:#ffffff;">' + label + '</div>' +
       '<div style="font-size:12px;color:' + col + ';border:1px solid ' + border + ';border-radius:5px;padding:3px 10px;font-weight:700;white-space:nowrap;">' + badgeText + '</div></div>' +
-      '<div style="font-size:11px;color:#9aab9e;line-height:1.5;">' + infoLine + '</div></div>';
+      '<div style="font-size:11px;color:#9a9a9a;line-height:1.5;">' + infoLine + '</div></div>';
   }
 
   // ── APP Detail ─────────────────────────────────────────────
   var appBucketDefs = ['30-75','75-100','100-125','125-150','150-175','175-200','200-225','225+'];
-  var appHtml = perfTabHeader('app', 'Approach · Detail', '#e8ede9');
+  var appHtml = perfTabHeader('app', 'Approach · Detail', '#ffffff');
   var worstBucket = appBucketDefs.reduce(function(worst, k){ var bk = a.appBuckets[k]; if(!bk.opp) return worst; var g=Math.round(100*bk.gir/bk.opp); return (!worst || g < worst.gir) ? {key:k,gir:g} : worst; }, null);
   appBucketDefs.forEach(function(bKey) {
     var b = a.appBuckets[bKey];
     if (b.opp === 0) {
       // The short buckets always show, so there's a place for wedge approaches.
-      if (bKey === '30-75' || bKey === '75-100') appHtml += statCard(bKey + ' yds', '#8a9a8e', '#0f1513', '#1c2120', 'No shots', 'No approach shots from this distance yet');
+      if (bKey === '30-75' || bKey === '75-100') appHtml += statCard(bKey + ' yds', '#9a9a9a', '#1e1e1e', '#282828', 'No shots', 'No approach shots from this distance yet');
       return;
     }
     var girP  = Math.round(100 * b.gir / b.opp);
     var col   = bucketGirColor(girP);
     var bg    = bucketGirBg(girP);
-    var border = girP >= 55 ? '#0d3a20' : girP >= 35 ? '#3a3010' : girP >= 20 ? '#3d1515' : '#3d1515';
+    var border = girP >= 55 ? '#0a3020' : girP >= 35 ? '#3a3010' : girP >= 20 ? '#3d1515' : '#3d1515';
     var misses = [{dir:'Short',count:b.missShort},{dir:'Left',count:b.missLeft},{dir:'Right',count:b.missRight},{dir:'Long',count:b.missLong}];
     misses.sort(function(x,y){return y.count-x.count;});
-    var topMiss = misses[0].count > 0 ? ' <span style="color:#8a9a8e;">·</span> ' + misses[0].dir + ' ' + Math.round(100*misses[0].count/b.opp) + '% of misses' : '';
-    var proxPart = b.proxCount > 0 ? ' <span style="color:#8a9a8e;">·</span> ' + Math.round(b.proxTotal / b.proxCount) + ' ft avg proximity' : '';
+    var topMiss = misses[0].count > 0 ? ' <span style="color:#9a9a9a;">·</span> ' + misses[0].dir + ' ' + Math.round(100*misses[0].count/b.opp) + '% of misses' : '';
+    var proxPart = b.proxCount > 0 ? ' <span style="color:#9a9a9a;">·</span> ' + Math.round(b.proxTotal / b.proxCount) + ' ft avg proximity' : '';
     var isWorst = worstBucket && worstBucket.key === bKey;
-    var infoLine = (isWorst ? '<span style="color:#ff5c5c;">' + ic('warn') + ' Weakest</span> <span style="color:#8a9a8e;">·</span> ' : '') + girP + '% GIR' + topMiss + proxPart;
+    var infoLine = (isWorst ? '<span style="color:#d4706e;">' + ic('warn') + ' Weakest</span> <span style="color:#9a9a9a;">·</span> ' : '') + girP + '% GIR' + topMiss + proxPart;
     appHtml += statCard(bKey + ' yds', col, bg, border, 'GIR ' + girP + '%', infoLine);
   });
   document.getElementById('perfTab-app').innerHTML = appHtml;
@@ -628,15 +628,15 @@ export function renderPerfAnalysis(a) {
   var ab = a.argBuckets;
   function argRow(label, makes, opp) {
     var p    = opp > 0 ? Math.round(100 * makes / opp) : null;
-    var col  = p === null ? '#8a9a8e' : p >= 40 ? '#00e08a' : '#ff5c5c';
-    var bg   = p === null ? '#141817' : p >= 40 ? '#0a2a18' : '#2a0e0e';
-    var bord = p === null ? '#1c2120' : p >= 40 ? '#0d3a20' : '#3d1515';
+    var col  = p === null ? '#9a9a9a' : p >= 40 ? '#00b87a' : '#d4706e';
+    var bg   = p === null ? '#1e1e1e' : p >= 40 ? '#0a3020' : '#3a1515';
+    var bord = p === null ? '#282828' : p >= 40 ? '#0a3020' : '#3d1515';
     var badge = p !== null ? p + '%' : 'N/A';
     var info  = p !== null ? p + '% up & down · ' + opp + ' opp' : 'No data';
     return statCard(label, col, bg, bord, badge, info);
   }
   document.getElementById('perfTab-arg').innerHTML =
-    perfTabHeader('arg', 'Around the Green · Detail', '#e8ede9') +
+    perfTabHeader('arg', 'Around the Green · Detail', '#ffffff') +
     argRow('< 15 yds',            ab['1-15'].upDown,       ab['1-15'].opp) +
     argRow('15 – 30 yds',         ab['15-30'].upDown,      ab['15-30'].opp) +
     argRow('< 15 yds (Rough)',    ab['lt15rough'].upDown,   ab['lt15rough'].opp) +
@@ -648,15 +648,15 @@ export function renderPerfAnalysis(a) {
     var p = att > 0 ? Math.round(100 * makes / att) : null;
     var col, bg, bord, badge, info;
     if (is3putt) {
-      col   = p === null ? '#8a9a8e' : p >= 20 ? '#ff5c5c' : '#00e08a';
-      bg    = p === null ? '#141817' : p >= 20 ? '#2a0e0e' : '#0a2a18';
-      bord  = p === null ? '#1c2120' : p >= 20 ? '#3d1515' : '#0d3a20';
+      col   = p === null ? '#9a9a9a' : p >= 20 ? '#d4706e' : '#00b87a';
+      bg    = p === null ? '#1e1e1e' : p >= 20 ? '#3a1515' : '#0a3020';
+      bord  = p === null ? '#282828' : p >= 20 ? '#3d1515' : '#0a3020';
       badge = p !== null ? p + '%' : 'N/A';
       info  = p !== null ? p + '% 3-putt rate · ' + att + ' opp' : 'No data';
     } else {
-      col   = p === null ? '#8a9a8e' : p >= 50 ? '#00e08a' : '#ff5c5c';
-      bg    = p === null ? '#141817' : p >= 50 ? '#0a2a18' : '#2a0e0e';
-      bord  = p === null ? '#1c2120' : p >= 50 ? '#0d3a20' : '#3d1515';
+      col   = p === null ? '#9a9a9a' : p >= 50 ? '#00b87a' : '#d4706e';
+      bg    = p === null ? '#1e1e1e' : p >= 50 ? '#0a3020' : '#3a1515';
+      bord  = p === null ? '#282828' : p >= 50 ? '#0a3020' : '#3d1515';
       badge = p !== null ? p + '%' : 'N/A';
       info  = p !== null ? p + '% make rate · ' + makes + '/' + att : 'No data';
     }
@@ -664,7 +664,7 @@ export function renderPerfAnalysis(a) {
   }
   var pb = a.puttBuckets;
   document.getElementById('perfTab-putt').innerHTML =
-    perfTabHeader('putt', 'Putting · Detail', '#e8ede9') +
+    perfTabHeader('putt', 'Putting · Detail', '#ffffff') +
     puttRow('0 – 3 ft',           pb['0-3'].makes,  pb['0-3'].att,  false) +
     puttRow('4 – 7 ft',           pb['4-7'].makes,  pb['4-7'].att,  false) +
     puttRow('8 – 15 ft',          pb['8-15'].makes, pb['8-15'].att, false) +
@@ -675,7 +675,7 @@ export function renderPerfAnalysis(a) {
 function perfTabHeader(key, title, color) {
   return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
     '<div style="font-size:14px;font-weight:800;color:' + color + ';">' + title + '</div>' +
-    '<button onclick="togglePerfTab(\'' + key + '\')" style="background:transparent;border:none;color:#8a9a8e;font-size:12px;cursor:pointer;height:auto;max-width:none;width:auto;padding:0;">✕ Close</button>' +
+    '<button onclick="togglePerfTab(\'' + key + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:12px;cursor:pointer;height:auto;max-width:none;width:auto;padding:0;">✕ Close</button>' +
     '</div>';
 }
 

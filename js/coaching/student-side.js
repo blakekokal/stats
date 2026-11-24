@@ -293,7 +293,7 @@ async function loadStudentAssignedDrills() {
   S.assignedDrillsData = data;
   list.innerHTML = data.map(function(d, idx) {
     var dateStr = new Date(d.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    var catColor = d.drill_category === 'putting' ? '#3d96ee' : d.drill_category === 'shortgame' ? '#00b87a' : '#f0c830';
+    var catColor = d.drill_category === 'putting' ? '#2d7abc' : d.drill_category === 'shortgame' ? '#00b87a' : '#f0c830';
     return '<div style="background:#222222;border-radius:10px;padding:12px;margin-bottom:8px;">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'
       + '<div onclick="openAssignedDrillDetail(' + idx + ')" style="font-weight:700;font-size:14px;cursor:pointer;text-decoration:underline;text-decoration-style:dotted;text-underline-offset:3px;">' + escapeHtml(d.drill_name) + '</div>'

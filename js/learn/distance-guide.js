@@ -137,7 +137,7 @@ function dgBuildTourTable(data) {
   data.forEach(function(row) {
     html += '<tr>';
     html += '<td class="dg-club-name">' + row.club + '</td>';
-    html += '<td style="font-weight:700;color:#4fc3f7;">' + row.carry + '</td>';
+    html += '<td style="font-weight:700;color:#44b8f0;">' + row.carry + '</td>';
     html += '<td>' + row.clubSpeed + '</td>';
     html += '<td>' + row.ballSpeed + '</td>';
     html += '<td>' + row.smash + '</td>';
@@ -163,8 +163,8 @@ function dgRenderHandicap() {
   var d = DG_HANDICAP_DATA[hcp];
   if (!d) return;
   var html = '<div class="dg-stat-box">';
-  html += '<div><div class="dg-stat-label">Avg Driver Distance</div><div class="dg-stat-value">' + d.driverDist + ' <span style="font-size:0.6em;color:#999;">yds</span></div></div>';
-  html += '<div><div class="dg-stat-label">Driver Club Speed</div><div class="dg-stat-value">' + d.clubSpeed + ' <span style="font-size:0.6em;color:#999;">mph</span></div></div>';
+  html += '<div><div class="dg-stat-label">Avg Driver Distance</div><div class="dg-stat-value">' + d.driverDist + ' <span style="font-size:0.6em;color:#9a9a9a;">yds</span></div></div>';
+  html += '<div><div class="dg-stat-label">Driver Club Speed</div><div class="dg-stat-value">' + d.clubSpeed + ' <span style="font-size:0.6em;color:#9a9a9a;">mph</span></div></div>';
   html += '</div>';
   html += dgBuildSimpleTable(d.clubs);
   document.getElementById('dgHandicapTable').innerHTML = html;
@@ -173,7 +173,7 @@ function dgRenderHandicap() {
 function dgRenderSpeed() {
   var driverSpeed = parseFloat(document.getElementById('dgDriverSpeed').value);
   if (isNaN(driverSpeed) || driverSpeed < 60 || driverSpeed > 140) {
-    document.getElementById('dgSpeedTable').innerHTML = '<div style="color:#999;text-align:center;padding:20px;">Enter a driver club speed between 60-140 mph</div>';
+    document.getElementById('dgSpeedTable').innerHTML = '<div style="color:#9a9a9a;text-align:center;padding:20px;">Enter a driver club speed between 60-140 mph</div>';
     return;
   }
   var clubs = [
@@ -202,11 +202,11 @@ function dgRenderSpeed() {
     rows.push({club:info.label,carry:Math.round(carryResult.carry),total:Math.round(totalResult.total)});
   });
   var html = '<div class="dg-stat-box">';
-  html += '<div><div class="dg-stat-label">Driver Club Speed</div><div class="dg-stat-value">' + driverSpeed + ' <span style="font-size:0.6em;color:#999;">mph</span></div></div>';
+  html += '<div><div class="dg-stat-label">Driver Club Speed</div><div class="dg-stat-value">' + driverSpeed + ' <span style="font-size:0.6em;color:#9a9a9a;">mph</span></div></div>';
   var driverRow = rows.find(function(r){ return r.club === 'Driver'; });
   if (driverRow) {
-    html += '<div><div class="dg-stat-label">Est. Driver Carry</div><div class="dg-stat-value">' + driverRow.carry + ' <span style="font-size:0.6em;color:#999;">yds</span></div></div>';
-    html += '<div><div class="dg-stat-label">Est. Driver Total</div><div class="dg-stat-value">' + driverRow.total + ' <span style="font-size:0.6em;color:#999;">yds</span></div></div>';
+    html += '<div><div class="dg-stat-label">Est. Driver Carry</div><div class="dg-stat-value">' + driverRow.carry + ' <span style="font-size:0.6em;color:#9a9a9a;">yds</span></div></div>';
+    html += '<div><div class="dg-stat-label">Est. Driver Total</div><div class="dg-stat-value">' + driverRow.total + ' <span style="font-size:0.6em;color:#9a9a9a;">yds</span></div></div>';
   }
   html += '</div>';
   html += dgBuildSimpleTable(rows);
@@ -266,11 +266,11 @@ function dgRenderProfile() {
 
   var ageLabel = age === '70' ? '70+' : age + '-' + (parseInt(age)+9);
   var genderLabel = gender === 'male' ? 'Male' : 'Female';
-  var html = '<div style="text-align:center;font-size:13px;font-weight:700;color:#e0e0e0;margin-bottom:10px;">' + genderLabel + ', Age ' + ageLabel + '</div>';
+  var html = '<div style="text-align:center;font-size:13px;font-weight:700;color:#ffffff;margin-bottom:10px;">' + genderLabel + ', Age ' + ageLabel + '</div>';
   html += '<div class="dg-stat-box">';
-  html += '<div><div class="dg-stat-label">Avg Driver Speed</div><div class="dg-stat-value">' + driverSpeed + ' <span style="font-size:0.6em;color:#999;">mph</span></div></div>';
-  html += '<div><div class="dg-stat-label">Avg Driver Carry</div><div class="dg-stat-value">' + p.driverCarry + ' <span style="font-size:0.6em;color:#999;">yds</span></div></div>';
-  html += '<div><div class="dg-stat-label">Avg Driver Total</div><div class="dg-stat-value">' + p.driverTotal + ' <span style="font-size:0.6em;color:#999;">yds</span></div></div>';
+  html += '<div><div class="dg-stat-label">Avg Driver Speed</div><div class="dg-stat-value">' + driverSpeed + ' <span style="font-size:0.6em;color:#9a9a9a;">mph</span></div></div>';
+  html += '<div><div class="dg-stat-label">Avg Driver Carry</div><div class="dg-stat-value">' + p.driverCarry + ' <span style="font-size:0.6em;color:#9a9a9a;">yds</span></div></div>';
+  html += '<div><div class="dg-stat-label">Avg Driver Total</div><div class="dg-stat-value">' + p.driverTotal + ' <span style="font-size:0.6em;color:#9a9a9a;">yds</span></div></div>';
   html += '</div>';
   html += dgBuildSimpleTable(rows);
   document.getElementById('dgProfileTable').innerHTML = html;

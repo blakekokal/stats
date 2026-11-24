@@ -18,7 +18,7 @@ var WG_WEDGE_DEGREE = ['48','50','52','54','56','58','60','62'];
 export var WG_WEDGE_LIST   = WG_WEDGE_NAMED.concat(WG_WEDGE_DEGREE);
 
 // Global wedge club color palette & helper
-var _WG_CLUB_PALETTE = ['#007a52', '#3d96ee', '#f0c830', '#9b59b6', '#d4706e', '#00b87a'];
+var _WG_CLUB_PALETTE = ['#007a52', '#2d7abc', '#f0c830', '#9b59b6', '#d4706e', '#00b87a'];
 export function getWedgeClubColor(clubName) {
   // Assign color based on position among user's bag wedges (sorted by loft)
   var clubs = sortBagClubs(getBagClubs());
@@ -97,7 +97,7 @@ export function renderWgTab() {
     var active = s.swingType === t;
     return '<button onclick="wgChangeSwingType(\'' + t + '\')" style="' +
       'padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid ' +
-      (active ? '#3d96ee' : '#333333') + ';background:' + (active ? '#3d96ee' : '#282828') +
+      (active ? '#2d7abc' : '#333333') + ';background:' + (active ? '#2d7abc' : '#282828') +
       ';color:' + (active ? '#ffffff' : '#606060') + ';">' + lbl + '</button>';
   }).join('');
 
@@ -231,8 +231,8 @@ function wgRenderClubGrid() {
     var sel   = _wgSelectedClubs.indexOf(w) >= 0;
     return '<button onclick="wgToggleClub(\'' + w + '\')" style="' +
       'flex:1;min-width:0;height:36px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;' +
-      'background:' + (sel ? '#3d96ee' : '#282828') + ';' +
-      'border:1px solid ' + (sel ? '#3d96ee' : inBag ? '#2e2e2e' : '#282828') + ';' +
+      'background:' + (sel ? '#2d7abc' : '#282828') + ';' +
+      'border:1px solid ' + (sel ? '#2d7abc' : inBag ? '#282828' : '#282828') + ';' +
       'color:' + (sel ? '#ffffff' : inBag ? '#ffffff' : '#3d3d3d') + ';">' + w + '</button>';
   }
   grid.innerHTML =
@@ -290,8 +290,8 @@ function wgUpdateTypeButtons() {
   ['percent','fraction','body'].forEach(function(t) {
     var btn = document.getElementById('wgTypeBtn' + t.charAt(0).toUpperCase() + t.slice(1));
     if (!btn) return;
-    btn.style.background   = _wgSwingType === t ? '#3d96ee' : '#282828';
-    btn.style.borderColor  = _wgSwingType === t ? '#3d96ee' : '#3d3d3d';
+    btn.style.background   = _wgSwingType === t ? '#2d7abc' : '#282828';
+    btn.style.borderColor  = _wgSwingType === t ? '#2d7abc' : '#3d3d3d';
     btn.style.color        = _wgSwingType === t ? '#ffffff'    : '#606060';
   });
   var preview = document.getElementById('wgSwingPreview');

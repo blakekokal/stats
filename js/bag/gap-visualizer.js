@@ -16,8 +16,8 @@ var _GV_WEDGES = ['48','PW','GW','AW','SW','50','52','54','56','58','60','62','L
 // Purple gradient bottom-up, top segment is a muted slate to show "extra" distance
 var _GV_SEG_COLORS = [
   '#2d7abc',  // deep violet — smallest partial
-  '#3d96ee',  // purple
-  '#3d96ee',  // medium purple
+  '#2d7abc',  // purple
+  '#2d7abc',  // medium purple
   '#44b8f0',  // soft purple
   '#2d7abc'   // slate — full-only extra on top
 ];
@@ -44,9 +44,9 @@ function setGapVizFilter(filter) {
     var btn = document.getElementById('gvFilter' + id);
     if (!btn) return;
     var active = id.toLowerCase() === filter;
-    btn.style.background = active ? '#3d96ee' : 'transparent';
+    btn.style.background = active ? '#2d7abc' : 'transparent';
     btn.style.color = active ? '#ffffff' : '#9a9a9a';
-    btn.style.borderColor = active ? '#3d96ee' : '#3d3d3d';
+    btn.style.borderColor = active ? '#2d7abc' : '#3d3d3d';
   });
   document.getElementById('gvCustomPicker').style.display = filter === 'custom' ? '' : 'none';
   renderGapVisualizerChart();
@@ -68,7 +68,7 @@ function gvToggleCustomClub(name) {
   _gapVizCustomClubs[name] = !_gapVizCustomClubs[name];
   var btn = document.getElementById('gvCust_' + name);
   if (btn) {
-    btn.style.background = _gapVizCustomClubs[name] ? '#3d96ee' : 'transparent';
+    btn.style.background = _gapVizCustomClubs[name] ? '#2d7abc' : 'transparent';
     btn.style.color = _gapVizCustomClubs[name] ? '#ffffff' : '#9a9a9a';
   }
   renderGapVisualizerChart();
@@ -203,15 +203,15 @@ export function renderGapVisualizerChart() {
     '1/2': '#007a52',
     '50%': '#007a52',
     'Hips': '#007a52',
-    '¾': '#3d96ee',      // blue
-    '3/4': '#3d96ee',
-    '75%': '#3d96ee',
-    'Ribs': '#3d96ee',
-    'Shldr': '#3d96ee',
-    'Ears': '#3d96ee',
+    '¾': '#2d7abc',      // blue
+    '3/4': '#2d7abc',
+    '75%': '#2d7abc',
+    'Ribs': '#2d7abc',
+    'Shldr': '#2d7abc',
+    'Ears': '#2d7abc',
     'Full': '#ffffff'    // white
   };
-  var _GV_SEG_COLOR_DEFAULT = ['#007a52', '#3d96ee', '#ffffff'];
+  var _GV_SEG_COLOR_DEFAULT = ['#007a52', '#2d7abc', '#ffffff'];
 
   function _gvSwingColor(label) {
     return _GV_SWING_COLORS[label] || _GV_SEG_COLOR_DEFAULT[0];

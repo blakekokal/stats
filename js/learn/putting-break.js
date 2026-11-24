@@ -287,12 +287,12 @@ function draw() {
   if (holeEdgeIntersection) {
     var edgeDotR = drawDotR * 0.8;
     ctx.beginPath(); ctx.arc(holeEdgeIntersection.x, holeEdgeIntersection.y, edgeDotR, 0, Math.PI*2);
-    ctx.fillStyle='#3d96ee'; ctx.fill();
+    ctx.fillStyle='#2d7abc'; ctx.fill();
     ctx.strokeStyle='white'; ctx.lineWidth=Math.max(1, edgeDotR*0.4); ctx.stroke();
   } else {
     var passDotR = drawDotR * 0.9;
     ctx.beginPath(); ctx.arc(nx, ny, passDotR, 0, Math.PI*2);
-    ctx.fillStyle='#3d96ee';
+    ctx.fillStyle='#2d7abc';
     ctx.fill();
     ctx.strokeStyle='rgba(255, 255, 255, 0.9)';
     ctx.lineWidth=1.5; ctx.stroke();

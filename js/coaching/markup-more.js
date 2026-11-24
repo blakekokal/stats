@@ -7,7 +7,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
 <div id="guideToGolfPage" class="page" style="justify-content:flex-start;padding-top:20px;overflow-y:auto;padding-bottom:80px;align-items:center;">
   <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div style="font-size:22px;font-weight:800;margin-bottom:4px;">Guide to Golf</div>
-  <div style="font-size:13px;color:#888;margin-bottom:16px;">How to hit every shot</div>
+  <div style="font-size:13px;color:#9a9a9a;margin-bottom:16px;">How to hit every shot</div>
 
   <div style="width:100%;max-width:360px;display:flex;flex-direction:column;gap:14px;">
 
@@ -16,7 +16,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SRIQYISbFAIcbNaYD9H3Lyhy8N96NP5RRX2q1tV79XzJ-UsSxpxXkWx8KPcXa1bPC1p675MtCz6tisJQx7heESOxUTVHGrU7tn2UaJlcy55msyaHXsCgcpIXsoaieWPXMnxU7FV5SMPdhtIjX61O92OjbugQQ7DOvCy2K-idN_0KicmYifCOtkwOQmtS5d3Nkqkxlfx5hApWuqwcdWBKE0oc2Z8GbT3UzbuFjo=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Driver</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#bbb;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
           <li>Feet wide</li>
           <li>Ball by front foot</li>
           <li>Tall tee</li>
@@ -30,7 +30,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SSlzxe1ZkAQFMoPwx7a2hsJ14qmu95s6ouidrhGGPeFk3lakIWozxBBnngq0sN6O58bz8PJsNz68h4ouDCjBWtxXOz8pKditU_Ewbwg2x7FgD3BAxv2S4HhjgiEDntGacgfCxAtOpE7dUk3fM5P1nspByJPlG1e-AS7UOjjCCi3F9olICzO9bA_hZkl6fr_UzinsL2NLifuv_G8xZmQr-7uVMFyN-IJji2E=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Hybrid / 3 Wood</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#bbb;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
           <li>Feet slightly wider than shoulder width</li>
           <li>Ball slightly forward in stance</li>
           <li>Shoulders level</li>
@@ -44,7 +44,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SSSafVu6pyn9CtjE6MCwlqPIoUlbor4rsToLB8w_qPy40arVW_DzAOFUO4WmMmwzpnLgvG7eJUNSKWGlbsrX3myrbTV0oGOufhGungQJikKiFO_dTRcQnIbhLxflEAIn2mqepcA8DMfzcPNTajR0IrRR0mXw58avsULIYvS-uRWFEkHdb3-dun82JAAf9WGadxmZU8g9SIg7gDw1YfwRuqDnmQlwFn_QeupMqg=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Irons</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#bbb;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
           <li>Feet shoulder width</li>
           <li>Ball in middle of stance</li>
           <li>Shoulders level</li>
@@ -58,7 +58,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0STiquwMUrI8swVnJjsZAyR3CNWXbbTFGaloKaBtGrMbDayuXszg5bXFF6GUjDi3Kh5iQE2FbrYkffIuPVvXtlht46QXHefD4ur3dg5c2LkB3tIKuRZNaa9ap9oRTUwhyYZa-Trp5q2kVltJ431dO0_Ffkx9NIfIAFHy7OdYgEyNSmjzK4RijsdFndo9X67CsiV8k9BQAGUJ1SXy692rZ7JAbDgRjlHfYQtZ=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Chipping (Low)</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#bbb;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
           <li>Use PW or SW</li>
           <li>70-80% of weight on front foot</li>
           <li>Feet closer together</li>
@@ -73,7 +73,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SS8CLkEWl7AKcDzVO_5yFgF_rAKOF0PSfuLe-yEvDZJk6DUoLZm7y7vnBc6k4QVSPomKBVtW8VU0S_zwF1-L22TrnB04frfTTfIgglnjVYqBLGNQfZ9LfNbmzA6RnJZ2MJKcQN2gVfHLIxK1PedKbKmHGFofUTOzjp2HB_KGfrW1QGNcV_0R_Z7_Ca0XRD0NFt-7XgqLTZnLvBseBU2-RWzlchEk-RPzbpIgpU=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Chipping (High)</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#bbb;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
           <li>Use SW</li>
           <li>70-80% of weight on front foot</li>
           <li>Feet closer together</li>
@@ -88,7 +88,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SQrqmzOjd-3aSmwHpP9uFiRovqAxRbe_GyURl2VqM5RINn_oFS-95mSwHrBq_8M-9O8fCpY60AFND55zzOm2Bs9byZArW7xLj36xLcXXe-pfIeRl9Aws7-FZxTQsrwYayCEWFyJ2UBQwIWSSm7w-NwnRnMedR9NpkiuF7DlL1fWRzVWJblQ79gm3UNKcby3OYuLpCxjRHxQgHjSVjLIIuin6w14Xkemsw=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Bunker / Sand</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#bbb;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
           <li>Use SW</li>
           <li>Feet shoulder width</li>
           <li>Ball in front of stance</li>
@@ -103,7 +103,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SRlfRyfWIZrDSnLIuxViVrMdPARpebxXiCvAMvDQn6BasIERfCXMGoiZdielgP_UhyNUHHooSIYo3uDKmg-afYdgCW5x7U7yRlNPDHxGq7qqxYGT3vjvfhKunecI5Ftm5FG3gmWFZ7GbLuynIbpSmToZcridjh3TB5GKiRDUtSa1NST7ThbR-OG9NLdxnT9TGPYgmU9p_uKzZuhGmjSSkpkBkI0815qChg1hFI=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Putting</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#bbb;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
           <li>Feet around shoulder width</li>
           <li>Ball in middle/front of stance</li>
           <li>No wrists, rock back and shoulders back and forth</li>
@@ -277,7 +277,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
         <div id="ppRecResults" style="display:none;touch-action:pan-y;">
           <canvas id="ppPieChart" width="280" height="280" style="display:block;margin:0 auto 16px;max-width:280px;touch-action:pan-y;"></canvas>
           <div id="ppBreakdownList" style="display:flex;flex-direction:column;gap:8px;"></div>
-          <button onclick="ppLogFromPractice('rec')" style="width:100%;margin-top:16px;padding:14px;font-size:15px;font-weight:700;color:#ffffff;background:#00703c;border:none;border-radius:12px;cursor:pointer;">Log Session</button>
+          <button onclick="ppLogFromPractice('rec')" style="width:100%;margin-top:16px;padding:14px;font-size:15px;font-weight:700;color:#ffffff;background:#007a52;border:none;border-radius:12px;cursor:pointer;">Log Session</button>
         </div>
       </div>
 
@@ -340,7 +340,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
             <input type="text" id="ppCustomName" placeholder="e.g. Pre-round warm-up" style="width:100%;height:38px;background:#1e1e1e;color:#fff;border:1px solid #3d3d3d;border-radius:8px;padding:0 10px;font-size:14px;box-sizing:border-box;">
           </div>
           <div id="ppCustomCategories"></div>
-          <button onclick="ppCustomAddCategory()" style="width:100%;height:40px;background:#333;border:1px dashed #555;border-radius:10px;color:#999;font-size:13px;font-weight:700;cursor:pointer;max-width:none;margin-bottom:10px;">+ Add Category</button>
+          <button onclick="ppCustomAddCategory()" style="width:100%;height:40px;background:#333;border:1px dashed #3d3d3d;border-radius:10px;color:#9a9a9a;font-size:13px;font-weight:700;cursor:pointer;max-width:none;margin-bottom:10px;">+ Add Category</button>
           <button onclick="ppCustomSavePlan()" style="width:100%;height:46px;background:#007a52;border:none;border-radius:10px;color:#ffffff;font-size:15px;font-weight:700;cursor:pointer;max-width:none;">Save Plan</button>
           <div id="ppCustomMsg" style="font-size:12px;text-align:center;min-height:18px;margin-top:6px;"></div>
         </div>
@@ -383,7 +383,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
 
         <!-- Optional: drills per category -->
         <div style="background:#222;border-radius:12px;padding:14px 16px;margin-bottom:10px;">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:10px;">Drills per category <span style="font-weight:400;color:#444;">(optional)</span></div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:10px;">Drills per category <span style="font-weight:400;color:#606060;">(optional)</span></div>
           <select id="ppGenDrillCount" style="width:100%;height:42px;background:#1e1e1e;color:#fff;border:1px solid #3d3d3d;border-radius:8px;text-align:center;font-size:15px;font-weight:700;font-family:inherit;appearance:none;-webkit-appearance:none;padding:0 10px;">
             <option value="0" selected>Auto</option>
             <option value="1">1</option>
@@ -395,7 +395,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
 
         <!-- Optional: block/random preference -->
         <div style="background:#222;border-radius:12px;padding:14px 16px;margin-bottom:10px;">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:10px;">Drill type <span style="font-weight:400;color:#444;">(optional)</span></div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:10px;">Drill type <span style="font-weight:400;color:#606060;">(optional)</span></div>
           <div style="display:flex;gap:0;border-radius:8px;overflow:hidden;">
             <button id="ppGenTypeSplit" onclick="ppGenSetType('split')" style="flex:1;height:38px;font-size:13px;font-weight:700;border:none;cursor:pointer;background:#2d7abc;color:#fff;">Split</button>
             <button id="ppGenTypeBlock" onclick="ppGenSetType('block')" style="flex:1;height:38px;font-size:13px;font-weight:700;border:none;cursor:pointer;background:#282828;color:#606060;">Block</button>
@@ -403,13 +403,13 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
           </div>
         </div>
 
-        <button onclick="ppGenGenerate()" style="width:100%;padding:14px;font-size:15px;font-weight:700;color:#ffffff;background:#00703c;border:none;border-radius:12px;cursor:pointer;margin-bottom:14px;">Generate Practice</button>
+        <button onclick="ppGenGenerate()" style="width:100%;padding:14px;font-size:15px;font-weight:700;color:#ffffff;background:#007a52;border:none;border-radius:12px;cursor:pointer;margin-bottom:14px;">Generate Practice</button>
         <div id="ppGenMsg" style="text-align:center;font-size:12px;margin-bottom:8px;"></div>
 
         <!-- Generated results -->
         <div id="ppGenResults" style="display:flex;flex-direction:column;gap:8px;"></div>
         <div id="ppGenLogWrap" style="display:none;">
-          <button onclick="ppLogFromPractice('gen')" style="width:100%;margin-top:16px;padding:14px;font-size:15px;font-weight:700;color:#ffffff;background:#00703c;border:none;border-radius:12px;cursor:pointer;">Log Session</button>
+          <button onclick="ppLogFromPractice('gen')" style="width:100%;margin-top:16px;padding:14px;font-size:15px;font-weight:700;color:#ffffff;background:#007a52;border:none;border-radius:12px;cursor:pointer;">Log Session</button>
         </div>
       </div>
 
@@ -493,7 +493,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
   <div class="bo-content">
     <div class="bo-results" id="bo_results">
       <h3>Optimal Results</h3>
-      <div style="color:#888;text-align:center;font-size:0.85em;">Adjust settings to see results</div>
+      <div style="color:#9a9a9a;text-align:center;font-size:0.85em;">Adjust settings to see results</div>
     </div>
     <div class="bo-control-group">
       <label class="bo-label" for="bo_clubSelect">Club Selection</label>
@@ -619,7 +619,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
       <!-- Yardage -->
       <div style="background:#282828;border-radius:12px;padding:14px 16px;text-align:center;">
         <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:8px;font-weight:600;">YARDAGE TO PIN</div>
-        <input type="number" id="proxYardage" placeholder="150" min="10" max="600" value="50" inputmode="numeric" pattern="[0-9]*" oninput="proxCalc()" style="width:100%;padding:10px 14px;border:2px solid #444;border-radius:10px;background:#1e1e1e;color:#fff;font-size:18px;font-weight:700;text-align:center;box-sizing:border-box;outline:none;font-family:inherit;" onfocus="this.select();this.style.borderColor='#2d7abc'" onblur="this.style.borderColor='#444'">
+        <input type="number" id="proxYardage" placeholder="150" min="10" max="600" value="50" inputmode="numeric" pattern="[0-9]*" oninput="proxCalc()" style="width:100%;padding:10px 14px;border:2px solid #3d3d3d;border-radius:10px;background:#1e1e1e;color:#fff;font-size:18px;font-weight:700;text-align:center;box-sizing:border-box;outline:none;font-family:inherit;" onfocus="this.select();this.style.borderColor='#2d7abc'" onblur="this.style.borderColor='#606060'">
       </div>
     </div>
 
@@ -632,7 +632,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
         <div style="font-size:11px;margin-top:6px;">&nbsp;</div>
         <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);">
           <div style="font-size:11px;color:rgba(255,255,255,0.5);font-weight:600;margin-bottom:4px;">STROKES GAINED</div>
-          <div style="font-size:28px;font-weight:800;color:#ff5252;line-height:1.1;white-space:nowrap;">-0.25</div>
+          <div style="font-size:28px;font-weight:800;color:#d4706e;line-height:1.1;white-space:nowrap;">-0.25</div>
         </div>
       </div>
 
@@ -657,7 +657,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
         <div style="font-size:11px;margin-top:6px;">&nbsp;</div>
         <div style="margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.1);">
           <div style="font-size:11px;color:rgba(255,255,255,0.5);font-weight:600;margin-bottom:4px;">STROKES GAINED</div>
-          <div style="font-size:28px;font-weight:800;color:#00c853;line-height:1.1;white-space:nowrap;">+0.25</div>
+          <div style="font-size:28px;font-weight:800;color:#00b87a;line-height:1.1;white-space:nowrap;">+0.25</div>
         </div>
       </div>
     </div>
@@ -696,8 +696,8 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     <!-- Handicap Content -->
     <div id="dgContent_handicap" style="display:none;">
       <div style="margin-bottom:12px;">
-        <label style="font-size:13px;font-weight:600;color:#e0e0e0;display:block;margin-bottom:6px;">Select Handicap</label>
-        <select id="dgHandicapSelect" onchange="dgRenderHandicap()" style="width:100%;padding:10px;border:2px solid #333;border-radius:10px;font-size:16px;background:#2a2a2a;color:#fff;font-family:inherit;">
+        <label style="font-size:13px;font-weight:600;color:#ffffff;display:block;margin-bottom:6px;">Select Handicap</label>
+        <select id="dgHandicapSelect" onchange="dgRenderHandicap()" style="width:100%;padding:10px;border:2px solid #333;border-radius:10px;font-size:16px;background:#282828;color:#fff;font-family:inherit;">
           <option value="scratch">Scratch (0)</option>
           <option value="5">5 Handicap</option>
           <option value="10" selected>10 Handicap</option>
@@ -713,8 +713,8 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     <!-- Driver Speed Content -->
     <div id="dgContent_speed" style="display:none;">
       <div style="margin-bottom:12px;">
-        <label style="font-size:13px;font-weight:600;color:#e0e0e0;display:block;margin-bottom:6px;">Your Driver Club Speed (mph)</label>
-        <input type="number" id="dgDriverSpeed" min="60" max="140" step="1" value="100" oninput="dgRenderSpeed()" style="width:100%;padding:10px;border:2px solid #333;border-radius:10px;font-size:16px;background:#2a2a2a;color:#fff;font-weight:600;font-family:inherit;box-sizing:border-box;">
+        <label style="font-size:13px;font-weight:600;color:#ffffff;display:block;margin-bottom:6px;">Your Driver Club Speed (mph)</label>
+        <input type="number" id="dgDriverSpeed" min="60" max="140" step="1" value="100" oninput="dgRenderSpeed()" style="width:100%;padding:10px;border:2px solid #333;border-radius:10px;font-size:16px;background:#282828;color:#fff;font-weight:600;font-family:inherit;box-sizing:border-box;">
       </div>
       <div id="dgSpeedTable"></div>
     </div>
@@ -723,8 +723,8 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     <div id="dgContent_profile" style="display:none;">
       <div style="display:flex;gap:8px;margin-bottom:12px;">
         <div style="flex:1;">
-          <label style="font-size:13px;font-weight:600;color:#e0e0e0;display:block;margin-bottom:6px;">Age</label>
-          <select id="dgProfileAge" onchange="dgRenderProfile()" style="width:100%;padding:10px;border:2px solid #333;border-radius:10px;font-size:16px;background:#2a2a2a;color:#fff;font-family:inherit;">
+          <label style="font-size:13px;font-weight:600;color:#ffffff;display:block;margin-bottom:6px;">Age</label>
+          <select id="dgProfileAge" onchange="dgRenderProfile()" style="width:100%;padding:10px;border:2px solid #333;border-radius:10px;font-size:16px;background:#282828;color:#fff;font-family:inherit;">
             <option value="20">20 - 29</option>
             <option value="30" selected>30 - 39</option>
             <option value="40">40 - 49</option>
@@ -734,8 +734,8 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
           </select>
         </div>
         <div style="flex:1;">
-          <label style="font-size:13px;font-weight:600;color:#e0e0e0;display:block;margin-bottom:6px;">Gender</label>
-          <select id="dgProfileGender" onchange="dgRenderProfile()" style="width:100%;padding:10px;border:2px solid #333;border-radius:10px;font-size:16px;background:#2a2a2a;color:#fff;font-family:inherit;">
+          <label style="font-size:13px;font-weight:600;color:#ffffff;display:block;margin-bottom:6px;">Gender</label>
+          <select id="dgProfileGender" onchange="dgRenderProfile()" style="width:100%;padding:10px;border:2px solid #333;border-radius:10px;font-size:16px;background:#282828;color:#fff;font-family:inherit;">
             <option value="male" selected>Male</option>
             <option value="female">Female</option>
           </select>
@@ -755,7 +755,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
       <div style="font-size:20px;font-weight:800;text-align:center;">Strokes Gained Calculator</div>
       <button id="learnSGExplainerOpenBtn" onclick="toggleLearnSGExplainer()" style="width:28px;height:28px;min-width:28px;max-width:28px;background:#222222;border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;padding:0;">${ic('help')}</button>
-      <button id="learnSGExplainerCloseBtn" onclick="toggleLearnSGExplainer()" style="display:none;width:28px;height:28px;min-width:28px;max-width:28px;background:#222222;border:none;border-radius:8px;align-items:center;justify-content:center;font-size:16px;cursor:pointer;padding:0;color:#ff4444;font-weight:700;">✕</button>
+      <button id="learnSGExplainerCloseBtn" onclick="toggleLearnSGExplainer()" style="display:none;width:28px;height:28px;min-width:28px;max-width:28px;background:#222222;border:none;border-radius:8px;align-items:center;justify-content:center;font-size:16px;cursor:pointer;padding:0;color:#d4706e;font-weight:700;">✕</button>
     </div>
     <div id="learnSGExplainerWrap" style="display:none;margin-bottom:14px;">
       <div id="learnSGExplainerGraphic" style="background:#222222;border-radius:14px;overflow:hidden;"></div>
@@ -832,23 +832,23 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
   <div style="width:100%;max-width:420px;padding:0 14px;box-sizing:border-box;">
     <div style="font-size:22px;font-weight:800;margin-bottom:2px;text-align:center;">Performance Analysis</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
-      <div id="perfAnalysisSubtitle" style="font-size:12px;color:#8a9a8e;">Loading...</div>
-      <div id="perfHcpBadge" style="display:none;background:#1a2533;border:1px solid #2b3d50;border-radius:20px;padding:4px 10px;align-items:center;gap:5px;">
-        <span style="font-size:10px;color:#5a6b60;">vs</span>
+      <div id="perfAnalysisSubtitle" style="font-size:12px;color:#9a9a9a;">Loading...</div>
+      <div id="perfHcpBadge" style="display:none;background:#1a2533;border:1px solid #2d7abc;border-radius:20px;padding:4px 10px;align-items:center;gap:5px;">
+        <span style="font-size:10px;color:#606060;">vs</span>
         <span id="perfHcpLabel" style="font-size:11px;font-weight:700;color:#7a9ab5;">—</span>
       </div>
     </div>
 
     <!-- Page toggle tabs -->
-    <div style="display:flex;gap:6px;margin-bottom:16px;background:#0d0f0e;border-radius:12px;padding:4px;">
-      <button id="perfTabBtnRounds"   onclick="setPerfPage('rounds')"   style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:#2b3d50;color:#e8ede9;">Past Rounds</button>
-      <button id="perfTabBtnCombines" onclick="setPerfPage('combines')" style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:#8a9a8e;">Combines</button>
+    <div style="display:flex;gap:6px;margin-bottom:16px;background:#1e1e1e;border-radius:12px;padding:4px;">
+      <button id="perfTabBtnRounds"   onclick="setPerfPage('rounds')"   style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:#2d7abc;color:#ffffff;">Past Rounds</button>
+      <button id="perfTabBtnCombines" onclick="setPerfPage('combines')" style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:#9a9a9a;">Combines</button>
     </div>
 
     <!-- ── PAST ROUNDS PAGE ── -->
     <div id="perfPageRounds">
       <!-- No rounds state -->
-      <div id="perfNoRounds" style="display:none;background:#141817;border-radius:12px;padding:24px;text-align:center;color:#8a9a8e;font-size:14px;line-height:1.6;margin-bottom:16px;">
+      <div id="perfNoRounds" style="display:none;background:#1e1e1e;border-radius:12px;padding:24px;text-align:center;color:#9a9a9a;font-size:14px;line-height:1.6;margin-bottom:16px;">
         Play and save at least 1 round to see your performance analysis.
       </div>
 
@@ -859,7 +859,7 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
         <div id="perfPriorityCard" style="border-radius:14px;padding:16px;margin-bottom:14px;"></div>
 
         <!-- SG OVERVIEW -->
-        <div style="font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#5a6b60;margin-bottom:8px;">Strokes Gained Overview</div>
+        <div style="font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#606060;margin-bottom:8px;">Strokes Gained Overview</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
           <div id="perfCardOtt"  onclick="togglePerfTab('ott')"  style="border-radius:11px;padding:12px;cursor:pointer;"></div>
           <div id="perfCardApp"  onclick="togglePerfTab('app')"  style="border-radius:11px;padding:12px;cursor:pointer;"></div>
@@ -878,22 +878,22 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
 
     <!-- ── COMBINES PAGE ── -->
     <div id="perfPageCombines" style="display:none;">
-      <div id="perfCombineLoading" style="background:#141817;border-radius:12px;padding:18px;text-align:center;color:#8a9a8e;font-size:13px;margin-bottom:10px;">Loading combine data…</div>
+      <div id="perfCombineLoading" style="background:#1e1e1e;border-radius:12px;padding:18px;text-align:center;color:#9a9a9a;font-size:13px;margin-bottom:10px;">Loading combine data…</div>
       <div id="perfCombineGrid" style="display:none;grid-template-columns:1fr 1fr;gap:10px;align-items:start;width:100%;">
         <div>
-          <div style="font-size:15px;font-weight:800;color:#e8ede9;margin-bottom:8px;text-align:center;">Putting</div>
+          <div style="font-size:15px;font-weight:800;color:#ffffff;margin-bottom:8px;text-align:center;">Putting</div>
           <div id="perfCombinePuttFocus"></div>
           <div id="perfCombinePuttOverview"></div>
           <div id="perfCombinePuttDetail" style="display:none;"></div>
         </div>
         <div>
-          <div style="font-size:15px;font-weight:800;color:#e8ede9;margin-bottom:8px;text-align:center;">Wedge</div>
+          <div style="font-size:15px;font-weight:800;color:#ffffff;margin-bottom:8px;text-align:center;">Wedge</div>
           <div id="perfCombineWedgeFocus"></div>
           <div id="perfCombineWedgeOverview"></div>
           <div id="perfCombineWedgeDetail" style="display:none;"></div>
         </div>
       </div>
-      <div id="perfCombineFooter" style="display:none;text-align:center;font-size:10px;color:#8a9a8e;margin-top:14px;">All stats vs scratch · combines only</div>
+      <div id="perfCombineFooter" style="display:none;text-align:center;font-size:10px;color:#9a9a9a;margin-top:14px;">All stats vs scratch · combines only</div>
     </div>
 
   </div>
@@ -957,7 +957,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
     <!-- Add Club Toggle -->
     <div style="width:100%;max-width:360px;margin-bottom:12px;display:flex;gap:8px;">
       <button onclick="toggleBagAddClub()" style="flex:1;height:40px;background:#222222;border:1px solid #333333;border-radius:10px;color:#9a9a9a;font-size:13px;font-weight:600;cursor:pointer;">+ Add a Club</button>
-      <button onclick="openGapVisualizer()" style="flex:1;height:40px;background:#222222;border:1px solid #3d96ee;border-radius:10px;color:#44b8f0;font-size:13px;font-weight:700;cursor:pointer;">${ic('bars')} Gap Visualizer</button>
+      <button onclick="openGapVisualizer()" style="flex:1;height:40px;background:#222222;border:1px solid #2d7abc;border-radius:10px;color:#44b8f0;font-size:13px;font-weight:700;cursor:pointer;">${ic('bars')} Gap Visualizer</button>
     </div>
     <!-- Add Club Expandable Section -->
     <div id="bagAddClubSection" style="display:none;width:100%;max-width:360px;background:#222222;border-radius:14px;padding:16px;margin-bottom:16px;">
@@ -1223,7 +1223,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
   <div style="width:100%;max-width:400px;padding:0 16px;box-sizing:border-box;">
     <!-- Filter buttons -->
     <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;">
-      <button id="gvFilterAll" onclick="setGapVizFilter('all')" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #3d96ee;background:#3d96ee;color:#ffffff;">All</button>
+      <button id="gvFilterAll" onclick="setGapVizFilter('all')" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #2d7abc;background:#2d7abc;color:#ffffff;">All</button>
       <button id="gvFilterWoods" onclick="setGapVizFilter('woods')" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #3d3d3d;background:transparent;color:#9a9a9a;">Woods</button>
       <button id="gvFilterIrons" onclick="setGapVizFilter('irons')" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #3d3d3d;background:transparent;color:#9a9a9a;">Irons</button>
       <button id="gvFilterWedges" onclick="setGapVizFilter('wedges')" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #3d3d3d;background:transparent;color:#9a9a9a;">Wedges</button>
@@ -1691,7 +1691,7 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
         </div>
 
         <!-- Scoreboard -->
-        <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:8px;background:#00402c;border:1px solid #00a06d;padding:10px;border-radius:10px;margin-bottom:10px;text-align:center;">
+        <div style="display:flex;justify-content:space-around;flex-wrap:wrap;gap:8px;background:#00402c;border:1px solid #00b87a;padding:10px;border-radius:10px;margin-bottom:10px;text-align:center;">
           <div id="comb-exp-box">
             <div style="font-size:0.65rem;color:#606060;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px;">Expected</div>
             <div id="comb-total-exp" style="font-size:1.4rem;font-weight:700;">0.00</div>

@@ -230,8 +230,8 @@ export async function loadPracticeHistory() {
         var done = n.done ? true : false;
         var uid = 'ppHistDrill_' + s.id + '_' + ni;
         html += '<div style="display:flex;align-items:center;gap:8px;padding:3px 0;">';
-        html += '<div id="' + uid + '" data-session-id="' + s.id + '" data-note-idx="' + ni + '" data-done="' + (done ? '1' : '0') + '" onclick="ppToggleHistoryDrill(this,event)" style="width:20px;height:20px;min-width:20px;border-radius:50%;border:2px solid ' + (done ? '#00c853' : '#555') + ';background:' + (done ? '#00c853' : 'transparent') + ';cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">' + (done ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' : '') + '</div>';
-        html += '<div style="flex:1;font-size:12px;color:' + (done ? '#666' : '#9a9a9a') + ';' + (done ? 'text-decoration:line-through;opacity:0.5;' : '') + '">' + escHtml(n.text) + '</div>';
+        html += '<div id="' + uid + '" data-session-id="' + s.id + '" data-note-idx="' + ni + '" data-done="' + (done ? '1' : '0') + '" onclick="ppToggleHistoryDrill(this,event)" style="width:20px;height:20px;min-width:20px;border-radius:50%;border:2px solid ' + (done ? '#00b87a' : '#3d3d3d') + ';background:' + (done ? '#00b87a' : 'transparent') + ';cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;">' + (done ? '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>' : '') + '</div>';
+        html += '<div style="flex:1;font-size:12px;color:' + (done ? '#606060' : '#9a9a9a') + ';' + (done ? 'text-decoration:line-through;opacity:0.5;' : '') + '">' + escHtml(n.text) + '</div>';
         html += '<span style="font-size:12px;color:#00b87a;font-weight:700;white-space:nowrap;margin-left:8px;">' + n.minutes + ' min</span>';
         html += '</div>';
       });
@@ -299,15 +299,15 @@ async function ppToggleHistoryDrill(el, e) {
   // Update visual
   if (!done) {
     el.setAttribute('data-done', '1');
-    el.style.background = '#00c853';
-    el.style.borderColor = '#00c853';
+    el.style.background = '#00b87a';
+    el.style.borderColor = '#00b87a';
     el.innerHTML = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
     var textEl = el.nextElementSibling;
-    if (textEl) { textEl.style.opacity = '0.5'; textEl.style.textDecoration = 'line-through'; textEl.style.color = '#666'; }
+    if (textEl) { textEl.style.opacity = '0.5'; textEl.style.textDecoration = 'line-through'; textEl.style.color = '#606060'; }
   } else {
     el.setAttribute('data-done', '0');
     el.style.background = 'transparent';
-    el.style.borderColor = '#555';
+    el.style.borderColor = '#606060';
     el.innerHTML = '';
     var textEl = el.nextElementSibling;
     if (textEl) { textEl.style.opacity = '1'; textEl.style.textDecoration = 'none'; textEl.style.color = '#9a9a9a'; }

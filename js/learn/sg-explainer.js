@@ -105,7 +105,7 @@ export function renderSGExplainer() {
     
     // Shot 2 card
     + '<div style="padding:0 16px 6px;">'
-    + '<div style="background:#1e1e1e;border-left:3px solid #00a06d;border-radius:8px;padding:10px 12px;">'
+    + '<div style="background:#1e1e1e;border-left:3px solid #00b87a;border-radius:8px;padding:10px 12px;">'
     + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">'
     + '<div style="font-size:12px;font-weight:800;color:#00b87a;">② Approach — 150 yds to 10 ft</div>'
     + '<div style="font-size:14px;font-weight:900;color:#00b87a;">+0.70</div></div>'
@@ -153,7 +153,7 @@ export function renderSGExplainer() {
     + '</div>'
     + '<div style="padding:0 16px 10px;display:grid;grid-template-columns:1fr 1fr;gap:6px;">'
     + sgCatCard('SG: Off the Tee', 'Tee shots on Par 4s & 5s', '#44b8f0')
-    + sgCatCard('SG: Approach', 'Shots into the green', '#00a06d')
+    + sgCatCard('SG: Approach', 'Shots into the green', '#00b87a')
     + sgCatCard('SG: Around Green', 'Chips, pitches & bunker shots', '#f0c830')
     + sgCatCard('SG: Putting', 'Everything on the green', '#44b8f0')
     + '</div>'
@@ -164,7 +164,7 @@ export function renderSGExplainer() {
     + '<div style="flex:1;background:#00402c;border:1px solid #00402c;border-radius:10px;padding:10px;text-align:center;">'
     + '<div style="font-size:18px;font-weight:900;color:#00b87a;">+SG</div>'
     + '<div style="font-size:10px;color:#00b87a;margin-top:2px;">Better than expected</div></div>'
-    + '<div style="flex:1;background:#2a1a1a;border:1px solid #e06060;border-radius:10px;padding:10px;text-align:center;">'
+    + '<div style="flex:1;background:#2a1a1a;border:1px solid #d4706e;border-radius:10px;padding:10px;text-align:center;">'
     + '<div style="font-size:18px;font-weight:900;color:#d4706e;">−SG</div>'
     + '<div style="font-size:10px;color:#d4706e;margin-top:2px;">Worse than expected</div></div>'
     + '</div></div>'

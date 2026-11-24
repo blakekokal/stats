@@ -145,9 +145,9 @@ function proxShowSG(ft) {
   valEl.textContent = sgStr;
 
   if (sg > 0.05) {
-    valEl.style.color = '#00c853';
+    valEl.style.color = '#00b87a';
   } else if (sg < -0.05) {
-    valEl.style.color = '#ff5252';
+    valEl.style.color = '#d4706e';
   } else {
     valEl.style.color = '#ffffff';
   }

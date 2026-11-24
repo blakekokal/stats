@@ -81,7 +81,7 @@ function renderCombinePutt(sessions) {
   if (!focusEl) return;
 
   if (sessions.length === 0) {
-    focusEl.innerHTML = '<div style="background:#141817;border:1px solid #1c2120;border-radius:10px;padding:10px 11px;font-size:11px;color:#8a9a8e;text-align:center;">No putting combines yet</div>';
+    focusEl.innerHTML = '<div style="background:#1e1e1e;border:1px solid #282828;border-radius:10px;padding:10px 11px;font-size:11px;color:#9a9a9a;text-align:center;">No putting combines yet</div>';
     overviewEl.innerHTML = '';
     detailEl.innerHTML = '';
     return;
@@ -132,8 +132,8 @@ function renderCombinePutt(sessions) {
   // Trend
   var trendDiff = (overallSg !== null && priorOverallSg !== null) ? (overallSg - priorOverallSg) : null;
   var trendStr = trendDiff === null ? '' : (trendDiff >= 0
-    ? '<span style="color:#00e08a;">\u25b2 improving</span>'
-    : '<span style="color:#ff5c5c;">\u25bc declining</span>');
+    ? '<span style="color:#00b87a;">\u25b2 improving</span>'
+    : '<span style="color:#d4706e;">\u25bc declining</span>');
 
   // Worst bucket (focus area)
   var worst = null;
@@ -144,35 +144,35 @@ function renderCombinePutt(sessions) {
   });
 
   var focusIsBad = worst && worst.avg < 0;
-  var focusBg    = focusIsBad ? 'linear-gradient(135deg,#2a0e0e,#2a0e0e)' : 'linear-gradient(135deg,#0a2a18,#0a2a18)';
-  var focusBord  = focusIsBad ? '#3d1515' : '#0d3a20';
-  var focusEye   = focusIsBad ? '<span style="color:#ff5c5c;">\u26a0 Focus Area</span>' : '<span style="color:#00e08a;">\u2713 Strong Area</span>';
+  var focusBg    = focusIsBad ? 'linear-gradient(135deg,#3a1515,#3a1515)' : 'linear-gradient(135deg,#0a3020,#0a3020)';
+  var focusBord  = focusIsBad ? '#3d1515' : '#0a3020';
+  var focusEye   = focusIsBad ? '<span style="color:#d4706e;">\u26a0 Focus Area</span>' : '<span style="color:#00b87a;">\u2713 Strong Area</span>';
   var focusSub   = worst ? (worst.avg >= 0 ? '+' : '') + worst.avg.toFixed(2) + ' SG avg' : '';
   var focusRange = worst ? (worst.key + (worst.key.indexOf('yds') === -1 ? ' ft' : '')) : '\u2014';
 
   focusEl.innerHTML = '<div style="border-radius:10px;padding:10px 11px;margin-bottom:6px;border:1px solid ' + focusBord + ';background:' + focusBg + ';">' +
     '<div style="font-size:8px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;">' + focusEye + '</div>' +
-    '<div style="font-size:15px;font-weight:800;color:#e8ede9;line-height:1.1;margin-bottom:1px;">' + focusRange + '</div>' +
-    '<div style="font-size:9px;font-weight:700;color:' + (focusIsBad ? '#ff5c5c' : '#00e08a') + ';">' + focusSub + '</div></div>';
+    '<div style="font-size:15px;font-weight:800;color:#ffffff;line-height:1.1;margin-bottom:1px;">' + focusRange + '</div>' +
+    '<div style="font-size:9px;font-weight:700;color:' + (focusIsBad ? '#d4706e' : '#00b87a') + ';">' + focusSub + '</div></div>';
 
-  var sgCol = overallSg === null ? '#8a9a8e' : overallSg >= 0 ? '#00e08a' : '#ff5c5c';
-  var ovBg   = overallSg === null ? '#141817' : overallSg >= 0 ? '#0a2a18' : '#2a0e0e';
-  var ovBord = overallSg === null ? '#1c2120' : overallSg >= 0 ? '#0d3a20' : '#3d1515';
+  var sgCol = overallSg === null ? '#9a9a9a' : overallSg >= 0 ? '#00b87a' : '#d4706e';
+  var ovBg   = overallSg === null ? '#1e1e1e' : overallSg >= 0 ? '#0a3020' : '#3a1515';
+  var ovBord = overallSg === null ? '#282828' : overallSg >= 0 ? '#0a3020' : '#3d1515';
   var sgStr  = overallSg !== null ? (overallSg >= 0 ? '+' : '') + overallSg.toFixed(2) : 'N/A';
 
   overviewEl.innerHTML = '<div style="border-radius:11px;padding:12px 13px;border:1px solid ' + ovBord + ';background:' + ovBg + ';cursor:pointer;user-select:none;margin-bottom:6px;" onclick="toggleCombineDetail(\'Putt\')">' +
-    '<div style="font-size:10px;margin-bottom:8px;">' + (trendStr || '<span style="color:#5a6b60;">\u2014 steady</span>') + '</div>' +
+    '<div style="font-size:10px;margin-bottom:8px;">' + (trendStr || '<span style="color:#606060;">\u2014 steady</span>') + '</div>' +
     '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
     '<div style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 5px;text-align:center;">' +
     '<div style="font-size:15px;font-weight:800;line-height:1;color:' + sgCol + ';white-space:nowrap;">' + sgStr + '</div>' +
-    '<div style="font-size:7px;color:#5a6b60;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">SG / Round</div></div>' +
+    '<div style="font-size:7px;color:#606060;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">SG / Round</div></div>' +
     '<div style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 5px;text-align:center;">' +
-    '<div style="font-size:15px;font-weight:800;line-height:1;color:#e8ede9;">' + (avgPuttsPerHole !== null ? avgPuttsPerHole : '\u2014') + '</div>' +
-    '<div style="font-size:7px;color:#5a6b60;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">Putts / Hole</div></div></div>' +
+    '<div style="font-size:15px;font-weight:800;line-height:1;color:#ffffff;">' + (avgPuttsPerHole !== null ? avgPuttsPerHole : '\u2014') + '</div>' +
+    '<div style="font-size:7px;color:#606060;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">Putts / Hole</div></div></div>' +
     '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
-    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#e8ede9;">' + sessions.length + '</span><span style="font-size:8px;color:#8a9a8e;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">combines</span></div>' +
-    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#e8ede9;">' + totalHolesAll + '</span><span style="font-size:8px;color:#8a9a8e;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">holes</span></div></div>' +
-    '<div style="font-size:9px;color:#8a9a8e;text-align:right;" id="perfCombinePuttCaret">View detail \u2192</div></div>';
+    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#ffffff;">' + sessions.length + '</span><span style="font-size:8px;color:#9a9a9a;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">combines</span></div>' +
+    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#ffffff;">' + totalHolesAll + '</span><span style="font-size:8px;color:#9a9a9a;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">holes</span></div></div>' +
+    '<div style="font-size:9px;color:#9a9a9a;text-align:right;" id="perfCombinePuttCaret">View detail \u2192</div></div>';
 
   // Build bucket detail (hidden)
   var dHtml = '';
@@ -184,15 +184,15 @@ function renderCombinePutt(sessions) {
       var pb = pBucks[bk];
       if (pb.count > 0) {
         var diff = avgSg - (pb.sgTotal / pb.count);
-        var tc = diff >= 0 ? '#00e08a' : '#ff5c5c';
+        var tc = diff >= 0 ? '#00b87a' : '#d4706e';
         trendH = ' <span style="color:' + tc + ';">' + (diff >= 0 ? '\u25b2' : '\u25bc') + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + '</span>';
       }
     }
     var isWorst = worst && worst.key === bk;
-    var col  = avgSg >= 0 ? '#00e08a' : '#ff5c5c';
-    var bg   = avgSg >= 0 ? '#0a2a18' : '#2a0e0e';
-    var bord = avgSg >= 0 ? '#0d3a20' : '#3d1515';
-    var info = (isWorst ? '<span style="color:#ff5c5c;">\u26a0 Needs work</span> \u00b7 ' : '') + rb.count + ' shots' + trendH;
+    var col  = avgSg >= 0 ? '#00b87a' : '#d4706e';
+    var bg   = avgSg >= 0 ? '#0a3020' : '#3a1515';
+    var bord = avgSg >= 0 ? '#0a3020' : '#3d1515';
+    var info = (isWorst ? '<span style="color:#d4706e;">\u26a0 Needs work</span> \u00b7 ' : '') + rb.count + ' shots' + trendH;
     dHtml += combStatCard(bk + ' ft', col, bg, bord, (avgSg >= 0 ? '+' : '') + avgSg.toFixed(2) + ' SG', info);
   });
   detailEl.innerHTML = dHtml;
@@ -205,7 +205,7 @@ function renderCombineWedge(sessions) {
   if (!focusEl) return;
 
   if (sessions.length === 0) {
-    focusEl.innerHTML = '<div style="background:#141817;border:1px solid #1c2120;border-radius:10px;padding:10px 11px;font-size:11px;color:#8a9a8e;text-align:center;">No wedge combines yet</div>';
+    focusEl.innerHTML = '<div style="background:#1e1e1e;border:1px solid #282828;border-radius:10px;padding:10px 11px;font-size:11px;color:#9a9a9a;text-align:center;">No wedge combines yet</div>';
     overviewEl.innerHTML = '';
     detailEl.innerHTML = '';
     return;
@@ -258,8 +258,8 @@ function renderCombineWedge(sessions) {
 
   var trendDiff = (overallSg !== null && priorOverallSg !== null) ? (overallSg - priorOverallSg) : null;
   var trendStr = trendDiff === null ? '' : (trendDiff >= 0
-    ? '<span style="color:#00e08a;">\u25b2 improving</span>'
-    : '<span style="color:#ff5c5c;">\u25bc declining</span>');
+    ? '<span style="color:#00b87a;">\u25b2 improving</span>'
+    : '<span style="color:#d4706e;">\u25bc declining</span>');
 
   // Worst bucket
   var worst = null;
@@ -270,35 +270,35 @@ function renderCombineWedge(sessions) {
   });
 
   var focusIsBad = worst && worst.avg < 0;
-  var focusBg    = focusIsBad ? 'linear-gradient(135deg,#2a0e0e,#2a0e0e)' : 'linear-gradient(135deg,#0a2a18,#0a2a18)';
-  var focusBord  = focusIsBad ? '#3d1515' : '#0d3a20';
-  var focusEye   = focusIsBad ? '<span style="color:#ff5c5c;">\u26a0 Focus Area</span>' : '<span style="color:#00e08a;">\u2713 Strong Area</span>';
+  var focusBg    = focusIsBad ? 'linear-gradient(135deg,#3a1515,#3a1515)' : 'linear-gradient(135deg,#0a3020,#0a3020)';
+  var focusBord  = focusIsBad ? '#3d1515' : '#0a3020';
+  var focusEye   = focusIsBad ? '<span style="color:#d4706e;">\u26a0 Focus Area</span>' : '<span style="color:#00b87a;">\u2713 Strong Area</span>';
   var focusSub   = worst ? (worst.avg >= 0 ? '+' : '') + worst.avg.toFixed(2) + ' SG avg' : '';
   var focusRange = worst ? worst.key + ' yds' : '\u2014';
 
   focusEl.innerHTML = '<div style="border-radius:10px;padding:10px 11px;margin-bottom:6px;border:1px solid ' + focusBord + ';background:' + focusBg + ';">' +
     '<div style="font-size:8px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;">' + focusEye + '</div>' +
-    '<div style="font-size:15px;font-weight:800;color:#e8ede9;line-height:1.1;margin-bottom:1px;">' + focusRange + '</div>' +
-    '<div style="font-size:9px;font-weight:700;color:' + (focusIsBad ? '#ff5c5c' : '#00e08a') + ';">' + focusSub + '</div></div>';
+    '<div style="font-size:15px;font-weight:800;color:#ffffff;line-height:1.1;margin-bottom:1px;">' + focusRange + '</div>' +
+    '<div style="font-size:9px;font-weight:700;color:' + (focusIsBad ? '#d4706e' : '#00b87a') + ';">' + focusSub + '</div></div>';
 
-  var sgCol  = overallSg === null ? '#8a9a8e' : overallSg >= 0 ? '#00e08a' : '#ff5c5c';
-  var ovBg   = overallSg === null ? '#141817' : overallSg >= 0 ? '#0a2a18' : '#2a0e0e';
-  var ovBord = overallSg === null ? '#1c2120' : overallSg >= 0 ? '#0d3a20' : '#3d1515';
+  var sgCol  = overallSg === null ? '#9a9a9a' : overallSg >= 0 ? '#00b87a' : '#d4706e';
+  var ovBg   = overallSg === null ? '#1e1e1e' : overallSg >= 0 ? '#0a3020' : '#3a1515';
+  var ovBord = overallSg === null ? '#282828' : overallSg >= 0 ? '#0a3020' : '#3d1515';
   var sgStr  = overallSg !== null ? (overallSg >= 0 ? '+' : '') + overallSg.toFixed(2) : 'N/A';
 
   overviewEl.innerHTML = '<div style="border-radius:11px;padding:12px 13px;border:1px solid ' + ovBord + ';background:' + ovBg + ';cursor:pointer;user-select:none;margin-bottom:6px;" onclick="toggleCombineDetail(\'Wedge\')">' +
-    '<div style="font-size:10px;margin-bottom:8px;">' + (trendStr || '<span style="color:#5a6b60;">\u2014 steady</span>') + '</div>' +
+    '<div style="font-size:10px;margin-bottom:8px;">' + (trendStr || '<span style="color:#606060;">\u2014 steady</span>') + '</div>' +
     '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
     '<div style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 5px;text-align:center;">' +
     '<div style="font-size:15px;font-weight:800;line-height:1;color:' + sgCol + ';white-space:nowrap;">' + sgStr + '</div>' +
-    '<div style="font-size:7px;color:#5a6b60;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">SG / Shot</div></div>' +
+    '<div style="font-size:7px;color:#606060;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">SG / Shot</div></div>' +
     '<div style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 5px;text-align:center;">' +
-    '<div style="font-size:15px;font-weight:800;line-height:1;color:#e8ede9;">' + (avgScore !== null ? avgScore : '\u2014') + '</div>' +
-    '<div style="font-size:7px;color:#5a6b60;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">Avg Score</div></div></div>' +
+    '<div style="font-size:15px;font-weight:800;line-height:1;color:#ffffff;">' + (avgScore !== null ? avgScore : '\u2014') + '</div>' +
+    '<div style="font-size:7px;color:#606060;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">Avg Score</div></div></div>' +
     '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
-    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#e8ede9;">' + sessions.length + '</span><span style="font-size:8px;color:#8a9a8e;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">combines</span></div>' +
-    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#e8ede9;">' + totalShotsAll + '</span><span style="font-size:8px;color:#8a9a8e;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">shots hit</span></div></div>' +
-    '<div style="font-size:9px;color:#8a9a8e;text-align:right;" id="perfCombineWedgeCaret">View detail \u2192</div></div>';
+    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#ffffff;">' + sessions.length + '</span><span style="font-size:8px;color:#9a9a9a;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">combines</span></div>' +
+    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#ffffff;">' + totalShotsAll + '</span><span style="font-size:8px;color:#9a9a9a;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">shots hit</span></div></div>' +
+    '<div style="font-size:9px;color:#9a9a9a;text-align:right;" id="perfCombineWedgeCaret">View detail \u2192</div></div>';
 
   var dHtml = '';
   wedgeBucketDefs.forEach(function(bk) {
@@ -310,15 +310,15 @@ function renderCombineWedge(sessions) {
       var pb = pBucks[bk];
       if (pb.count > 0) {
         var diff = avgSg - (pb.sgTotal / pb.count);
-        var tc = diff >= 0 ? '#00e08a' : '#ff5c5c';
+        var tc = diff >= 0 ? '#00b87a' : '#d4706e';
         trendH = ' <span style="color:' + tc + ';">' + (diff >= 0 ? '\u25b2' : '\u25bc') + ' ' + (diff >= 0 ? '+' : '') + diff.toFixed(2) + '</span>';
       }
     }
     var isWorst = worst && worst.key === bk;
-    var col  = avgSg >= 0 ? '#00e08a' : '#ff5c5c';
-    var bg   = avgSg >= 0 ? '#0a2a18' : '#2a0e0e';
-    var bord = avgSg >= 0 ? '#0d3a20' : '#3d1515';
-    var info = (isWorst ? '<span style="color:#ff5c5c;">\u26a0 Needs work</span> \u00b7 ' : '') + rb.count + ' shots \u00b7 ' + Math.round(avgPts) + ' avg score' + trendH;
+    var col  = avgSg >= 0 ? '#00b87a' : '#d4706e';
+    var bg   = avgSg >= 0 ? '#0a3020' : '#3a1515';
+    var bord = avgSg >= 0 ? '#0a3020' : '#3d1515';
+    var info = (isWorst ? '<span style="color:#d4706e;">\u26a0 Needs work</span> \u00b7 ' : '') + rb.count + ' shots \u00b7 ' + Math.round(avgPts) + ' avg score' + trendH;
     dHtml += combStatCard(bk + ' yds', col, bg, bord, (avgSg >= 0 ? '+' : '') + avgSg.toFixed(2) + ' SG', info);
   });
   detailEl.innerHTML = dHtml;
@@ -327,9 +327,9 @@ function renderCombineWedge(sessions) {
 function combStatCard(label, col, bg, border, badgeText, infoLine) {
   return '<div style="background:' + bg + ';border:1px solid ' + border + ';border-radius:11px;padding:12px 14px;margin-bottom:7px;min-height:62px;display:flex;flex-direction:column;justify-content:center;">' +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">' +
-    '<div style="font-size:14px;font-weight:700;color:#e8ede9;">' + label + '</div>' +
+    '<div style="font-size:14px;font-weight:700;color:#ffffff;">' + label + '</div>' +
     '<div style="font-size:12px;color:' + col + ';border:1px solid ' + border + ';border-radius:5px;padding:3px 10px;font-weight:700;white-space:nowrap;">' + badgeText + '</div></div>' +
-    '<div style="font-size:11px;color:#9aab9e;line-height:1.5;">' + infoLine + '</div></div>';
+    '<div style="font-size:11px;color:#9a9a9a;line-height:1.5;">' + infoLine + '</div></div>';
 }
 
 // Functions called from inline HTML handlers
