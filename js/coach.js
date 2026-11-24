@@ -13,6 +13,9 @@ import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting, f
 import { downloadRoundCsv } from './dashboard.js';
 import { openBookSetup, openSavedBooks } from './book.js';
 import { holeFeatures, ownGreen } from './hole.js';
+import { renderSGExplainer } from './learn/sg-explainer.js';
+import { drillsData } from './coaching/data-drills.js';
+import { libraryVideos } from './learn/library.js';
 
 const PREF_LABEL = { Pro: 'Tour Pro', Scratch: 'Scratch (0)' };
 const levelOpt = (l, sel, short) => h('option', { value: l, selected: l === sel },
@@ -66,7 +69,7 @@ export function renderHome(view) {
   const go = (icon, title, bg, href) => h('button', { class: 'homebtn', style: `background:${bg}`, onclick: () => { location.hash = href; } },
     h('span', { class: 'ic' }, icEl(icon)), h('div', {}, h('div', { class: 't' }, title)));
   const divider = () => h('div', { style: 'height:1px;background:#282828;margin:3px 0;flex:none;' });
-  const search = h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' });
+  const search = h('button', { class: 'iconbtn', 'aria-label': 'Search', onclick: () => { location.hash = '#/search'; } });
   search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 
   const brand = h('div', { class: 'homebrand', style: 'text-align:center;margin-bottom:6px;' });
@@ -83,13 +86,13 @@ export function renderHome(view) {
 
   view.replaceChildren(page('center home',
     h('div', { class: 'homecol' },
-      // Help on the left and search + settings on the right, level with the
-      // "Blake Kokal" line and spread to the screen edges.
-      h('div', { style: 'position:relative;' }, brand,
+      // Help on the left and search + settings on the right, in a row above
+      // "Blake Kokal" (beside it they covered the title), spread to the screen edges.
+      h('div', { style: 'position:relative;' },
         h('div', { class: 'iconrow' },
-          h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' }, icEl('help')),
+          h('button', { class: 'iconbtn', 'aria-label': 'Strokes Gained explained', onclick: () => { location.hash = '#/help'; } }, icEl('help')),
           h('div', { style: 'display:flex;gap:4px;' }, search,
-            h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, icEl('gear'))))),
+            h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, icEl('gear')))), brand),
       go('map', 'GPS Overview / Yardage Books', '#1a4a8a', '#/scout'),
       go('flag', 'New Round', '#007a52', '#/new'),
       go('scorecard', 'Round History', '#00402c', '#/history'),
@@ -247,6 +250,9 @@ export function renderNewRound(view, { scout = false } = {}) {
     onblur: () => { results.hidden = true; },
     onkeydown: e => { if (e.key === 'Enter') { const hits = hitsFor(); if (hits.length === 1) { pickCourse(hits[0]); search.blur(); } } } });
   const courseBox = h('div', { style: 'width:100%;max-width:320px;position:relative;z-index:10;' }, search, results);
+  // Opened from Search with a course picked.
+  const pre = sessionStorage.getItem('gs:pickCourse');
+  if (pre) { sessionStorage.removeItem('gs:pickCourse'); if (COURSES.some(c => c.id === pre)) useCourse(pre); }
   if (scout) {
     view.replaceChildren(page('top', backBtn(),
       h('div', { style: 'font-size:20px;font-weight:800;padding:0 44px;line-height:1.2;' }, 'GPS Overview / Yardage Books'),
@@ -498,6 +504,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.18.10', ['Home: the ? opens Strokes Gained Explained', 'Home: Search finds pages, courses, drills, combines and Learn tools and videos; tap one to go there (a course opens in GPS Overview)', 'Home: the ?, search and settings buttons sit in a row above the title, so they no longer cover it']],
   ['1.18.9', ['Drills: every drill tile and category tab is blue (Short Game and Full Swing were green and yellow)']],
   ['1.18.8', ['New Round and GPS Overview: picking a course fills in a tee box, the one you played last if the course has it, otherwise the second longest (usually the Blues)']],
   ['1.18.7', ['One color scheme across the app: Stats, Settings and Performance now use the same colors as the rest (the yardage book keeps its own)']],
@@ -825,4 +832,90 @@ export function renderWhatsNew(view) {
         h('div', { style: 'display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;' },
           h('strong', { style: 'font-size:15px;' }, `v${v}`), i === 0 ? h('span', { style: 'font-size:11px;color:#00b87a;font-weight:700;' }, 'LATEST') : null),
         h('ul', { style: 'margin:0;padding-left:18px;font-size:13px;color:#cfcfcf;line-height:1.4;' }, items.map(t => h('li', {}, t))))))));
+}
+
+// ---------- help: Strokes Gained explained ----------
+
+export function renderHelp(view) {
+  const box = h('div', { style: 'width:100%;max-width:460px;background:#222222;border-radius:14px;overflow:hidden;text-align:left;' });
+  renderSGExplainer();
+  const src = document.getElementById('sgExplainerGraphic');
+  if (src) box.innerHTML = src.innerHTML;
+  view.replaceChildren(page('top', backBtn(), box));
+}
+
+// ---------- search: pages, courses, drills and Learn ----------
+
+// Open a part of Practice and Learning once its page is up (the route draws it a moment later).
+function openPractice(tab, then) {
+  location.hash = '#/practice';
+  let tries = 0;
+  const t = setInterval(() => {
+    const hub = document.getElementById('practiceHubPage');
+    if ((hub && hub.classList.contains('active')) || ++tries > 40) {
+      clearInterval(t);
+      window.setPracticeHubTab?.(tab);
+      if (then) then();
+    }
+  }, 50);
+}
+
+function searchItems() {
+  const go = href => () => { location.hash = href; };
+  const items = [
+    ['GPS Overview / Yardage Books', 'Course maps, yardages and printable books', go('#/scout'), 'gps map yardage book course'],
+    ['New Round', 'Start a round', go('#/new'), 'play start score'],
+    ['Round History', 'Your past rounds', go('#/history'), 'rounds scores past'],
+    ['Stats Dashboard', 'Strokes gained and stats', go('#/dashboard'), 'stats sg'],
+    ['Performance Analysis', 'Rounds and combines over time', go('#/performance'), 'analysis trends'],
+    ['My Bag', 'Clubs, distances and gapping', go('#/bag'), 'clubs distances gapping wedges speed'],
+    ['Practice and Learning', 'Combines, drills, practice and learn', go('#/practice'), 'practice'],
+    ['Coaching', 'Notes, messages and assignments', go('#/coaching'), 'coach lessons students'],
+    ['Settings', 'Account and app settings', go('#/settings'), 'account profile'],
+    ['Offline imagery & backup', 'Save maps for no signal, back up rounds', go('#/device'), 'offline backup restore download'],
+    ['What’s New', `Version ${VERSION}`, go('#/whatsnew'), 'changes updates version'],
+    ['Strokes Gained Explained', 'How strokes gained works', go('#/help'), 'sg help explained'],
+  ].map(([title, sub, open, tags]) => ({ kind: 'Page', title, sub, open, tags }));
+  const combines = [['Evaluation Test', 'goToEvalCombine'], ['Putting Combine', 'goToPuttingCombine'], ['Short Game Combine', 'goToCombines'],
+    ['Wedge Distances Combine', 'goToWedgeCombine'], ['Line Drill Combine', 'goToLineDrill'], ['Driver Combine', 'goToDriverCombinePicker']];
+  combines.forEach(([title, fn]) => items.push({ kind: 'Combine', title, sub: 'Practice and Learning › Combines', tags: 'combine test', open: () => openPractice('combines', () => window[fn]?.()) }));
+  const learn = [['Learning Library', 'Articles, tips & guides', 'openLearningLibrary'], ['Strokes Gained Calculator', 'Calculate SG for any shot', 'toggleLearnSGCalc'],
+    ['Putting Break Calculator', 'Putt break & aim point', 'toggleLearnPBV'], ['Distance Optimizer', 'Optimize distances for your game', 'toggleLearnDistanceOptimizer'],
+    ['Proximity Calculator', 'How close to gain strokes', 'toggleLearnProximityCalc'], ['How Far Should I Hit It?', 'Tour averages & distance by speed or handicap', 'toggleDistanceGuide'],
+    ['Guide to Golf', 'How to hit every shot', null]];
+  learn.forEach(([title, sub, fn]) => items.push({ kind: 'Learn', title, sub, tags: 'learn', open: () => openPractice('learn', () => (fn ? window[fn]?.() : window.show?.('guideToGolfPage'))) }));
+  libraryVideos.forEach(v => items.push({ kind: 'Video', title: v.title, sub: v.description, tags: (v.tags || []).join(' '), open: () => window.open(v.url, '_blank', 'noopener') }));
+  const catName = { putting: 'Putting', shortgame: 'Short Game', fullswing: 'Full Swing' };
+  Object.keys(drillsData).forEach(cat => (drillsData[cat] || []).forEach(d => items.push({
+    kind: 'Drill', title: d.title, sub: `${catName[cat] || cat} drill` + ((d.subcategories || []).length ? ' · ' + d.subcategories.slice(0, 2).join(' · ') : ''),
+    tags: [cat, catName[cat], ...(d.subcategories || [])].join(' '),
+    open: () => openPractice('drills', () => { window.setDrillCategory?.(cat); window.showDrillDetail?.(d.id, cat); }) })));
+  COURSES.forEach(c => items.push({ kind: 'Course', title: c.name, sub: 'Open in GPS Overview', tags: 'course',
+    open: () => { sessionStorage.setItem('gs:pickCourse', c.id); location.hash = '#/scout'; } }));
+  return items;
+}
+
+export function renderSearch(view) {
+  const all = searchItems();
+  const list = h('div', { style: 'width:100%;max-width:460px;display:flex;flex-direction:column;gap:6px;text-align:left;' });
+  const input = h('input', { type: 'search', placeholder: 'Search courses, drills, pages…', 'aria-label': 'Search', autocomplete: 'off',
+    style: 'max-width:460px;text-align:left;padding:0 14px;', oninput: () => draw() });
+  const row = it => h('button', { style: 'max-width:none;height:auto;min-height:52px;padding:10px 14px;background:#282828;border-radius:10px;display:flex;align-items:center;gap:10px;text-align:left;white-space:normal;', onclick: it.open },
+    h('div', { style: 'flex:1;min-width:0;' },
+      h('div', { style: 'font-size:15px;font-weight:700;color:#ffffff;line-height:1.25;' }, it.title),
+      it.sub ? h('div', { style: 'font-size:11px;font-weight:400;color:#9a9a9a;margin-top:2px;line-height:1.3;' }, it.sub) : null),
+    h('span', { style: 'flex:none;font-size:10px;font-weight:700;color:#606060;text-transform:uppercase;letter-spacing:.06em;' }, it.kind));
+  function draw() {
+    const words = input.value.toLowerCase().split(/\s+/).filter(Boolean);
+    if (!words.length) { list.replaceChildren(...all.filter(i => i.kind === 'Page').map(row)); return; }
+    const hay = i => `${i.title} ${i.sub || ''} ${i.tags || ''} ${i.kind}`.toLowerCase();
+    const hits = all.filter(i => words.every(w => hay(i).includes(w)))
+      .sort((a, b) => (b.title.toLowerCase().startsWith(words[0]) - a.title.toLowerCase().startsWith(words[0])) || (b.title.toLowerCase().includes(words.join(' ')) - a.title.toLowerCase().includes(words.join(' '))));
+    list.replaceChildren(...(hits.length ? hits.slice(0, 60).map(row)
+      : [h('div', { style: 'padding:20px;color:#606060;font-size:14px;text-align:center;background:#282828;border-radius:10px;' }, 'Nothing found')]));
+  }
+  draw();
+  view.replaceChildren(page('top', backBtn(),
+    h('div', { style: 'font-size:22px;font-weight:800;' }, 'Search'), input, list));
+  setTimeout(() => input.focus(), 50);
 }

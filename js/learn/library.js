@@ -1,6 +1,6 @@
 import { expose } from '../coaching/core.js';
 
-var _learningLibraryVideos = [
+export var libraryVideos = [
   {
     title: 'Zero Torque Putting Explained by Phil Kenyon',
     url: 'https://www.youtube.com/watch?v=LHwChX2XpRs',
@@ -24,7 +24,7 @@ var _learningLibraryVideos = [
 function openLearningLibrary() {
   document.getElementById('learningLibraryPage').style.display = 'block';
   document.getElementById('learningLibrarySearch').value = '';
-  renderLearningLibrary(_learningLibraryVideos);
+  renderLearningLibrary(libraryVideos);
 }
 function closeLearningLibrary() {
   document.getElementById('learningLibraryPage').style.display = 'none';
@@ -55,8 +55,8 @@ function renderLearningLibrary(videos) {
 }
 function filterLearningLibrary() {
   var q = document.getElementById('learningLibrarySearch').value.trim().toLowerCase();
-  if (!q) { renderLearningLibrary(_learningLibraryVideos); return; }
-  var filtered = _learningLibraryVideos.filter(function(v) {
+  if (!q) { renderLearningLibrary(libraryVideos); return; }
+  var filtered = libraryVideos.filter(function(v) {
     if (v.title.toLowerCase().indexOf(q) !== -1) return true;
     if (v.description && v.description.toLowerCase().indexOf(q) !== -1) return true;
     return v.tags.some(function(t) { return t.toLowerCase().indexOf(q) !== -1; });
