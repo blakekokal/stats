@@ -489,6 +489,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.18.3', ['Menus: double-tapping no longer zooms the page in']],
   ['1.18.2', ['Home stays put: dragging on the main page no longer makes the screen slide and spring back']],
   ['1.18.1', ['Home fits the screen: no more scrolling on the main page. The buttons shrink a little on shorter phones so everything shows at once']],
   ['1.18.0', ['New icons: every emoji is now a simple outline icon in one style, on Home, Practice, Combines, Learn, Coaching and the rest of the app. Each Practice, Combines and Learn tile has its own icon, lined up on the left with the titles after it', 'Search boxes show a magnifier inside the box']],
