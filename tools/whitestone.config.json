@@ -1,0 +1,18 @@
+{
+  "id": "whitestone",
+  "name": "Whitestone Golf Club",
+  "location": "Benbrook, TX",
+  "par": [5, 4, 3, 4, 3, 4, 5, 4, 4, 5, 3, 4, 4, 4, 4, 5, 3, 4],
+  "hcp": [3, 15, 17, 9, 11, 1, 7, 5, 13, 2, 12, 4, 10, 18, 16, 6, 14, 8],
+  "_comment_tees": "Scorecard from GolfPass (22642); its pars match OpenStreetMap's hole tags. Its ratings are for tees about 150 yds shorter than its hole yards add to (Gold 7117 vs 7268, Blue 6615 vs 6774, White 6084 vs 6235, Red 5201 vs 5351); matched by name. Men's ratings, but Red is rated for women only.",
+  "_comment_drop": "Polygons containing these points are not part of the course: the three practice greens by the clubhouse and a lone tee by the maintenance yard.",
+  "drop": [[32.658676, -97.494174, "green"], [32.659108, -97.494571, "green"], [32.659214, -97.493851, "green"], [32.661842, -97.494, "tee"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": -0.75, "north": 2.0},
+  "tees": [
+    {"name": "Gold", "rating": 74.4, "slope": 135, "yards": [555, 375, 156, 420, 208, 481, 540, 451, 359, 595, 215, 486, 395, 375, 416, 586, 207, 448]},
+    {"name": "Blue", "rating": 72.1, "slope": 128, "yards": [529, 350, 135, 395, 186, 448, 521, 423, 337, 557, 181, 456, 368, 346, 369, 570, 179, 424]},
+    {"name": "White", "rating": 69.0, "slope": 125, "yards": [499, 336, 124, 369, 163, 400, 501, 409, 313, 501, 146, 411, 333, 317, 349, 542, 140, 382]},
+    {"name": "Red", "rating": 71.2, "slope": 125, "yards": [429, 298, 114, 336, 144, 347, 436, 347, 237, 439, 117, 362, 313, 255, 273, 453, 110, 341]}
+  ]
+}

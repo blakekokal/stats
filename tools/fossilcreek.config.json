@@ -1,0 +1,18 @@
+{
+  "id": "fossilcreek",
+  "name": "The Golf Club at Fossil Creek",
+  "location": "Fort Worth, TX",
+  "par": [4, 3, 5, 4, 3, 4, 4, 5, 4, 3, 5, 4, 3, 4, 4, 4, 4, 5],
+  "hcp": [3, 17, 9, 15, 5, 11, 1, 13, 7, 18, 4, 16, 12, 14, 6, 2, 8, 10],
+  "_comment_tees": "Scorecard from GolfPass (2924); its pars match OpenStreetMap's hole tags. Ratings matched to tees by total yards (Palmer = Black 6865, Tournament = Blue 6457, Club = White 6006). Men's ratings, but Forward is rated for women only.",
+  "_comment_drop": "Polygons containing these points are not part of the course: the practice green by the clubhouse, a bunker on grass, the fairway round a chipping green no hole plays to and a fairway sliver by the water.",
+  "drop": [[32.854937, -97.309624, "green"], [32.860135, -97.301326, "bunker"], [32.852124, -97.293687, "fairway"], [32.856193, -97.294729, "fairway"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": -0.25, "north": 1.5},
+  "tees": [
+    {"name": "Palmer", "rating": 73.7, "slope": 138, "yards": [402, 157, 523, 339, 209, 377, 430, 537, 399, 208, 547, 372, 194, 387, 394, 379, 456, 555]},
+    {"name": "Tournament", "rating": 72.1, "slope": 133, "yards": [382, 139, 510, 318, 198, 358, 404, 511, 374, 189, 515, 341, 173, 365, 361, 354, 435, 530]},
+    {"name": "Club", "rating": 69.3, "slope": 127, "yards": [360, 120, 498, 300, 183, 339, 382, 478, 357, 144, 498, 309, 167, 330, 338, 336, 369, 498]},
+    {"name": "Forward", "rating": 68.7, "slope": 119, "yards": [320, 109, 405, 237, 144, 265, 325, 426, 316, 108, 431, 261, 96, 319, 260, 280, 334, 430]}
+  ]
+}

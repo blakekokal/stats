@@ -1,0 +1,18 @@
+{
+  "id": "hawkscreek",
+  "name": "Hawks Creek Golf Club",
+  "location": "Westworth Village, TX",
+  "par": [4, 4, 4, 3, 5, 4, 3, 4, 5, 3, 4, 5, 4, 4, 4, 4, 3, 5],
+  "hcp": [11, 7, 3, 13, 17, 1, 15, 9, 5, 14, 4, 16, 8, 2, 12, 10, 18, 6],
+  "_comment_tees": "Scorecard from GolfPass (12709); its pars match OpenStreetMap's hole tags and its rated yards match the hole yards. Men's ratings, but Silver is rated for women only. Shady Oaks is next door: only what lies inside Hawks Creek's boundary is kept.",
+  "_comment_drop": "Polygons containing these points are not part of the course: nothing.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": -0.5, "north": 1.5},
+  "tees": [
+    {"name": "Gold", "rating": 74.0, "slope": 137, "yards": [337, 375, 406, 192, 468, 428, 190, 381, 547, 215, 501, 475, 441, 444, 371, 412, 139, 576]},
+    {"name": "Blue", "rating": 71.8, "slope": 133, "yards": [328, 364, 398, 174, 454, 380, 170, 365, 525, 180, 460, 455, 421, 423, 339, 401, 129, 549]},
+    {"name": "White", "rating": 69.6, "slope": 127, "yards": [302, 323, 384, 155, 437, 344, 148, 336, 486, 150, 425, 425, 387, 394, 331, 368, 123, 522]},
+    {"name": "Silver", "rating": 72.9, "slope": 133, "yards": [276, 291, 303, 137, 375, 295, 126, 320, 469, 120, 395, 400, 368, 355, 301, 348, 101, 468]}
+  ]
+}

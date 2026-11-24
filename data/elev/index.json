@@ -628,5 +628,80 @@
    569
   ],
   "source": "USGS 3DEP"
+ },
+ "rockwall": {
+  "bounds": [
+   -96.496567,
+   32.944575,
+   -96.47239,
+   32.959332
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   434,
+   538
+  ],
+  "source": "USGS 3DEP"
+ },
+ "fossilcreek": {
+  "bounds": [
+   -97.312048,
+   32.847567,
+   -97.289851,
+   32.862029
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   560,
+   663
+  ],
+  "source": "USGS 3DEP"
+ },
+ "whitestone": {
+  "bounds": [
+   -97.505163,
+   32.652044,
+   -97.486151,
+   32.667963
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   702,
+   861
+  ],
+  "source": "USGS 3DEP"
+ },
+ "hawkscreek": {
+  "bounds": [
+   -97.436486,
+   32.754822,
+   -97.420131,
+   32.766664
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   549,
+   652
+  ],
+  "source": "USGS 3DEP"
+ },
+ "oakhollow": {
+  "bounds": [
+   -96.62604,
+   33.222457,
+   -96.611372,
+   33.230468
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   559,
+   634
+  ],
+  "source": "USGS 3DEP"
  }
 }
