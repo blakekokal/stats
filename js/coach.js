@@ -523,6 +523,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.19.1', ['New app icon: BKG wearing the hat']],
   ['1.19.0', ['New courses: Rockwall Golf & Athletic Club (Rockwall), The Golf Club at Fossil Creek (Fort Worth), Whitestone Golf Club (Benbrook), Hawks Creek Golf Club (Westworth Village) and Oak Hollow Golf Course (McKinney), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.18.13', ['Stats Dashboard: the Filter button sits to the right of the title (it was beside “per round”)']],
   ['1.18.12', ['Round History: one Filter button instead of five boxes. Tap it for a menu with Type, Holes, Time, Status and Sort (Clear resets them); it turns blue and shows how many are on']],
