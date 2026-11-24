@@ -51,7 +51,7 @@ export function renderSettings(view) {
       h('p', { class: 'muted' }, 'Download every round and outline edit as a file, or restore from one.'),
       h('div', { class: 'row' },
         h('button', { onclick: () => {
-          const a = h('a', { href: URL.createObjectURL(new Blob([store.exportAll()], { type: 'application/json' })), download: `shot-tracker-backup-${new Date().toISOString().slice(0, 10)}.json` });
+          const a = h('a', { href: URL.createObjectURL(new Blob([store.exportAll()], { type: 'application/json' })), download: `bkg-stats-backup-${new Date().toISOString().slice(0, 10)}.json` });
           a.click();
         } }, 'Download backup'),
         h('button', { onclick: () => fileIn.click() }, 'Restore from file'), fileIn)),
