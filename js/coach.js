@@ -485,6 +485,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.17.5', ['Browser tab icon: the golfer silhouette']],
   ['1.17.4', ['The app is now called BKG Stats (browser tab, home-screen name, privacy policy and backup file names)']],
   ['1.17.3', ['New app icon: BLAKE KOKAL GOLF (browser tab, and the home-screen icon when you add the app to your phone)']],
   ['1.17.2', ['Settings: Delete account, which permanently deletes your account and everything saved to it (for the coaching app too, as they share the account)', 'Privacy policy, linked from Settings and the log-in page']],
