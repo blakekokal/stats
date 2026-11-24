@@ -8,6 +8,7 @@ import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
 import { checkCoachingDot } from './coaching/index.js';
 import { VERSION } from './version.js';
+import { icEl } from './icons.js';
 import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting, firstHoleOf, activeRound, pauseRound, resumeRound, holeCountOf } from './rounds.js';
 import { downloadRoundCsv } from './dashboard.js';
 import { openBookSetup, openSavedBooks } from './book.js';
@@ -62,44 +63,47 @@ export function askResume() {
 // ---------- home ----------
 
 export function renderHome(view) {
-  const go = (ic, title, bg, href) => h('button', { class: 'homebtn', style: `background:${bg}`, onclick: () => { location.hash = href; } },
-    h('span', { class: 'ic' }, ic), h('div', {}, h('div', { class: 't' }, title)));
-  const divider = () => h('div', { style: 'height:1px;background:#282828;margin:3px 0;' });
+  const go = (icon, title, bg, href) => h('button', { class: 'homebtn', style: `background:${bg}`, onclick: () => { location.hash = href; } },
+    h('span', { class: 'ic' }, icEl(icon)), h('div', {}, h('div', { class: 't' }, title)));
+  const divider = () => h('div', { style: 'height:1px;background:#282828;margin:3px 0;flex:none;' });
   const search = h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' });
   search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 
-  const brand = h('div', { style: 'text-align:center;margin-bottom:6px;' });
+  const brand = h('div', { class: 'homebrand', style: 'text-align:center;margin-bottom:6px;' });
   brand.innerHTML = `<div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:1px;line-height:1.0;color:#ffffff;">Blake Kokal<br><span style="display:inline-flex;align-items:baseline;justify-content:center;"><span style="font-size:10px;visibility:hidden;font-weight:600;">What's new</span><span style="font-size:13px;visibility:hidden;font-weight:700;margin-right:5px;">v${VERSION}</span>Golf<span class="wn" style="font-size:13px;color:#606060;font-weight:700;margin-left:6px;cursor:pointer;">v${VERSION}</span><span class="wn" style="font-size:10px;color:#44b8f0;font-weight:600;margin-left:5px;cursor:pointer;">&#x2190; What's new</span></span></div>`;
   brand.querySelectorAll('.wn').forEach(el => el.addEventListener('click', () => { location.hash = '#/whatsnew'; }));
-  brand.append(h('div', { style: 'font-size:11px;color:#606060;margin-top:3px;' }, sync.user ? '👤 ' + sync.name : ''));
+  brand.append(h('div', { style: 'font-size:11px;color:#606060;margin-top:3px;' }, sync.user ? [icEl('user'), ' ' + sync.name] : ''));
 
   // Coaching, with a dot when a note, message or assignment is waiting.
-  const coaching = go('🎓', 'Coaching', '#00402c', '#/coaching');
+  const coaching = go('cap', 'Coaching', '#00402c', '#/coaching');
   coaching.append(h('span', { id: 'coachingNotifDot', style: 'display:none;width:10px;height:10px;border-radius:50%;background:#d4706e;margin-left:auto;flex-shrink:0;' }));
   if (sync.user) checkCoachingDot();
 
-  const practice = go('🏌️', 'Practice and Learning', '#d49a10', '#/practice');
+  const practice = go('club', 'Practice and Learning', '#d49a10', '#/practice');
 
-  view.replaceChildren(page('center',
-    h('div', { style: 'width:100%;max-width:320px;display:flex;flex-direction:column;gap:7px;' },
+  view.replaceChildren(page('center home',
+    h('div', { class: 'homecol' },
       // Help on the left and search + settings on the right, level with the
       // "Blake Kokal" line and spread to the screen edges.
       h('div', { style: 'position:relative;' }, brand,
         h('div', { class: 'iconrow' },
-          h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' }, '❓'),
+          h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' }, icEl('help')),
           h('div', { style: 'display:flex;gap:4px;' }, search,
-            h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, '⚙️')))),
-      go('🛰️', 'GPS Overview / Yardage Books', '#1a4a8a', '#/scout'),
-      go('⛳', 'New Round', '#007a52', '#/new'),
-      go('📋', 'Round History', '#00402c', '#/history'),
+            h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, icEl('gear'))))),
+      go('map', 'GPS Overview / Yardage Books', '#1a4a8a', '#/scout'),
+      go('flag', 'New Round', '#007a52', '#/new'),
+      go('scorecard', 'Round History', '#00402c', '#/history'),
       divider(),
-      go('📊', 'Stats Dashboard', '#3d96ee', '#/dashboard'),
-      go('🔍', 'Performance Analysis', '#2d7abc', '#/performance'),
-      go('🎒', 'My Bag', '#1a4a8a', '#/bag'),
+      go('bars', 'Stats Dashboard', '#3d96ee', '#/dashboard'),
+      go('perf', 'Performance Analysis', '#2d7abc', '#/performance'),
+      go('bag', 'My Bag', '#1a4a8a', '#/bag'),
       divider(),
       practice,
       coaching),
-    sync.user ? null : h('button', { class: 'linkbtn', style: 'margin-top:18px;', onclick: () => { location.hash = '#/account'; } }, 'Log In / Sign Up')));
+    sync.user ? null : h('button', { class: 'linkbtn', style: 'margin-top:10px;flex:none;', onclick: () => { location.hash = '#/account'; } }, 'Log In / Sign Up')));
+  // Everything fits, so a drag on Home shouldn't move the page at all: on iPhone
+  // the whole screen otherwise slides and springs back (rubber-band bounce).
+  view.firstChild.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 }
 
 // ---------- new round ----------
@@ -266,7 +270,7 @@ export function renderHistory(view) {
   const fTime = sel([['all', 'All Time'], ['1', 'Last Month'], ['3', 'Last 3 Months'], ['6', 'Last 6 Months']]);
   const fStatus = sel([['all', 'All Status'], ['complete', 'Completed'], ['incomplete', 'In Progress']]);
   const sort = sel([['date-desc', 'Date: Newest'], ['date-asc', 'Date: Oldest'], ['score-asc', 'Score: Low→High'], ['score-desc', 'Score: High→Low']]);
-  const search = h('input', { type: 'text', placeholder: '🔍 Search course name...', style: 'max-width:360px;margin-bottom:6px;', oninput: () => draw() });
+  const search = h('input', { type: 'text', placeholder: 'Search course name...', class: 'searchbox', style: 'max-width:360px;margin-bottom:6px;', oninput: () => draw() });
   const msg = h('div', { style: 'font-size:13px;color:#606060;min-height:20px;text-align:center;' });
   const list = h('div', { style: 'width:100%;' });
   const filtMsg = h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:6px;' });
@@ -304,7 +308,7 @@ export function renderHistory(view) {
     return h('div', { class: 'card', style: s.incomplete ? 'border-left:3px solid #d4706e;cursor:pointer;' : '', onclick: s.incomplete ? resume : null },
       h('div', { style: 'display:flex;justify-content:space-between;align-items:center;' },
         h('div', {},
-          h('div', { style: 'font-weight:700;font-size:15px;' }, r.courseName || course.name, s.incomplete ? h('span', { style: 'color:#f0c830;font-size:10px;font-weight:700;' }, ' ⏸ In Progress') : null),
+          h('div', { style: 'font-weight:700;font-size:15px;' }, r.courseName || course.name, s.incomplete ? h('span', { style: 'color:#f0c830;font-size:10px;font-weight:700;' }, [' ', icEl('pause'), ' In Progress']) : null),
           r.type === 'Tournament' ? h('div', { style: 'color:#f0c830;font-size:11px;font-weight:700;margin-top:2px;' }, '★ Tournament' + (r.place ? ` — ${ordinal(r.place)} Place` : '')) : null,
           h('div', { style: 'font-size:12px;color:#9a9a9a;' }, `${fmtDate(r.date)} · ${holesInfo}${r.player ? ' · ' + r.player : ''}`)),
         h('div', { style: 'text-align:right;' }, s.incomplete
@@ -320,13 +324,13 @@ export function renderHistory(view) {
             location.hash = '#/hole/' + firstHoleOf(r, courseById(r.course)); // the first hole they played
           } }, 'View/Edit'),
           h('button', { style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#2d7abc;border-radius:6px;', onclick: e => { e.stopPropagation(); location.hash = `#/dashboard/${r.id}`; } }, 'Stats'),
-          h('button', { title: 'Download scorecard (CSV)', style: 'width:50px;max-width:none;height:30px;font-size:12px;background:#00402c;border-radius:6px;', onclick: e => { e.stopPropagation(); downloadRoundCsv(r); } }, '📥'),
+          h('button', { title: 'Download scorecard (CSV)', style: 'width:50px;max-width:none;height:30px;font-size:12px;background:#00402c;border-radius:6px;', onclick: e => { e.stopPropagation(); downloadRoundCsv(r); } }, icEl('download')),
           del(50, 30)]));
   }
 
   view.replaceChildren(page('top', backBtn(),
     h('div', { style: 'width:100%;max-width:360px;' },
-      h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;' }, '📋 Round History'),
+      h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;' }, icEl('scorecard'), ' Round History'),
       search,
       h('div', { style: 'display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;' }, fType, fHoles, fTime, fStatus, sort),
       msg, list, filtMsg)));
@@ -393,7 +397,7 @@ export function renderSettingsPage(view) {
 
   view.replaceChildren(page('top', backBtn(),
     h('div', { style: 'width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center;gap:4px;' },
-      h('div', { style: 'font-size:18px;font-weight:800;' }, '⚙️ Settings'),
+      h('div', { style: 'font-size:18px;font-weight:800;' }, icEl('gear'), ' Settings'),
       h('div', { style: 'font-size:13px;color:#9a9a9a;' }, u.email),
       h('div', { style: 'font-size:11px;color:#606060;margin-bottom:2px;' }, joined ? `Joined ${joined.getMonth() + 1}/${joined.getDate()}/${joined.getFullYear()}` : ''),
       nameIn,
@@ -485,6 +489,11 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.18.3', ['Menus: double-tapping no longer zooms the page in']],
+  ['1.18.2', ['Home stays put: dragging on the main page no longer makes the screen slide and spring back']],
+  ['1.18.1', ['Home fits the screen: no more scrolling on the main page. The buttons shrink a little on shorter phones so everything shows at once']],
+  ['1.18.0', ['New icons: every emoji is now a simple outline icon in one style, on Home, Practice, Combines, Learn, Coaching and the rest of the app. Each Practice, Combines and Learn tile has its own icon, lined up on the left with the titles after it', 'Search boxes show a magnifier inside the box']],
+  ['1.17.7', ['Home Screen icon: the BLAKE KOKAL GOLF badge now shows on iPhone instead of a plain letter']],
   ['1.17.6', ['Browser tab icon: the golfer drawing itself, with its background removed']],
   ['1.17.5', ['Browser tab icon: the golfer silhouette']],
   ['1.17.4', ['The app is now called BKG Stats (browser tab, home-screen name, privacy policy and backup file names)']],

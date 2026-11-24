@@ -8,6 +8,7 @@ import { show } from './core.js';
 import { _viewingAsStudent } from './core.js';
 import { _sb } from './core.js';
 import { escapeHtml } from './core.js';
+import { ic } from '../icons.js';
 
 /* ── Update showProfileTab to include combines ── */
 // =============================================
@@ -135,7 +136,7 @@ async function loadCoachingPageStudentView() {
     if (coach) {
       var emailPart = coach.email ? ' <a href="mailto:' + escapeHtml(coach.email) + '" style="font-size:12px;color:#44b8f0;text-decoration:none;margin-left:6px;">' + escapeHtml(coach.email) + '</a>' : '';
       coachContent.innerHTML = '<div style="display:flex;align-items:center;gap:12px;">'
-        + '<div style="width:40px;height:40px;background:#1a4a8a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">👤</div>'
+        + '<div style="width:40px;height:40px;background:#1a4a8a;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">' + ic('user') + '</div>'
         + '<div style="display:flex;align-items:baseline;flex-wrap:wrap;gap:2px;"><span style="font-weight:700;font-size:15px;">' + escapeHtml(coach.display_name || 'Coach') + '</span>'
         + emailPart + '</div></div>';
     } else {
@@ -143,7 +144,7 @@ async function loadCoachingPageStudentView() {
     }
   } else {
     coachContent.innerHTML = '<div style="text-align:center;padding:10px 0;">'
-      + '<div style="font-size:28px;margin-bottom:8px;">👤</div>'
+      + '<div style="font-size:28px;margin-bottom:8px;">' + ic('user') + '</div>'
       + '<div style="color:#9a9a9a;font-size:13px;">No coach connected yet.<br>Share your invite code on the Info tab!</div></div>';
   }
 
@@ -237,7 +238,7 @@ function renderFeedbackNotes(data) {
     var lessonLine = '';
     if (n.lesson_date) {
       var ld = new Date(n.lesson_date + 'T12:00:00');
-      lessonLine = '<div style="font-size:11px;color:#44b8f0;font-weight:700;margin-bottom:4px;">📅 Lesson: '
+      lessonLine = '<div style="font-size:11px;color:#44b8f0;font-weight:700;margin-bottom:4px;">' + ic('cal') + ' Lesson: '
         + ld.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + '</div>';
     }
 
@@ -304,7 +305,7 @@ async function loadStudentAssignedDrills() {
       + 'style="font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;background:' + (d.completed ? '#007a52' : '#007a52') + ';'
       + 'color:' + (d.completed ? '#00b87a' : '#ffffff') + ';border:none;cursor:pointer;height:auto;max-width:none;width:auto;">'
       + (d.completed ? '✓ Done' : 'Mark Done') + '</button></div>'
-      + (d.completion_note ? '<div style="font-size:11px;color:#9a9a9a;margin-top:6px;padding-top:6px;border-top:1px solid #282828;">📝 ' + escapeHtml(d.completion_note) + '</div>' : '')
+      + (d.completion_note ? '<div style="font-size:11px;color:#9a9a9a;margin-top:6px;padding-top:6px;border-top:1px solid #282828;">' + ic('memo') + ' ' + escapeHtml(d.completion_note) + '</div>' : '')
       + '</div>';
   }).join('');
 }
@@ -337,7 +338,7 @@ async function loadStudentAssignedCombines() {
       : '';
     return '<div style="background:#222222;border-radius:10px;padding:12px;margin-bottom:8px;">'
       + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">'
-      + '<div style="font-weight:700;font-size:14px;">🏌️ ' + escapeHtml(c.combine_type) + '</div>'
+      + '<div style="font-weight:700;font-size:14px;">' + ic('club') + ' ' + escapeHtml(c.combine_type) + '</div>'
       + (c.target_score ? '<div style="font-size:11px;color:#00b87a;font-weight:700;">Target: ' + c.target_score + '</div>' : '') + '</div>'
       + shotInfo
       + (c.note ? '<div style="font-size:12px;color:#9a9a9a;font-style:italic;margin-bottom:6px;">"' + escapeHtml(c.note) + '"</div>' : '')

@@ -20,6 +20,7 @@ import { currentRound, setCurrentRound, pauseRound, holeCountOf, roundKeyOf, sub
 import { liveLink, isLiveOn, setLiveOn, liveStatus, onLiveStatus, loadWatch, watchHole, shareCurrent } from './live.js';
 import { openBoundaryEditor, resumeEditAt, editFeatures } from './holeedit.js';
 import { elevIndex, elevPrefs, drawElevation, styleElevation, resetContourLook, heightAt, CONTOUR_YD } from './elev.js';
+import { icEl } from './icons.js';
 
 const maplibregl = window.maplibregl;
 const LIE_TAG = { tee: 'TEE', fairway: 'FWY', rough: 'RGH', bunker: 'BNK', green: 'GRN', water: 'WTR', ob: 'OB', recovery: 'REC' };
@@ -1153,7 +1154,7 @@ export function renderHole(view, n) {
   let coachStudents = null, studentLast = {}; // loaded once per hole screen; the list puts the most recently active first
   const agoTxt = ms => { const m = Math.round((Date.now() - ms) / 60000); return m < 60 ? `${Math.max(1, m)}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : `${Math.round(m / 1440)}d ago`; };
   function openBagSearch() {
-    const input = h('input', { type: 'search', placeholder: '🔍 Search students', autocomplete: 'off', class: 'bagsearch', oninput: () => drawList() });
+    const input = h('input', { type: 'search', placeholder: 'Search students', class: 'searchbox', autocomplete: 'off', class: 'bagsearch', oninput: () => drawList() });
     const list = h('div', { class: 'baglist' });
     const choose = async (who) => {
       if (!who) { bagFor = null; sessionStorage.removeItem('gs:scoutBag'); }
@@ -1200,7 +1201,7 @@ export function renderHole(view, n) {
     clubPicker.replaceChildren(h('div', { class: 'clubbox' },
       // Club, a Carry | Total switch for the yardages shown (and used for the arcs), and close.
       h('div', { class: 'clubhead' }, h('strong', {}, 'Club'), ydToggle(() => openClubPicker()), h('button', { class: 'x', style: 'margin-left:10px;', onclick: () => { clubPicker.hidden = true; } }, '✕')),
-      scouting && sync.user ? h('button', { class: 'bagwho', onclick: openBagSearch }, h('span', {}, '👤'), h('b', {}, bagFor ? `${bagFor.name}’s bag` : sync.name ? `${sync.name}’s bag` : 'My bag'), h('small', {}, 'Change ›')) : null,
+      scouting && sync.user ? h('button', { class: 'bagwho', onclick: openBagSearch }, h('span', {}, icEl('user')), h('b', {}, bagFor ? `${bagFor.name}’s bag` : sync.name ? `${sync.name}’s bag` : 'My bag'), h('small', {}, 'Change ›')) : null,
       h('div', { class: 'clubgrid' },
         h('button', { class: pickedClub ? '' : 'on', onclick: () => { pickedClub = null; clubPicker.hidden = true; update(); } }, h('b', {}, tourney ? 'None' : 'Auto'), h('small', {}, tourney ? '–' : autoClub() ? clubName(autoClub()) : '–')),
         bag().map(c => h('button', { class: pickedClub === c.name ? 'on' : '', onclick: () => {
@@ -1284,7 +1285,7 @@ export function renderHole(view, n) {
     const lie0 = shots[shots.length - 1];
     const lostHere = !gps && shots.length >= 2 && lie0.lie !== 'green' && !lie0.drop && !lie0.replay;
     const draw = () => shotConfirm.replaceChildren(h('div', { class: 'clubbox' },
-      h('div', { class: 'clubhead' }, h('strong', {}, `${gps ? '📍 ' : ''}Shot ${shots.length ? strokeNo(shots, shots.length - 1) : 1} · ${Math.round(yards(from, at))} yds`), h('button', { class: 'x', onclick: () => { shotConfirm.hidden = true; } }, '✕')),
+      h('div', { class: 'clubhead' }, h('strong', {}, gps ? [icEl('pin'), ' '] : '', `Shot ${shots.length ? strokeNo(shots, shots.length - 1) : 1} · ${Math.round(yards(from, at))} yds`), h('button', { class: 'x', onclick: () => { shotConfirm.hidden = true; } }, '✕')),
       gps ? h('small', { class: 'muted' }, `Finishing where you are standing (${LIE_TAG[lieOn(at, course.features)] || ''}, GPS ±${Math.round(gpsFix.acc * YD_PER_M)} yd)`) : null,
       h('small', { class: 'muted' }, club ? `Club: ${clubName(club)}` : 'Which club did you hit?'),
       h('div', { class: 'clubgrid' }, bag().map(c => h('button', { class: club === c.name ? 'on' : '', onclick: () => { club = c.name; draw(); } },
@@ -1317,7 +1318,7 @@ export function renderHole(view, n) {
     if (far > 1200) return toast(`GPS puts you ${(far / 1760).toFixed(1)} miles from this hole, so no shot was recorded.`);
     if (gpsFix.acc * YD_PER_M > 25) toast(`GPS is only good to ±${Math.round(gpsFix.acc * YD_PER_M)} yd right now.`);
     openShotConfirm([...gpsFix.pos], true);
-  } }, h('span', {}, '📍'), h('small', {}, 'Shot'));
+  } }, h('span', {}, icEl('pin')), h('small', {}, 'Shot'));
   // Under Expected: the GPS button at the right edge, Undo and the Shot pin to its left, and the distance in the top middle.
   const gpsFresh = () => !!gpsFix && Date.now() - gpsFix.at < 30000;
   function drawGps() {
@@ -1401,7 +1402,7 @@ export function renderHole(view, n) {
       courseLabel(),
       h('label', {}, 'Tees ', h('select', { onchange: e => { const r = currentRound(); if (r) r.tee = e.target.value; store.set('settings', { ...(store.get('settings') || {}), tee: e.target.value }); renderHole(view, n); } },
         course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
-      isAdmin && !course.parts ? h('button', { class: 'btn', onclick: () => { menu.hidden = true; editBoundaries(); } }, '✏️ Edit boundaries') : null, // two nines as 18: edit each nine on its own
+      isAdmin && !course.parts ? h('button', { class: 'btn', onclick: () => { menu.hidden = true; editBoundaries(); } }, icEl('pencil'), ' Edit boundaries') : null, // two nines as 18: edit each nine on its own
       h('button', { class: 'btn', onclick: () => { endScouting(); location.hash = '#/'; } }, 'Home'),
       h('small', { class: 'muted' }, 'GPS Overview · shots are not saved'),
       credit)
@@ -1428,7 +1429,7 @@ export function renderHole(view, n) {
       isAdmin ? h('a', { class: 'btn', href: '#/course' }, 'Edit course outlines') : null,
       h('a', { class: 'btn', href: '#/settings' }, 'Settings'),
       credit);
-  menu.insertBefore(h('button', { class: 'btn', onclick: () => { menu.hidden = true; openSettings(); } }, '⚙ Settings'), credit);
+  menu.insertBefore(h('button', { class: 'btn', onclick: () => { menu.hidden = true; openSettings(); } }, icEl('gear'), ' Settings'), credit);
 
   // Strokes Gained panel while viewing a past round (filled in by drawSgView).
   const sgView = h('div', { class: 'sgview', hidden: true });

@@ -1,3 +1,4 @@
+import { ic } from '../icons.js';
 export function renderSGExplainer() {
   var el = document.getElementById('sgExplainerGraphic');
   if (el.getAttribute('data-rendered')) return;
@@ -12,7 +13,7 @@ export function renderSGExplainer() {
 
     // ── HANDICAP SECTION ──
     + '<div style="padding:16px 16px 0;">'
-    + '<div style="font-size:14px;font-weight:800;color:#ffffff;margin-bottom:6px;">📊 Why Handicap Matters</div>'
+    + '<div style="font-size:14px;font-weight:800;color:#ffffff;margin-bottom:6px;">' + ic('bars') + ' Why Handicap Matters</div>'
     + '<div style="font-size:12px;color:#9a9a9a;line-height:1.6;margin-bottom:10px;">Expected strokes change based on skill level. A tour pro and a 10-handicap face the same hole very differently:</div>'
     + '</div>'
     
@@ -35,7 +36,7 @@ export function renderSGExplainer() {
 
     // ── EXAMPLE 1: TWO PLAYERS ──
     + '<div style="padding:0 16px;">'
-    + '<div style="font-size:14px;font-weight:800;color:#ffffff;margin-bottom:4px;">🏌️ Example 1: Comparing Two Drives</div>'
+    + '<div style="font-size:14px;font-weight:800;color:#ffffff;margin-bottom:4px;">' + ic('club') + ' Example 1: Comparing Two Drives</div>'
     + '<div style="font-size:12px;color:#9a9a9a;line-height:1.5;margin-bottom:10px;">Both players are <span style="color:#f0c830;font-weight:700;">10 handicaps</span> on a <span style="color:#ffffff;font-weight:700;">400-yard Par 4</span>.</div>'
     + '</div>'
     
@@ -73,7 +74,7 @@ export function renderSGExplainer() {
 
     // ── EXAMPLE 2: FULL HOLE ──
     + '<div style="padding:0 16px;">'
-    + '<div style="font-size:14px;font-weight:800;color:#ffffff;margin-bottom:4px;">⛳ Example 2: Full Hole Breakdown</div>'
+    + '<div style="font-size:14px;font-weight:800;color:#ffffff;margin-bottom:4px;">' + ic('flag') + ' Example 2: Full Hole Breakdown</div>'
     + '<div style="font-size:12px;color:#9a9a9a;line-height:1.5;margin-bottom:10px;"><span style="color:#f0c830;font-weight:700;">10-handicap</span> player on a <span style="color:#ffffff;font-weight:700;">400-yard Par 4</span>. Expected strokes from the tee: <span style="color:#00b87a;font-weight:700;">4.73</span></div>'
     + '</div>'
     
