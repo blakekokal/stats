@@ -485,6 +485,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.17.3', ['New app icon: BLAKE KOKAL GOLF (browser tab, and the home-screen icon when you add the app to your phone)']],
   ['1.17.2', ['Settings: Delete account, which permanently deletes your account and everything saved to it (for the coaching app too, as they share the account)', 'Privacy policy, linked from Settings and the log-in page']],
   ['1.17.1', ['Coaching: editing a student’s round also updates the score on its New Round notification in Recent Activity']],
   ['1.17.0', ['Last ball lost / unplayable: when the ball you already marked was lost or unplayable, tap + and choose it to re-tee or drop with the penalty and no extra stroke (before, Penalty / drop there added a stroke from where the ball lay)', 'A drop placed on the edge of a pond is played as from the rough and isn’t charged a second penalty; rounds that already had one are corrected', 'Coaching: Edit on a student’s round (opened from Coaching) to fix their shots; changes are saved to the student’s account']],
