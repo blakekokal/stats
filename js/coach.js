@@ -65,11 +65,11 @@ export function askResume() {
 export function renderHome(view) {
   const go = (icon, title, bg, href) => h('button', { class: 'homebtn', style: `background:${bg}`, onclick: () => { location.hash = href; } },
     h('span', { class: 'ic' }, icEl(icon)), h('div', {}, h('div', { class: 't' }, title)));
-  const divider = () => h('div', { style: 'height:1px;background:#282828;margin:3px 0;' });
+  const divider = () => h('div', { style: 'height:1px;background:#282828;margin:3px 0;flex:none;' });
   const search = h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' });
   search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 
-  const brand = h('div', { style: 'text-align:center;margin-bottom:6px;' });
+  const brand = h('div', { class: 'homebrand', style: 'text-align:center;margin-bottom:6px;' });
   brand.innerHTML = `<div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:1px;line-height:1.0;color:#ffffff;">Blake Kokal<br><span style="display:inline-flex;align-items:baseline;justify-content:center;"><span style="font-size:10px;visibility:hidden;font-weight:600;">What's new</span><span style="font-size:13px;visibility:hidden;font-weight:700;margin-right:5px;">v${VERSION}</span>Golf<span class="wn" style="font-size:13px;color:#606060;font-weight:700;margin-left:6px;cursor:pointer;">v${VERSION}</span><span class="wn" style="font-size:10px;color:#44b8f0;font-weight:600;margin-left:5px;cursor:pointer;">&#x2190; What's new</span></span></div>`;
   brand.querySelectorAll('.wn').forEach(el => el.addEventListener('click', () => { location.hash = '#/whatsnew'; }));
   brand.append(h('div', { style: 'font-size:11px;color:#606060;margin-top:3px;' }, sync.user ? [icEl('user'), ' ' + sync.name] : ''));
@@ -81,8 +81,8 @@ export function renderHome(view) {
 
   const practice = go('club', 'Practice and Learning', '#d49a10', '#/practice');
 
-  view.replaceChildren(page('center',
-    h('div', { style: 'width:100%;max-width:320px;display:flex;flex-direction:column;gap:7px;' },
+  view.replaceChildren(page('center home',
+    h('div', { class: 'homecol' },
       // Help on the left and search + settings on the right, level with the
       // "Blake Kokal" line and spread to the screen edges.
       h('div', { style: 'position:relative;' }, brand,
@@ -100,7 +100,7 @@ export function renderHome(view) {
       divider(),
       practice,
       coaching),
-    sync.user ? null : h('button', { class: 'linkbtn', style: 'margin-top:18px;', onclick: () => { location.hash = '#/account'; } }, 'Log In / Sign Up')));
+    sync.user ? null : h('button', { class: 'linkbtn', style: 'margin-top:10px;flex:none;', onclick: () => { location.hash = '#/account'; } }, 'Log In / Sign Up')));
 }
 
 // ---------- new round ----------
@@ -486,6 +486,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.18.1', ['Home fits the screen: no more scrolling on the main page. The buttons shrink a little on shorter phones so everything shows at once']],
   ['1.18.0', ['New icons: every emoji is now a simple outline icon in one style, on Home, Practice, Combines, Learn, Coaching and the rest of the app. Each Practice, Combines and Learn tile has its own icon, lined up on the left with the titles after it', 'Search boxes show a magnifier inside the box']],
   ['1.17.7', ['Home Screen icon: the BLAKE KOKAL GOLF badge now shows on iPhone instead of a plain letter']],
   ['1.17.6', ['Browser tab icon: the golfer drawing itself, with its background removed']],
