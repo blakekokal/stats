@@ -2,6 +2,7 @@ import { S } from './core.js';
 import { expose } from './core.js';
 import { _sb } from './core.js';
 import { escapeHtml } from './core.js';
+import { ic } from '../icons.js';
 
 // ── STUDENT VIEWER: NOTES TAB ────────────────────────────────────────────────
 
@@ -83,7 +84,7 @@ function renderSvNotes(data) {
     var lessonLine = '';
     if (n.lesson_date) {
       var ld = new Date(n.lesson_date + 'T12:00:00');
-      lessonLine = '<div style="font-size:11px;color:#44b8f0;font-weight:700;margin-bottom:4px;">📅 Lesson: '
+      lessonLine = '<div style="font-size:11px;color:#44b8f0;font-weight:700;margin-bottom:4px;">' + ic('cal') + ' Lesson: '
         + ld.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) + '</div>';
     }
 
@@ -97,7 +98,7 @@ function renderSvNotes(data) {
     // Preserve newlines that aren't already bullet divs
     noteText = noteText.replace(/\n/g, '<br>');
 
-    var editBtn = n.id ? '<button onclick="editSvNote(\'' + n.id + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:14px;cursor:pointer;padding:2px 4px;height:auto;width:auto;max-width:none;" title="Edit note">✏️</button>' : '';
+    var editBtn = n.id ? '<button onclick="editSvNote(\'' + n.id + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:14px;cursor:pointer;padding:2px 4px;height:auto;width:auto;max-width:none;" title="Edit note">' + ic('pencil') + '</button>' : '';
 
     return '<div id="svNote_' + (n.id || idx) + '" style="border-bottom:1px solid #282828;padding:12px 0;">'
       + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;flex-wrap:wrap;gap:4px;">'
@@ -107,7 +108,7 @@ function renderSvNotes(data) {
       + '<div style="display:flex;align-items:center;gap:8px;">'
       + '<div style="font-size:10px;color:#9a9a9a;">' + sentDate + '</div>'
       + editBtn
-      + (n.id ? '<button onclick="deleteSvNote(\'' + n.id + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:14px;cursor:pointer;padding:2px 4px;height:auto;width:auto;max-width:none;" title="Delete note">🗑</button>' : '')
+      + (n.id ? '<button onclick="deleteSvNote(\'' + n.id + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:14px;cursor:pointer;padding:2px 4px;height:auto;width:auto;max-width:none;" title="Delete note">' + ic('trash') + '</button>' : '')
       + '</div></div>'
       + lessonLine
       + '<div style="font-size:13px;color:#9a9a9a;line-height:1.6;">' + noteText + '</div></div>';

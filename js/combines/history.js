@@ -7,6 +7,7 @@ import { show } from '../coaching/core.js';
 import { activeUserId } from '../coaching/core.js';
 import { _sb } from '../coaching/core.js';
 import { escapeHtml } from '../coaching/core.js';
+import { ic } from '../icons.js';
 
 /* ── LOAD history on the Combines page ── */
 async function combLoadHistory(){
@@ -153,11 +154,11 @@ export function renderCombCard(c, canDelete, canEditNote){
   }
   var dateStr=c.combine_date?new Date(c.combine_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
   var combBadge = c.is_combine ? '<span style="font-size:10px;background:#2d7abc;color:#ffffff;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:600;">COMBINE</span>' : '';
-  var delBtn = canDelete ? '<button class="comb-hist-del" onclick="deleteCombScore(\''+c.id+'\')" title="Delete">🗑 Delete</button>' : '';
+  var delBtn = canDelete ? '<button class="comb-hist-del" onclick="deleteCombScore(\''+c.id+'\')" title="Delete">' + ic('trash') + ' Delete</button>' : '';
   var noteHtml = c.note ? ' • <em style="color:#9a9a9a;">'+escapeHtml(c.note)+'</em>' : '';
   var metaStr = c.holes_count + '-hole • vs '+c.handicap+strokesLine+noteHtml;
-  var editNoteBtn = canEditNote ? '<button onclick="editCombNote(\''+c.id+'\',\''+c.user_id+'\')" style="background:transparent;border:1px solid #333333;border-radius:6px;color:#606060;font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;height:auto;width:auto;max-width:none;margin-top:6px;">✏️ Note</button>' : '';
-  var detailsBtn = c.row_data ? '<button onclick="toggleCombDetails(\''+c.id+'\')" style="background:transparent;border:1px solid #333333;border-radius:6px;color:#606060;font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;height:auto;width:auto;max-width:none;margin-top:6px;">📊 Details</button>' : '';
+  var editNoteBtn = canEditNote ? '<button onclick="editCombNote(\''+c.id+'\',\''+c.user_id+'\')" style="background:transparent;border:1px solid #333333;border-radius:6px;color:#606060;font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;height:auto;width:auto;max-width:none;margin-top:6px;">' + ic('pencil') + ' Note</button>' : '';
+  var detailsBtn = c.row_data ? '<button onclick="toggleCombDetails(\''+c.id+'\')" style="background:transparent;border:1px solid #333333;border-radius:6px;color:#606060;font-size:11px;font-weight:600;padding:3px 8px;cursor:pointer;height:auto;width:auto;max-width:none;margin-top:6px;">' + ic('bars') + ' Details</button>' : '';
   // Store data globally for details/edit views
   if (!S.combRowDataMap) S.combRowDataMap = {};
   if (c.row_data) S.combRowDataMap[c.id] = { data: c.row_data, type: c.combine_type };

@@ -3,6 +3,7 @@ import { expose } from './core.js';
 import { checkCoachingStudentNotifications } from './student-side.js';
 import { checkCoachNotifications } from './students.js';
 import { _sb } from './core.js';
+import { ic } from '../icons.js';
 
 // ═══════════════════════════════════════════════════════════════
 // END PERFORMANCE ANALYSIS ENGINE
@@ -136,7 +137,7 @@ async function submitCoachRequest() {
 
     if (existing && existing.length > 0) {
       modalMsg.style.color = '#f0c830';
-      modalMsg.textContent = '⏳ Request already pending — waiting for admin approval.';
+      modalMsg.innerHTML = ic('hourglass') + ' Request already pending — waiting for admin approval.';
       sendBtn.disabled = false;
       sendBtn.textContent = 'Send Request';
       return;
@@ -253,7 +254,7 @@ async function approveCoachRequest(requestId, userId) {
   await _sb.from('notifications').insert({
     user_id: userId,
     type: 'coach_approved',
-    title: 'Coach Access Approved! 🎉',
+    title: 'Coach Access Approved!',
     message: 'Your request for coach access has been approved. Go to Settings to switch to Coach mode.',
     read: false,
     created_at: new Date().toISOString()
@@ -305,7 +306,7 @@ export async function loadUserRole() {
     var roleMsg = document.getElementById('roleMsg');
     if (roleMsg && pending && pending.length > 0) {
       roleMsg.style.color = '#f0c830';
-      roleMsg.textContent = '⏳ Coach request pending approval';
+      roleMsg.innerHTML = ic('hourglass') + ' Coach request pending approval';
     }
   }
   // Check coaching notifications for home page dot

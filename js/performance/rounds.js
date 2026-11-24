@@ -8,6 +8,7 @@ import { historyRounds } from '../rounds.js';
 import { toCoachRound } from '../dashboard.js';
 import { isDriver } from '../model.js';
 import { getExpectedPutts, getExpectedStrokes } from '../coaching/sg-calc.js';
+import { ic } from '../icons.js';
 
 // ═══════════════════════════════════════════════════════════════
 // PERFORMANCE ANALYSIS ENGINE  v4.0.0
@@ -481,7 +482,7 @@ export function renderPerfAnalysis(a) {
   // ── Priority card ──────────────────────────────────────────
   var pc = a.priorityCat;
   var pcColor = sgColor(pc.val);
-  var pcBadge = pc.val < 0 ? '⚠ Priority Area' : '✓ Your Focus';
+  var pcBadge = pc.val < 0 ? ic('warn') + ' Priority Area' : '✓ Your Focus';
   var hcpCtx = perfHcpLabel(a.displayHcp || 'pro');
   var pcMsg = pc.val < 0
     ? 'Averaging <strong style="color:' + pcColor + ';">' + pc.val.toFixed(1) + ' per round</strong> vs ' + hcpCtx
@@ -538,9 +539,9 @@ export function renderPerfAnalysis(a) {
   // ── OTT Detail ─────────────────────────────────────────────
   var ottTrend = '';
   if (a.recentFwRightPct > a.priorFwRightPct + 8)
-    ottTrend = '<div style="font-size:11px;color:#ff5c5c;margin-top:8px;line-height:1.5;">⚠ Missing right more in last 3 rounds (' + a.recentFwRightPct + '%) vs prior avg (' + a.priorFwRightPct + '%)</div>';
+    ottTrend = '<div style="font-size:11px;color:#ff5c5c;margin-top:8px;line-height:1.5;">' + ic('warn') + ' Missing right more in last 3 rounds (' + a.recentFwRightPct + '%) vs prior avg (' + a.priorFwRightPct + '%)</div>';
   else if (a.recentFwLeftPct > a.priorFwLeftPct + 8)
-    ottTrend = '<div style="font-size:11px;color:#ff5c5c;margin-top:8px;line-height:1.5;">⚠ Missing left more in last 3 rounds (' + a.recentFwLeftPct + '%) vs prior avg (' + a.priorFwLeftPct + '%)</div>';
+    ottTrend = '<div style="font-size:11px;color:#ff5c5c;margin-top:8px;line-height:1.5;">' + ic('warn') + ' Missing left more in last 3 rounds (' + a.recentFwLeftPct + '%) vs prior avg (' + a.priorFwLeftPct + '%)</div>';
 
   document.getElementById('perfTab-ott').innerHTML =
     perfTabHeader('ott', 'Off the Tee · Detail', '#e8ede9') +
@@ -618,7 +619,7 @@ export function renderPerfAnalysis(a) {
     var topMiss = misses[0].count > 0 ? ' <span style="color:#8a9a8e;">·</span> ' + misses[0].dir + ' ' + Math.round(100*misses[0].count/b.opp) + '% of misses' : '';
     var proxPart = b.proxCount > 0 ? ' <span style="color:#8a9a8e;">·</span> ' + Math.round(b.proxTotal / b.proxCount) + ' ft avg proximity' : '';
     var isWorst = worstBucket && worstBucket.key === bKey;
-    var infoLine = (isWorst ? '<span style="color:#ff5c5c;">⚠ Weakest</span> <span style="color:#8a9a8e;">·</span> ' : '') + girP + '% GIR' + topMiss + proxPart;
+    var infoLine = (isWorst ? '<span style="color:#ff5c5c;">' + ic('warn') + ' Weakest</span> <span style="color:#8a9a8e;">·</span> ' : '') + girP + '% GIR' + topMiss + proxPart;
     appHtml += statCard(bKey + ' yds', col, bg, border, 'GIR ' + girP + '%', infoLine);
   });
   document.getElementById('perfTab-app').innerHTML = appHtml;

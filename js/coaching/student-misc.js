@@ -5,6 +5,7 @@ import { loadStudentGoalsAndHandicap } from './student-goals.js';
 import { loadStudentCombines } from '../combines/history.js';
 import { _sb } from './core.js';
 import { escHtml } from './core.js';
+import { ic } from '../icons.js';
 
 // ── Coach viewing student practice sessions ──
 // ─── Student Bag (Coach View) ────────────────────────────────
@@ -91,7 +92,7 @@ async function loadStudentSchedule() {
       '<div>' +
         '<div style="font-size:14px;font-weight:700;color:#9a9a9a;">' + (e.course || 'TBD') + '</div>' +
         (e.tournament ? '<div style="font-size:12px;color:#44b8f0;margin-top:2px;">' + e.tournament + '</div>' : '') +
-        '<div style="font-size:11px;color:#606060;margin-top:2px;">📅 ' + dateStr + '</div>' +
+        '<div style="font-size:11px;color:#606060;margin-top:2px;">' + ic('cal') + ' ' + dateStr + '</div>' +
       '</div>' +
       '<button onclick="removeSvScheduleEntry(' + idx + ')" style="width:28px;height:28px;background:#2a1a1a;border:1px solid #351a1a;border-radius:8px;color:#d4706e;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;line-height:1;flex-shrink:0;">×</button>' +
     '</div>';

@@ -10,6 +10,7 @@ import { _sb } from './core.js';
 import { escapeHtml } from './core.js';
 import { studentRounds, viewRound } from './gps.js';
 import { renderDashboard } from '../dashboard.js';
+import { ic } from '../icons.js';
 
 export async function loadCoachingPageCoachView() {
   loadCoachRequests(); // Show pending coach requests for admin
@@ -171,7 +172,7 @@ async function loadCoachActivityFeed() {
   el.innerHTML = data.map(function(n) {
     var d = new Date(n.created_at);
     var dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    var icon = n.type === 'live_round' ? '🔴' : n.type === 'new_round' ? '⛳' : (n.type === 'new_combine' || n.type === 'combine_completed') ? '🎯' : n.type === 'drill_completed' ? '📋' : n.type === 'new_signup' ? '👤' : n.type === 'student_message' ? '💬' : '📌';
+    var icon = n.type === 'live_round' ? '<span style="color:#ff5c5c">' + ic('live') + '</span>' : ic(n.type === 'new_round' ? 'flag' : (n.type === 'new_combine' || n.type === 'combine_completed') ? 'target' : n.type === 'drill_completed' ? 'check' : n.type === 'new_signup' ? 'user' : n.type === 'student_message' ? 'chat' : 'pin');
     var unreadStyle = !n.read ? 'border-left:3px solid #2d7abc;padding-left:10px;' : 'padding-left:13px;';
     // Profile, and for a round: View round (the hole screen) and Strokes gained
     // (that round's SG in a pop-up), so the profile isn't needed every time.
