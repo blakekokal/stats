@@ -1,0 +1,18 @@
+{
+  "id": "oakhollow",
+  "name": "Oak Hollow Golf Course",
+  "location": "McKinney, TX",
+  "par": [4, 3, 4, 4, 4, 5, 4, 4, 3, 4, 3, 4, 4, 4, 3, 4, 4, 5],
+  "hcp": [17, 7, 9, 13, 3, 5, 11, 1, 15, 12, 10, 18, 2, 16, 4, 6, 14, 8],
+  "_comment_tees": "Scorecard from GolfPass (3149); its pars match OpenStreetMap's hole tags (par 70). Men's ratings; Gold has no published rating.",
+  "_comment_drop": "Polygons containing these points are not part of the course: nothing.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 1.0},
+  "tees": [
+    {"name": "Blue", "rating": 71.6, "slope": 116, "yards": [363, 203, 406, 412, 444, 555, 363, 421, 168, 405, 170, 393, 435, 378, 204, 419, 396, 544]},
+    {"name": "White", "rating": 68.6, "slope": 113, "yards": [328, 180, 354, 371, 369, 537, 321, 386, 148, 374, 142, 354, 432, 349, 187, 384, 354, 507]},
+    {"name": "Gold", "rating": null, "slope": null, "yards": [315, 150, 325, 345, 315, 440, 265, 285, 95, 345, 125, 305, 355, 205, 160, 335, 325, 465]},
+    {"name": "Red", "rating": 68.9, "slope": 112, "yards": [308, 144, 318, 341, 312, 436, 259, 282, 91, 340, 123, 303, 350, 202, 156, 331, 323, 461]}
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "id": "rockwall",
+  "name": "Rockwall Golf & Athletic Club",
+  "location": "Rockwall, TX",
+  "par": [4, 4, 5, 4, 3, 5, 4, 3, 4, 4, 4, 3, 4, 3, 4, 5, 4, 5],
+  "hcp": [17, 3, 7, 9, 15, 5, 13, 11, 1, 2, 8, 16, 14, 18, 12, 10, 6, 4],
+  "_comment_tees": "Scorecard from GolfPass (3275); its pars match OpenStreetMap's hole tags. GolfPass's ratings are for older tees (Black 7281, Blue 6813, White 6323, Red 5522 yds); they are matched to the current card's Gold, Blue, White and Silver by total yards. The combo tees (Blue/White, White/Silver) have no published rating. Men's ratings.",
+  "_comment_drop": "Polygons containing these points are not part of the course: the two practice greens by the clubhouse, six bunkers on grass, and the driving range (OSM draws it as a fairway) with its tees and a stray tee by the pond on 5.",
+  "drop": [[32.94986, -96.484003, "green"], [32.952812, -96.485753, "green"], [32.948397, -96.489058, "bunker"], [32.950875, -96.483886, "bunker"], [32.95267, -96.485887, "bunker"], [32.952815, -96.485889, "bunker"], [32.952973, -96.485911, "bunker"], [32.953017, -96.485613, "bunker"], [32.951709, -96.485091, "fairway"], [32.950075, -96.484247, "tee"], [32.950286, -96.484412, "tee"], [32.950404, -96.484585, "tee"], [32.952796, -96.486202, "tee"], [32.949121, -96.490157, "tee"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": -0.5, "north": 1.0},
+  "tees": [
+    {"name": "Gold", "rating": 75.6, "slope": 133, "yards": [415, 435, 535, 470, 225, 590, 410, 175, 450, 475, 415, 175, 410, 180, 425, 630, 395, 545]},
+    {"name": "Blue", "rating": 73.7, "slope": 131, "yards": [395, 420, 525, 410, 165, 565, 395, 160, 435, 450, 400, 160, 380, 165, 410, 610, 375, 505]},
+    {"name": "Blue/White", "rating": null, "slope": null, "yards": [395, 360, 495, 410, 165, 500, 340, 160, 380, 425, 340, 160, 380, 165, 410, 530, 375, 490]},
+    {"name": "White", "rating": 71.1, "slope": 128, "yards": [370, 360, 495, 350, 145, 500, 340, 135, 380, 425, 340, 155, 355, 140, 365, 530, 360, 490]},
+    {"name": "White/Silver", "rating": null, "slope": null, "yards": [370, 315, 440, 350, 145, 450, 340, 135, 360, 375, 295, 155, 355, 140, 365, 505, 310, 430]},
+    {"name": "Silver", "rating": 66.9, "slope": 117, "yards": [310, 315, 440, 315, 135, 450, 305, 120, 360, 375, 295, 140, 330, 125, 310, 505, 310, 430]}
+  ]
+}
