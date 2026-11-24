@@ -229,9 +229,9 @@ async function ppLoadAndRender() {
 function ppRenderPlan(sg) {
   // Categories: more negative SG = more strokes lost = needs more practice time
   var cats = [
-    { key:'ott', label:'OTT', fullLabel:'Off the Tee', sg:sg.ott, color:'#e06666' },
-    { key:'app', label:'APP', fullLabel:'Approach', sg:sg.app, color:'#6fa8dc' },
-    { key:'arg', label:'ARG', fullLabel:'Around the Green', sg:sg.arg, color:'#93c47d' },
+    { key:'ott', label:'OTT', fullLabel:'Off the Tee', sg:sg.ott, color:'#d4706e' },
+    { key:'app', label:'APP', fullLabel:'Approach', sg:sg.app, color:'#44b8f0' },
+    { key:'arg', label:'ARG', fullLabel:'Around the Green', sg:sg.arg, color:'#00b87a' },
     { key:'putt', label:'Putt', fullLabel:'Putting', sg:sg.putt, color:'#f6b26b' }
   ];
 
@@ -288,7 +288,7 @@ function ppRenderPlan(sg) {
     }
   });
   if (rangeMins > 0) {
-    pieCats.unshift({ key: 'range', label: 'Range', fullLabel: 'Range', mins: rangeMins, pct: rangePct, color: '#e06666' });
+    pieCats.unshift({ key: 'range', label: 'Range', fullLabel: 'Range', mins: rangeMins, pct: rangePct, color: '#d4706e' });
   }
 
   // Draw pie chart with grouped categories
@@ -305,7 +305,7 @@ function ppRenderPlan(sg) {
 
   // Show range header with combined time
   if (appCat || ottCat) {
-    html += '<div style="font-size:12px;font-weight:700;color:#e06666;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Range — ' + rangeMins + ' min</div>';
+    html += '<div style="font-size:12px;font-weight:700;color:#d4706e;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Range — ' + rangeMins + ' min</div>';
   }
 
   var orderedCats = [];
@@ -319,7 +319,7 @@ function ppRenderPlan(sg) {
     html += '<div onclick="this.parentElement.querySelector(\'.pp-drill-detail\').style.display=this.parentElement.querySelector(\'.pp-drill-detail\').style.display===\'none\'?\'\':\'none\'" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;">';
     html += '<div style="font-size:14px;font-weight:700;color:#fff;">' + c.fullLabel + '</div>';
     html += '<div style="display:flex;align-items:center;gap:8px;">';
-    html += '<span style="font-size:11px;font-weight:600;color:' + (c.sg < 0 ? '#ff5252' : '#00c853') + ';">' + (c.sg >= 0 ? '+' : '') + c.sg.toFixed(1) + ' SG</span>';
+    html += '<span style="font-size:11px;font-weight:600;color:' + (c.sg < 0 ? '#d4706e' : '#00b87a') + ';">' + (c.sg >= 0 ? '+' : '') + c.sg.toFixed(1) + ' SG</span>';
     html += '<span style="font-size:13px;font-weight:700;color:' + c.color + ';">' + c.mins + ' min</span>';
     html += '</div></div>';
     html += '<div class="pp-drill-detail" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #333;">';
@@ -365,28 +365,28 @@ function ppRenderPlan(sg) {
             else if (tip.indexOf('Random:') === 0) { label = 'Random'; drillName = tip.substring(7).trim(); }
             else { drillName = tip; }
           }
-          var labelColor = label === 'Block' ? '#6fa8dc' : '#e6a84d';
+          var labelColor = label === 'Block' ? '#44b8f0' : '#e6a84d';
           var labelHtml = label ? '<span style="font-size:11px;font-weight:700;color:' + labelColor + ';margin-right:6px;">' + label + ' -</span>' : '';
           if (combineFunc) {
             wpExpandHtml += '<div style="font-size:12px;padding:4px 0;text-align:left;">' + labelHtml + '<a onclick="' + combineFunc + '();event.stopPropagation();" style="color:#44b8f0;font-weight:700;cursor:pointer;text-decoration:underline;">' + drillName + '</a></div>';
           } else if (drillId && drillCat) {
             wpExpandHtml += '<div style="font-size:12px;padding:4px 0;text-align:left;">' + labelHtml + '<a onclick="ppOpenDrillFromPractice(\'' + drillId + '\',\'' + drillCat + '\');event.stopPropagation();" style="color:#44b8f0;font-weight:700;cursor:pointer;text-decoration:underline;">' + drillName + '</a></div>';
           } else {
-            wpExpandHtml += '<div style="font-size:12px;color:#888;padding:4px 0;text-align:left;">' + labelHtml + drillName + '</div>';
+            wpExpandHtml += '<div style="font-size:12px;color:#9a9a9a;padding:4px 0;text-align:left;">' + labelHtml + drillName + '</div>';
           }
         });
         wpExpandHtml += '</div>';
       }
       html += '<div style="padding:6px 0;">';
       html += '<div style="display:flex;align-items:center;gap:10px;">';
-      html += '<div id="' + uid + '" onclick="ppToggleDrill(this,event)" style="width:24px;height:24px;min-width:24px;border-radius:50%;border:2px solid #555;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"></div>';
-      html += '<div style="flex:1;"><div style="font-size:13px;color:#ccc;">' + d.name + '</div>';
-      if (d.detail) html += '<div style="font-size:11px;color:#666;margin-top:2px;">' + d.detail + '</div>';
+      html += '<div id="' + uid + '" onclick="ppToggleDrill(this,event)" style="width:24px;height:24px;min-width:24px;border-radius:50%;border:2px solid #3d3d3d;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"></div>';
+      html += '<div style="flex:1;"><div style="font-size:13px;color:#9a9a9a;">' + d.name + '</div>';
+      if (d.detail) html += '<div style="font-size:11px;color:#606060;margin-top:2px;">' + d.detail + '</div>';
       html += '</div>';
       if (hasWpTips) html += wpToggleHtml;
       html += '<div style="display:flex;align-items:center;gap:2px;white-space:nowrap;margin-left:8px;">';
-      html += '<input type="number" value="' + d.mins + '" min="1" max="120" style="width:36px;height:24px;background:#1e1e1e;color:#888;border:1px solid #3d3d3d;border-radius:6px;text-align:center;font-size:11px;font-weight:700;padding:0;font-family:inherit;" onclick="event.stopPropagation()">';
-      html += '<span style="font-size:10px;color:#555;">min</span></div>';
+      html += '<input type="number" value="' + d.mins + '" min="1" max="120" style="width:36px;height:24px;background:#1e1e1e;color:#9a9a9a;border:1px solid #3d3d3d;border-radius:6px;text-align:center;font-size:11px;font-weight:700;padding:0;font-family:inherit;" onclick="event.stopPropagation()">';
+      html += '<span style="font-size:10px;color:#606060;">min</span></div>';
       html += '</div>';
       if (hasWpTips) html += wpExpandHtml;
       html += '</div>';
@@ -403,15 +403,15 @@ function ppToggleDrill(el, e) {
   if (done) {
     el.setAttribute('data-done', '0');
     el.style.background = 'transparent';
-    el.style.borderColor = '#555';
+    el.style.borderColor = '#606060';
     el.innerHTML = '';
     // Un-strike the text
     var textEl = el.nextElementSibling;
     if (textEl) { textEl.style.opacity = '1'; textEl.style.textDecoration = 'none'; }
   } else {
     el.setAttribute('data-done', '1');
-    el.style.background = '#00c853';
-    el.style.borderColor = '#00c853';
+    el.style.background = '#00b87a';
+    el.style.borderColor = '#00b87a';
     el.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
     // Strike-through the text
     var textEl = el.nextElementSibling;
@@ -746,7 +746,7 @@ function ppRenderTourRoutine() {
   var html = '';
 
   var inSeasonSections = [
-    { title: 'Warm Up & Exercises', color: '#888', items: [] },
+    { title: 'Warm Up & Exercises', color: '#9a9a9a', items: [] },
     { title: 'Putting', color: '#f6b26b', items: [
       { text: 'Make 15 Gate drill in a row from 3 ft' },
       { text: 'Make 15 Double gate drill from 7 ft' },
@@ -759,7 +759,7 @@ function ppRenderTourRoutine() {
       { text: 'Hit 3x3 Around the world from 30 ft', tour: '1.98 putts' },
       { text: 'Play 6 holes with 1 ball: 4ft, 30ft, 9ft, 12ft, 25ft, 6ft', tour: '9.7 putts' }
     ]},
-    { title: 'Short Game', color: '#93c47d', items: [
+    { title: 'Short Game', color: '#00b87a', items: [
       { text: '5-10 from 5 yds', tour: '<3 ft' },
       { text: '5-10 from 10 yds', tour: '4 ft' },
       { text: '5-10 from 15 yds', tour: '5 ft' },
@@ -770,7 +770,7 @@ function ppRenderTourRoutine() {
       { text: '5-10 medium bunker shots (10-15 yds)', tour: '10 ft' },
       { text: '5-10 long bunker shots (15+ yds)', tour: '11 ft' }
     ]},
-    { title: 'Range', color: '#e06666', items: [
+    { title: 'Range', color: '#d4706e', items: [
       { text: '5-10 balls leapfrogging 30-60 yards' },
       { text: '5-10 short irons (PW-8i) at single target' },
       { text: '5-10 mid irons (7i-6i) at single target' },
@@ -787,13 +787,13 @@ function ppRenderTourRoutine() {
   ];
 
   var offSeasonSections = [
-    { title: 'Off Season', color: '#888', items: [
+    { title: 'Off Season', color: '#9a9a9a', items: [
       { text: 'Coming soon — send txt file to populate' }
     ]}
   ];
 
   var preTournamentSections = [
-    { title: 'Pre Tournament', color: '#888', items: [
+    { title: 'Pre Tournament', color: '#9a9a9a', items: [
       { text: 'Coming soon — send txt file to populate' }
     ]}
   ];
@@ -811,7 +811,7 @@ function ppRenderTourRoutine() {
     html += '</div>';
     html += '<div id="' + detailId + '" style="display:none;margin-top:10px;padding-top:10px;border-top:1px solid #333;">';
     if (s.items.length === 0) {
-      html += '<div style="font-size:12px;color:#555;font-style:italic;">Coming soon</div>';
+      html += '<div style="font-size:12px;color:#606060;font-style:italic;">Coming soon</div>';
     }
     s.items.forEach(function(item, ii) {
       if (item.text === 'break') {
@@ -820,14 +820,14 @@ function ppRenderTourRoutine() {
       }
       var uid = 'ppTourDrill_' + s.title.replace(/[^a-zA-Z]/g,'') + '_' + ii;
       html += '<div style="display:flex;align-items:center;gap:10px;padding:4px 0;">';
-      html += '<div id="' + uid + '" onclick="ppToggleDrill(this,event)" style="width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid #555;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"></div>';
+      html += '<div id="' + uid + '" onclick="ppToggleDrill(this,event)" style="width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid #3d3d3d;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"></div>';
       html += '<div style="flex:1;">';
-      html += '<div style="font-size:12px;color:#999;">' + item.text + '</div>';
+      html += '<div style="font-size:12px;color:#9a9a9a;">' + item.text + '</div>';
       if (item.goal || item.tour) {
-        html += '<div style="font-size:10px;color:#555;margin-top:1px;">';
-        if (item.goal) html += '<span style="color:#6fa8dc;">Goal: ' + item.goal + '</span>';
+        html += '<div style="font-size:10px;color:#606060;margin-top:1px;">';
+        if (item.goal) html += '<span style="color:#44b8f0;">Goal: ' + item.goal + '</span>';
         if (item.goal && item.tour) html += '<span style="margin:0 6px;">|</span>';
-        if (item.tour) html += '<span style="color:#93c47d;">Tour: ' + item.tour + '</span>';
+        if (item.tour) html += '<span style="color:#00b87a;">Tour: ' + item.tour + '</span>';
         html += '</div>';
       }
       html += '</div></div>';
@@ -845,7 +845,7 @@ function ppShowWarmUp() {
 
 function ppRenderWarmUp() {
   var sections = [
-    { title: 'Stretching', color: '#888', items: [
+    { title: 'Stretching', color: '#9a9a9a', items: [
       { text: 'Toe touch — hold 15-20 sec' },
       { text: 'Quad stretch — hold 15-20 sec each leg' },
       { text: 'Shoulder stretch — hold 15-20 sec each arm' },
@@ -853,7 +853,7 @@ function ppRenderWarmUp() {
       { text: 'Arm circles — small to large, both directions' },
       { text: 'Torso rotations — feet planted, rotate through core' }
     ]},
-    { title: 'Range', color: '#e06666', items: [
+    { title: 'Range', color: '#d4706e', items: [
       { text: 'Leapfrog wedges — 20, 30, 40, 50, 60 yds', note: '5-10 balls' },
       { text: 'Short irons — 9I, PW', note: '3-5 balls' },
       { text: 'Mid irons — 7I, 8I', note: '3-5 balls' },
@@ -863,7 +863,7 @@ function ppRenderWarmUp() {
       { text: 'Random shots through the bag' },
       { text: 'Finish with the club you hit off the first tee' }
     ]},
-    { title: 'Chipping', color: '#93c47d', items: [
+    { title: 'Chipping', color: '#00b87a', items: [
       { text: 'Low chips from 10-30 yds', note: '3-5 balls' },
       { text: 'Mid-trajectory chips from 10-30 yds', note: '3-5 balls' },
       { text: 'High chips / flops from 10-30 yds', note: '3-5 balls' },
@@ -884,14 +884,14 @@ function ppRenderWarmUp() {
     s.items.forEach(function(item, ii) {
       var uid = 'ppWarmDrill_' + s.title.replace(/[^a-zA-Z]/g,'') + '_' + ii;
       html += '<div style="display:flex;align-items:center;gap:10px;padding:4px 0;">';
-      html += '<div id="' + uid + '" onclick="ppToggleDrill(this,event)" style="width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid #555;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"></div>';
-      html += '<div style="flex:1;font-size:12px;color:#999;">' + item.text + '</div>';
+      html += '<div id="' + uid + '" onclick="ppToggleDrill(this,event)" style="width:22px;height:22px;min-width:22px;border-radius:50%;border:2px solid #3d3d3d;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"></div>';
+      html += '<div style="flex:1;font-size:12px;color:#9a9a9a;">' + item.text + '</div>';
       if (item.mins) {
         html += '<div style="display:flex;align-items:center;gap:2px;white-space:nowrap;">';
-        html += '<input type="number" value="' + item.mins + '" min="1" max="120" style="width:36px;height:24px;background:#1e1e1e;color:#888;border:1px solid #3d3d3d;border-radius:6px;text-align:center;font-size:11px;font-weight:700;padding:0;font-family:inherit;" onclick="event.stopPropagation()">';
-        html += '<span style="font-size:10px;color:#555;">min</span></div>';
+        html += '<input type="number" value="' + item.mins + '" min="1" max="120" style="width:36px;height:24px;background:#1e1e1e;color:#9a9a9a;border:1px solid #3d3d3d;border-radius:6px;text-align:center;font-size:11px;font-weight:700;padding:0;font-family:inherit;" onclick="event.stopPropagation()">';
+        html += '<span style="font-size:10px;color:#606060;">min</span></div>';
       } else if (item.note) {
-        html += '<div style="font-size:10px;color:#555;white-space:nowrap;">' + item.note + '</div>';
+        html += '<div style="font-size:10px;color:#606060;white-space:nowrap;">' + item.note + '</div>';
       }
       html += '</div>';
     });

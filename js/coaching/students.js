@@ -95,11 +95,11 @@ function renderStudentsList(data) {
       + '<div style="font-weight:700;font-size:15px;">' + (s.student_name || 'Student') + '</div>'
       + '<div style="font-size:12px;color:#9a9a9a;">' + (s.student_email || '') + '</div>'
       + '</div>'
-      + '<button onclick="editStudentName(\'' + s.student_id + '\',\'' + (s.student_name||'Student').replace(/'/g,"\\'") + '\')" style="width:32px;height:32px;font-size:14px;background:#2e2e2e;border-radius:6px;padding:0;">' + ic('pencil') + '</button>'
+      + '<button onclick="editStudentName(\'' + s.student_id + '\',\'' + (s.student_name||'Student').replace(/'/g,"\\'") + '\')" style="width:32px;height:32px;font-size:14px;background:#282828;border-radius:6px;padding:0;">' + ic('pencil') + '</button>'
       + '</div>'
       + '<div style="display:flex;gap:6px;margin-top:8px;">'
       + '<button onclick="viewStudent(\'' + s.student_id + '\',\'' + (s.student_name||'Student').replace(/'/g,"\\'") + '\',\'' + (s.student_email||'').replace(/'/g,"\\'") + '\')" style="flex:1;height:36px;font-size:13px;background:#2d7abc;border-radius:6px;">View Profile</button>'
-      + '<button onclick="removeStudent(\'' + s.student_id + '\',this)" style="width:70px;height:36px;font-size:12px;background:#e06060;border-radius:6px;">Remove</button>'
+      + '<button onclick="removeStudent(\'' + s.student_id + '\',this)" style="width:70px;height:36px;font-size:12px;background:#d4706e;border-radius:6px;">Remove</button>'
       + '</div>';
     list.appendChild(card);
   });

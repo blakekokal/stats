@@ -57,7 +57,7 @@ function renderCoachTeamCards() {
       + '<div style="font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(t.team_name) + '</div>'
       + '<div style="font-size:11px;color:#606060;">' + count + ' player' + (count !== 1 ? 's' : '') + '</div>'
       + '</div>'
-      + '<div style="color:#444;font-size:16px;">›</div>'
+      + '<div style="color:#606060;font-size:16px;">›</div>'
       + '</div>';
   });
 
@@ -68,7 +68,7 @@ function renderCoachTeamCards() {
     + '<div style="font-weight:700;font-size:14px;color:#9a9a9a;">No Team</div>'
     + '<div style="font-size:11px;color:#606060;">' + noTeamCount + ' player' + (noTeamCount !== 1 ? 's' : '') + '</div>'
     + '</div>'
-    + '<div style="color:#444;font-size:16px;">›</div>'
+    + '<div style="color:#606060;font-size:16px;">›</div>'
     + '</div>';
 
   if (teams.length === 0 && students.length === 0) {

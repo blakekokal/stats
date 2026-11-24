@@ -72,7 +72,7 @@ function ppGenGenerate() {
   });
 
   // Render results using same format as recommended practice
-  var colors = { range: '#e06666', shortgame: '#93c47d', putting: '#f6b26b' };
+  var colors = { range: '#d4706e', shortgame: '#00b87a', putting: '#f6b26b' };
   var labels = { range: 'Range', shortgame: 'Short Game', putting: 'Putting' };
   var html = '';
   var ci = 0;
@@ -89,7 +89,7 @@ function ppGenGenerate() {
       var wpExpandHtml = '';
       if (hasTip) {
         var tipLabel = d.tip.type === 'block' ? 'Block' : 'Random';
-        var tipColor = d.tip.type === 'block' ? '#6fa8dc' : '#e6a84d';
+        var tipColor = d.tip.type === 'block' ? '#44b8f0' : '#e6a84d';
         var tipText = d.tip.text || '';
         var drillId = d.tip.drillId || null;
         var drillCat = d.tip.drillCat || null;
@@ -103,20 +103,20 @@ function ppGenGenerate() {
         } else if (drillId && drillCat) {
           wpExpandHtml += '<a onclick="ppOpenDrillFromPractice(\'' + drillId + '\',\'' + drillCat + '\');event.stopPropagation();" style="color:#44b8f0;font-weight:700;cursor:pointer;text-decoration:underline;">' + tipText + '</a>';
         } else {
-          wpExpandHtml += '<span style="color:#888;">' + tipText + '</span>';
+          wpExpandHtml += '<span style="color:#9a9a9a;">' + tipText + '</span>';
         }
         wpExpandHtml += '</div></div>';
       }
       html += '<div style="padding:6px 0;">';
       html += '<div style="display:flex;align-items:center;gap:10px;">';
-      html += '<div id="' + uid + '" onclick="ppToggleDrill(this,event)" style="width:24px;height:24px;min-width:24px;border-radius:50%;border:2px solid #555;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"></div>';
-      html += '<div style="flex:1;"><div style="font-size:13px;color:#ccc;">' + d.name + '</div>';
-      if (d.detail) html += '<div style="font-size:11px;color:#666;margin-top:2px;">' + d.detail + '</div>';
+      html += '<div id="' + uid + '" onclick="ppToggleDrill(this,event)" style="width:24px;height:24px;min-width:24px;border-radius:50%;border:2px solid #3d3d3d;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;"></div>';
+      html += '<div style="flex:1;"><div style="font-size:13px;color:#9a9a9a;">' + d.name + '</div>';
+      if (d.detail) html += '<div style="font-size:11px;color:#606060;margin-top:2px;">' + d.detail + '</div>';
       html += '</div>';
       if (hasTip) html += wpToggleHtml;
       html += '<div style="display:flex;align-items:center;gap:2px;white-space:nowrap;margin-left:8px;">';
-      html += '<input type="number" value="' + d.mins + '" min="1" max="120" style="width:36px;height:24px;background:#1e1e1e;color:#888;border:1px solid #3d3d3d;border-radius:6px;text-align:center;font-size:11px;font-weight:700;padding:0;font-family:inherit;" onclick="event.stopPropagation()">';
-      html += '<span style="font-size:10px;color:#555;">min</span></div>';
+      html += '<input type="number" value="' + d.mins + '" min="1" max="120" style="width:36px;height:24px;background:#1e1e1e;color:#9a9a9a;border:1px solid #3d3d3d;border-radius:6px;text-align:center;font-size:11px;font-weight:700;padding:0;font-family:inherit;" onclick="event.stopPropagation()">';
+      html += '<span style="font-size:10px;color:#606060;">min</span></div>';
       html += '</div>';
       if (hasTip) html += wpExpandHtml;
       html += '</div>';
@@ -354,7 +354,7 @@ export function ppDrawPie(cats, total) {
   ctx.textBaseline = 'middle';
   ctx.fillText(total + ' min', cx, cy - 6);
   ctx.font = '11px sans-serif';
-  ctx.fillStyle = '#999';
+  ctx.fillStyle = '#9a9a9a';
   ctx.fillText('total practice', cx, cy + 14);
 }
 

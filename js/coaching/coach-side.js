@@ -172,7 +172,7 @@ async function loadCoachActivityFeed() {
   el.innerHTML = data.map(function(n) {
     var d = new Date(n.created_at);
     var dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    var icon = n.type === 'live_round' ? '<span style="color:#ff5c5c">' + ic('live') + '</span>' : ic(n.type === 'new_round' ? 'flag' : (n.type === 'new_combine' || n.type === 'combine_completed') ? 'target' : n.type === 'drill_completed' ? 'check' : n.type === 'new_signup' ? 'user' : n.type === 'student_message' ? 'chat' : 'pin');
+    var icon = n.type === 'live_round' ? '<span style="color:#d4706e">' + ic('live') + '</span>' : ic(n.type === 'new_round' ? 'flag' : (n.type === 'new_combine' || n.type === 'combine_completed') ? 'target' : n.type === 'drill_completed' ? 'check' : n.type === 'new_signup' ? 'user' : n.type === 'student_message' ? 'chat' : 'pin');
     var unreadStyle = !n.read ? 'border-left:3px solid #2d7abc;padding-left:10px;' : 'padding-left:13px;';
     // Profile, and for a round: View round (the hole screen) and Strokes gained
     // (that round's SG in a pop-up), so the profile isn't needed every time.
@@ -384,7 +384,7 @@ async function coachActRound(studentId, roundId, at, msg, mode) {
   var box = document.getElementById('coachSgOverlay');
   if (!box) {
     box = document.createElement('div'); box.id = 'coachSgOverlay';
-    box.style.cssText = 'position:fixed;inset:0;z-index:200;background:#1b1b1b;overflow-y:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom));text-align:left;';
+    box.style.cssText = 'position:fixed;inset:0;z-index:200;background:#1e1e1e;overflow-y:auto;padding:12px 16px calc(24px + env(safe-area-inset-bottom));text-align:left;';
     document.body.appendChild(box);
   }
   box.innerHTML = '<div style="max-width:420px;margin:0 auto;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">'

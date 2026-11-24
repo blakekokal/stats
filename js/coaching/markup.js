@@ -183,7 +183,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
       <div id="cctTabContent0">
         <!-- Students playing right now (this app's live view) -->
         <div id="coachLiveSection" style="display:none;background:#222222;border-radius:14px;padding:14px 16px;margin-bottom:14px;border:1px solid #c8102e;">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#ff6b7f;margin-bottom:8px;">\u25cf Live now</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#d4706e;margin-bottom:8px;">\u25cf Live now</div>
           <div id="coachLiveList"></div>
         </div>
         <!-- Students: tap for the list of students -->

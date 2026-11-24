@@ -432,7 +432,7 @@ function filterSvRounds() {
       + typeTag
       + '<div style="font-size:12px;color:#9a9a9a;">' + dateStr + ' · ' + r.holes + 'h</div></div>'
       + '<div style="text-align:right;"><div style="font-size:20px;font-weight:800;">' + r.score + '</div>'
-      + '<div style="font-size:13px;color:' + (r.to_par>0?'#d4706e':r.to_par<0?'#00a06d':'#9a9a9a') + '">' + tp + '</div></div></div>'
+      + '<div style="font-size:13px;color:' + (r.to_par>0?'#d4706e':r.to_par<0?'#00b87a':'#9a9a9a') + '">' + tp + '</div></div></div>'
       + '<div style="display:flex;gap:6px;margin-top:8px;">'
       + (_svLive[r.id] ? '<button onclick="svWatchLive(\'' + r.id + '\')" style="flex:1;height:30px;font-size:12px;background:#c8102e;border-radius:6px;font-weight:700;">\u25cf Watch live</button>' : '')
       + '<button onclick="svViewRound(\'' + r.id + '\')" style="flex:1;height:30px;font-size:12px;background:#2d7abc;border-radius:6px;font-weight:700;">View round</button>'

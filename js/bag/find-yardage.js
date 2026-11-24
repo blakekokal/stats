@@ -83,7 +83,7 @@ function fyRenderShotCountBtns() {
   container.innerHTML = counts.map(function(n) {
     var active = n === _fyShotCount;
     return '<button onclick="fyPickShotCount(' + n + ')" style="width:52px;height:44px;font-size:16px;font-weight:800;border-radius:10px;border:2px solid ' +
-      (active ? '#3d96ee' : '#3d3d3d') + ';background:' + (active ? '#3d96ee' : '#282828') + ';color:' +
+      (active ? '#2d7abc' : '#3d3d3d') + ';background:' + (active ? '#2d7abc' : '#282828') + ';color:' +
       (active ? '#ffffff' : '#9a9a9a') + ';cursor:pointer;">' + n + '</button>';
   }).join('');
   container.innerHTML += '<button onclick="fyGoToStep3()" style="width:100%;height:42px;margin-top:8px;background:#007a52;border:none;border-radius:10px;color:#00b87a;font-size:14px;font-weight:700;cursor:pointer;">Enter Shots →</button>';

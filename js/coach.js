@@ -67,7 +67,7 @@ export function renderHome(view) {
     h('span', { class: 'ic' }, icEl(icon)), h('div', {}, h('div', { class: 't' }, title)));
   const divider = () => h('div', { style: 'height:1px;background:#282828;margin:3px 0;flex:none;' });
   const search = h('button', { class: 'iconbtn', disabled: true, title: 'Coming soon' });
-  search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+  search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 
   const brand = h('div', { class: 'homebrand', style: 'text-align:center;margin-bottom:6px;' });
   brand.innerHTML = `<div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:1px;line-height:1.0;color:#ffffff;">Blake Kokal<br><span style="display:inline-flex;align-items:baseline;justify-content:center;"><span style="font-size:10px;visibility:hidden;font-weight:600;">What's new</span><span style="font-size:13px;visibility:hidden;font-weight:700;margin-right:5px;">v${VERSION}</span>Golf<span class="wn" style="font-size:13px;color:#606060;font-weight:700;margin-left:6px;cursor:pointer;">v${VERSION}</span><span class="wn" style="font-size:10px;color:#44b8f0;font-weight:600;margin-left:5px;cursor:pointer;">&#x2190; What's new</span></span></div>`;
@@ -94,7 +94,7 @@ export function renderHome(view) {
       go('flag', 'New Round', '#007a52', '#/new'),
       go('scorecard', 'Round History', '#00402c', '#/history'),
       divider(),
-      go('bars', 'Stats Dashboard', '#3d96ee', '#/dashboard'),
+      go('bars', 'Stats Dashboard', '#2d7abc', '#/dashboard'),
       go('perf', 'Performance Analysis', '#2d7abc', '#/performance'),
       go('bag', 'My Bag', '#1a4a8a', '#/bag'),
       divider(),
@@ -299,7 +299,7 @@ export function renderHistory(view) {
 
   function card(r, s) {
     const tp = s.toPar > 0 ? '+' + s.toPar : s.toPar === 0 ? 'E' : String(s.toPar);
-    const del = (w, ht) => h('button', { style: `width:${w}px;max-width:none;height:${ht}px;font-size:12px;background:#e06060;border-radius:6px;`, onclick: e => {
+    const del = (w, ht) => h('button', { style: `width:${w}px;max-width:none;height:${ht}px;font-size:12px;background:#d4706e;border-radius:6px;`, onclick: e => {
       e.stopPropagation();
       if (confirm(`Delete the round from ${fmtDate(r.date)}? This removes it from every device.`)) { store.remove(roundKeyOf(r.id)); draw(); }
     } }, 'Del');
@@ -314,7 +314,7 @@ export function renderHistory(view) {
         h('div', { style: 'text-align:right;' }, s.incomplete
           ? h('div', { style: 'font-size:14px;font-weight:700;color:#f0c830;' }, 'In Progress')
           : [h('div', { style: 'font-size:20px;font-weight:800;' }, String(s.score)),
-            h('div', { style: `font-size:13px;color:${s.toPar > 0 ? '#d4706e' : s.toPar < 0 ? '#00a06d' : '#9a9a9a'}` }, tp)])),
+            h('div', { style: `font-size:13px;color:${s.toPar > 0 ? '#d4706e' : s.toPar < 0 ? '#00b87a' : '#9a9a9a'}` }, tp)])),
       h('div', { style: 'display:flex;gap:6px;margin-top:8px;' }, s.incomplete
         ? [h('button', { style: 'flex:2;max-width:none;height:34px;font-size:13px;font-weight:700;background:#d4706e;border-radius:6px;', onclick: e => { e.stopPropagation(); resume(); } }, '▶ Resume Round'), del(60, 34)]
         : [h('button', { style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#007a52;border-radius:6px;font-weight:700;', onclick: e => {
@@ -422,7 +422,7 @@ export function renderSettingsPage(view) {
           say(pwMsg, 'Updating...', true);
           try { await sync.changePassword(pw1.value); say(pwMsg, '✓ Password updated!', true); pw1.value = pw2.value = ''; } catch (e) { say(pwMsg, e.message || String(e)); }
         } }, 'UPDATE PASSWORD'), pwMsg),
-      h('button', { style: 'background:#e06060;margin-top:8px;', onclick: async () => { await sync.signOut(); location.hash = '#/'; } }, 'LOG OUT'),
+      h('button', { style: 'background:#d4706e;margin-top:8px;', onclick: async () => { await sync.signOut(); location.hash = '#/'; } }, 'LOG OUT'),
       h('button', { class: 'linkbtn', style: 'margin-top:14px;font-size:12px;', onclick: () => { location.hash = '#/device'; } }, 'Offline imagery & backup'),
       deleteAccountSection(),
       h('a', { href: 'privacy.html', target: '_blank', rel: 'noopener', style: 'margin-top:10px;font-size:12px;color:#9a9a9a;' }, 'Privacy policy'))));
@@ -432,7 +432,7 @@ export function renderSettingsPage(view) {
 function deleteAccountSection() {
   const pw = h('input', { type: 'password', placeholder: 'Your password', autocomplete: 'current-password', 'aria-label': 'Password' });
   const msg = h('div', { class: 'msg' });
-  const go = h('button', { style: 'background:#e06060;', onclick: async () => {
+  const go = h('button', { style: 'background:#d4706e;', onclick: async () => {
     if (!pw.value) { msg.textContent = 'Enter your password'; msg.className = 'msg err'; return; }
     if (!confirm('Delete your account and every round, shot and setting saved to it? This cannot be undone.')) return;
     go.disabled = true; msg.textContent = 'Deleting…'; msg.className = 'msg ok';
@@ -440,10 +440,10 @@ function deleteAccountSection() {
     catch (e) { msg.textContent = e.message || String(e); msg.className = 'msg err'; go.disabled = false; }
   } }, 'DELETE MY ACCOUNT');
   const box = h('div', { class: 'section', hidden: true },
-    h('div', { class: 'lab', style: 'color:#e06060;' }, 'Delete Account'),
+    h('div', { class: 'lab', style: 'color:#d4706e;' }, 'Delete Account'),
     h('div', { style: 'font-size:12px;color:#9a9a9a;max-width:280px;' }, 'This deletes your account and everything saved to it: rounds, shots, your bag and settings, for this app and the coaching app (they share the account). It cannot be undone. Download a backup first if you want to keep your rounds.'),
     pw, go, msg);
-  const open = h('button', { class: 'linkbtn', style: 'margin-top:10px;font-size:12px;color:#e06060;', onclick: () => { box.hidden = false; open.hidden = true; pw.focus(); } }, 'Delete account');
+  const open = h('button', { class: 'linkbtn', style: 'margin-top:10px;font-size:12px;color:#d4706e;', onclick: () => { box.hidden = false; open.hidden = true; pw.focus(); } }, 'Delete account');
   return h('div', { style: 'display:contents;' }, open, box);
 }
 

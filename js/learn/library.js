@@ -40,7 +40,7 @@ function renderLearningLibrary(videos) {
     var tagHtml = v.tags.map(function(t) {
       return '<span style="font-size:10px;font-weight:700;color:#44b8f0;background:rgba(68,184,240,0.12);padding:2px 7px;border-radius:5px;">' + t + '</span>';
     }).join(' ');
-    html += '<a href="' + v.url + '" target="_blank" rel="noopener" style="display:block;background:#1a1a1a;border:1px solid #333;border-radius:12px;padding:14px 16px;margin-bottom:10px;text-decoration:none;text-align:left;">';
+    html += '<a href="' + v.url + '" target="_blank" rel="noopener" style="display:block;background:#1e1e1e;border:1px solid #333;border-radius:12px;padding:14px 16px;margin-bottom:10px;text-decoration:none;text-align:left;">';
     html += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:6px;">';
     html += '<span style="font-size:20px;flex-shrink:0;">&#9654;&#65039;</span>';
     html += '<div style="font-size:15px;font-weight:700;color:#ffffff;line-height:1.3;">' + v.title + '</div>';

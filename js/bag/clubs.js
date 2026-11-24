@@ -323,7 +323,7 @@ export function renderBagClubs() {
         var avg = entry && entry.avg != null ? entry.avg : '—';
         return '<div style="display:flex;flex-direction:column;align-items:center;">' +
           '<span style="font-size:10px;color:#9a9a9a;font-weight:700;line-height:1;">' + label + '</span>' +
-          '<span style="font-size:12px;color:#3d96ee;font-weight:800;line-height:1.3;">' + avg + '</span>' +
+          '<span style="font-size:12px;color:#2d7abc;font-weight:800;line-height:1.3;">' + avg + '</span>' +
         '</div>';
       }).join('');
       return '<div onclick="openClubDetail(\'' + safe + '\')" style="grid-column:span 3;background:#222222;border-radius:10px;padding:8px 10px;cursor:pointer;border:1px solid #282828;display:flex;align-items:center;gap:10px;">' +
@@ -339,7 +339,7 @@ export function renderBagClubs() {
     return '<div onclick="openClubDetail(\'' + safe + '\')" style="background:#222222;border-radius:10px;padding:10px 6px;cursor:pointer;border:1px solid #282828;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:68px;">' +
       '<div style="font-size:14px;font-weight:800;color:#9a9a9a;line-height:1.2;">' + dName + '</div>' + labelHtml +
       '<div style="display:flex;gap:4px;margin-top:6px;align-items:baseline;">' +
-        '<div style="text-align:center;"><div style="font-size:8px;color:#9a9a9a;font-weight:600;line-height:1;">CARRY</div><div style="font-size:13px;font-weight:700;color:#3d96ee;line-height:1.3;">' + (displayCarry !== '' ? displayCarry : '—') + '</div></div>' +
+        '<div style="text-align:center;"><div style="font-size:8px;color:#9a9a9a;font-weight:600;line-height:1;">CARRY</div><div style="font-size:13px;font-weight:700;color:#2d7abc;line-height:1.3;">' + (displayCarry !== '' ? displayCarry : '—') + '</div></div>' +
         '<div style="color:#9a9a9a;font-size:10px;">|</div>' +
         '<div style="text-align:center;"><div style="font-size:8px;color:#9a9a9a;font-weight:600;line-height:1;">TOTAL</div><div style="font-size:13px;font-weight:700;color:#ffffff;line-height:1.3;">' + (total !== '' ? total : '—') + '</div></div>' +
         '<div style="color:#9a9a9a;font-size:10px;">|</div>' +
