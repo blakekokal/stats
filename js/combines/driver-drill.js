@@ -266,7 +266,7 @@ async function driverDrillSave(){
     if (msg) { msg.style.color = '#d4706e'; msg.textContent = 'Save failed: ' + resp.error.message; }
     return;
   }
-  if (msg) { msg.style.color = '#9affc8'; msg.textContent = '✅ Saved to your profile'; }
+  if (msg) { msg.style.color = '#9affc8'; msg.textContent = '✓ Saved to your profile'; }
 
   // Evaluation Test: capture driver result
   if(_evalState && _evalState.active) evalCaptureResult('driver', grade, 0);

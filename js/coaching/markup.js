@@ -1,19 +1,22 @@
 // Page markup for Coaching, taken from the coaching app (v6/index.html): the
 // Coaching page (student and coach views) and the coach's Student View page.
 
+import { ic } from '../icons.js';
+
+
 export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="justify-content:flex-start;padding-top:0;overflow-y:hidden;padding-bottom:0;align-items:center;">
   <button class="back-btn-top" aria-label="Back" onclick="appBack()" style="z-index:10;"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
 
   <!-- HEADER -->
   <div style="width:100%;max-width:420px;padding:28px 16px 0;box-sizing:border-box;flex-shrink:0;">
-    <div style="font-size:22px;font-weight:800;margin-bottom:2px;text-align:center;">🎓 Coaching</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:2px;text-align:center;">${ic('cap')} Coaching</div>
     <div id="coachingSubtitle" style="font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:10px;">Loading...</div>
   </div>
 
   <!-- LOGIN GATE -->
   <div id="coachingLoginGate" style="display:none;width:100%;max-width:420px;padding:0 16px;box-sizing:border-box;">
     <div style="background:#222222;border-radius:14px;padding:28px 20px;text-align:center;margin-top:20px;">
-      <div style="font-size:36px;margin-bottom:12px;">🔒</div>
+      <div style="font-size:36px;margin-bottom:12px;">${ic('lock')}</div>
       <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Sign In Required</div>
       <div style="font-size:13px;color:#606060;margin-bottom:18px;">Create an account or log in to access coaching features.</div>
       <button onclick="show('authPage')" style="background:#2d7abc;width:100%;height:44px;font-size:14px;font-weight:700;max-width:none;">Log In / Sign Up</button>
@@ -68,11 +71,11 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
 
       <!-- TAB 1: Drills & Combines -->
       <div id="cstTabContent1" style="display:none;height:100%;overflow-y:auto;padding:14px 0 80px;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:10px;">🎯 Assigned Drills</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:10px;">${ic('target')} Assigned Drills</div>
         <div id="coachingAssignedDrillsList">
           <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No drills assigned yet.</div>
         </div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin:18px 0 10px;">🏌️ Assigned Combines</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin:18px 0 10px;">${ic('club')} Assigned Combines</div>
         <div id="coachingAssignedCombinesList">
           <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No combines assigned yet.</div>
         </div>
@@ -148,7 +151,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
         <div style="background:#222222;border-radius:14px;padding:18px 20px;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:10px;">My Coach</div>
           <div id="coachingMyCoachContent">
-            <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:10px 0;"><div style="font-size:28px;margin-bottom:8px;">👤</div>No coach connected yet.<br>Share your invite code above!</div>
+            <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:10px 0;"><div style="font-size:28px;margin-bottom:8px;">${ic('user')}</div>No coach connected yet.<br>Share your invite code above!</div>
           </div>
         </div>
         <div style="text-align:center;margin-top:14px;">
@@ -191,14 +194,14 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
         </button>
         <!-- Admin: Pending Coach Requests (only visible to admin) -->
         <div id="coachRequestsSection" style="display:none;background:#222222;border-radius:14px;padding:16px 18px;margin-bottom:14px;">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#f0c830;margin-bottom:10px;">⏳ Pending Coach Requests</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#f0c830;margin-bottom:10px;">${ic('hourglass')} Pending Coach Requests</div>
           <div id="coachRequestsList"><div style="color:#9a9a9a;font-size:13px;">Loading...</div></div>
         </div>
 
         <!-- Recent activity -->
         <div style="background:#222222;border-radius:14px;padding:16px 18px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;">🔔 Recent Activity</div>
+            <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;">${ic('bell')} Recent Activity</div>
             <button onclick="markCoachNotificationsRead()" id="markReadBtn" style="display:none;background:transparent;border:none;color:#44b8f0;font-size:11px;font-weight:700;cursor:pointer;height:auto;width:auto;max-width:none;padding:0;">Mark all read</button>
           </div>
           <div id="coachActivityList"><div style="text-align:center;color:#9a9a9a;font-size:13px;padding:10px 0;">No recent activity.</div></div>
@@ -210,13 +213,13 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
 
         <!-- Type toggle -->
         <div style="display:flex;gap:0;border-radius:10px;overflow:hidden;margin-bottom:12px;">
-          <button id="coachNoteTypeLesson" onclick="setCoachNoteType('lesson')" style="flex:1;height:38px;font-size:12px;font-weight:700;background:#2d7abc;border-radius:0;border:none;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">📅 Lesson Note</button>
-          <button id="coachNoteTypeGeneral" onclick="setCoachNoteType('general')" style="flex:1;height:38px;font-size:12px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">💬 General Feedback</button>
+          <button id="coachNoteTypeLesson" onclick="setCoachNoteType('lesson')" style="flex:1;height:38px;font-size:12px;font-weight:700;background:#2d7abc;border-radius:0;border:none;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">${ic('cal')} Lesson Note</button>
+          <button id="coachNoteTypeGeneral" onclick="setCoachNoteType('general')" style="flex:1;height:38px;font-size:12px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">${ic('chat')} General Feedback</button>
         </div>
 
         <!-- Student search -->
         <div style="position:relative;margin-bottom:8px;">
-          <input id="coachNoteStudentSearch" oninput="filterCoachNoteStudents()" placeholder="🔍 Search student name..." style="width:100%;height:40px;font-size:14px;box-sizing:border-box;">
+          <input id="coachNoteStudentSearch" oninput="filterCoachNoteStudents()" placeholder="Search student name..." class="searchbox" style="width:100%;height:40px;font-size:14px;box-sizing:border-box;">
           <div id="coachNoteStudentDropdown" style="display:none;position:absolute;top:44px;left:0;right:0;background:#282828;border:1px solid #3d3d3d;border-radius:8px;z-index:50;max-height:180px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,0.5);"></div>
         </div>
         <input type="hidden" id="coachNoteStudentSelect" value="">
@@ -242,7 +245,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
 
         <!-- Assign a Combine -->
         <div style="background:#222222;border-radius:14px;padding:16px 18px;margin-bottom:14px;">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:12px;">🏌️ Assign a Combine</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:12px;">${ic('club')} Assign a Combine</div>
           <select id="coachCombStudentSelect" style="width:100%;height:40px;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;font-size:14px;margin-bottom:8px;padding:0 10px;">
             <option value="">Select student...</option>
           </select>
@@ -324,7 +327,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
 
         <!-- Assign a Drill -->
         <div style="background:#222222;border-radius:14px;padding:16px 18px;">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:12px;">🎯 Assign a Drill</div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:12px;">${ic('target')} Assign a Drill</div>
           <select id="coachDrillStudentSelect" style="width:100%;height:40px;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;font-size:14px;margin-bottom:8px;padding:0 10px;">
             <option value="">Select student...</option>
           </select>
@@ -365,7 +368,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
         <!-- Students: one list, latest activity first, with a name search -->
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
           <button class="stepback" onclick="showCoachCoachingTab(0)" aria-label="Back" style="height:38px;font-size:18px;background:#282828;border-radius:8px;padding:0 12px;max-width:none;width:auto;color:#9a9a9a;border:1px solid #333333;">←</button>
-          <input id="coachStudentSearch" type="search" oninput="drawCoachStudentList()" placeholder="🔍 Search students" autocomplete="off" style="flex:1;height:38px;font-size:14px;max-width:none;text-align:left;border-radius:8px;">
+          <input id="coachStudentSearch" type="search" oninput="drawCoachStudentList()" placeholder="Search students" class="searchbox" autocomplete="off" style="flex:1;height:38px;font-size:14px;max-width:none;text-align:left;border-radius:8px;">
         </div>
         <div id="coachStudentList" style="margin-bottom:14px;"><div style="text-align:center;color:#606060;font-size:13px;padding:20px 0;">Loading students...</div></div>
         <!-- Add student -->
@@ -406,7 +409,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
           </div>
           <!-- Search within team -->
           <div style="display:flex;align-items:center;background:#222222;border:1px solid #333333;border-radius:8px;padding:6px 10px;margin-bottom:8px;gap:6px;">
-            <span style="color:#9a9a9a;font-size:13px;">🔍</span>
+            <span style="color:#9a9a9a;font-size:13px;">${ic('search')}</span>
             <input id="coachTeamPlayerSearch" type="text" placeholder="Search players..." oninput="filterTeamPlayers()" style="background:transparent;border:none;color:#ffffff;font-size:12px;width:100%;outline:none;height:auto;max-width:none;text-align:left;padding:0;">
           </div>
           <!-- Player list for this team -->
@@ -523,7 +526,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
 
     <!-- Student Rounds -->
     <div id="svRoundsTab" style="width:100%;max-width:360px;display:none;">
-      <input id="svRoundSearch" type="text" placeholder="🔍 Search course name..." oninput="filterSvRounds()" style="width:100%;max-width:360px;box-sizing:border-box;margin-bottom:6px;">
+      <input id="svRoundSearch" type="text" placeholder="Search course name..." class="searchbox" oninput="filterSvRounds()" style="width:100%;max-width:360px;box-sizing:border-box;margin-bottom:6px;">
       <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;">
         <select id="svRoundFilterType" onchange="filterSvRounds()" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:4px 6px;font-size:11px;">
           <option value="all">All Types</option>
@@ -559,7 +562,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
       <!-- Combines sub-tab (moved from standalone Combines tab) -->
       <div id="svPracticeCombinesContent">
         <button onclick="coachRunCombineForStudent()" style="width:100%;height:46px;background:#007a52;border:none;border-radius:10px;color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px;max-width:none;">Run Combine for Student</button>
-        <div style="font-size:16px;font-weight:800;text-align:center;margin-bottom:8px;">🏌️ Combine History</div>
+        <div style="font-size:16px;font-weight:800;text-align:center;margin-bottom:8px;">${ic('club')} Combine History</div>
         <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;">
           <select id="svCombFilterType" onchange="loadStudentCombines()" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:4px 8px;font-size:12px;">
             <option value="all">All Types</option>
@@ -652,7 +655,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
           <button onclick="addSvScheduleEntry()" style="width:100%;height:42px;background:#007a52;border:none;border-radius:10px;color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;">+ Add to Schedule</button>
           <div id="svSchedAddMsg" style="font-size:12px;min-height:16px;text-align:center;margin-top:6px;color:#00b87a;"></div>
         </div>
-        <div style="font-size:16px;font-weight:800;text-align:center;margin-bottom:8px;">📅 Upcoming Rounds</div>
+        <div style="font-size:16px;font-weight:800;text-align:center;margin-bottom:8px;">${ic('cal')} Upcoming Rounds</div>
         <div id="svSchedEmptyMsg" style="background:#222222;border-radius:12px;padding:24px;text-align:center;color:#9a9a9a;font-size:13px;line-height:1.7;">
           No upcoming rounds scheduled.
         </div>
@@ -714,7 +717,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
 // Pop-ups: asking for coach access, a note when finishing a drill, and a drill's details.
 export const MODALS = `  <div id="coachRequestModal" onclick="if(event.target===this)document.getElementById('coachRequestModal').style.display='none'" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);z-index:500;align-items:center;justify-content:center;">
     <div style="background:#222222;border-radius:16px;padding:24px 20px;width:300px;max-width:90vw;box-shadow:0 8px 32px rgba(0,0,0,0.5);display:flex;flex-direction:column;align-items:center;gap:12px;">
-      <div style="font-size:22px;">🏌️</div>
+      <div style="font-size:22px;">${ic('club')}</div>
       <div style="font-size:16px;font-weight:800;text-align:center;">Become a Coach</div>
       <div style="font-size:13px;color:#9a9a9a;text-align:center;line-height:1.6;">Coach accounts require admin approval. Tap below to send a request — you'll be notified once it's approved.</div>
       <div id="coachRequestModalMsg" style="font-size:12px;min-height:14px;text-align:center;"></div>

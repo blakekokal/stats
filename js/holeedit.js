@@ -16,6 +16,7 @@
 
 import { h, course, toast, LIE_COLOR, along, boxCentre, teeBoxFor, saveCourseEdits, unpublishedEdits } from './app.js';
 import { inPolygon, drawnRing } from './geo.js';
+import { icEl } from './icons.js';
 
 const maplibregl = window.maplibregl;
 export const EDIT_TYPES = ['fairway', 'rough', 'bunker', 'water', 'recovery', 'trees', 'tee', 'green', 'ob'];
@@ -329,7 +330,7 @@ export function openBoundaryEditor({ m, root, ch, own, prev, next, go, onClose }
     } else {
       hint.textContent = 'Tap a boundary to edit it, or draw a new one.';
       panel.replaceChildren(hint, h('div', { class: 'brow' },
-        h('button', { class: 'bgo', onclick: () => { mode = drawType === 'trees' ? 'trees' : 'draw'; draft = []; sel = null; selVtx = null; refresh(); } }, '✏️ Draw new boundary')),
+        h('button', { class: 'bgo', onclick: () => { mode = drawType === 'trees' ? 'trees' : 'draw'; draft = []; sel = null; selVtx = null; refresh(); } }, icEl('pencil'), ' Draw new boundary')),
         h('small', { class: 'muted' }, 'Anything outside every boundary counts as rough.'));
     }
   }

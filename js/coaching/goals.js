@@ -1,6 +1,7 @@
 import { expose } from './core.js';
 import { activeUserId } from './core.js';
 import { _sb } from './core.js';
+import { ic } from '../icons.js';
 
 /* ══════════════════════════════════════════════════════════════
    GOAL SETTING & TRACKING
@@ -81,7 +82,7 @@ export function renderGoals(targetEl, goals, readOnly) {
       else deadlineStr = '<span style="color:#606060;">' + (dl.getMonth()+1) + '/' + dl.getDate() + '/' + dl.getFullYear() + '</span>';
     }
     var completedStyle = g.completed ? 'opacity:0.5;text-decoration:line-through;' : '';
-    var checkIcon = g.completed ? '✅' : '⬜';
+    var checkIcon = ic(g.completed ? 'check' : 'box');
     var actions = readOnly ? '' : '<div style="display:flex;gap:4px;margin-top:4px;">'
       + '<button onclick="toggleGoalComplete(\'' + g.id + '\')" style="background:transparent;border:none;color:#44b8f0;font-size:11px;cursor:pointer;padding:0;height:auto;text-decoration:underline;">' + (g.completed ? 'Undo' : 'Complete') + '</button>'
       + '<button onclick="deleteGoal(\'' + g.id + '\')" style="background:transparent;border:none;color:#d4706e;font-size:11px;cursor:pointer;padding:0;height:auto;text-decoration:underline;">Delete</button>'

@@ -11,6 +11,7 @@ import { combChipScenarios, combPutDistances } from '../coaching/data-combines.j
 import { setPracticeHubTab } from '../practice/hub.js';
 import { ppHideAllViews } from '../practice/plans.js';
 import { getExpectedPutts, getExpectedStrokes } from '../coaching/sg-calc.js';
+import { ic } from '../icons.js';
 
 /* ── State ── */
 let combCurMode='custom', combCurType='', combWedgeMode='sg', combState={};
@@ -200,7 +201,7 @@ export function combOpen(type, mode) {
   // reset save
   document.getElementById('comb-save-msg').textContent='';
   document.getElementById('comb-save-btn').disabled=false;
-  document.getElementById('comb-save-btn').textContent='💾 Save to Profile';
+  document.getElementById('comb-save-btn').innerHTML=ic('save')+' Save to Profile';
 
   // Set HCP — use student's HCP if coach is running for a student
   var userHcp;
@@ -216,7 +217,7 @@ export function combOpen(type, mode) {
 
   // Update save button text for student combines
   if (S.combSaveForStudent) {
-    document.getElementById('comb-save-btn').textContent = '💾 Save to ' + S.combSaveForStudent.name + "'s Profile";
+    var csb = document.getElementById('comb-save-btn'); csb.innerHTML = ic('save'); csb.append(' Save to ' + S.combSaveForStudent.name + "'s Profile");
   }
 
   combSetup();
@@ -610,11 +611,11 @@ async function combSave(){
 
   var resp = await _sb.from('combine_scores').insert(payload);
   if(resp.error){
-    btn.disabled=false; btn.textContent='💾 Save to Profile';
+    btn.disabled=false; btn.innerHTML=ic('save')+' Save to Profile';
     msg.style.color='#d4706e'; msg.textContent='Save failed: '+resp.error.message;
     return;
   }
-  btn.textContent='✅ Saved!';
+  btn.textContent='✓ Saved!';
 
   // Evaluation Test: capture this sub-combine's result
   if(_evalState && _evalState.active){

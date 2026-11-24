@@ -10,6 +10,7 @@
 import { h, course, teePosition, teeBoxFor, boxCentre, partOf, TILE_URL, setActiveCourse, courseById } from './app.js';
 import { store } from './store.js';
 import { elevIndex, heightAt } from './elev.js';
+import { icEl } from './icons.js';
 
 const M_PER_DEG = 111320, M_PER_YD = 0.9144, IN_PER_M = 39.3701;
 const SVGNS = 'http://www.w3.org/2000/svg';
@@ -1446,7 +1447,7 @@ export function openBook(n, opts) {
     status.textContent = adding ? HINT : '';
     sel = null; showSel();
   } }, '✎ Edit');
-  const delBtn = h('button', { class: 'bookbtn', hidden: true, onclick: () => { if (!sel) return; dropPt(sel); sel = null; keep(); draw(); } }, '🗑 Delete point');
+  const delBtn = h('button', { class: 'bookbtn', hidden: true, onclick: () => { if (!sel) return; dropPt(sel); sel = null; keep(); draw(); } }, icEl('trash'), ' Delete point');
   const holeSvg = () => pages.querySelector('svg.bookpage[data-page=hole]');
   const local = (svg, cx, cy) => { const pt = svg.createSVGPoint(); pt.x = cx; pt.y = cy; return pt.matrixTransform(svg.getScreenCTM().inverse()); };
   const inMap = (svg, x, y) => { const [l, t, r, b] = svg.geo.rect; return x >= l && x <= r && y >= t && y <= b; };

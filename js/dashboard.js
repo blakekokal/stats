@@ -8,6 +8,7 @@ import { expected } from './sg.js';
 import { yards } from './geo.js';
 import { isDriver } from './model.js';
 import { historyRounds, setCurrentRound, firstHoleOf } from './rounds.js';
+import { icEl } from './icons.js';
 
 const S = {}; // shared state for the ported dashboard code
 var hcpLabels = { 'pro': 'Tour Pro', '0': 'Scratch', '5': '5 HCP', '10': '10 HCP', '15': '15 HCP', '20': '20 HCP', '25': '25 HCP', '30': '30 HCP' };
@@ -123,7 +124,7 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
   back.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
   view.replaceChildren(h('div', { class: 'cx top' }, back,
     h('div', { style: 'width:100%;max-width:360px;' },
-      h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:6px;' }, only ? '📊 Round Stats' : '📊 Stats Dashboard'),
+      h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:6px;' }, icEl('bars'), only ? ' Round Stats' : ' Stats Dashboard'),
       only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || courseById(only.course).name} · ${only.date}${only.player ? ' · ' + only.player : ''}`) : null,
       // Filters (round type, time, "vs" level): hidden until Filter (beside "per round") is tapped.
       h('div', { id: 'dashFilters', style: 'display:none;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;' }, only ? [fHcp] : [fType, fTime, fHcp]),

@@ -6,6 +6,7 @@ import { showStudentTab, svHcpBadgeLabel } from './student-view.js';
 import { show } from './core.js';
 import { enterStudentView } from './core.js';
 import { _sb } from './core.js';
+import { ic } from '../icons.js';
 
 async function goToStudents() {
   if (!S.currentUser) { showAuthPage(); return; }
@@ -94,7 +95,7 @@ function renderStudentsList(data) {
       + '<div style="font-weight:700;font-size:15px;">' + (s.student_name || 'Student') + '</div>'
       + '<div style="font-size:12px;color:#9a9a9a;">' + (s.student_email || '') + '</div>'
       + '</div>'
-      + '<button onclick="editStudentName(\'' + s.student_id + '\',\'' + (s.student_name||'Student').replace(/'/g,"\\'") + '\')" style="width:32px;height:32px;font-size:14px;background:#2e2e2e;border-radius:6px;padding:0;">✏️</button>'
+      + '<button onclick="editStudentName(\'' + s.student_id + '\',\'' + (s.student_name||'Student').replace(/'/g,"\\'") + '\')" style="width:32px;height:32px;font-size:14px;background:#2e2e2e;border-radius:6px;padding:0;">' + ic('pencil') + '</button>'
       + '</div>'
       + '<div style="display:flex;gap:6px;margin-top:8px;">'
       + '<button onclick="viewStudent(\'' + s.student_id + '\',\'' + (s.student_name||'Student').replace(/'/g,"\\'") + '\',\'' + (s.student_email||'').replace(/'/g,"\\'") + '\')" style="flex:1;height:36px;font-size:13px;background:#2d7abc;border-radius:6px;">View Profile</button>'

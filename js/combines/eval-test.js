@@ -154,7 +154,7 @@ async function evalSaveSummary(score, totalSg){
   };
   var resp = await _sb.from('combine_scores').insert(payload);
   if(resp.error){ if(msg){ msg.style.color='#d4706e'; msg.textContent='Save failed: '+resp.error.message; } return; }
-  if(msg){ msg.style.color='#9affc8'; msg.textContent='✅ Evaluation Test saved to your profile'; }
+  if(msg){ msg.style.color='#9affc8'; msg.textContent='✓ Evaluation Test saved to your profile'; }
 }
 
 // Functions called from inline HTML handlers
