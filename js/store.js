@@ -156,6 +156,21 @@ export const sync = {
     localStorage.removeItem(OWNER_KEY); clearLocal();
     await init();
   },
+  // Delete the account for good (shared with the coaching app, so it goes
+  // there too): checks the password, then the database's delete_my_account()
+  // (DELETE_ACCOUNT_SQL) removes the user and their rows, then this device
+  // forgets everything.
+  async deleteAccount(password) {
+    const c = getClient(); if (!c || !sync.user) throw new Error('Log in first.');
+    const { error: authErr } = await c.auth.signInWithPassword({ email: sync.email, password });
+    if (authErr) throw new Error('That password is not right.');
+    const { error } = await c.rpc('delete_my_account');
+    if (error) throw new Error(/delete_my_account/.test(error.message) ? 'Account deletion isn’t switched on yet. Please try again later.' : error.message);
+    await c.auth.signOut({ scope: 'local' }).catch(() => {});
+    localStorage.removeItem(OWNER_KEY); clearLocal();
+    ['gs:avgDrive', BAG_KEY, 'gs:bag'].forEach(k => { try { localStorage.removeItem(k); } catch { /* ignore */ } });
+    await init();
+  },
   now: () => runSync(),
   onStatus(fn) { statusListeners.add(fn); },
 };
@@ -252,6 +267,23 @@ export const SETUP_SQL = `create table if not exists shot_tracker_docs (
 alter table shot_tracker_docs enable row level security;
 create policy "own rows" on shot_tracker_docs for all
   using (auth.uid() = user_id) with check (auth.uid() = user_id);`;
+
+// Lets a signed-in user delete their own account (Settings → Delete account;
+// the App Store requires it). Their rows here go first, then the auth user,
+// which cascades to every table that references it with on delete cascade.
+// Run DELETE_ACCOUNT_SQL once in the Supabase SQL editor.
+export const DELETE_ACCOUNT_SQL = `create or replace function delete_my_account() returns void
+  language plpgsql security definer set search_path = public, auth
+  as $$
+declare uid uuid := auth.uid();
+begin
+  if uid is null then raise exception 'not signed in'; end if;
+  delete from public.shot_tracker_docs where user_id = uid;
+  delete from public.live_rounds where user_id = uid;
+  delete from auth.users where id = uid;
+end $$;
+revoke all on function delete_my_account() from public, anon;
+grant execute on function delete_my_account() to authenticated;`;
 
 // ---------- published course outlines ----------
 // An admin's outline edits are published to `course_edits`, which everyone

@@ -419,7 +419,28 @@ export function renderSettingsPage(view) {
           try { await sync.changePassword(pw1.value); say(pwMsg, '✓ Password updated!', true); pw1.value = pw2.value = ''; } catch (e) { say(pwMsg, e.message || String(e)); }
         } }, 'UPDATE PASSWORD'), pwMsg),
       h('button', { style: 'background:#e06060;margin-top:8px;', onclick: async () => { await sync.signOut(); location.hash = '#/'; } }, 'LOG OUT'),
-      h('button', { class: 'linkbtn', style: 'margin-top:14px;font-size:12px;', onclick: () => { location.hash = '#/device'; } }, 'Offline imagery & backup'))));
+      h('button', { class: 'linkbtn', style: 'margin-top:14px;font-size:12px;', onclick: () => { location.hash = '#/device'; } }, 'Offline imagery & backup'),
+      deleteAccountSection(),
+      h('a', { href: 'privacy.html', target: '_blank', rel: 'noopener', style: 'margin-top:10px;font-size:12px;color:#9a9a9a;' }, 'Privacy policy'))));
+}
+
+// Delete account: hidden behind a link, then a warning and the password.
+function deleteAccountSection() {
+  const pw = h('input', { type: 'password', placeholder: 'Your password', autocomplete: 'current-password', 'aria-label': 'Password' });
+  const msg = h('div', { class: 'msg' });
+  const go = h('button', { style: 'background:#e06060;', onclick: async () => {
+    if (!pw.value) { msg.textContent = 'Enter your password'; msg.className = 'msg err'; return; }
+    if (!confirm('Delete your account and every round, shot and setting saved to it? This cannot be undone.')) return;
+    go.disabled = true; msg.textContent = 'Deleting…'; msg.className = 'msg ok';
+    try { await sync.deleteAccount(pw.value); location.hash = '#/'; toast('Your account has been deleted.'); }
+    catch (e) { msg.textContent = e.message || String(e); msg.className = 'msg err'; go.disabled = false; }
+  } }, 'DELETE MY ACCOUNT');
+  const box = h('div', { class: 'section', hidden: true },
+    h('div', { class: 'lab', style: 'color:#e06060;' }, 'Delete Account'),
+    h('div', { style: 'font-size:12px;color:#9a9a9a;max-width:280px;' }, 'This deletes your account and everything saved to it: rounds, shots, your bag and settings, for this app and the coaching app (they share the account). It cannot be undone. Download a backup first if you want to keep your rounds.'),
+    pw, go, msg);
+  const open = h('button', { class: 'linkbtn', style: 'margin-top:10px;font-size:12px;color:#e06060;', onclick: () => { box.hidden = false; open.hidden = true; pw.focus(); } }, 'Delete account');
+  return h('div', { style: 'display:contents;' }, open, box);
 }
 
 // ---------- log in ----------
@@ -456,13 +477,15 @@ export function renderLogin(view) {
     try { await sync.resetPassword(email.value.trim()); say('✓ Password reset email sent! Check your inbox.', '#00b87a'); } catch (e) { say(e.message || String(e)); }
   } }, 'Forgot Password?');
   view.replaceChildren(page('center', backBtn(),
-    h('div', { style: 'font-size:24px;font-weight:800;' }, 'Account'), msg, email, pass, extra, loginBtn, signupBtn, forgot));
+    h('div', { style: 'font-size:24px;font-weight:800;' }, 'Account'), msg, email, pass, extra, loginBtn, signupBtn, forgot,
+    h('a', { href: 'privacy.html', target: '_blank', rel: 'noopener', style: 'margin-top:14px;font-size:12px;color:#9a9a9a;' }, 'Privacy policy')));
 }
 
 
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.17.2', ['Settings: Delete account, which permanently deletes your account and everything saved to it (for the coaching app too, as they share the account)', 'Privacy policy, linked from Settings and the log-in page']],
   ['1.17.1', ['Coaching: editing a student’s round also updates the score on its New Round notification in Recent Activity']],
   ['1.17.0', ['Last ball lost / unplayable: when the ball you already marked was lost or unplayable, tap + and choose it to re-tee or drop with the penalty and no extra stroke (before, Penalty / drop there added a stroke from where the ball lay)', 'A drop placed on the edge of a pond is played as from the rough and isn’t charged a second penalty; rounds that already had one are corrected', 'Coaching: Edit on a student’s round (opened from Coaching) to fix their shots; changes are saved to the student’s account']],
   ['1.16.3', ['Coaching: View round and Strokes gained on a New Round notification open that round (the course it names, played that day), not the one the student edited most recently']],
