@@ -118,9 +118,18 @@ export function renderNewRound(view, { scout = false } = {}) {
   // The course starts blank: type to filter the list, tap one to pick it.
   let chosen = null;
   const tee = h('select', { class: 'bigsel', 'aria-label': 'Tee box', disabled: true, onchange: () => showTee() }, h('option', { value: '' }, 'Select Tee Box...'));
+  // Picking a course fills in a tee box: the one you played last if this course
+  // has it, otherwise the second longest (usually the Blues), or the only one.
+  const total = t => t.yards.reduce((a, b) => a + b, 0);
+  function defaultTee(c) {
+    if (c.tees.some(t => t.name === lastTee)) return lastTee;
+    const byLength = [...c.tees].sort((a, b) => total(b) - total(a));
+    return (byLength[1] || byLength[0])?.name;
+  }
   function fillTees() {
+    const pick = chosen && defaultTee(chosen);
     tee.replaceChildren(h('option', { value: '' }, chosen ? 'Select Tee Box...' : 'Pick a course first'),
-      ...(chosen ? chosen.tees.map(t => h('option', { value: t.name, selected: t.name === lastTee }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yds`)) : []));
+      ...(chosen ? chosen.tees.map(t => h('option', { value: t.name, selected: t.name === pick }, `${t.name} · ${total(t)} yds`)) : []));
     tee.disabled = !chosen;
     showTee();
   }
@@ -489,6 +498,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.18.8', ['New Round and GPS Overview: picking a course fills in a tee box, the one you played last if the course has it, otherwise the second longest (usually the Blues)']],
   ['1.18.7', ['One color scheme across the app: Stats, Settings and Performance now use the same colors as the rest (the yardage book keeps its own)']],
   ['1.18.6', ['App icon back to the white BLAKE KOKAL GOLF']],
   ['1.18.5', ['Home Screen icon on iPhone is the dark one too (it was still showing the white icon)']],
