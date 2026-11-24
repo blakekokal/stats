@@ -523,6 +523,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.18.13', ['Stats Dashboard: the Filter button sits to the right of the title (it was beside “per round”)']],
   ['1.18.12', ['Round History: one Filter button instead of five boxes. Tap it for a menu with Type, Holes, Time, Status and Sort (Clear resets them); it turns blue and shows how many are on']],
   ['1.18.11', ['Strokes Gained Explained: the same font as the rest of the app (the worked sums were in a typewriter font), with the app’s title size and weights and no text smaller than 11']],
   ['1.18.10', ['Home: the ? opens Strokes Gained Explained', 'Home: Search finds pages, courses, drills, combines and Learn tools and videos; tap one to go there (a course opens in GPS Overview)', 'Home: the ?, search and settings buttons sit in a row above the title, so they no longer cover it']],

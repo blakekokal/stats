@@ -124,9 +124,13 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
   back.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
   view.replaceChildren(h('div', { class: 'cx top' }, back,
     h('div', { style: 'width:100%;max-width:360px;' },
-      h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:6px;' }, icEl('bars'), only ? ' Round Stats' : ' Stats Dashboard'),
+      // The title, with Filter at its right (it shows or hides the filters below).
+      h('div', { style: 'position:relative;margin-bottom:6px;' },
+        h('div', { style: 'font-size:20px;font-weight:800;text-align:center;' }, icEl('bars'), only ? ' Round Stats' : ' Stats Dashboard'),
+        only ? null : h('button', { 'aria-label': 'Filter', onclick: () => toggleDashFilters(),
+          style: 'position:absolute;right:0;top:50%;transform:translateY(-50%);width:auto;max-width:none;height:30px;padding:0 10px;font-size:12px;font-weight:700;background:#282828;color:#9a9a9a;border-radius:8px;' }, 'Filter \u25be')),
       only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || courseById(only.course).name} · ${only.date}${only.player ? ' · ' + only.player : ''}`) : null,
-      // Filters (round type, time, "vs" level): hidden until Filter (beside "per round") is tapped.
+      // Filters (round type, time, "vs" level): hidden until Filter (beside the title) is tapped.
       h('div', { id: 'dashFilters', style: 'display:none;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;' }, only ? [fHcp] : [fType, fTime, fHcp]),
       content)));
 
@@ -442,14 +446,15 @@ export function renderDashboard(data, hcp, targetId, opts) {
   var nd=nDetailed||1, sgPer={tot:sgTot/nd,ott:A.sgOTT/nd,app:A.sgAPP/nd,arg:A.sgARG/nd,putt:A.sgPutt/nd};
   var sgMax=Math.max(Math.abs(sgPer.tot),Math.abs(sgPer.ott),Math.abs(sgPer.app),Math.abs(sgPer.arg),Math.abs(sgPer.putt));
   var sgR=[3,5,10,20,40].filter(function(x){return x>=sgMax;})[0]||Math.ceil(sgMax/10)*10;
-  // Heading, with Filter beside "per round" (round type, time and the level to compare with),
+  // Heading (a coach's view of a student has Filter beside "per round": round type, time and the level to compare with),
   // or, for one round picked from the list, which round it is (Back returns to all rounds).
   var top=opts.single&&data[0]?'<div style="display:flex;align-items:center;gap:8px;margin:2px 0 6px;">'
     +'<div style="font-size:13px;color:#9a9a9a;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(data[0].course_name||'')+' \u00b7 '+data[0].round_date+'</div></div>':'';
   html+=top+'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:2px;">'
     +'<div style="font-size:14px;font-weight:800;color:#00b87a;">STROKES GAINED \u00b7 '+(opts.single?'this round':'per round')+'</div>'
     // A quiet text link on the same line as the heading.
-    +(opts.single?'':'<button onclick="toggleDashFilters()" style="height:auto;min-height:0;font-size:11px;font-weight:600;background:none;border:none;border-radius:0;padding:0;margin:0;max-width:none;width:auto;color:#606060;line-height:1;letter-spacing:.03em;">Filter \u25be</button>')+'</div>';
+    // The coach's view of a student keeps it here; the Stats Dashboard page has it beside its title.
+    +(opts.single||targetId!=='svDashContent'?'':'<button onclick="toggleDashFilters()" style="height:auto;min-height:0;font-size:11px;font-weight:600;background:none;border:none;border-radius:0;padding:0;margin:0;max-width:none;width:auto;color:#606060;line-height:1;letter-spacing:.03em;">Filter \u25be</button>')+'</div>';
   html+=sgBar('SG: Total', sgPer.tot, sgR, true, 1);
   html+=sgBar('SG: Off The Tee', sgPer.ott, sgR, false, 2);
   html+=sgBar('SG: Approach', sgPer.app, sgR, false, 3);
@@ -619,7 +624,7 @@ function dashViewRound(i) {
 }
 window.dashViewRound = dashViewRound;
 function dashAllRounds() { if (_dash) renderDashboard(_dash.data, _dash.hcp, _dash.targetId); }
-// Filter (beside "per round"): shows or hides the page's filters (round type, time, and the level to compare with).
+// Filter (beside the title, or beside "per round" in a coach's view of a student): shows or hides the page's filters (round type, time, and the level to compare with).
 function toggleDashFilters() {
   var el = document.getElementById(_dash && _dash.targetId === 'svDashContent' ? 'svDashFilters' : 'dashFilters');
   if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
