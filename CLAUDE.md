@@ -124,13 +124,13 @@ Public, complete:
   no OSM hole); needs the current card from the club
 - Texas Rangers Golf Club (Arlington): OSM's holes 1-9 are GolfPass's 10-18 and the
   other way round; check the club's current card before building
-- Rockwall Golf & Athletic Club (Rockwall)
+- Rockwall Golf & Athletic Club (Rockwall) (building, 2026-11-24)
 - Pecan Valley (Fort Worth; two courses)
-- The Golf Club at Fossil Creek (Fort Worth)
-- White Stone (Fort Worth)
+- The Golf Club at Fossil Creek (Fort Worth) (building, 2026-11-24)
+- White Stone (Fort Worth) (building, 2026-11-24)
 - The Resort (Fort Worth)
-- Hawks Creek (Westworth Village)
-- Oak Hollow (McKinney)
+- Hawks Creek (Westworth Village) (building, 2026-11-24)
+- Oak Hollow (McKinney) (building, 2026-11-24)
 
 Private, complete: TPC Craig Ranch, TPC Four Seasons Las Colinas, Stonebriar,
 Dallas Athletic Club, Dallas National, Colonial, Northwood, Prestonwood Creeks,
