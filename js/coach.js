@@ -498,6 +498,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.18.9', ['Drills: every drill tile and category tab is blue (Short Game and Full Swing were green and yellow)']],
   ['1.18.8', ['New Round and GPS Overview: picking a course fills in a tee box, the one you played last if the course has it, otherwise the second longest (usually the Blues)']],
   ['1.18.7', ['One color scheme across the app: Stats, Settings and Performance now use the same colors as the rest (the yardage book keeps its own)']],
   ['1.18.6', ['App icon back to the white BLAKE KOKAL GOLF']],
