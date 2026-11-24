@@ -489,6 +489,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.18.5', ['Home Screen icon on iPhone is the dark one too (it was still showing the white icon)']],
   ['1.18.4', ['App icon: BLAKE KOKAL GOLF in white and green on black']],
   ['1.18.3', ['Menus: double-tapping no longer zooms the page in']],
   ['1.18.2', ['Home stays put: dragging on the main page no longer makes the screen slide and spring back']],
