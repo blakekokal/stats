@@ -218,3 +218,15 @@ body.coach { background: #1e1e1e; }
 .cx .markernone { font-size: 13px; color: #8a8a8a; }
 .cx .markereditor { justify-items: stretch; }
 .cx .savededit { background: #1c3a5e; }
+
+/* Home: always fits the screen without scrolling. The page is exactly the
+   screen's height and the buttons share what's left, shrinking on short screens. */
+.cx.home { height: 100%; min-height: 0; overflow: hidden; padding: max(16px, calc(env(safe-area-inset-top) + 8px)) 16px max(12px, env(safe-area-inset-bottom)); }
+.cx.home .homecol { width: 100%; max-width: 320px; display: flex; flex-direction: column; gap: 7px; flex: 0 1 auto; min-height: 0; }
+.cx.home .homecol > :first-child { flex: none; }
+.cx.home .homebtn { flex: 0 1 60px; min-height: 36px; padding-top: 0; padding-bottom: 0; overflow: hidden; }
+@media (max-height: 640px) {
+  .cx.home .homecol { gap: 5px; }
+  .cx.home .homebrand > div:first-child { font-size: 2.2rem !important; }
+  .cx.home .homebtn .ic, .cx.home .homebtn .ic .ico { width: 28px; height: 28px; }
+}
