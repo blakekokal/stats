@@ -504,6 +504,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.18.11', ['Strokes Gained Explained: the same font as the rest of the app (the worked sums were in a typewriter font), with the app’s title size and weights and no text smaller than 11']],
   ['1.18.10', ['Home: the ? opens Strokes Gained Explained', 'Home: Search finds pages, courses, drills, combines and Learn tools and videos; tap one to go there (a course opens in GPS Overview)', 'Home: the ?, search and settings buttons sit in a row above the title, so they no longer cover it']],
   ['1.18.9', ['Drills: every drill tile and category tab is blue (Short Game and Full Swing were green and yellow)']],
   ['1.18.8', ['New Round and GPS Overview: picking a course fills in a tee box, the one you played last if the course has it, otherwise the second longest (usually the Blues)']],
