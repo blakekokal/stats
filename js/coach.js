@@ -101,6 +101,9 @@ export function renderHome(view) {
       practice,
       coaching),
     sync.user ? null : h('button', { class: 'linkbtn', style: 'margin-top:10px;flex:none;', onclick: () => { location.hash = '#/account'; } }, 'Log In / Sign Up')));
+  // Everything fits, so a drag on Home shouldn't move the page at all: on iPhone
+  // the whole screen otherwise slides and springs back (rubber-band bounce).
+  view.firstChild.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
 }
 
 // ---------- new round ----------
@@ -486,6 +489,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.18.2', ['Home stays put: dragging on the main page no longer makes the screen slide and spring back']],
   ['1.18.1', ['Home fits the screen: no more scrolling on the main page. The buttons shrink a little on shorter phones so everything shows at once']],
   ['1.18.0', ['New icons: every emoji is now a simple outline icon in one style, on Home, Practice, Combines, Learn, Coaching and the rest of the app. Each Practice, Combines and Learn tile has its own icon, lined up on the left with the titles after it', 'Search boxes show a magnifier inside the box']],
   ['1.17.7', ['Home Screen icon: the BLAKE KOKAL GOLF badge now shows on iPhone instead of a plain letter']],
