@@ -20,15 +20,15 @@ function getSubcategoriesForCategory(cat) {
 // Category colors for drill cards
 var drillCatColors = {
   putting:   { bg: '#1a4a8a', border: '#2d7abc', tag: '#44b8f0' },
-  shortgame: { bg: '#00402c', border: '#007a52', tag: '#00b87a' },
-  fullswing: { bg: '#2a2008', border: '#d49a10', tag: '#f0c830' }
+  shortgame: { bg: '#1a4a8a', border: '#2d7abc', tag: '#44b8f0' },
+  fullswing: { bg: '#1a4a8a', border: '#2d7abc', tag: '#44b8f0' }
 };
 
 export function setDrillCategory(cat) {
   // Update tab button styles for both standalone and practice hub versions
   var prefix = S.drillsOnPracticeHub ? 'phDrillTab' : 'drillTab';
   var tabs = { putting: prefix+'Putting', shortgame: prefix+'Shortgame', fullswing: prefix+'Fullswing' };
-  var activeColors = { putting: '#2d7abc', shortgame: '#007a52', fullswing: '#d4706e' };
+  var activeColors = { putting: '#2d7abc', shortgame: '#2d7abc', fullswing: '#2d7abc' };
   Object.keys(tabs).forEach(function(k) {
     var btn = document.getElementById(tabs[k]);
     if (!btn) return;
