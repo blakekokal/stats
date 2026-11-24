@@ -230,3 +230,6 @@ body.coach { background: #1e1e1e; }
   .cx.home .homebrand > div:first-child { font-size: 2.2rem !important; }
   .cx.home .homebtn .ic, .cx.home .homebtn .ic .ico { width: 28px; height: 28px; }
 }
+/* No rubber-band bounce or pull-to-refresh on Home. */
+html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-behavior: none; }
+.cx.home { touch-action: none; }
