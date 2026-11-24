@@ -1,6 +1,6 @@
 {
-  "name": "Shot Tracker",
-  "short_name": "Shots",
+  "name": "BKG Stats",
+  "short_name": "BKG Stats",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#101412",
