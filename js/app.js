@@ -7,7 +7,7 @@ import { renderSettings } from './settings.js';
 import { renderStats } from './stats.js';
 import { renderAccount } from './account.js';
 import { renderStatsDashboard } from './dashboard.js';
-import { askResume, renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin, renderWhatsNew, renderEditRound } from './coach.js';
+import { askResume, renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin, renderWhatsNew, renderEditRound, renderHelp, renderSearch } from './coach.js';
 import { VERSION } from './version.js';
 import { currentRound, isWatching, endWatching, watchInfo, watchingId } from './rounds.js';
 import { loadWatch, watchHole } from './live.js';
@@ -335,10 +335,10 @@ async function route() {
     const res = await loadWatch(id);
     if (res !== 'ok') { document.body.classList.add('coach'); document.body.classList.remove('playing'); closeHole(); renderLiveError(res, route); return; }
   }
-  const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag', 'coaching', 'performance', 'practice'].includes(parts[0]) ? parts[0] : 'home';
+  const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag', 'coaching', 'performance', 'practice', 'help', 'search'].includes(parts[0]) ? parts[0] : 'home';
   // Pages laid out like the coaching app hide this app's top bar. Set before
   // waiting for the course, so the old top bar never shows while it loads.
-  document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout', 'coaching', 'performance', 'practice'].includes(tab));
+  document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout', 'coaching', 'performance', 'practice', 'help', 'search'].includes(tab));
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   document.body.classList.toggle('playing', tab === 'hole');
   await loadCourse(parts[0] === 'hole');
@@ -358,6 +358,8 @@ async function route() {
   else if (tab === 'dashboard') renderStatsDashboard(view, renderLogin, parts[1]);
   else if (tab === 'round') renderEditRound(view, parts[1]);
   else if (tab === 'scout') renderNewRound(view, { scout: true });
+  else if (tab === 'help') renderHelp(view);
+  else if (tab === 'search') renderSearch(view);
   else if (coachTab) renderCoaching(view, tab);
   else renderHome(view);
   // A round left going is settled before anything else (see askResume).
