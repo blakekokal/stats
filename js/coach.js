@@ -7,6 +7,7 @@ import { store, sync, submitCourseRequest, fetchCourseRequests, setCourseRequest
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
 import { checkCoachingDot } from './coaching/index.js';
+import { fetchMyRole, saveRole, sendCoachRequest } from './coaching/roles.js';
 import { VERSION } from './version.js';
 import { icEl } from './icons.js';
 import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting, firstHoleOf, activeRound, pauseRound, resumeRound, holeCountOf } from './rounds.js';
@@ -451,6 +452,36 @@ function courseRequestsSection() {
   return h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Course Requests'), list);
 }
 
+// Settings > Account Role: Student or Coach. Coaches (and admins, always
+// coaches) switch freely; anyone else taps Coach to ask an admin for access.
+function accountRoleSection() {
+  const msg = h('div', { class: 'msg' });
+  const say = (t, ok) => { msg.textContent = t; msg.className = 'msg ' + (ok ? 'ok' : 'err'); };
+  let me = null;
+  const show = () => {
+    student.classList.toggle('on', me?.role === 'student'); coach.classList.toggle('on', me?.role === 'coach');
+    student.disabled = !me || me.isAdmin; coach.disabled = !me;
+  };
+  const pick = async role => {
+    if (!me || me.role === role) return;
+    if (role === 'coach' && !me.approved) {
+      if (!confirm('Coach access lets you add students, view their rounds and assign drills. Send a request to the admin?')) return;
+      say('Sending…', true);
+      try { say((await sendCoachRequest()) === 'pending' ? 'Your request is already waiting for approval.' : "✓ Request sent! You'll be notified when it's approved.", true); }
+      catch (e) { say(e.message || String(e)); }
+      return;
+    }
+    const was = me.role; me.role = role; show();
+    try { await saveRole(role); say(role === 'coach' ? '✓ Coach: Coaching shows your students.' : '✓ Student: Coaching shows your coach.', true); }
+    catch (e) { me.role = was; show(); say(e.message || String(e)); }
+  };
+  const student = h('button', { class: 'rolebtn', disabled: true, onclick: () => pick('student') }, 'Student');
+  const coach = h('button', { class: 'rolebtn', disabled: true, onclick: () => pick('coach') }, 'Coach');
+  fetchMyRole().then(r => { me = r; show(); if (r.isAdmin) say('Admins are always coaches.', true); }).catch(e => say(e.message || String(e)));
+  return h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Account Role'),
+    h('div', { style: 'display:flex;gap:6px;width:100%;max-width:280px;' }, student, coach), msg);
+}
+
 // ---------- settings ----------
 
 export function renderSettingsPage(view) {
@@ -489,8 +520,7 @@ export function renderSettingsPage(view) {
         say(nameMsg, 'Saving...', true);
         try { await sync.setName(n); say(nameMsg, '✓ Name updated!', true); } catch (e) { say(nameMsg, e.message || String(e)); }
       } }, 'SAVE NAME'), nameMsg,
-      h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Account Role'),
-        h('div', { style: 'display:flex;gap:6px;width:100%;max-width:280px;' }, off('Student'), off('Coach'))),
+      accountRoleSection(),
       h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Strokes Gained Comparison'), hcp, hcpMsg),
       h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Avg Total Drive'), drive,
         h('div', { style: 'font-size:11px;color:#606060;max-width:280px;' }, 'Par 4s and 5s open with the crosshair this far from the tee. Leave blank to use the spot where a drive down the fairway gains 0 strokes.'),
@@ -571,6 +601,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.17', ['Settings: Account Role works. Coaches switch between Student and Coach; anyone else taps Coach to request coach access', 'Coaching: Request coach access no longer fails for coaches and admins']],
   ['1.20.16', ['Submit a New Course: on GPS Overview and New Round (and when a course search finds nothing), logged-in players can ask for a course to be added']],
   ['1.20.15', ['New Round: no Create Custom Course or My Courses buttons']],
   ['1.20.14', ['Performance Analysis, Combines: the Putting and Wedge cards line up, each pair the same height']],

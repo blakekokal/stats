@@ -266,3 +266,4 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 .cx .reqtop { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
 .cx .reqtop b { font-size: 14px; min-width: 0; }
 .cx .reqnotes { color: #9a9a9a; overflow-wrap: anywhere; }
+.cx .rolebtn { flex: 1; height: 36px; font-size: 13px; }

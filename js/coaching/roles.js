@@ -35,27 +35,70 @@ export function generateInviteCode(userId) {
   return code;
 }
 
+// Switch the signed-in account's role and save it. The coaching app's own
+// Student/Coach switch is gone (the switch now lives in Settings), so every
+// element here is optional.
 function setRole(role) {
   _userRole = role;
-  // Update UI
   var sBtn = document.getElementById('roleStudentBtn');
   var cBtn = document.getElementById('roleCoachBtn');
-  if (role === 'student') {
-    sBtn.style.background = '#007a52'; sBtn.style.color = '#ffffff'; sBtn.style.fontWeight = '700';
-    cBtn.style.background = '#282828'; cBtn.style.color = '#606060'; cBtn.style.fontWeight = '600';
-    document.getElementById('studentCodeSection').style.display = 'flex';
-    document.getElementById('coachInfoSection').style.display = 'none';
-  } else {
-    cBtn.style.background = '#007a52'; cBtn.style.color = '#ffffff'; cBtn.style.fontWeight = '700';
-    sBtn.style.background = '#282828'; sBtn.style.color = '#606060'; sBtn.style.fontWeight = '600';
-    document.getElementById('studentCodeSection').style.display = 'none';
-    document.getElementById('coachInfoSection').style.display = 'flex';
-    checkCoachNotifications();
+  if (sBtn && cBtn) {
+    var on = role === 'student' ? sBtn : cBtn, off = role === 'student' ? cBtn : sBtn;
+    on.style.background = '#007a52'; on.style.color = '#ffffff'; on.style.fontWeight = '700';
+    off.style.background = '#282828'; off.style.color = '#606060'; off.style.fontWeight = '600';
   }
-  // Save role to profiles table
-  if (S.currentUser) {
-    _sb.from('profiles').update({ role: role }).eq('id', S.currentUser.id);
+  var sc = document.getElementById('studentCodeSection'), ci = document.getElementById('coachInfoSection');
+  if (sc) sc.style.display = role === 'student' ? 'flex' : 'none';
+  if (ci) ci.style.display = role === 'student' ? 'none' : 'flex';
+  if (role === 'coach') checkCoachNotifications();
+  if (S.currentUser) saveRole(role);
+}
+
+// The signed-in account's role: { role: 'student' | 'coach', isAdmin, approved }.
+// Admins are always coaches; approved means an admin has approved a coach request
+// (so the player can switch back to Coach after trying Student).
+export async function fetchMyRole() {
+  if (!S.currentUser) return { role: 'student', isAdmin: false, approved: false };
+  var { data } = await _sb.from('profiles').select('role, is_admin').eq('id', S.currentUser.id).single();
+  var isAdmin = !!(data && data.is_admin);
+  var role = isAdmin ? 'coach' : (data && data.role === 'coach' ? 'coach' : 'student');
+  var approved = isAdmin || role === 'coach';
+  if (!approved) {
+    var { data: ok } = await _sb.from('coach_requests').select('id').eq('user_id', S.currentUser.id).eq('status', 'approved').limit(1);
+    approved = !!(ok && ok.length);
   }
+  _userRole = role;
+  return { role: role, isAdmin: isAdmin, approved: approved };
+}
+export async function saveRole(role) {
+  _userRole = role;
+  if (!S.currentUser) return;
+  var { error } = await _sb.from('profiles').update({ role: role }).eq('id', S.currentUser.id);
+  if (error) throw new Error(error.message);
+}
+
+// Ask an admin for coach access: a coach_requests row, an in-app notification
+// to each admin and an email. Returns 'sent', or 'pending' if one is already waiting.
+export async function sendCoachRequest() {
+  if (!S.currentUser) throw new Error('Log in first');
+  var { data: existing } = await _sb.from('coach_requests')
+    .select('id').eq('user_id', S.currentUser.id).eq('status', 'pending').limit(1);
+  if (existing && existing.length > 0) return 'pending';
+  var displayName = (S.currentUser.user_metadata && S.currentUser.user_metadata.display_name) || 'Unknown';
+  var email = S.currentUser.email || '';
+  var { error: insertErr } = await _sb.from('coach_requests').insert({
+    user_id: S.currentUser.id, user_email: email, display_name: displayName, status: 'pending', created_at: new Date().toISOString()
+  });
+  if (insertErr) throw insertErr;
+  var { data: admins } = await _sb.from('profiles').select('id').eq('is_admin', true);
+  for (var i = 0; admins && i < admins.length; i++) {
+    await _sb.from('notifications').insert({
+      user_id: admins[i].id, type: 'coach_request', title: 'Coach Role Request',
+      message: displayName + ' (' + email + ') is requesting coach access.', read: false, created_at: new Date().toISOString()
+    });
+  }
+  await sendCoachRequestEmail(displayName, email);
+  return 'sent';
 }
 
 // ─── COACH TEAMS SYSTEM ─────────────────────────────────────────────────────
@@ -103,11 +146,15 @@ var _ADMIN_EMAIL         = 'blakekokal@gmail.com';
 async function requestCoachRole() {
   if (!S.currentUser) return;
 
-  // Admin always gets direct access
-  if (S.isAdmin) { setRole('coach'); return; }
-
-  // If already coach, switch back to student via Student btn
-  if (_userRole === 'coach') { setRole('student'); return; }
+  // Admins and coaches already have coach access; an approved player who chose
+  // Student switches straight back. Everyone else asks (the modal below).
+  var roleMsg = document.getElementById('roleMsg');
+  var me = await fetchMyRole();
+  if (me.role === 'coach' || me.approved) {
+    if (me.role !== 'coach') setRole('coach');
+    if (roleMsg) { roleMsg.style.color = '#00b87a'; roleMsg.textContent = "✓ You're a coach. Switch between Student and Coach in Settings."; }
+    return;
+  }
 
   // Show the explanation modal
   var modalMsg = document.getElementById('coachRequestModalMsg');
@@ -131,48 +178,13 @@ async function submitCoachRequest() {
   modalMsg.textContent = 'Submitting request...';
 
   try {
-    // Check for existing pending request
-    var { data: existing } = await _sb.from('coach_requests')
-      .select('id').eq('user_id', S.currentUser.id).eq('status', 'pending').limit(1);
-
-    if (existing && existing.length > 0) {
+    if (await sendCoachRequest() === 'pending') {
       modalMsg.style.color = '#f0c830';
       modalMsg.innerHTML = ic('hourglass') + ' Request already pending — waiting for admin approval.';
       sendBtn.disabled = false;
       sendBtn.textContent = 'Send Request';
       return;
     }
-
-    var displayName = (S.currentUser.user_metadata && S.currentUser.user_metadata.display_name) || 'Unknown';
-    var email = S.currentUser.email || '';
-
-    // Insert request row
-    var { error: insertErr } = await _sb.from('coach_requests').insert({
-      user_id: S.currentUser.id,
-      user_email: email,
-      display_name: displayName,
-      status: 'pending',
-      created_at: new Date().toISOString()
-    });
-    if (insertErr) throw insertErr;
-
-    // In-app notification to admin
-    var { data: admins } = await _sb.from('profiles').select('id').eq('is_admin', true);
-    if (admins) {
-      for (var i = 0; i < admins.length; i++) {
-        await _sb.from('notifications').insert({
-          user_id: admins[i].id,
-          type: 'coach_request',
-          title: 'Coach Role Request',
-          message: displayName + ' (' + email + ') is requesting coach access.',
-          read: false,
-          created_at: new Date().toISOString()
-        });
-      }
-    }
-
-    // Email notification
-    await sendCoachRequestEmail(displayName, email);
 
     modalMsg.style.color = '#00b87a';
     modalMsg.textContent = '✓ Request sent! You\'ll be notified when approved.';
@@ -182,8 +194,8 @@ async function submitCoachRequest() {
     setTimeout(function() {
       document.getElementById('coachRequestModal').style.display = 'none';
       var roleMsg = document.getElementById('roleMsg');
-      roleMsg.style.color = '#00b87a';
-      roleMsg.textContent = '✓ Request sent! You\'ll be notified when approved.';
+      if (roleMsg) roleMsg.style.color = '#00b87a';
+      if (roleMsg) roleMsg.textContent = '✓ Request sent! You\'ll be notified when approved.';
     }, 1500);
   } catch(e) {
     modalMsg.style.color = '#d4706e';
