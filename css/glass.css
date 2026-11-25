@@ -145,3 +145,7 @@ body, body.coach { background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, 
 .cx .tint-blue { color: var(--mac-blue); } .cx .tint-green { color: var(--mac-green); }
 .cx .tint-yellow { color: var(--mac-yellow); } .cx .tint-red { color: var(--mac-red); }
 .cx .tint-purple { color: #BF5AF2; }
+
+/* Round buttons stay round: app.css gives every button a 40px min-height, which
+   stretched the 32px search/settings and 36px back buttons into ovals. */
+.cx .iconbtn, .cx .back-btn-top { min-height: 0 !important; aspect-ratio: 1; }
