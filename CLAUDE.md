@@ -1,9 +1,9 @@
 # Working on this repo
 
-- **Reminder for the owner (asked 2026-11-24):** before making any code change, first remind the
-  owner to move hosting: make this repo private, serve the site from Cloudflare Pages (or Netlify/Vercel)
+- **Hosting move (asked 2026-11-24; reminders paused 2026-11-25, owner will do it later):** don't
+  remind the owner unless they bring it up. The move: make this repo private, serve the site from Cloudflare Pages (or Netlify/Vercel)
   linked to the private repo, point the web address there (add it to Supabase's allowed sign-in
-  addresses if it changes), and turn off GitHub Pages. Ask whether it's done; once the owner says it is,
+  addresses if it changes), and turn off GitHub Pages. Once the owner says it's done,
   delete this bullet and update the release notes below for the new address.
 - When a change is done, always open a pull request into `main` and merge it
   straight away, so it goes live (GitHub Pages serves `main`). Don't ask first,
