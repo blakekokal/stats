@@ -255,13 +255,13 @@ export function renderNewRound(view, { scout = false } = {}) {
   if (pre) { sessionStorage.removeItem('gs:pickCourse'); if (COURSES.some(c => c.id === pre)) useCourse(pre); }
   if (scout) {
     view.replaceChildren(page('top', backBtn(),
-      h('div', { style: 'font-size:20px;font-weight:800;padding:0 44px;line-height:1.2;' }, 'GPS Overview / Yardage Books'),
+      h('div', { style: 'font-size:20px;font-weight:800;padding:0 44px;line-height:1.2;' }, icEl('map', 'tint-blue'), ' GPS Overview / Yardage Books'),
       h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:-4px;' }, `${COURSES.length} courses added`),
       courseBox, ninesBox, tee, teeInfo, typeRow, typeNote, confirm, genBook, savedBooksBtn, err, reqBtn()));
     return;
   }
   view.replaceChildren(page('top', backBtn(),
-    h('div', { style: 'font-size:22px;font-weight:800;' }, 'New Round'),
+    h('div', { style: 'font-size:22px;font-weight:800;' }, icEl('flag', 'tint-green'), ' New Round'),
     name,
     h('div', { class: 'row' }, level, date),
     courseBox, ninesBox,
@@ -360,7 +360,7 @@ export function renderHistory(view) {
   // Tapping anywhere else closes it.
   const root = page('top', backBtn(),
     h('div', { style: 'width:100%;max-width:360px;' },
-      h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;' }, icEl('scorecard'), ' Round History'),
+      h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;' }, icEl('scorecard', 'tint-green'), ' Round History'),
       search, filterWrap,
       msg, list, filtMsg));
   root.addEventListener('click', e => { if (!panel.hidden && !filterWrap.contains(e.target)) { panel.hidden = true; filterBtn.setAttribute('aria-expanded', 'false'); } });
@@ -601,6 +601,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.18', ['Page titles show their Home icon in the same color: New Round, GPS Overview, Round History, Stats Dashboard, Performance Analysis, My Clubs, Practice and Learning, Coaching']],
   ['1.20.17', ['Settings: Account Role works. Coaches switch between Student and Coach; anyone else taps Coach to request coach access', 'Coaching: Request coach access no longer fails for coaches and admins']],
   ['1.20.16', ['Submit a New Course: on GPS Overview and New Round (and when a course search finds nothing), logged-in players can ask for a course to be added']],
   ['1.20.15', ['New Round: no Create Custom Course or My Courses buttons']],

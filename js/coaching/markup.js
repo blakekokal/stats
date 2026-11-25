@@ -9,7 +9,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
 
   <!-- HEADER -->
   <div style="width:100%;max-width:420px;padding:28px 16px 0;box-sizing:border-box;flex-shrink:0;">
-    <div style="font-size:22px;font-weight:800;margin-bottom:2px;text-align:center;">${ic('cap')} Coaching</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:2px;text-align:center;">${ic('cap', 'tint-green')} Coaching</div>
     <div id="coachingSubtitle" style="font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:10px;">Loading...</div>
   </div>
 

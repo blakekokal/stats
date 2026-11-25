@@ -126,7 +126,7 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
     h('div', { style: 'width:100%;max-width:360px;' },
       // The title, with Filter at its right (it shows or hides the filters below).
       h('div', { style: 'position:relative;margin-bottom:6px;' },
-        h('div', { style: 'font-size:20px;font-weight:800;text-align:center;' }, icEl('bars'), only ? ' Round Stats' : ' Stats Dashboard'),
+        h('div', { style: 'font-size:20px;font-weight:800;text-align:center;' }, icEl('bars', 'tint-blue'), only ? ' Round Stats' : ' Stats Dashboard'),
         only ? null : h('button', { 'aria-label': 'Filter', onclick: () => toggleDashFilters(),
           style: 'position:absolute;right:0;top:50%;transform:translateY(-50%);width:auto;max-width:none;height:30px;padding:0 10px;font-size:12px;font-weight:700;background:#282828;color:#9a9a9a;border-radius:8px;' }, 'Filter \u25be')),
       only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || courseById(only.course).name} · ${only.date}${only.player ? ' · ' + only.player : ''}`) : null,
