@@ -10,6 +10,7 @@ import { checkCoachingDot } from './coaching/index.js';
 import { fetchMyRole, saveRole, sendCoachRequest } from './coaching/roles.js';
 import { VERSION } from './version.js';
 import { icEl } from './icons.js';
+import { addTestRounds, removeTestRounds, testRounds } from './testrounds.js';
 import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting, firstHoleOf, activeRound, pauseRound, resumeRound, holeCountOf } from './rounds.js';
 import { downloadRoundCsv } from './dashboard.js';
 import { openBookSetup, openSavedBooks } from './book.js';
@@ -431,6 +432,21 @@ function openCourseRequest(prefill = '') {
   (prefill ? place : name).focus();
 }
 
+// Settings, admin only: add or remove made-up finished rounds, for testing.
+function testRoundsSection() {
+  const note = h('div', { class: 'small muted' });
+  const show = () => { const n = testRounds().length; note.textContent = n ? `${n} test round${n > 1 ? 's' : ''} on your profile` : 'No test rounds'; rm.disabled = !n; };
+  const add = h('button', { style: 'flex:1;max-width:none;height:36px;font-size:13px;background:#2d7abc;border-radius:8px;', onclick: () => {
+    const n = addTestRounds(8); show(); toast(n ? `Added ${n} test rounds` : 'Test rounds already added');
+  } }, 'Add 8 test rounds');
+  const rm = h('button', { style: 'flex:1;max-width:none;height:36px;font-size:13px;background:#282828;border-radius:8px;', onclick: () => {
+    if (!confirm('Remove all test rounds?')) return;
+    const n = removeTestRounds(); show(); toast(`Removed ${n} test rounds`);
+  } }, 'Remove test rounds');
+  show();
+  return h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Test Rounds'), h('div', { class: 'row' }, add, rm), note);
+}
+
 // Settings, admin only: every request, newest first, with its status.
 function courseRequestsSection() {
   const list = h('div', { class: 'reqlist' }, h('div', { class: 'small muted' }, 'Loading…'));
@@ -513,6 +529,7 @@ export function renderSettingsPage(view) {
     h('div', { style: 'width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center;gap:4px;' },
       h('div', { style: 'font-size:18px;font-weight:800;' }, icEl('gear'), ' Settings'),
       isAdmin ? courseRequestsSection() : null,
+      isAdmin ? testRoundsSection() : null,
       h('div', { style: 'font-size:13px;color:#9a9a9a;' }, u.email),
       h('div', { style: 'font-size:11px;color:#606060;margin-bottom:2px;' }, joined ? `Joined ${joined.getMonth() + 1}/${joined.getDate()}/${joined.getFullYear()}` : ''),
       nameIn,
@@ -603,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.29', ['Settings (admin): Add 8 test rounds and Remove test rounds, for testing the dashboards and history']],
   ['1.20.28', ['Stats Dashboard: each strokes gained category is a glass bubble, so it looks tappable']],
   ['1.20.27', ['Stats Dashboard: tapping a category keeps its SG bar at the top with the title; only the stats under it scroll. SG: Total now shows its bar too']],
   ['1.20.26', ['Combine History: Delete is a round trash-can button, so it fits the card']],
