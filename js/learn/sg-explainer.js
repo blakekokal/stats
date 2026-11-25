@@ -47,13 +47,13 @@ export function renderSGExplainer() {
     
     // Player comparison cards
     + '<div style="padding:8px 16px 0;display:flex;gap:6px;">'
-    + '<div style="flex:1;background:#1a4a8a;border:1px solid #2d7abc;border-radius:10px;padding:10px;">'
+    + '<div style="flex:1;background:rgba(58,58,60,.38);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px;">'
     + '<div style="font-size:11px;font-weight:800;color:#44b8f0;text-transform:uppercase;letter-spacing:1px;">Player 1</div>'
     + '<div style="font-size:11px;color:#9a9a9a;margin-top:4px;">250 yd drive → 150 out</div>'
     + '<div style="font-size:11px;color:#9a9a9a;margin-top:2px;">Expected from 150 yds:</div>'
     + '<div style="font-size:18px;font-weight:800;color:#44b8f0;">3.18 <span style="font-size:11px;color:#9a9a9a;">shots</span></div>'
     + '</div>'
-    + '<div style="flex:1;background:#00402c;border:1px solid #007a52;border-radius:10px;padding:10px;">'
+    + '<div style="flex:1;background:rgba(58,58,60,.38);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px;">'
     + '<div style="font-size:11px;font-weight:800;color:#00b87a;text-transform:uppercase;letter-spacing:1px;">Player 2</div>'
     + '<div style="font-size:11px;color:#9a9a9a;margin-top:4px;">300 yd drive → 100 out</div>'
     + '<div style="font-size:11px;color:#9a9a9a;margin-top:2px;">Expected from 100 yds:</div>'
@@ -134,7 +134,7 @@ export function renderSGExplainer() {
     
     // Total summary
     + '<div style="padding:4px 16px 14px;">'
-    + '<div style="background:linear-gradient(135deg,#00402c,#1e1e1e);border:1px solid #007a52;border-radius:12px;padding:14px;text-align:center;">'
+    + '<div style="background:rgba(58,58,60,.38);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;text-align:center;">'
     + '<div style="font-size:11px;color:#606060;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:4px;">Hole Total</div>'
     + '<div style="font-size:11px;color:#9a9a9a;margin-bottom:6px;">Scored a <span style="color:#ffffff;font-weight:700;">Birdie 3</span> on a Par 4 (expected: 4.73)</div>'
     + '<div style="display:flex;justify-content:center;gap:12px;margin-bottom:8px;">'
@@ -161,10 +161,10 @@ export function renderSGExplainer() {
     // Positive vs Negative
     + '<div style="padding:4px 16px 20px;">'
     + '<div style="display:flex;gap:6px;">'
-    + '<div style="flex:1;background:#00402c;border:1px solid #00402c;border-radius:10px;padding:10px;text-align:center;">'
+    + '<div style="flex:1;background:rgba(58,58,60,.38);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px;text-align:center;">'
     + '<div style="font-size:18px;font-weight:800;color:#00b87a;">+SG</div>'
     + '<div style="font-size:11px;color:#00b87a;margin-top:2px;">Better than expected</div></div>'
-    + '<div style="flex:1;background:#2a1a1a;border:1px solid #d4706e;border-radius:10px;padding:10px;text-align:center;">'
+    + '<div style="flex:1;background:rgba(58,58,60,.38);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px;text-align:center;">'
     + '<div style="font-size:18px;font-weight:800;color:#d4706e;">−SG</div>'
     + '<div style="font-size:11px;color:#d4706e;margin-top:2px;">Worse than expected</div></div>'
     + '</div></div>'

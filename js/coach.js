@@ -518,6 +518,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.13', ['Strokes Gained Explained (the ? button, and in Learn): glass cards instead of blue, green and red; only the numbers are colored']],
   ['1.20.12', ['New Round: no "What type of round is this?" and no Place box for Tournament (set Place later in Edit Round)']],
   ['1.20.11', ['New Round: the compare-to picker reads "SG: 5 HCP", "SG: Tour Pro"..., so it fits']],
   ['1.20.10', ['GPS screen: map buttons are 50% see-through']],
