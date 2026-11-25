@@ -117,7 +117,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
 export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="justify-content:flex-start;padding:0;overflow:hidden;">
 
   <!-- Fixed header -->
-  <div style="flex-shrink:0;width:100%;padding:30px 16px 0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;position:relative;">
+  <div class="fixedhead" style="flex-shrink:0;width:100%;padding:30px 16px 0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;position:relative;">
     <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="font-size:22px;font-weight:800;margin-bottom:6px;">${ic('club', 'tint-yellow')} Practice and Learning</div>
     <div style="font-size:13px;color:#9a9a9a;margin-bottom:14px;">Combines, Drills, Practice &amp; Learn</div>
