@@ -523,6 +523,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.0', ['New look: liquid glass. A graphite background, frosted glass buttons, fields and cards, and solid blue for whatever is selected']],
   ['1.19.7', ['Round type: Casual is "every tool available", Tournament is "USGA legal features enabled"']],
   ['1.19.6', ['No scroll bars anywhere in coaching, My Bag, Performance and Practice (they still scroll), so switching tabs on a player profile no longer shifts the page']],
   ['1.19.5', ['Player profiles: the Misc tab is now Clubs, and Goals and Schedule are hidden for now']],

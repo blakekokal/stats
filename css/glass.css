@@ -1,0 +1,83 @@
+/* Liquid glass (Graphite): loaded after app.css and coach.css. A graphite
+   gradient behind everything, and every button, field and card on the .cx
+   screens (Home, New Round, History, Settings, My Bag, Coaching, Practice...)
+   is frosted glass: 5% white fill, an edge that glows top and bottom and fades
+   at the sides, and the same 8px blur as the GPS screen's map buttons (the
+   GPS screen itself, .holeview, keeps its own look). Selected is solid blue.
+   Many of these elements carry inline colours, hence the !important. */
+:root {
+  --glass-fill: rgba(255,255,255,.05);
+  --glass-edge: .10;
+  --glass-blur: blur(8px) saturate(180%);
+  --glass-on: #3D8BF2;
+  --mac-blue: #0A84FF; --mac-green: #30D158; --mac-yellow: #FFD60A; --mac-red: #FF453A;
+}
+html { background: #1a1a1c; }
+body, body.coach { background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, #1a1a1c 100%) !important; }
+.cx, .cx.coachroot, .coachroot .page { background: transparent !important; }
+
+/* Buttons */
+.cx button:not(.linkbtn):not(.link):not(.glass-skip) {
+  background: var(--glass-fill) !important;
+  border: 0 !important;
+  border-radius: 22px !important;
+  box-shadow: inset 0 1.5px 2px rgba(255,255,255,calc(var(--glass-edge) * 1.4)),
+              inset 0 -1.5px 2px rgba(255,255,255,calc(var(--glass-edge) * .9)),
+              0 2px 10px rgba(0,0,0,.35) !important;
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+}
+/* For the edge ring; zero specificity, so any rule or inline style that places a button wins. */
+:where(.cx button) { position: relative; }
+:where(.cx) button:where(:not(.linkbtn):not(.link):not(.glass-skip))::before {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+  background: linear-gradient(180deg,
+    rgba(255,255,255,calc(var(--glass-edge) * 4)) 0%,
+    rgba(255,255,255,calc(var(--glass-edge) * .25)) 30%,
+    rgba(255,255,255,calc(var(--glass-edge) * .25)) 70%,
+    rgba(255,255,255,calc(var(--glass-edge) * 2.6)) 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+/* Round icon buttons */
+.cx .iconbtn, .cx .back-btn-top, .cx button.back-btn { border-radius: 50% !important; }
+
+/* Selected: solid blue. Toggles mark the picked one with a class, aria-pressed,
+   or an inline blue background (#2d7abc). */
+.cx button.selected:not(.linkbtn):not(.link):not(.glass-skip),
+.cx button.on:not(.linkbtn):not(.link):not(.glass-skip),
+.cx button[aria-pressed="true"]:not(.linkbtn):not(.link):not(.glass-skip),
+.cx button:not(.homebtn):not(.linkbtn):not(.link):not(.glass-skip)[style*="background:#2d7abc"],
+.cx button:not(.homebtn):not(.linkbtn):not(.link):not(.glass-skip)[style*="background: rgb(45, 122, 188)"],
+.cx button:not(.homebtn):not(.linkbtn):not(.link):not(.glass-skip)[style*="background-color: rgb(45, 122, 188)"] {
+  background: var(--glass-on) !important; color: #fff !important;
+  box-shadow: inset 0 1.5px 2px rgba(255,255,255,.35), 0 2px 10px rgba(0,0,0,.3) !important;
+}
+.cx button.selected::before, .cx button.on::before, .cx button[aria-pressed="true"]::before,
+.cx button[style*="background:#2d7abc"]::before, .cx button[style*="rgb(45, 122, 188)"]::before {
+  background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.1) 35%, rgba(255,255,255,.1) 65%, rgba(255,255,255,.4)) !important;
+}
+.cx button.selected small, .cx button.on small { color: rgba(255,255,255,.85) !important; }
+
+/* Home: each button's colour moves to its icon, in the macOS palette. */
+.cx .homebtn[style*="#1a4a8a"] .ic, .cx .homebtn[style*="#2d7abc"] .ic { color: var(--mac-blue); }
+.cx .homebtn[style*="#007a52"] .ic, .cx .homebtn[style*="#00402c"] .ic { color: var(--mac-green); }
+.cx .homebtn[style*="#d49a10"] .ic { color: var(--mac-yellow); }
+
+/* Fields */
+.cx input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]),
+.cx select, .cx textarea {
+  background: var(--glass-fill) !important;
+  border: 1px solid rgba(255,255,255,var(--glass-edge)) !important;
+  -webkit-backdrop-filter: var(--glass-blur); backdrop-filter: var(--glass-blur);
+}
+.cx input:not([type=range]):not([type=checkbox]):not([type=radio]):not([type=color]):not([type=file]), .cx select { border-radius: 22px !important; }
+.cx select option { background: #2c2c2e; color: #fff; }
+
+/* Cards and panels (solid greys inline): a frosted graphite pane. */
+.cx div[style*="background:#222"], .cx div[style*="background:#282828"], .cx div[style*="background:#333"],
+.cx .card {
+  background: rgba(58,58,60,.38) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+}
+/* Bars painted the old page colour (sticky tab rows, toggle groups). */
+.cx div[style*="background:#1e1e1e"] { background: rgba(35,35,37,.6) !important; -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
