@@ -157,7 +157,7 @@ export function renderNewRound(view, { scout = false } = {}) {
   }, 'data-v': v }, h('b', {}, label), h('small', {}, sub));
   const typeRow = h('div', { class: 'roundtypes', role: 'group', 'aria-label': 'Round type' },
     h('div', { class: 'ninesq' }, 'What type of round is this?'),
-    typeBtn('Casual', 'Casual', 'Every tool available'), typeBtn('Tournament', 'Tournament', 'USGA legal features enabled'));
+    typeBtn('Casual', 'Casual', 'Every tool available'), typeBtn('Tournament', 'Tournament', 'USGA legal'));
 
   let holes = 18;
   const pick = (btn, n) => { b9.classList.remove('selected'); b18.classList.remove('selected'); if (btn) btn.classList.add('selected'); holes = n; if (btn) custom.value = ''; };
@@ -523,6 +523,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.1', ['Round type: Casual and Tournament are the same width; Tournament reads "USGA legal"']],
   ['1.20.0', ['New look: liquid glass. A graphite background, frosted glass buttons, fields and cards, and solid blue for whatever is selected']],
   ['1.19.7', ['Round type: Casual is "every tool available", Tournament is "USGA legal features enabled"']],
   ['1.19.6', ['No scroll bars anywhere in coaching, My Bag, Performance and Practice (they still scroll), so switching tabs on a player profile no longer shifts the page']],

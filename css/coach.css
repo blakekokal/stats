@@ -168,7 +168,7 @@ body.coach { background: #1e1e1e; }
 .cx .ninesbox button b { font-size: 15px; } .cx .ninesbox button small { font-size: 12px; color: #9a9a9a; }
 .cx .ninesbox button.on { border-color: #007a52; background: #0d3a29; }
 /* Round type (New Round / GPS Overview): Casual or Tournament, side by side. */
-.cx .roundtypes { width: 100%; max-width: 320px; display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.cx .roundtypes { width: 100%; max-width: 320px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 6px; }
 .cx .roundtypes .ninesq { grid-column: 1 / -1; font-size: 13px; color: #bdbdbd; text-align: center; }
 .cx .roundtypes button { max-width: none; width: 100%; height: auto; min-height: 0; padding: 9px 12px; border-radius: 10px; border: 1px solid #3d3d3d; background: #222; color: #fff; display: grid; justify-items: center; gap: 2px; }
 .cx .roundtypes button b { font-size: 15px; } .cx .roundtypes button small { font-size: 12px; color: #9a9a9a; }
