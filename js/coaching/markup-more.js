@@ -139,27 +139,27 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     <div id="phCombinesContent">
       <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
         <button onclick="goToEvalCombine()" id="phEvalCombineBtn" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('target')}</span>
+          <span class="tileic">${ic('target', 'tint-blue')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Evaluation Test</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Complete assessment of your game</div></div>
         </button>
         <button onclick="goToPuttingCombine()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('putt')}</span>
+          <span class="tileic">${ic('putt', 'tint-green')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Putting</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Speed &amp; accuracy on the greens</div></div>
         </button>
         <button onclick="goToCombines()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('chip')}</span>
+          <span class="tileic">${ic('chip', 'tint-yellow')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Short Game</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Chipping &amp; pitching around the green</div></div>
         </button>
         <button onclick="goToWedgeCombine()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('carry')}</span>
+          <span class="tileic">${ic('carry', 'tint-red')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Wedge Distances</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Dial in carry distances 40-125 yds</div></div>
         </button>
         <button onclick="goToLineDrill()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('line')}</span>
+          <span class="tileic">${ic('line', 'tint-purple')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Line Drill</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Accuracy from PW to your highest wood</div></div>
         </button>
         <button onclick="goToDriverCombinePicker()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('driver')}</span>
+          <span class="tileic">${ic('driver', 'tint-blue')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Driver</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Track drive distance &amp; accuracy</div></div>
         </button>
       </div>
@@ -206,31 +206,31 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
       <div id="ppLanding">
         <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
           <button onclick="ppShowSwingJournal()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-            <span class="tileic">${ic('journal')}</span>
+            <span class="tileic">${ic('journal', 'tint-blue')}</span>
             <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Swing Journal</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Log your swing thoughts by date</div></div>
           </button>
           <button onclick="ppShowWarmUp()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-            <span class="tileic">${ic('dumbbell')}</span>
+            <span class="tileic">${ic('dumbbell', 'tint-red')}</span>
             <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Pre-Round Warm Up</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Comprehensive warm up before your round</div></div>
           </button>
           <button onclick="ppShowRecommended()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-            <span class="tileic">${ic('checklist')}</span>
+            <span class="tileic">${ic('checklist', 'tint-green')}</span>
             <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Recommended Practice</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Based on your strokes gained data</div></div>
           </button>
           <button onclick="ppShowTimed()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-            <span class="tileic">${ic('watch')}</span>
+            <span class="tileic">${ic('watch', 'tint-yellow')}</span>
             <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Timed Practice</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Only have 30 mins? Get a focused plan</div></div>
           </button>
           <button onclick="ppShowTourPractice()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-            <span class="tileic">${ic('trophy')}</span>
+            <span class="tileic">${ic('trophy', 'tint-purple')}</span>
             <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Tour Practice</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Follow a PGA Tour-style practice structure</div></div>
           </button>
           <button onclick="ppShowCustom()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-            <span class="tileic">${ic('pencil')}</span>
+            <span class="tileic">${ic('pencil', 'tint-blue')}</span>
             <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Custom Practice</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Build your own plan and save it for later</div></div>
           </button>
           <button onclick="ppShowGenerator()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-            <span class="tileic">${ic('shuffle')}</span>
+            <span class="tileic">${ic('shuffle', 'tint-green')}</span>
             <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Practice Generator</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Pick categories and get random drills</div></div>
           </button>
         </div>
@@ -446,31 +446,31 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     <div id="phLearnContent" style="display:none;">
       <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
         <button onclick="openLearningLibrary()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('books')}</span>
+          <span class="tileic">${ic('books', 'tint-blue')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Learning Library</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Articles, tips &amp; guides</div></div>
         </button>
         <button onclick="toggleLearnSGCalc()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('calc')}</span>
+          <span class="tileic">${ic('calc', 'tint-green')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Strokes Gained Calculator</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Calculate SG for any shot</div></div>
         </button>
         <button onclick="toggleLearnPBV()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('breakGreen')}</span>
+          <span class="tileic">${ic('breakGreen', 'tint-purple')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Putting Break Calculator</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Visualize putt break &amp; aim point</div></div>
         </button>
         <button onclick="toggleLearnDistanceOptimizer()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('ruler')}</span>
+          <span class="tileic">${ic('ruler', 'tint-yellow')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Distance Optimizer</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Optimize distances for your game</div></div>
         </button>
         <button onclick="toggleLearnProximityCalc()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('prox')}</span>
+          <span class="tileic">${ic('prox', 'tint-red')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Proximity Calculator</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">How close to gain strokes from any yardage</div></div>
         </button>
         <button onclick="toggleDistanceGuide()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('flight')}</span>
+          <span class="tileic">${ic('flight', 'tint-purple')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">How Far Should I Hit It?</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Tour averages &amp; distance by speed or handicap</div></div>
         </button>
         <button onclick="show('guideToGolfPage')" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('book')}</span>
+          <span class="tileic">${ic('book', 'tint-blue')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Guide to Golf</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">How to hit every shot with photos &amp; tips</div></div>
         </button>
       </div>
@@ -754,7 +754,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
   <div style="width:100%;max-width:420px;margin:0 auto;">
     <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
       <div style="font-size:20px;font-weight:800;text-align:center;">Strokes Gained Calculator</div>
-      <button id="learnSGExplainerOpenBtn" onclick="toggleLearnSGExplainer()" style="width:28px;height:28px;min-width:28px;max-width:28px;background:#222222;border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;padding:0;">${ic('help')}</button>
+      <button id="learnSGExplainerOpenBtn" onclick="toggleLearnSGExplainer()" style="width:28px;height:28px;min-width:28px;max-width:28px;background:#222222;border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;padding:0;">${ic('help', 'tint-green')}</button>
       <button id="learnSGExplainerCloseBtn" onclick="toggleLearnSGExplainer()" style="display:none;width:28px;height:28px;min-width:28px;max-width:28px;background:#222222;border:none;border-radius:8px;align-items:center;justify-content:center;font-size:16px;cursor:pointer;padding:0;color:#d4706e;font-weight:700;">✕</button>
     </div>
     <div id="learnSGExplainerWrap" style="display:none;margin-bottom:14px;">
