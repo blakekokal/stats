@@ -523,6 +523,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.19.5', ['Player profiles: the Misc tab is now Clubs, and Goals and Schedule are hidden for now']],
   ['1.19.4', ['Find Yardages: your clubs are a 3-across grid instead of one long list']],
   ['1.19.3', ['My Clubs: no scroll bar, so the page no longer shifts sideways between My Bag, Find Yardages, Wedge Gapping and Speed']],
   ['1.19.2', ['App icon: back to the BLAKE KOKAL GOLF icon']],

@@ -446,7 +446,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
     <button onclick="showStudentTab('rounds')" id="svTabRounds" style="flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Rounds</button>
     <button onclick="showStudentTab('practice')" id="svTabPractice" style="display:none;flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Practice</button>
     <button onclick="showStudentTab('notes')" id="svTabNotes" style="flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Notes</button>
-    <button onclick="showStudentTab('misc')" id="svTabMisc" style="flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Misc</button>
+    <button onclick="showStudentTab('misc')" id="svTabMisc" style="flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Clubs</button>
   </div>
   <div id="studentViewScroll" style="flex:1;overflow-y:auto;width:100%;display:flex;flex-direction:column;align-items:center;padding:12px 0 80px;">
     
@@ -589,10 +589,10 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
       </div>
     </div>
 
-    <!-- Student Misc Tab (Bag + Schedule) -->
+    <!-- Student Clubs tab (internally "misc"; Goals and Schedule hidden for now: show the toggle again to bring them back) -->
     <div id="svMiscTab" style="width:100%;max-width:360px;display:none;">
       <!-- Toggle: Bag / Goals / Schedule -->
-      <div style="display:flex;gap:0;margin-bottom:12px;background:#1e1e1e;border-radius:10px;overflow:hidden;border:1px solid #333333;">
+      <div style="display:none;gap:0;margin-bottom:12px;background:#1e1e1e;border-radius:10px;overflow:hidden;border:1px solid #333333;">
         <button id="svMiscToggleBag" onclick="showSvMiscSubTab('bag')" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#2d7abc;border:none;color:#ffffff;cursor:pointer;">Bag</button>
         <button id="svMiscToggleGoals" onclick="showSvMiscSubTab('goals')" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#1e1e1e;border:none;color:#606060;cursor:pointer;">Goals</button>
         <button id="svMiscToggleSchedule" onclick="showSvMiscSubTab('schedule')" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#1e1e1e;border:none;color:#606060;cursor:pointer;">Schedule</button>
