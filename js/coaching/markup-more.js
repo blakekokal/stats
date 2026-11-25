@@ -123,7 +123,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     <div style="font-size:13px;color:#9a9a9a;margin-bottom:14px;">Combines, Drills, Practice &amp; Learn</div>
 
     <!-- 4-tab bar -->
-    <div style="display:flex;gap:0;width:100%;max-width:360px;margin-bottom:0;border-radius:10px;overflow:hidden;">
+    <div style="display:flex;gap:4px;width:100%;max-width:360px;margin-bottom:0;">
       <button onclick="setPracticeHubTab('combines')" id="phTabCombines" style="flex:1;height:40px;font-size:13px;font-weight:700;background:#2d7abc;border:none;color:#ffffff;cursor:pointer;max-width:none;width:auto;padding:0;margin:0;">Combines</button>
       <button onclick="setPracticeHubTab('plan')" id="phTabPlan" style="flex:1;height:40px;font-size:13px;font-weight:700;background:#282828;border:none;color:#606060;cursor:pointer;max-width:none;width:auto;padding:0;margin:0;">Practice</button>
       <button onclick="setPracticeHubTab('drills')" id="phTabDrills" style="flex:1;height:40px;font-size:13px;font-weight:700;background:#282828;border:none;color:#606060;cursor:pointer;max-width:none;width:auto;padding:0;margin:0;">Drills</button>
@@ -1246,8 +1246,8 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
 
 export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justify-content:flex-start;padding:0;overflow:hidden;">
   <!-- Header -->
-  <div style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
-    <button onclick="lineDrillBack()" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:#333333;border:none;color:#ffffff;border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#ffffff;stroke-width:2.5;fill:none;"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <div class="fixedhead" style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
+    <button class="back-btn-top" aria-label="Back" onclick="lineDrillBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="font-size:1.2rem;font-weight:800;color:#ffffff;">Line Drill</div>
   </div>
 
@@ -1283,7 +1283,7 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
           <span style="color:#606060;font-size:13px;">yds</span>
         </div>
         <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
-          <select id="ld-wood-club" style="flex:1;height:46px;background:#282828;color:#ffffff;border:1px solid #333333;border-radius:10px;font-size:14px;font-weight:700;padding:0 8px;box-sizing:border-box;">
+          <select id="ld-wood-club" style="flex:1;height:46px;text-align:center;text-align-last:center;background:#282828;color:#ffffff;border:1px solid #333333;border-radius:10px;font-size:14px;font-weight:700;padding:0 8px;box-sizing:border-box;">
             <option value="3w">3 Wood</option>
             <option value="4w">4 Wood</option>
             <option value="5w">5 Wood</option>
@@ -1384,8 +1384,8 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
 
 <div id="driverDrillPage" class="page" style="justify-content:flex-start;padding:0;overflow:hidden;">
   <!-- Header -->
-  <div style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
-    <button onclick="driverDrillBack()" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:#333333;border:none;color:#ffffff;border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#ffffff;stroke-width:2.5;fill:none;"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <div class="fixedhead" style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
+    <button class="back-btn-top" aria-label="Back" onclick="driverDrillBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="font-size:1.2rem;font-weight:800;color:#ffffff;">Driver Combine</div>
   </div>
 
@@ -1501,8 +1501,8 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
 
 <!-- EVAL COMBINE -->
 <div id="evalCombinePage" class="page" style="justify-content:flex-start;padding:0;overflow:hidden;">
-  <div style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
-    <button onclick="evalCombineBack()" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:#333333;border:none;color:#ffffff;border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#ffffff;stroke-width:2.5;fill:none;"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <div class="fixedhead" style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
+    <button class="back-btn-top" aria-label="Back" onclick="evalCombineBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="font-size:1.2rem;font-weight:800;color:#ffffff;">Evaluation Test</div>
   </div>
   <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100%;">
@@ -1561,8 +1561,8 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
 <div id="combinesPage" class="page" style="justify-content:flex-start;padding:0;overflow:hidden;">
 
   <!-- Fixed header -->
-  <div style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
-    <button id="comb-header-back-btn" onclick="combHeaderBack()" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);background:#333333;border:none;color:#ffffff;border-radius:8px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;cursor:pointer;padding:0;"><svg viewBox="0 0 24 24" style="width:20px;height:20px;stroke:#ffffff;stroke-width:2.5;fill:none;"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <div class="fixedhead" style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
+    <button id="comb-header-back-btn" class="back-btn-top" aria-label="Back" onclick="combHeaderBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="font-size:1.2rem;font-weight:800;color:#ffffff;">Short Game Combines</div>
     <div id="combStudentBanner" style="display:none;background:#007a52;color:#ffffff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;margin-top:4px;"></div>
   </div>
@@ -1578,15 +1578,15 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
         <div id="comb-practice-sub">
           <div style="font-size:1.1rem;font-weight:800;color:#ffffff;margin-bottom:14px;text-align:center;">Choose a Combine</div>
           <div style="display:flex;flex-direction:column;gap:12px;">
-            <button onclick="combShowModeSelect('putting')" style="background:#1a4a8a;border:2px solid #2d7abc;border-radius:12px;padding:16px;text-align:left;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;box-sizing:border-box;">
+            <button onclick="combShowModeSelect('putting')" style="background:#1a4a8a;border:2px solid #2d7abc;border-radius:12px;padding:16px;text-align:center;align-items:center;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;box-sizing:border-box;">
               <div style="font-size:1rem;font-weight:800;">Putting</div>
               <div style="font-size:0.82rem;color:#44b8f0;line-height:1.4;margin-top:4px;">Test putts from set distances and breaks.</div>
             </button>
-            <button onclick="combShowShortGameSelect()" style="background:#1a4a8a;border:2px solid #2d7abc;border-radius:12px;padding:16px;text-align:left;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;box-sizing:border-box;">
+            <button onclick="combShowShortGameSelect()" style="background:#1a4a8a;border:2px solid #2d7abc;border-radius:12px;padding:16px;text-align:center;align-items:center;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;box-sizing:border-box;">
               <div style="font-size:1rem;font-weight:800;">Short Game</div>
               <div style="font-size:0.82rem;color:#44b8f0;line-height:1.4;margin-top:4px;">Proximity based or up &amp; downs around the green.</div>
             </button>
-            <button onclick="combShowModeSelect('wedge')" style="background:#1a4a8a;border:2px solid #2d7abc;border-radius:12px;padding:16px;text-align:left;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;box-sizing:border-box;">
+            <button onclick="combShowModeSelect('wedge')" style="background:#1a4a8a;border:2px solid #2d7abc;border-radius:12px;padding:16px;text-align:center;align-items:center;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;box-sizing:border-box;">
               <div style="font-size:1rem;font-weight:800;">Wedge Distances</div>
               <div style="font-size:0.82rem;color:#44b8f0;line-height:1.4;margin-top:4px;">Dial in carry distances from 40–125 yards.</div>
             </button>
@@ -1597,11 +1597,11 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
         <div id="comb-shortgame-select" style="display:none;">
           <div style="font-size:1.1rem;font-weight:800;color:#ffffff;margin-bottom:14px;text-align:center;">Short Game</div>
           <div style="display:flex;flex-direction:column;gap:12px;">
-            <button onclick="combShowModeSelect('chip-prox')" style="background:#1a4a8a;border:2px solid #2d7abc;border-radius:12px;padding:16px;text-align:left;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;display:flex;flex-direction:column;gap:6px;box-sizing:border-box;white-space:normal;word-break:break-word;">
+            <button onclick="combShowModeSelect('chip-prox')" style="background:#1a4a8a;border:2px solid #2d7abc;border-radius:12px;padding:16px;text-align:center;align-items:center;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;display:flex;flex-direction:column;gap:6px;box-sizing:border-box;white-space:normal;word-break:break-word;">
               <div style="font-size:1rem;font-weight:800;">Proximity Based</div>
               <div style="font-size:0.82rem;color:#44b8f0;line-height:1.4;white-space:normal;word-break:break-word;">Scored on how close you hit it to the hole. Use this option if you're not able to putt out.</div>
             </button>
-            <button onclick="combShowModeSelect('chip-hole')" style="background:#00402c;border:2px solid #007a52;border-radius:12px;padding:16px;text-align:left;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;display:flex;flex-direction:column;gap:6px;box-sizing:border-box;white-space:normal;word-break:break-word;">
+            <button onclick="combShowModeSelect('chip-hole')" style="background:#00402c;border:2px solid #007a52;border-radius:12px;padding:16px;text-align:center;align-items:center;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;display:flex;flex-direction:column;gap:6px;box-sizing:border-box;white-space:normal;word-break:break-word;">
               <div style="font-size:1rem;font-weight:800;">Up & Downs</div>
               <div style="font-size:0.82rem;color:#00b87a;line-height:1.4;white-space:normal;word-break:break-word;">Chip and hole out each hole. Use this option if you're able to putt.</div>
             </button>
@@ -1610,16 +1610,13 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
 
         <!-- Mode select sub-view (Combine vs Custom) -->
         <div id="comb-mode-select" style="display:none;">
-          <button onclick="combModeBack()" style="background:transparent;border:none;color:#606060;font-size:0.9rem;cursor:pointer;display:flex;align-items:center;gap:4px;padding:0 0 12px 0;height:auto;max-width:none;width:auto;">
-            <svg viewBox="0 0 24 24" style="width:16px;height:16px;stroke:#606060;stroke-width:2.5;fill:none;"><path d="M15 18l-6-6 6-6"/></svg> Back
-          </button>
           <div id="comb-mode-type-label" style="font-size:1.1rem;font-weight:800;color:#ffffff;margin-bottom:14px;text-align:center;"></div>
           <div style="display:flex;flex-direction:column;gap:12px;">
-            <button onclick="combOpenFromModeSelect('combine')" style="background:#1a4a8a;border:2px solid #2d7abc;border-radius:12px;padding:16px;text-align:left;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;display:flex;flex-direction:column;gap:6px;box-sizing:border-box;white-space:normal;word-break:break-word;">
+            <button onclick="combOpenFromModeSelect('combine')" style="background:#1a4a8a;border:2px solid #2d7abc;border-radius:12px;padding:16px;text-align:center;align-items:center;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;display:flex;flex-direction:column;gap:6px;box-sizing:border-box;white-space:normal;word-break:break-word;">
               <div style="font-size:1rem;font-weight:800;">Combine</div>
               <div style="font-size:0.82rem;color:#44b8f0;line-height:1.4;white-space:normal;word-break:break-word;">Fixed set of yardages scrambled into a new random order each session. Use this to benchmark and track progress over time.</div>
             </button>
-            <button onclick="combOpenFromModeSelect('custom')" style="background:#00402c;border:2px solid #00b87a;border-radius:12px;padding:16px;text-align:left;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;display:flex;flex-direction:column;gap:6px;box-sizing:border-box;white-space:normal;word-break:break-word;">
+            <button onclick="combOpenFromModeSelect('custom')" style="background:#00402c;border:2px solid #00b87a;border-radius:12px;padding:16px;text-align:center;align-items:center;color:#ffffff;cursor:pointer;height:auto;max-width:none;width:100%;display:flex;flex-direction:column;gap:6px;box-sizing:border-box;white-space:normal;word-break:break-word;">
               <div style="font-size:1rem;font-weight:800;">Custom</div>
               <div style="font-size:0.82rem;color:#00b87a;line-height:1.4;white-space:normal;word-break:break-word;">Enter your own yardage range and number of holes. Great for targeted practice at specific distances.</div>
             </button>

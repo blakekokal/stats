@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.35', ['Practice and Learning: no dark strip behind the tabs', 'Short Game Combines, Line Drill, Driver and Evaluation Test: Back button in the bottom-right; card text centered']],
   ['1.20.34', ['Practice and Learning: no gap under the tabs']],
   ['1.20.33', ['Stats Dashboard, Round History and a student’s Dashboard: the list runs to the bottom of the screen (no empty band); its last row still scrolls clear of the Back button']],
   ['1.20.32', ['Stats Dashboard: each past round’s strokes gained fits on one line; SG: Total’s number sits in the middle of its bubble', 'Coaching: a student’s Dashboard tab is laid out the same way (only Past rounds scrolls)']],
