@@ -263,10 +263,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     tee, teeInfo, typeRow, typeNote,
     h('div', { class: 'row' }, b9, b18),
     custom,
-    confirm, err,
-    h('div', { style: 'margin-top:6px;display:flex;gap:8px;justify-content:center;width:100%;max-width:320px;' },
-      h('button', { disabled: true, title: 'Coming soon', style: 'background:transparent;border:1px solid #3d3d3d;color:#606060;font-size:12px;height:auto;padding:8px 12px;width:auto;' }, '+ Create Custom Course'),
-      h('button', { disabled: true, title: 'Coming soon', style: 'background:transparent;border:1px solid #3d3d3d;color:#606060;font-size:12px;height:auto;padding:8px 12px;width:auto;' }, 'My Courses'))));
+    confirm, err));
 }
 
 // ---------- round history ----------
@@ -518,6 +515,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.15', ['New Round: no Create Custom Course or My Courses buttons']],
   ['1.20.14', ['Performance Analysis, Combines: the Putting and Wedge cards line up, each pair the same height']],
   ['1.20.13', ['Strokes Gained Explained (the ? button, and in Learn): glass cards instead of blue, green and red; only the numbers are colored']],
   ['1.20.12', ['New Round: no "What type of round is this?" and no Place box for Tournament (set Place later in Edit Round)']],
