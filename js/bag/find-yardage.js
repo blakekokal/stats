@@ -30,12 +30,12 @@ function fyRenderClubGrid() {
   var grid = document.getElementById('fyClubGrid');
   if (!grid) return;
   if (clubs.length === 0) {
-    grid.innerHTML = '<div style="color:#9a9a9a;font-size:13px;width:100%;text-align:center;padding:8px 0;">No clubs in bag yet. Add one below.</div>';
+    grid.innerHTML = '<div style="grid-column:1/-1;color:#9a9a9a;font-size:13px;width:100%;text-align:center;padding:8px 0;">No clubs in bag yet. Add one below.</div>';
     return;
   }
   grid.innerHTML = clubs.map(function(c) {
     var safe = c.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    return '<button onclick="fySelectClub(\'' + safe + '\')" style="padding:8px 14px;background:#282828;border:1px solid #3d3d3d;border-radius:10px;color:#9a9a9a;font-size:13px;font-weight:700;cursor:pointer;">' + c.name + '</button>';
+    return '<button onclick="fySelectClub(\'' + safe + '\')" style="width:100%;max-width:none;height:40px;padding:0 4px;background:#282828;border:1px solid #3d3d3d;border-radius:10px;color:#9a9a9a;font-size:13px;font-weight:700;cursor:pointer;">' + c.name + '</button>';
   }).join('');
 }
 

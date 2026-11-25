@@ -994,7 +994,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
     <div id="fyStep1" style="width:100%;max-width:360px;">
       <div style="background:#222222;border-radius:14px;padding:16px;margin-bottom:12px;">
         <div style="font-size:12px;font-weight:700;color:#44b8f0;margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px;">Select a Club</div>
-        <div id="fyClubGrid" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;"></div>
+        <div id="fyClubGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px;"></div>
         <div style="font-size:11px;color:#9a9a9a;margin-bottom:8px;text-align:center;">— or add a new club —</div>
         <select id="fyNewClubSelect" style="width:100%;height:40px;font-size:14px;text-align:center;box-sizing:border-box;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;-webkit-appearance:none;appearance:none;">
           <option value="" disabled selected>Select a club...</option>
