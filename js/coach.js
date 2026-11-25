@@ -603,6 +603,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.28', ['Stats Dashboard: each strokes gained category is a glass bubble, so it looks tappable']],
   ['1.20.27', ['Stats Dashboard: tapping a category keeps its SG bar at the top with the title; only the stats under it scroll. SG: Total now shows its bar too']],
   ['1.20.26', ['Combine History: Delete is a round trash-can button, so it fits the card']],
   ['1.20.25', ['Stats Dashboard: the strokes gained bars stay put and only Past rounds scrolls, with no scroll bar', 'Back button: smaller and more see-through']],
