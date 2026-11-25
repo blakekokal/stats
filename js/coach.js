@@ -601,6 +601,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.19', ['Coaching Recent Activity: Mark all read and Strokes gained fit inside their buttons on narrow screens']],
   ['1.20.18', ['Page titles show their Home icon in the same color: New Round, GPS Overview, Round History, Stats Dashboard, Performance Analysis, My Clubs, Practice and Learning, Coaching']],
   ['1.20.17', ['Settings: Account Role works. Coaches switch between Student and Coach; anyone else taps Coach to request coach access', 'Coaching: Request coach access no longer fails for coaches and admins']],
   ['1.20.16', ['Submit a New Course: on GPS Overview and New Round (and when a course search finds nothing), logged-in players can ask for a course to be added']],
