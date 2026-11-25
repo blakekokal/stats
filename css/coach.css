@@ -309,3 +309,7 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
    the Back button instead of the page leaving an empty band. */
 .cx.fixedpage, .coachroot .page.svdashfixed { padding-bottom: 0 !important; }
 :is(.cx.fixedpage, .svdashfixed) :is(.scrollpane, .dashpast, .dashdetail) { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+/* Coaching (coach side): Recent Activity runs to the foot of the screen; its own end room
+   keeps the last item clear of the Back button. */
+#coachingCoachView { margin-bottom: calc(-66px - env(safe-area-inset-bottom)); }
+#coachingCoachView > div[style*="overflow-y:auto"] { padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important; }
