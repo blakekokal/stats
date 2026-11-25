@@ -141,8 +141,6 @@ export function renderNewRound(view, { scout = false } = {}) {
     teeInfo.textContent = t ? `Par ${par} · ${t.yards.reduce((a, b) => a + b, 0).toLocaleString()} yds` + (t.rating ? ` · Rating ${t.rating} / Slope ${t.slope}` : '') : '';
   }
   fillTees();
-  const place = h('input', { type: 'number', inputmode: 'numeric', min: 1, placeholder: 'Place (e.g. 1, 2, 3...)' });
-  const placeWrap = h('div', { style: 'width:100%;max-width:320px;', hidden: true }, place);
   // Round type, Casual to start: Casual has every tool; Tournament keeps to what
   // the Rules of Golf allow (distances only: no plays-like, wind, contours,
   // strokes gained or club advice on the hole screen).
@@ -151,11 +149,9 @@ export function renderNewRound(view, { scout = false } = {}) {
   const typeBtn = (v, label, sub) => h('button', { class: 'roundtype', 'aria-pressed': 'false', onclick: () => {
     type.value = v; err.textContent = '';
     typeRow.querySelectorAll('button').forEach(b => { const on = b === typeRow.querySelector(`[data-v="${v}"]`); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
-    placeWrap.hidden = scout || v !== 'Tournament';
     typeNote.textContent = v === 'Tournament' ? 'Tournament mode: USGA legal features enabled' : 'Casual: every tool available';
   }, 'data-v': v }, h('b', {}, label), h('small', {}, sub));
   const typeRow = h('div', { class: 'roundtypes', role: 'group', 'aria-label': 'Round type' },
-    h('div', { class: 'ninesq' }, 'What type of round is this?'),
     typeBtn('Casual', 'Casual', 'Every tool available'), typeBtn('Tournament', 'Tournament', 'USGA legal'));
 
   let holes = 18;
@@ -180,7 +176,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     const most = Math.min(18, chosen.holes.length);
     if (custom.value && !(+custom.value >= 3 && +custom.value <= most)) { err.textContent = `Custom holes must be 3 to ${most}.`; return; }
     const r = { ...newRound(course, tee.value, date.value || today()), courseName: course.name, player: name.value.trim() || (sync.user ? sync.name : ''),
-      level: level.value, type: type.value, place: type.value === 'Tournament' && place.value ? +place.value : null, holeCount: Math.min(holes, chosen.holes.length) };
+      level: level.value, type: type.value, place: null, holeCount: Math.min(holes, chosen.holes.length) };
     store.set(roundKeyOf(r.id), r);
     setActiveCourse(course.id);
     setCurrentRound(r.id); localStorage.removeItem('gs:viewOnly'); localStorage.removeItem('gs:editingPast');
@@ -264,7 +260,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     name,
     h('div', { class: 'row' }, level, date),
     courseBox, ninesBox,
-    tee, teeInfo, typeRow, typeNote, placeWrap,
+    tee, teeInfo, typeRow, typeNote,
     h('div', { class: 'row' }, b9, b18),
     custom,
     confirm, err,
@@ -522,6 +518,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.12', ['New Round: no "What type of round is this?" and no Place box for Tournament (set Place later in Edit Round)']],
   ['1.20.11', ['New Round: the compare-to picker reads "SG: 5 HCP", "SG: Tour Pro"..., so it fits']],
   ['1.20.10', ['GPS screen: map buttons are 50% see-through']],
   ['1.20.9', ['Home: bigger title, filling the space between the buttons']],
