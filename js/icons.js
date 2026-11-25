@@ -7,7 +7,7 @@ const P = {
   map: '<g transform="translate(0.00 0.00) scale(1.000)" stroke-width="2.00"><path d="M3 6.5l6-2.5 6 2.5 6-2.5v13.5l-6 2.5-6-2.5-6 2.5z"/><path d="M9 4v13.5M15 6.5V20"/></g>',
   flag: '<g transform="translate(1.00 0.00) scale(1.000)" stroke-width="2.00"><path d="M7 21V3"/><path d="M7 4h11l-3 4 3 4H7"/><path d="M4 21h6"/></g>',
   scorecard: '<g transform="translate(0.29 0.54) scale(0.976)" stroke-width="2.05"><rect x="5" y="4" width="14" height="17" rx="1.5"/><path d="M9 2.5h6M8.5 9h7M8.5 13h7M8.5 17h4"/></g>',
-  bars: '<g transform="translate(0.00 -0.75) scale(1.000)" stroke-width="2.00"><path d="M3 20.5h18"/><rect x="5" y="11.5" width="4" height="9"/><rect x="10" y="5" width="4" height="15.5"/><rect x="15" y="14" width="4" height="6.5"/></g>',
+  bars: '<g transform="translate(0.00 -0.75) scale(1.000)" stroke-width="2.00"><path d="M3 20.5h18"/><rect x="5" y="8" width="4" height="12.5"/><rect x="10" y="12" width="4" height="8.5"/><rect x="15" y="5" width="4" height="15.5"/></g>',
   perf: '<g transform="translate(-0.63 -0.63) scale(1.053)" stroke-width="1.90"><circle cx="10" cy="10" r="6.5"/><path d="M15 15l5.5 5.5"/><path d="M6.8 12.2l2.2-2.2 1.8 1.6 2.4-3"/></g>',
   bag: '<g transform="translate(0.08 1.72) scale(0.886)" stroke-width="2.26"><rect x="7" y="8" width="9" height="15" rx="2.2"/><path d="M7 13h9M9.5 8L8.6 3.6M11.5 8l.3-4.6M14 8l1.2-3.6M8.6 3.6H5.8M11.8 3.4H9.2"/><ellipse cx="17.3" cy="3.2" rx="3.3" ry="2.1" transform="rotate(-18 17.3 3.2)"/></g>',
   club: '<g transform="translate(-0.56 -0.05) scale(1.026)" stroke-width="1.95"><path d="M17 3L9.5 17.5"/><path d="M9.5 17.5l-1 2.5H4.5l.8-2.5z"/><circle cx="17.5" cy="18" r="2.5"/></g>',
