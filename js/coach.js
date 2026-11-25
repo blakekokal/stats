@@ -2,8 +2,8 @@
 // coaching app. My Bag, Performance Analysis, Practice and Learning and
 // Coaching are the coaching app's own pages (js/coaching).
 
-import { h, course, toast, COURSES, courseById, setActiveCourse, goBack, ninesWith, comboId } from './app.js';
-import { store, sync } from './store.js';
+import { h, course, toast, COURSES, courseById, setActiveCourse, goBack, ninesWith, comboId, isAdmin } from './app.js';
+import { store, sync, submitCourseRequest, fetchCourseRequests, setCourseRequestStatus, countNewCourseRequests, markCourseRequestsSeen } from './store.js';
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
 import { checkCoachingDot } from './coaching/index.js';
@@ -71,6 +71,9 @@ export function renderHome(view) {
   const search = h('button', { class: 'iconbtn', 'aria-label': 'Search', onclick: () => { location.hash = '#/search'; } });
   search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 
+  const gearBtn = h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, icEl('gear'));
+  // For the admin: a red dot on the gear while a course request is waiting (listed in Settings).
+  if (isAdmin) countNewCourseRequests().then(n => { if (n) { gearBtn.setAttribute('aria-label', `Settings (${n} new course request${n > 1 ? 's' : ''})`); gearBtn.append(h('span', { class: 'reqdot' })); } });
   const brand = h('div', { class: 'homebrand' });
   // One line, between the ? and the search / settings buttons; version and the player's name under it.
   brand.innerHTML = `<div class="hometitle">Blake Kokal Golf</div><div class="homesub"><span class="wn" style="color:#606060;font-weight:700;cursor:pointer;">v${VERSION}</span><span class="wn" style="color:#44b8f0;font-weight:600;cursor:pointer;">&#x2190; What's new</span></div>`;
@@ -91,7 +94,7 @@ export function renderHome(view) {
         h('button', { class: 'iconbtn', 'aria-label': 'Strokes Gained explained', onclick: () => { location.hash = '#/help'; } }, icEl('help')),
         brand,
         h('div', { style: 'display:flex;gap:4px;' }, search,
-          h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, icEl('gear')))),
+          gearBtn)),
       go('map', 'GPS Overview / Yardage Books', '#1a4a8a', '#/scout'),
       go('flag', 'New Round', '#007a52', '#/new'),
       go('scorecard', 'Round History', '#00402c', '#/history'),
@@ -192,6 +195,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     openBookSetup({ teeName: tee.value, tourney: type.value === 'Tournament', holeFeatures, ownGreen });
   } }, 'GENERATE YARDAGE BOOK');
   // The yardage books saved from Preview and edit: open one to edit and print it again.
+  const reqBtn = () => sync.user ? h('button', { class: 'reqbtn', onclick: () => openCourseRequest(chosen ? '' : search.value.trim()) }, '+ Submit a New Course') : null;
   const savedBooksBtn = h('button', { class: 'holes9 savedbooks', onclick: () => openSavedBooks({ tourney: false, holeFeatures, ownGreen }) }, 'SAVED YARDAGE BOOKS');
 
   // Course: a blank box to type in; the courses matching what's typed are listed
@@ -235,7 +239,7 @@ export function renderNewRound(view, { scout = false } = {}) {
   };
   const showHits = () => {
     const hits = hitsFor();
-    results.replaceChildren(...(hits.length ? hits.map(c => h('button', { class: c.id === chosen?.id ? 'on' : '', onmousedown: e => e.preventDefault(), onclick: () => pickCourse(c) }, c.name)) : [h('div', { class: 'none' }, 'No courses match')]));
+    results.replaceChildren(...(hits.length ? hits.map(c => h('button', { class: c.id === chosen?.id ? 'on' : '', onmousedown: e => e.preventDefault(), onclick: () => pickCourse(c) }, c.name)) : [h('div', { class: 'none' }, 'No courses match'), sync.user ? h('button', { class: 'reqhit', onmousedown: e => e.preventDefault(), onclick: () => { search.blur(); openCourseRequest(search.value.trim()); } }, `+ Submit “${search.value.trim()}” as a new course`) : null]));
     results.hidden = false;
   };
   const search = h('input', { type: 'search', placeholder: 'Course name', 'aria-label': 'Course', autocomplete: 'off', value: '',
@@ -252,7 +256,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     view.replaceChildren(page('top', backBtn(),
       h('div', { style: 'font-size:20px;font-weight:800;padding:0 44px;line-height:1.2;' }, 'GPS Overview / Yardage Books'),
       h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:-4px;' }, `${COURSES.length} courses added`),
-      courseBox, ninesBox, tee, teeInfo, typeRow, typeNote, confirm, genBook, savedBooksBtn, err));
+      courseBox, ninesBox, tee, teeInfo, typeRow, typeNote, confirm, genBook, savedBooksBtn, err, reqBtn()));
     return;
   }
   view.replaceChildren(page('top', backBtn(),
@@ -263,7 +267,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     tee, teeInfo, typeRow, typeNote,
     h('div', { class: 'row' }, b9, b18),
     custom,
-    confirm, err));
+    confirm, err, reqBtn()));
 }
 
 // ---------- round history ----------
@@ -396,6 +400,57 @@ export function renderEditRound(view, id) {
     msg));
 }
 
+// ---------- course requests ----------
+
+// Submit a new course: a logged-in player names a course to be added; it lands
+// in the admin's Settings (Course Requests) with a dot on Home's gear.
+function openCourseRequest(prefill = '') {
+  const close = () => ov.remove();
+  const name = h('input', { placeholder: 'Course name', value: prefill, maxlength: 120, 'aria-label': 'Course name' });
+  const place = h('input', { placeholder: 'City, State', maxlength: 120, 'aria-label': 'City and state' });
+  const notes = h('input', { placeholder: 'Website or notes (optional)', maxlength: 1000, 'aria-label': 'Website or notes' });
+  const msg = h('div', { class: 'msg' });
+  const send = h('button', { class: 'holes9', onclick: async () => {
+    const n = name.value.trim(), p = place.value.trim();
+    if (n.length < 2) { msg.textContent = 'Enter the course name'; msg.className = 'msg err'; return; }
+    if (!p) { msg.textContent = 'Enter the city and state'; msg.className = 'msg err'; return; }
+    send.disabled = true; msg.textContent = 'Sending…'; msg.className = 'msg ok';
+    try { await submitCourseRequest({ name: n, place: p, notes: notes.value.trim() }); close(); toast('Thanks! Your course request was sent.'); }
+    catch (e) { msg.textContent = e.message || String(e); msg.className = 'msg err'; send.disabled = false; }
+  } }, 'SUBMIT');
+  const ov = h('div', { class: 'cx reqov', onclick: e => { if (e.target === ov) close(); } },
+    h('div', { class: 'reqbox' },
+      h('div', { style: 'font-size:18px;font-weight:800;' }, 'Submit a New Course'),
+      h('div', { style: 'font-size:12px;color:#9a9a9a;margin-bottom:4px;' }, "Tell us the course and we'll add it."),
+      name, place, notes, send, msg,
+      h('button', { class: 'linkbtn', style: 'font-size:13px;', onclick: close }, 'Cancel')));
+  document.body.append(ov);
+  (prefill ? place : name).focus();
+}
+
+// Settings, admin only: every request, newest first, with its status.
+function courseRequestsSection() {
+  const list = h('div', { class: 'reqlist' }, h('div', { class: 'small muted' }, 'Loading…'));
+  const STATUS = [['new', 'New'], ['building', 'Building'], ['added', 'Added'], ['declined', 'Declined']];
+  fetchCourseRequests().then(rows => {
+    markCourseRequestsSeen();
+    if (!rows.length) { list.replaceChildren(h('div', { class: 'small muted' }, 'No requests yet.')); return; }
+    list.replaceChildren(...rows.map(r => {
+      const d = new Date(r.created);
+      const sel = h('select', { class: 'minisel', 'aria-label': 'Status of ' + r.name, onchange: async () => {
+        try { await setCourseRequestStatus(r.id, sel.value); card.dataset.status = sel.value; } catch (e) { toast(e.message || String(e)); sel.value = card.dataset.status; }
+      } }, STATUS.map(([v, l]) => h('option', { value: v, selected: v === r.status }, l)));
+      const card = h('div', { class: 'reqcard', 'data-status': r.status },
+        h('div', { class: 'reqtop' }, h('b', {}, r.name), sel),
+        r.place ? h('div', {}, r.place) : null,
+        r.notes ? h('div', { class: 'reqnotes' }, r.notes) : null,
+        h('div', { class: 'small muted' }, `${r.who || r.email || 'A player'} · ${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`));
+      return card;
+    }));
+  }).catch(e => list.replaceChildren(h('div', { class: 'small', style: 'color:#d4706e;' }, e.message || String(e))));
+  return h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Course Requests'), list);
+}
+
 // ---------- settings ----------
 
 export function renderSettingsPage(view) {
@@ -424,6 +479,7 @@ export function renderSettingsPage(view) {
   view.replaceChildren(page('top', backBtn(),
     h('div', { style: 'width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center;gap:4px;' },
       h('div', { style: 'font-size:18px;font-weight:800;' }, icEl('gear'), ' Settings'),
+      isAdmin ? courseRequestsSection() : null,
       h('div', { style: 'font-size:13px;color:#9a9a9a;' }, u.email),
       h('div', { style: 'font-size:11px;color:#606060;margin-bottom:2px;' }, joined ? `Joined ${joined.getMonth() + 1}/${joined.getDate()}/${joined.getFullYear()}` : ''),
       nameIn,
@@ -515,6 +571,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.16', ['Submit a New Course: on GPS Overview and New Round (and when a course search finds nothing), logged-in players can ask for a course to be added']],
   ['1.20.15', ['New Round: no Create Custom Course or My Courses buttons']],
   ['1.20.14', ['Performance Analysis, Combines: the Putting and Wedge cards line up, each pair the same height']],
   ['1.20.13', ['Strokes Gained Explained (the ? button, and in Learn): glass cards instead of blue, green and red; only the numbers are colored']],
