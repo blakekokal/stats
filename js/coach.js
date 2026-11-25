@@ -260,7 +260,8 @@ export function renderNewRound(view, { scout = false } = {}) {
       courseBox, ninesBox, tee, teeInfo, typeRow, typeNote, confirm, genBook, savedBooksBtn, err, reqBtn()));
     return;
   }
-  view.replaceChildren(page('top', backBtn(),
+  // The page fits the screen and doesn't scroll (the course list scrolls inside its drop-down).
+  view.replaceChildren(page('top noscroll', backBtn(),
     h('div', { style: 'font-size:22px;font-weight:800;' }, icEl('flag', 'tint-green'), ' New Round'),
     name,
     h('div', { class: 'row' }, level, date),
@@ -602,6 +603,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.22', ['New Round: the page fits the screen and doesn’t scroll']],
   ['1.20.21', ['Round History and Stats Dashboard: the page stays put; only the list of past rounds scrolls']],
   ['1.20.20', ['Viewing a student: no gray band behind the Dashboard, Rounds, Notes and Clubs buttons']],
   ['1.20.19', ['Coaching Recent Activity: Mark all read and Strokes gained fit inside their buttons on narrow screens']],
