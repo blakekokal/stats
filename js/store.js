@@ -327,6 +327,69 @@ export async function publishCourse(id, doc, updated) {
   if (error) throw new Error(error.message);
 }
 
+// ---------- course requests ----------
+// A logged-in player asks for a course to be added (Submit a new course, on
+// GPS Overview and New Round). Players add and see their own; only admins
+// (config.js) see them all and set their status, in Settings. Run
+// COURSE_REQUESTS_SQL once in the Supabase SQL editor.
+export const COURSE_REQUESTS_SQL = `create table if not exists course_requests (
+  id bigint generated always as identity primary key,
+  user_id uuid not null default auth.uid() references auth.users on delete cascade,
+  email text default (auth.jwt() ->> 'email'),
+  who text check (char_length(who) <= 80),
+  name text not null check (char_length(name) between 2 and 120),
+  place text check (char_length(place) <= 120),
+  notes text check (char_length(notes) <= 1000),
+  status text not null default 'new' check (status in ('new', 'building', 'added', 'declined')),
+  created timestamptz not null default now()
+);
+alter table course_requests enable row level security;
+drop policy if exists "players add their own" on course_requests;
+create policy "players add their own" on course_requests for insert to authenticated
+  with check (auth.uid() = user_id and status = 'new');
+drop policy if exists "own or admin reads" on course_requests;
+create policy "own or admin reads" on course_requests for select to authenticated
+  using (auth.uid() = user_id or ${ADMIN_CHECK});
+drop policy if exists "admins update" on course_requests;
+create policy "admins update" on course_requests for update to authenticated
+  using (${ADMIN_CHECK}) with check (${ADMIN_CHECK});
+drop policy if exists "admins delete" on course_requests;
+create policy "admins delete" on course_requests for delete to authenticated using (${ADMIN_CHECK});`;
+
+const REQ_SETUP = /course_requests/;
+const reqError = error => new Error(REQ_SETUP.test(error.message) ? 'Course requests aren\'t set up yet (COURSE_REQUESTS_SQL in store.js)' : error.message);
+export async function submitCourseRequest({ name, place, notes }) {
+  const c = getClient();
+  if (!c || !sync.user) throw new Error('Log in to submit a course');
+  const { error } = await c.from('course_requests').insert({ name, place: place || null, notes: notes || null, who: sync.name || null });
+  if (error) throw reqError(error);
+}
+// Every request, newest first (an admin sees all of them; anyone else only their own).
+export async function fetchCourseRequests() {
+  const c = getClient();
+  if (!c || !sync.user) throw new Error('not signed in');
+  const { data, error } = await c.from('course_requests').select('*').order('created', { ascending: false });
+  if (error) throw reqError(error);
+  return data;
+}
+export async function setCourseRequestStatus(id, status) {
+  const c = getClient();
+  if (!c || !sync.user) throw new Error('not signed in');
+  const { error } = await c.from('course_requests').update({ status }).eq('id', id);
+  if (error) throw reqError(error);
+}
+// How many requests are still New and arrived after the admin last opened Settings (0 if it can't tell).
+const REQ_SEEN = 'gs:courseReqSeen';
+export async function countNewCourseRequests() {
+  const c = getClient();
+  if (!c || !sync.user) return 0;
+  let seen = '1970-01-01T00:00:00Z';
+  try { seen = localStorage.getItem(REQ_SEEN) || seen; } catch {}
+  const { count, error } = await c.from('course_requests').select('id', { count: 'exact', head: true }).eq('status', 'new').gt('created', seen);
+  return error ? 0 : count || 0;
+}
+export function markCourseRequestsSeen() { try { localStorage.setItem(REQ_SEEN, new Date().toISOString()); } catch {} }
+
 // ---------- live view ----------
 // A round shared by link: the scorer's device keeps a copy of the round in
 // `live_rounds` under a long random id, and anyone with that id (logged in or
