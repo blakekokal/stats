@@ -523,6 +523,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.9', ['Home: bigger title, filling the space between the buttons']],
   ['1.20.8', ['Home: Blake Kokal Golf is on one line, between the ? and the search and settings buttons']],
   ['1.20.7', ['Back, search and settings buttons are round again, not oval', 'New settings icon: a gear']],
   ['1.20.6', ['Drills: tiles are glass instead of blue']],
