@@ -390,6 +390,50 @@ export async function countNewCourseRequests() {
 }
 export function markCourseRequestsSeen() { try { localStorage.setItem(REQ_SEEN, new Date().toISOString()); } catch {} }
 
+// ---------- who may be a coach ----------
+// Players save their own role (Settings > Account Role), so the database checks
+// it: only an admin can make someone an admin, Coach needs an admin's approval
+// (an approved coach_requests row), and a player's own coach request always
+// starts as pending. Run ROLE_GUARD_SQL once in the Supabase SQL editor.
+// (The SQL editor itself, with no signed-in user, is never blocked.)
+export const ROLE_GUARD_SQL = `create or replace function is_app_admin() returns boolean
+  language sql stable security definer set search_path = public as $$
+  select coalesce((select is_admin from profiles where id = auth.uid()), false) or (${ADMIN_CHECK})
+$$;
+
+create or replace function guard_profile_role() returns trigger
+  language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null or is_app_admin() then return new; end if;
+  if tg_op = 'INSERT' then
+    new.is_admin := false;
+    if new.role = 'coach' then new.role := 'student'; end if;
+    return new;
+  end if;
+  if new.is_admin is distinct from old.is_admin then
+    raise exception 'Only an admin can change admin access';
+  end if;
+  if new.role = 'coach' and old.role is distinct from 'coach'
+     and not exists (select 1 from coach_requests where user_id = new.id and status = 'approved') then
+    raise exception 'Coach access needs an admin''s approval';
+  end if;
+  return new;
+end $$;
+drop trigger if exists guard_profile_role on profiles;
+create trigger guard_profile_role before insert or update on profiles
+  for each row execute function guard_profile_role();
+
+create or replace function guard_coach_request() returns trigger
+  language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is null or is_app_admin() then return new; end if;
+  if tg_op = 'INSERT' then new.status := 'pending'; return new; end if;
+  raise exception 'Only an admin can change a coach request';
+end $$;
+drop trigger if exists guard_coach_request on coach_requests;
+create trigger guard_coach_request before insert or update on coach_requests
+  for each row execute function guard_coach_request();`;
+
 // ---------- live view ----------
 // A round shared by link: the scorer's device keeps a copy of the round in
 // `live_rounds` under a long random id, and anyone with that id (logged in or

@@ -119,7 +119,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
   <!-- Fixed header -->
   <div style="flex-shrink:0;width:100%;padding:30px 16px 0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;position:relative;">
     <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <div style="font-size:22px;font-weight:800;margin-bottom:6px;">Practice and Learning</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:6px;">${ic('club', 'tint-yellow')} Practice and Learning</div>
     <div style="font-size:13px;color:#9a9a9a;margin-bottom:14px;">Combines, Drills, Practice &amp; Learn</div>
 
     <!-- 4-tab bar -->
@@ -830,7 +830,7 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
   <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
 
   <div style="width:100%;max-width:420px;padding:0 14px;box-sizing:border-box;">
-    <div style="font-size:22px;font-weight:800;margin-bottom:2px;text-align:center;">Performance Analysis</div>
+    <div style="font-size:22px;font-weight:800;margin-bottom:2px;text-align:center;">${ic('perf', 'tint-blue')} Performance Analysis</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
       <div id="perfAnalysisSubtitle" style="font-size:12px;color:#9a9a9a;">Loading...</div>
       <div id="perfHcpBadge" style="display:none;background:#1a2533;border:1px solid #2d7abc;border-radius:20px;padding:4px 10px;align-items:center;gap:5px;">
@@ -932,7 +932,7 @@ export const DRILLS_PAGES = `<div id="drillsPage" class="page" style="justify-co
 export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;padding-bottom:80px;align-items:center;">
   <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div style="text-align:center;margin-bottom:12px;">
-    <div style="font-size:22px;font-weight:800;">${ic('bag')} My Clubs</div>
+    <div style="font-size:22px;font-weight:800;">${ic('bag', 'tint-blue')} My Clubs</div>
   </div>
 
   <!-- Coach Student Selector -->
