@@ -18,11 +18,14 @@ body.coach { background: #1e1e1e; }
 .cx .holes9 { background: #007a52; }
 .cx .holes9.genbook { background: #1c3a5e; margin-top: 8px; }
 .cx .holes18 { background: #2d7abc; }
-.cx .back-btn-top { position: fixed; top: auto; left: auto; right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); width: 48px; height: 48px; min-width: 48px; max-width: 48px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; z-index: 20; }
-.cx .back-btn-top svg { width: 24px; height: 24px; stroke: #fff; stroke-width: 2; fill: none; }
+.cx .back-btn-top { position: fixed; top: auto; left: auto; right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); width: 40px; height: 40px; min-width: 40px; max-width: 40px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; z-index: 20; }
+.cx .back-btn-top svg { width: 20px; height: 20px; stroke: #fff; stroke-width: 2; fill: none; }
 /* The Back button sits in the bottom-right corner (one-handed): every page with one
    keeps room at its foot, so nothing ends up under it once you've scrolled down. */
-.cx:has(> .back-btn-top), .cx :has(> .back-btn-top) { padding-bottom: calc(76px + env(safe-area-inset-bottom)) !important; }
+.cx:has(> .back-btn-top), .cx :has(> .back-btn-top) { padding-bottom: calc(66px + env(safe-area-inset-bottom)) !important; }
+/* More see-through than the other glass buttons. */
+.cx button.back-btn-top:not(.linkbtn):not(.link):not(.glass-skip) { background: rgba(255,255,255,.02) !important; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.cx .back-btn-top svg { opacity: .85; }
 /* With the button gone from the top, those pages start higher. */
 .cx:has(> .back-btn-top), .coachroot .page:has(> .back-btn-top) { padding-top: max(24px, calc(env(safe-area-inset-top) + 14px)); }
 .cx .bigsel { width: 100%; max-width: 320px; height: 44px; background: #282828; color: #fff; border-radius: 10px; border: none; text-align: center; font-size: 15px; appearance: none; -webkit-appearance: none; padding: 0 10px; }
@@ -281,10 +284,13 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 .cx.fixedpage #dashContent { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .cx.fixedpage #dashContent > div { flex-shrink: 0; }
 .cx.fixedpage #dashContent > .dsubContent { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-.cx.fixedpage #dsub_0:has(.dashpast) { display: flex; flex-direction: column; }
+.cx.fixedpage #dsub_0:has(.dashpast) { display: flex; flex-direction: column; overflow: hidden; }
 .cx.fixedpage #dsub_0 > * { flex-shrink: 0; }
-.cx.fixedpage #dsub_0 > .dashpast { flex: 1 1 auto; min-height: 140px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.cx.fixedpage #dsub_0 > .dashpast { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 
 /* New Round: fits the screen and doesn't scroll. */
 .cx.noscroll { height: 100%; min-height: 0; overflow: hidden; overscroll-behavior: none; }
 .cx.noscroll > * { flex-shrink: 0; }
+/* No scroll bars on these lists. */
+.cx.fixedpage .scrollpane, .cx.fixedpage .dsubContent, .cx.fixedpage .dashpast { scrollbar-width: none; }
+.cx.fixedpage .scrollpane::-webkit-scrollbar, .cx.fixedpage .dsubContent::-webkit-scrollbar, .cx.fixedpage .dashpast::-webkit-scrollbar { display: none; }
