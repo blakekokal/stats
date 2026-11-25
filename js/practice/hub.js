@@ -2,7 +2,6 @@ import { onEnter } from '../coaching/core.js';
 import { S } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { boInit } from '../learn/optimizer.js';
-import { returnSGCalcToHelp } from '../learn/sg-calculator.js';
 import { setDrillCategory } from './drills.js';
 import { loadPHCombineHistory } from './log.js';
 import { ppBackToLanding } from './plans.js';
@@ -37,8 +36,6 @@ export function setPracticeHubTab(tab) {
       ppBackToLanding();
     }
   }
-  // When leaving Learn tab, return SG calc to its original home
-  if (tab !== 'learn') returnSGCalcToHelp();
 }
 
 

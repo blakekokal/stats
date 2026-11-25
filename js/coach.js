@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.36', ['Learn: removed the Strokes Gained Calculator (GPS does it better)']],
   ['1.20.35', ['Practice and Learning: no dark strip behind the tabs', 'Short Game Combines, Line Drill, Driver and Evaluation Test: Back button in the bottom-right; card text centered']],
   ['1.20.34', ['Practice and Learning: no gap under the tabs']],
   ['1.20.33', ['Stats Dashboard, Round History and a student’s Dashboard: the list runs to the bottom of the screen (no empty band); its last row still scrolls clear of the Back button']],
@@ -1042,7 +1043,7 @@ function searchItems() {
   const combines = [['Evaluation Test', 'goToEvalCombine'], ['Putting Combine', 'goToPuttingCombine'], ['Short Game Combine', 'goToCombines'],
     ['Wedge Distances Combine', 'goToWedgeCombine'], ['Line Drill Combine', 'goToLineDrill'], ['Driver Combine', 'goToDriverCombinePicker']];
   combines.forEach(([title, fn]) => items.push({ kind: 'Combine', title, sub: 'Practice and Learning › Combines', tags: 'combine test', open: () => openPractice('combines', () => window[fn]?.()) }));
-  const learn = [['Learning Library', 'Articles, tips & guides', 'openLearningLibrary'], ['Strokes Gained Calculator', 'Calculate SG for any shot', 'toggleLearnSGCalc'],
+  const learn = [['Learning Library', 'Articles, tips & guides', 'openLearningLibrary'],
     ['Putting Break Calculator', 'Putt break & aim point', 'toggleLearnPBV'], ['Distance Optimizer', 'Optimize distances for your game', 'toggleLearnDistanceOptimizer'],
     ['Proximity Calculator', 'How close to gain strokes', 'toggleLearnProximityCalc'], ['How Far Should I Hit It?', 'Tour averages & distance by speed or handicap', 'toggleDistanceGuide'],
     ['Guide to Golf', 'How to hit every shot', null]];

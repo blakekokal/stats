@@ -449,10 +449,6 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
           <span class="tileic">${ic('books', 'tint-blue')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Learning Library</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Articles, tips &amp; guides</div></div>
         </button>
-        <button onclick="toggleLearnSGCalc()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
-          <span class="tileic">${ic('calc', 'tint-green')}</span>
-          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Strokes Gained Calculator</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Calculate SG for any shot</div></div>
-        </button>
         <button onclick="toggleLearnPBV()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
           <span class="tileic">${ic('breakGreen', 'tint-purple')}</span>
           <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Putting Break Calculator</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Visualize putt break &amp; aim point</div></div>
@@ -745,22 +741,6 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
       <p style="text-align:center;font-size:10px;color:rgba(255,255,255,0.3);margin:12px 0 0;">Sources: Arccos (20M+ drives), deWiz Golf, Trackman</p>
     </div>
 
-  </div>
-</div>
-
-<!-- SG CALCULATOR FULL SCREEN -->
-<div id="learnSGCalcPage" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;z-index:9999;background:#1e1e1e;overflow-y:auto;padding:50px 16px 30px;box-sizing:border-box;">
-  <button class="back-btn-top" onclick="toggleLearnSGCalc()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-  <div style="width:100%;max-width:420px;margin:0 auto;">
-    <div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:12px;">
-      <div style="font-size:20px;font-weight:800;text-align:center;">Strokes Gained Calculator</div>
-      <button id="learnSGExplainerOpenBtn" onclick="toggleLearnSGExplainer()" style="width:28px;height:28px;min-width:28px;max-width:28px;background:#222222;border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;cursor:pointer;padding:0;">${ic('help', 'tint-green')}</button>
-      <button id="learnSGExplainerCloseBtn" onclick="toggleLearnSGExplainer()" style="display:none;width:28px;height:28px;min-width:28px;max-width:28px;background:#222222;border:none;border-radius:8px;align-items:center;justify-content:center;font-size:16px;cursor:pointer;padding:0;color:#d4706e;font-weight:700;">✕</button>
-    </div>
-    <div id="learnSGExplainerWrap" style="display:none;margin-bottom:14px;">
-      <div id="learnSGExplainerGraphic" style="background:#222222;border-radius:14px;overflow:hidden;"></div>
-    </div>
-    <div id="learnSGCalcContainer" style="width:100%;"></div>
   </div>
 </div>
 
@@ -1750,52 +1730,10 @@ export const MORE_MODALS = `
   </div>
 </div>`;
 
-export const SG_PARTS = `<!-- Strokes gained explainer and calculator: kept here (hidden) and moved into the Learn screens when opened. -->
+export const SG_PARTS = `<!-- Strokes gained explainer: kept here (hidden) and moved into the Learn screens when opened. -->
 <div id="helpContent_sg" style="display:none;">
       <!-- SG Explained content -->
       <div id="sgSubContent_explained">
         <div id="sgExplainerGraphic" style="background:#222222;border-radius:14px;overflow:hidden;"></div>
-      </div>
-      <!-- SG Calculator content (relocated) -->
-      <div id="sgSubContent_calc" style="display:none;">
-        <!-- Row 1: HCP + Yardage + Reset -->
-        <div style="display:flex;gap:6px;align-items:center;justify-content:center;margin-bottom:5px;">
-          <div style="display:flex;align-items:center;gap:4px;">
-            <span style="font-size:10px;color:#606060;">HCP</span>
-            <select id="sgCalcHcp" onchange="sgCalcReset()" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:3px 5px;font-size:12px;height:28px;">
-              <option value="Tour Pro">Pro</option>
-              <option value="Scratch">Scr</option>
-              <option value="5">5</option><option value="10" selected>10</option>
-              <option value="15">15</option><option value="20">20</option>
-              <option value="25">25</option><option value="30">30</option>
-            </select>
-          </div>
-          <div style="display:flex;align-items:center;gap:4px;">
-            <span style="font-size:10px;color:#606060;">Yds</span>
-            <input id="sgCalcYardage" type="number" value="400" min="100" max="650" onchange="sgCalcReset()" style="width:52px;height:28px;font-size:12px;text-align:center;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:0;">
-          </div>
-          <button onclick="sgCalcReset()" style="height:28px;width:36px;font-size:13px;font-weight:700;background:#333333;border:1px solid #3d3d3d;border-radius:6px;color:#9a9a9a;cursor:pointer;flex-shrink:0;padding:0;">↺</button>
-        </div>
-        <!-- Row 2: Par tabs -->
-        <div style="display:flex;gap:4px;margin-bottom:5px;background:#222222;border-radius:8px;padding:2px;">
-          <button id="sgCalcTab3" onclick="sgCalcSetHole(3)" style="flex:1;height:28px;font-size:12px;font-weight:700;background:#222222;color:#606060;border:none;border-radius:6px;cursor:pointer;">Par 3</button>
-          <button id="sgCalcTab4" onclick="sgCalcSetHole(4)" style="flex:1;height:28px;font-size:12px;font-weight:700;background:#2d7abc;color:#ffffff;border:none;border-radius:6px;cursor:pointer;">Par 4</button>
-          <button id="sgCalcTab5" onclick="sgCalcSetHole(5)" style="flex:1;height:28px;font-size:12px;font-weight:700;background:#222222;color:#606060;border:none;border-radius:6px;cursor:pointer;">Par 5</button>
-        </div>
-        <!-- Row 3: Stats bar -->
-        <div id="sgCalcStatsBar" style="background:#222222;border-radius:8px;padding:5px 10px;margin-bottom:5px;">
-          <div style="display:flex;justify-content:space-around;align-items:center;">
-            <div style="text-align:center;"><div style="font-size:8px;color:#606060;text-transform:uppercase;">Exp</div><div id="sgCalcStatExp" style="font-size:15px;font-weight:800;color:#00b87a;">–</div></div>
-            <div style="text-align:center;"><div style="font-size:8px;color:#606060;text-transform:uppercase;">Rem</div><div id="sgCalcStatRemain" style="font-size:15px;font-weight:800;color:#44b8f0;">–</div></div>
-            <div style="text-align:center;"><div style="font-size:8px;color:#606060;text-transform:uppercase;">SG</div><div id="sgCalcStatSg" style="font-size:15px;font-weight:800;color:#9a9a9a;">–</div></div>
-          </div>
-        </div>
-        <!-- Interactive SVG -->
-        <div style="background:transparent;border-radius:14px;overflow:hidden;border:1px solid #333333;position:relative;">
-          <svg id="sgCalcSvg" viewBox="0 0 340 400" style="width:100%;height:auto;cursor:crosshair;touch-action:none;display:block;"></svg>
-          <canvas id="sgCalcHoleCanvas" width="340" height="400" style="display:none;"></canvas>
-        </div>
-        <!-- Shot results -->
-        <div id="sgCalcResults" style="margin-top:10px;"></div>
       </div>
 </div>`;

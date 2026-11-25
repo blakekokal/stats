@@ -41,7 +41,6 @@ import '../combines/table.js';
 import '../learn/distance-guide.js';
 import '../learn/library.js';
 import '../learn/putting-break.js';
-import '../learn/sg-calculator.js';
 import '../learn/sg-explainer.js';
 import '../performance/combines.js';
 import '../performance/rounds.js';
