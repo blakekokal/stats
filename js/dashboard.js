@@ -484,6 +484,10 @@ export function renderDashboard(data, hcp, targetId, opts) {
   
   // ===== TAB 1: SCORING =====
   html+='<div id="dsub_1" class="dsubContent" style="display:none;">'+back;
+  html+=hdr('SG: TOTAL');
+  html+=sgBar('SG: Total \u00b7 per round',sgPer.tot,sgR);
+  html+=sgScale(sgR);
+  html+='<div class="dashdetail">'; // below the category's bar: scrolls on its own
   // Inline handicap calculation from the data we already have
   var hcpResult = calcHandicapIndex(data);
   var hcpDisplay = hcpResult.index !== null ? hcpResult.index.toFixed(1) : '--';
@@ -508,13 +512,14 @@ export function renderDashboard(data, hcp, targetId, opts) {
   var recentRows=[];var recent=data.slice(0,8);
   for(var ri=0;ri<recent.length;ri++){var rr=recent[ri];var d3=new Date(rr.round_date+'T12:00:00');recentRows.push([(d3.getMonth()+1)+'/'+d3.getDate(),rr.course_name,''+rr.score,'<span style="color:'+ftpC(rr.to_par)+'">'+ftp(rr.to_par)+'</span>']);}
   html+=tbl(['Date','Course','Score','\u00b1Par'],recentRows);
-  html+='</div>';
+  html+='</div></div>'; // .dashdetail, then the section
   
   // ===== TAB 2: OFF THE TEE =====
   html+='<div id="dsub_2" class="dsubContent" style="display:none;">'+back;
   html+=hdr('SG: OFF THE TEE');
   html+=sgBar('SG: Off The Tee \u00b7 per round',sgPer.ott,sgR);
   html+=sgScale(sgR);
+  html+='<div class="dashdetail">'; // below the category's bar: scrolls on its own
   html+=hdr('FAIRWAY ACCURACY');
   html+=row('Fairways Hit',pct(A.fwHit,A.fwOpp),A.fwHit+'/'+A.fwOpp);
   html+=row('Missed Left',A.fwLeft,pct(A.fwLeft,A.fwOpp));
@@ -534,13 +539,14 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+=hdr('PENALTIES OFF THE TEE');
   html+=row('Par 3 Tee Penalties',A.par3TeePen);
   html+=row('Par 4/5 Tee Penalties',A.par45TeePen);
-  html+='</div>';
+  html+='</div></div>'; // .dashdetail, then the section
   
   // ===== TAB 3: APPROACH =====
   html+='<div id="dsub_3" class="dsubContent" style="display:none;">'+back;
   html+=hdr('SG: APPROACH');
   html+=sgBar('SG: Approach \u00b7 per round',sgPer.app,sgR);
   html+=sgScale(sgR);
+  html+='<div class="dashdetail">'; // below the category's bar: scrolls on its own
   html+=hdr('GREENS IN REGULATION');
   html+=row('GIR',pct(A.girHit,detailedHoles),A.girHit+'/'+detailedHoles);
   html+=row('Proximity when GIR',A.girHit>0?Math.round(A.girFirstPuttDist/A.girHit)+' ft':'\u2013');
@@ -562,13 +568,14 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+=row('Par 5 Avg Proximity',A.par5AppProx.length>0?davg(A.par5AppProx)+' ft':'\u2013',A.par5AppProx.length+' GIR');
   html+=hdr('PENALTIES ON APPROACH');
   html+=row('Approach Penalties',A.appPen);
-  html+='</div>';
+  html+='</div></div>'; // .dashdetail, then the section
   
   // ===== TAB 4: SHORT GAME =====
   html+='<div id="dsub_4" class="dsubContent" style="display:none;">'+back;
   html+=hdr('SG: AROUND THE GREEN');
   html+=sgBar('SG: Around Green \u00b7 per round',sgPer.arg,sgR);
   html+=sgScale(sgR);
+  html+='<div class="dashdetail">'; // below the category's bar: scrolls on its own
   html+=hdr('SCRAMBLING');
   html+=row('Scrambling',pct(A.scrMade,A.scrOpp),A.scrMade+'/'+A.scrOpp);
   html+=row('Bunker Saves',pct(A.bunMade,A.bunOpp),A.bunMade+'/'+A.bunOpp);
@@ -578,13 +585,14 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+=tbl(['Distance','Shots','Avg Proximity'],sgRows2);
   html+=hdr('PENALTIES AROUND GREEN');
   html+=row('Short Game Penalties',A.sgPen);
-  html+='</div>';
+  html+='</div></div>'; // .dashdetail, then the section
   
   // ===== TAB 5: PUTTING =====
   html+='<div id="dsub_5" class="dsubContent" style="display:none;">'+back;
   html+=hdr('SG: PUTTING');
   html+=sgBar('SG: Putting \u00b7 per round',sgPer.putt,sgR);
   html+=sgScale(sgR);
+  html+='<div class="dashdetail">'; // below the category's bar: scrolls on its own
   html+=hdr('PUTTING SUMMARY');
   html+=row('Total Putts',A.totPutts,detailedHoles>0?(A.totPutts/detailedHoles).toFixed(1)+'/hole':'');
   html+=row('Putts per GIR',A.girHit>0?(A.girPutts/A.girHit).toFixed(1):'\u2013');
@@ -597,7 +605,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+=hdr('MAKE % BY DISTANCE');
   var puttRows=[];A.allPuttRanges.forEach(function(r){puttRows.push([r.l,r.t>0?r.m+'/'+r.t:'0/0',r.t>0?Math.round(r.m/r.t*100)+'%':'\u2013']);});
   html+=tbl(['Distance','Made/Total','Make %'],puttRows);
-  html+='</div>';
+  html+='</div></div>'; // .dashdetail, then the section
   
   content.innerHTML=html;
   

@@ -294,3 +294,8 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 /* No scroll bars on these lists. */
 .cx.fixedpage .scrollpane, .cx.fixedpage .dsubContent, .cx.fixedpage .dashpast { scrollbar-width: none; }
 .cx.fixedpage .scrollpane::-webkit-scrollbar, .cx.fixedpage .dsubContent::-webkit-scrollbar, .cx.fixedpage .dashpast::-webkit-scrollbar { display: none; }
+/* A category's detail page: its SG bar stays at the top; the stats under it scroll. */
+.cx.fixedpage #dashContent > .dsubContent:has(> .dashdetail) { display: flex; flex-direction: column; overflow: hidden; }
+.cx.fixedpage .dsubContent > * { flex-shrink: 0; }
+.cx.fixedpage .dsubContent > .dashdetail { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none; }
+.cx.fixedpage .dashdetail::-webkit-scrollbar { display: none; }
