@@ -284,7 +284,7 @@ export function renderHistory(view) {
   const sort = sel([['date-desc', 'Date: Newest'], ['date-asc', 'Date: Oldest'], ['score-asc', 'Score: Low→High'], ['score-desc', 'Score: High→Low']]);
   const search = h('input', { type: 'text', placeholder: 'Search course name...', class: 'searchbox', style: 'max-width:360px;margin-bottom:6px;', oninput: () => draw() });
   const msg = h('div', { style: 'font-size:13px;color:#606060;min-height:20px;text-align:center;' });
-  const list = h('div', { style: 'width:100%;' });
+  const list = h('div', { class: 'scrollpane', style: 'width:100%;' });
   const filtMsg = h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:6px;' });
 
   function draw() {
@@ -358,8 +358,9 @@ export function renderHistory(view) {
     h('span', { style: 'font-size:15px;line-height:1;' }, '\u2630'), h('span', {}, 'Filter'));
   const filterWrap = h('div', { style: 'position:relative;margin-bottom:8px;' }, filterBtn, panel);
   // Tapping anywhere else closes it.
-  const root = page('top', backBtn(),
-    h('div', { style: 'width:100%;max-width:360px;' },
+  // Only the list of rounds scrolls; the title, search and Filter stay put.
+  const root = page('top fixedpage', backBtn(),
+    h('div', { class: 'fixedcol', style: 'width:100%;max-width:360px;' },
       h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;' }, icEl('scorecard', 'tint-green'), ' Round History'),
       search, filterWrap,
       msg, list, filtMsg));
@@ -601,6 +602,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.21', ['Round History and Stats Dashboard: the page stays put; only the list of past rounds scrolls']],
   ['1.20.20', ['Viewing a student: no gray band behind the Dashboard, Rounds, Notes and Clubs buttons']],
   ['1.20.19', ['Coaching Recent Activity: Mark all read and Strokes gained fit inside their buttons on narrow screens']],
   ['1.20.18', ['Page titles show their Home icon in the same color: New Round, GPS Overview, Round History, Stats Dashboard, Performance Analysis, My Clubs, Practice and Learning, Coaching']],
