@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.37', ['Coaching: Recent Activity runs to the bottom of the screen']],
   ['1.20.36', ['Learn: removed the Strokes Gained Calculator (GPS does it better)']],
   ['1.20.35', ['Practice and Learning: no dark strip behind the tabs', 'Short Game Combines, Line Drill, Driver and Evaluation Test: Back button in the bottom-right; card text centered']],
   ['1.20.34', ['Practice and Learning: no gap under the tabs']],
