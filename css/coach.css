@@ -281,21 +281,26 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 .cx.fixedpage { height: 100%; min-height: 0; overflow: hidden; }
 .cx.fixedpage .fixedcol { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .cx.fixedpage .scrollpane { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-.cx.fixedpage #dashContent { flex: 1; min-height: 0; display: flex; flex-direction: column; }
-.cx.fixedpage #dashContent > div { flex-shrink: 0; }
-.cx.fixedpage #dashContent > .dsubContent { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-.cx.fixedpage #dsub_0:has(.dashpast) { display: flex; flex-direction: column; overflow: hidden; }
-.cx.fixedpage #dsub_0 > * { flex-shrink: 0; }
-.cx.fixedpage #dsub_0 > .dashpast { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+:is(.cx.fixedpage #dashContent, .svdashfixed #svDashContent) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+:is(.cx.fixedpage #dashContent, .svdashfixed #svDashContent) > div { flex-shrink: 0; }
+:is(.cx.fixedpage #dashContent, .svdashfixed #svDashContent) > .dsubContent { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+:is(.cx.fixedpage, .svdashfixed) #dsub_0:has(.dashpast) { display: flex; flex-direction: column; overflow: hidden; }
+:is(.cx.fixedpage, .svdashfixed) #dsub_0 > * { flex-shrink: 0; }
+:is(.cx.fixedpage, .svdashfixed) #dsub_0 > .dashpast { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 
 /* New Round: fits the screen and doesn't scroll. */
 .cx.noscroll { height: 100%; min-height: 0; overflow: hidden; overscroll-behavior: none; }
 .cx.noscroll > * { flex-shrink: 0; }
 /* No scroll bars on these lists. */
-.cx.fixedpage .scrollpane, .cx.fixedpage .dsubContent, .cx.fixedpage .dashpast { scrollbar-width: none; }
-.cx.fixedpage .scrollpane::-webkit-scrollbar, .cx.fixedpage .dsubContent::-webkit-scrollbar, .cx.fixedpage .dashpast::-webkit-scrollbar { display: none; }
+.cx.fixedpage .scrollpane, :is(.cx.fixedpage, .svdashfixed) .dsubContent, :is(.cx.fixedpage, .svdashfixed) .dashpast { scrollbar-width: none; }
+.cx.fixedpage .scrollpane::-webkit-scrollbar, :is(.cx.fixedpage, .svdashfixed) .dsubContent::-webkit-scrollbar, :is(.cx.fixedpage, .svdashfixed) .dashpast::-webkit-scrollbar { display: none; }
 /* A category's detail page: its SG bar stays at the top; the stats under it scroll. */
-.cx.fixedpage #dashContent > .dsubContent:has(> .dashdetail) { display: flex; flex-direction: column; overflow: hidden; }
-.cx.fixedpage .dsubContent > * { flex-shrink: 0; }
-.cx.fixedpage .dsubContent > .dashdetail { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none; }
-.cx.fixedpage .dashdetail::-webkit-scrollbar { display: none; }
+:is(.cx.fixedpage #dashContent, .svdashfixed #svDashContent) > .dsubContent:has(> .dashdetail) { display: flex; flex-direction: column; overflow: hidden; }
+:is(.cx.fixedpage, .svdashfixed) .dsubContent > * { flex-shrink: 0; }
+:is(.cx.fixedpage, .svdashfixed) .dsubContent > .dashdetail { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; scrollbar-width: none; }
+:is(.cx.fixedpage, .svdashfixed) .dashdetail::-webkit-scrollbar { display: none; }
+/* A coach's view of a student, Dashboard tab: laid out like the Stats Dashboard (only Past rounds scrolls). */
+.svdashfixed #studentViewScroll { overflow: hidden !important; padding-bottom: 0 !important; }
+.svdashfixed #svDashTab { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+#svDashContent { text-align: left; }
+.svdashfixed #svDashTab > * { flex-shrink: 0; }
