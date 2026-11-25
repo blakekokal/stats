@@ -153,11 +153,11 @@ export function renderNewRound(view, { scout = false } = {}) {
     type.value = v; err.textContent = '';
     typeRow.querySelectorAll('button').forEach(b => { const on = b === typeRow.querySelector(`[data-v="${v}"]`); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
     placeWrap.hidden = scout || v !== 'Tournament';
-    typeNote.textContent = v === 'Tournament' ? 'Tournament: plain yardages only. No plays-like, wind, strokes gained or club picks; contours off to start.' : 'Casual: every tool.';
+    typeNote.textContent = v === 'Tournament' ? 'Tournament mode: USGA legal features enabled' : 'Casual: every tool available';
   }, 'data-v': v }, h('b', {}, label), h('small', {}, sub));
   const typeRow = h('div', { class: 'roundtypes', role: 'group', 'aria-label': 'Round type' },
     h('div', { class: 'ninesq' }, 'What type of round is this?'),
-    typeBtn('Casual', 'Casual', 'Every tool'), typeBtn('Tournament', 'Tournament', 'Rules-legal only'));
+    typeBtn('Casual', 'Casual', 'Every tool available'), typeBtn('Tournament', 'Tournament', 'USGA legal features enabled'));
 
   let holes = 18;
   const pick = (btn, n) => { b9.classList.remove('selected'); b18.classList.remove('selected'); if (btn) btn.classList.add('selected'); holes = n; if (btn) custom.value = ''; };
@@ -523,6 +523,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.19.7', ['Round type: Casual is "every tool available", Tournament is "USGA legal features enabled"']],
   ['1.19.6', ['No scroll bars anywhere in coaching, My Bag, Performance and Practice (they still scroll), so switching tabs on a player profile no longer shifts the page']],
   ['1.19.5', ['Player profiles: the Misc tab is now Clubs, and Goals and Schedule are hidden for now']],
   ['1.19.4', ['Find Yardages: your clubs are a 3-across grid instead of one long list']],
