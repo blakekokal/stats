@@ -403,13 +403,14 @@ export function renderDashboard(data, hcp, targetId, opts) {
   // green to the right for strokes gained. Compact, so all five fit on a small
   // screen: the title and number on one line, the bar under them. With `go`,
   // the bar is a button that opens that category's detailed stats.
-  function sgBar(l,v,R,big,go){
-    var p=Math.max(-R,Math.min(R,v))/R*50, c=sgC(v), ht=big?10:8;
+  // small: one of the four categories in the 2x2 grid under SG: Total.
+  function sgBar(l,v,R,big,go,small){
+    var p=Math.max(-R,Math.min(R,v))/R*50, c=sgC(v), ht=big?10:small?6:8;
     // One you can tap (it opens that category) is a glass bubble.
-    return '<div'+(go!=null?' role="button" class="sgtap" onclick="showDashSub('+go+')" style="cursor:pointer;padding:8px 14px 10px;margin:0 0 8px;">':' style="padding:7px 0 8px;border-bottom:1px solid #282828;">')
-      +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">'
-      +'<span style="'+(big?'font-size:15px;font-weight:700;color:#ffffff;':'font-size:14px;color:#c4c4c4;')+'">'+l+(go!=null?' <span style="color:#606060;font-weight:700;">›</span>':'')+'</span>'
-      +'<span style="font-weight:800;font-variant-numeric:tabular-nums;font-size:'+(big?19:16)+'px;color:'+c+';">'+sgFmt(v)+'</span></div>'
+    return '<div'+(go!=null?' role="button" class="sgtap" onclick="showDashSub('+go+')" style="cursor:pointer;'+(small?'padding:8px 10px 10px;margin:0;':'padding:8px 14px 10px;margin:0 0 8px;')+'">':' style="padding:7px 0 8px;border-bottom:1px solid #282828;">')
+      +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:4px;margin-bottom:'+(small?5:6)+'px;">'
+      +'<span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'+(big?'font-size:15px;font-weight:700;color:#ffffff;':small?'font-size:12.5px;color:#c4c4c4;':'font-size:14px;color:#c4c4c4;')+'">'+l+(go!=null&&!small?' <span style="color:#606060;font-weight:700;">›</span>':'')+'</span>'
+      +'<span style="font-weight:800;font-variant-numeric:tabular-nums;font-size:'+(big?19:small?14:16)+'px;color:'+c+';">'+sgFmt(v)+'</span></div>'
       +'<div style="position:relative;height:'+ht+'px;border-radius:'+(ht/2)+'px;background:#282828;">'
       +'<div style="position:absolute;top:0;bottom:0;border-radius:'+(ht/2)+'px;background:'+c+';left:'+(v>=0?50:50+p)+'%;width:'+Math.abs(p)+'%;"></div>'
       +'<div style="position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:#9a9a9a;"></div></div></div>';
@@ -458,11 +459,13 @@ export function renderDashboard(data, hcp, targetId, opts) {
     // The coach's view of a student keeps it here; the Stats Dashboard page has it beside its title.
     +(opts.single||targetId!=='svDashContent'?'':'<button onclick="toggleDashFilters()" style="height:auto;min-height:0;font-size:11px;font-weight:600;background:none;border:none;border-radius:0;padding:0;margin:0;max-width:none;width:auto;color:#606060;line-height:1;letter-spacing:.03em;">Filter \u25be</button>')+'</div>';
   html+=sgBar('SG: Total', sgPer.tot, sgR, true, 1);
-  html+=sgBar('SG: Off The Tee', sgPer.ott, sgR, false, 2);
-  html+=sgBar('SG: Approach', sgPer.app, sgR, false, 3);
-  html+=sgBar('SG: Around Green', sgPer.arg, sgR, false, 4);
-  html+=sgBar('SG: Putting', sgPer.putt, sgR, false, 5);
-  html+=sgScale(sgR, true);
+  // The four categories two by two, so more of Past rounds fits below.
+  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
+  html+=sgBar('Off The Tee', sgPer.ott, sgR, false, 2, true);
+  html+=sgBar('Approach', sgPer.app, sgR, false, 3, true);
+  html+=sgBar('Around Green', sgPer.arg, sgR, false, 4, true);
+  html+=sgBar('Putting', sgPer.putt, sgR, false, 5, true);
+  html+='</div>';
   // One round: View round opens it on the hole screen (the shots on the map).
   if(opts.single&&opts.index!=null)html+='<button onclick="dashViewRound('+opts.index+')" style="width:100%;max-width:none;height:46px;margin:16px 0 4px;font-size:15px;font-weight:800;background:#007a52;color:#ffffff;border:none;border-radius:12px;">\u26f3 View round</button>';
   // Past rounds: every round, newest first (scroll for these): the date, course and

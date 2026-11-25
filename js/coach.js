@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.31', ['Stats Dashboard: Off The Tee, Approach, Around Green and Putting sit two by two under SG: Total, so more past rounds fit on screen']],
   ['1.20.30', ['Home: Search sits under Settings, so Blake Kokal Golf is always centred']],
   ['1.20.29', ['Settings (admin): Add 8 test rounds and Remove test rounds, for testing the dashboards and history']],
   ['1.20.28', ['Stats Dashboard: each strokes gained category is a glass bubble, so it looks tappable']],
