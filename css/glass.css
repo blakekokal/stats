@@ -140,3 +140,8 @@ body, body.coach { background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, 
 /* Number fields: no up/down arrows. */
 .cx input[type=number] { -moz-appearance: textfield; appearance: textfield; }
 .cx input[type=number]::-webkit-inner-spin-button, .cx input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+/* Icon tints in the macOS palette (Practice and Learning's tiles), like Home's. */
+.cx .tint-blue { color: var(--mac-blue); } .cx .tint-green { color: var(--mac-green); }
+.cx .tint-yellow { color: var(--mac-yellow); } .cx .tint-red { color: var(--mac-red); }
+.cx .tint-purple { color: #BF5AF2; }
