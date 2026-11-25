@@ -304,3 +304,8 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 .svdashfixed #svDashTab { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 #svDashContent { text-align: left; }
 .svdashfixed #svDashTab > * { flex-shrink: 0; }
+/* Fixed pages (Round History, Stats Dashboard, a student's Dashboard tab): the list runs to the
+   foot of the screen and keeps its own room at the end, so its last row still scrolls clear of
+   the Back button instead of the page leaving an empty band. */
+.cx.fixedpage, .coachroot .page.svdashfixed { padding-bottom: 0 !important; }
+:is(.cx.fixedpage, .svdashfixed) :is(.scrollpane, .dashpast, .dashdetail) { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
