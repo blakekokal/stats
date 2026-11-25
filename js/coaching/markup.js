@@ -440,7 +440,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
     </div>
     <div id="studentViewEmail" style="font-size:12px;color:#606060;"></div>
   </div>
-  <div style="display:flex;gap:0;width:100%;max-width:360px;margin-bottom:0;border-radius:10px;overflow:hidden;flex-shrink:0;">
+  <div style="display:flex;gap:6px;width:100%;max-width:360px;margin-bottom:0;background:transparent;overflow:visible;flex-shrink:0;">
     <button onclick="showStudentTab('dashboard')" id="svTabDash" style="flex:1;height:38px;font-size:10px;background:#2d7abc;border-radius:0;border:none;color:#ffffff;font-weight:700;max-width:none;width:auto;padding:0;margin:0;">Dashboard</button>
     <button onclick="showStudentTab('performance')" id="svTabPerf" style="display:none;flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Analysis</button>
     <button onclick="showStudentTab('rounds')" id="svTabRounds" style="flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Rounds</button>
