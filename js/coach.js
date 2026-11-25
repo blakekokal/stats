@@ -603,6 +603,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.26', ['Combine History: Delete is a round trash-can button, so it fits the card']],
   ['1.20.25', ['Stats Dashboard: the strokes gained bars stay put and only Past rounds scrolls, with no scroll bar', 'Back button: smaller and more see-through']],
   ['1.20.24', ['Back button: now in the bottom-right corner, for one-handed use']],
   ['1.20.23', ['Stats Dashboard: new bars icon']],
