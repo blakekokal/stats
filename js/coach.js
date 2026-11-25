@@ -17,9 +17,8 @@ import { renderSGExplainer } from './learn/sg-explainer.js';
 import { drillsData } from './coaching/data-drills.js';
 import { libraryVideos } from './learn/library.js';
 
-const PREF_LABEL = { Pro: 'Tour Pro', Scratch: 'Scratch (0)' };
 const levelOpt = (l, sel, short) => h('option', { value: l, selected: l === sel },
-  short ? `vs ${l === 'Pro' ? 'Tour Pro' : l === 'Scratch' ? 'Scratch' : l + ' HCP'}` : `Compare to: ${PREF_LABEL[l] || l + ' Handicap'}`);
+  short ? `vs ${l === 'Pro' ? 'Tour Pro' : l === 'Scratch' ? 'Scratch' : l + ' HCP'}` : `SG: ${l === 'Pro' ? 'Tour Pro' : l === 'Scratch' ? 'Scratch' : l + ' HCP'}`); // short enough for the half-width field
 const profileLevel = () => (LEVELS.includes(sync.level) ? sync.level : 'Pro');
 const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD, local
 const fmtDate = d => { const [y, m, dd] = d.split('-').map(Number); return `${m}/${dd}/${y}`; };
@@ -523,6 +522,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.11', ['New Round: the compare-to picker reads "SG: 5 HCP", "SG: Tour Pro"..., so it fits']],
   ['1.20.10', ['GPS screen: map buttons are 50% see-through']],
   ['1.20.9', ['Home: bigger title, filling the space between the buttons']],
   ['1.20.8', ['Home: Blake Kokal Golf is on one line, between the ? and the search and settings buttons']],
