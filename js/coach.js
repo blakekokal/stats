@@ -72,10 +72,11 @@ export function renderHome(view) {
   const search = h('button', { class: 'iconbtn', 'aria-label': 'Search', onclick: () => { location.hash = '#/search'; } });
   search.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#9a9a9a" stroke-width="2.5" stroke-linecap="round" style="width:18px;height:18px;"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
 
-  const brand = h('div', { class: 'homebrand', style: 'text-align:center;margin-bottom:6px;' });
-  brand.innerHTML = `<div style="font-family:'Barlow Condensed',system-ui,sans-serif;font-size:2.8rem;font-weight:900;letter-spacing:1px;line-height:1.0;color:#ffffff;">Blake Kokal<br><span style="display:inline-flex;align-items:baseline;justify-content:center;"><span style="font-size:10px;visibility:hidden;font-weight:600;">What's new</span><span style="font-size:13px;visibility:hidden;font-weight:700;margin-right:5px;">v${VERSION}</span>Golf<span class="wn" style="font-size:13px;color:#606060;font-weight:700;margin-left:6px;cursor:pointer;">v${VERSION}</span><span class="wn" style="font-size:10px;color:#44b8f0;font-weight:600;margin-left:5px;cursor:pointer;">&#x2190; What's new</span></span></div>`;
+  const brand = h('div', { class: 'homebrand' });
+  // One line, between the ? and the search / settings buttons; version and the player's name under it.
+  brand.innerHTML = `<div class="hometitle">Blake Kokal Golf</div><div class="homesub"><span class="wn" style="color:#606060;font-weight:700;cursor:pointer;">v${VERSION}</span><span class="wn" style="color:#44b8f0;font-weight:600;cursor:pointer;">&#x2190; What's new</span></div>`;
   brand.querySelectorAll('.wn').forEach(el => el.addEventListener('click', () => { location.hash = '#/whatsnew'; }));
-  brand.append(h('div', { style: 'font-size:11px;color:#606060;margin-top:3px;' }, sync.user ? [icEl('user'), ' ' + sync.name] : ''));
+  brand.append(h('div', { class: 'homeuser' }, sync.user ? [icEl('user'), ' ' + sync.name] : ''));
 
   // Coaching, with a dot when a note, message or assignment is waiting.
   const coaching = go('cap', 'Coaching', '#00402c', '#/coaching');
@@ -86,13 +87,12 @@ export function renderHome(view) {
 
   view.replaceChildren(page('center home',
     h('div', { class: 'homecol' },
-      // Help on the left and search + settings on the right, in a row above
-      // "Blake Kokal" (beside it they covered the title), spread to the screen edges.
-      h('div', { style: 'position:relative;' },
-        h('div', { class: 'iconrow' },
-          h('button', { class: 'iconbtn', 'aria-label': 'Strokes Gained explained', onclick: () => { location.hash = '#/help'; } }, icEl('help')),
-          h('div', { style: 'display:flex;gap:4px;' }, search,
-            h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, icEl('gear')))), brand),
+      // Help on the left, the title in the middle, search + settings on the right, in one row.
+      h('div', { class: 'homehead' },
+        h('button', { class: 'iconbtn', 'aria-label': 'Strokes Gained explained', onclick: () => { location.hash = '#/help'; } }, icEl('help')),
+        brand,
+        h('div', { style: 'display:flex;gap:4px;' }, search,
+          h('button', { class: 'iconbtn', 'aria-label': 'Settings', onclick: () => { location.hash = '#/settings'; } }, icEl('gear')))),
       go('map', 'GPS Overview / Yardage Books', '#1a4a8a', '#/scout'),
       go('flag', 'New Round', '#007a52', '#/new'),
       go('scorecard', 'Round History', '#00402c', '#/history'),
@@ -523,6 +523,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.8', ['Home: Blake Kokal Golf is on one line, between the ? and the search and settings buttons']],
   ['1.20.7', ['Back, search and settings buttons are round again, not oval', 'New settings icon: a gear']],
   ['1.20.6', ['Drills: tiles are glass instead of blue']],
   ['1.20.5', ['Practice and Learning: icons in color, like Home']],
