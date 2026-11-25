@@ -236,3 +236,7 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 /* Menus: no double-tap zoom (scrolling and pinch still work). :where() keeps this
    at zero specificity so maps and Home's own touch-action still win. */
 :where(body.coach, body.coach *) { touch-action: manipulation; }
+
+/* My Clubs: no scroll bar (it still scrolls), so the tabs stay centred whether a tab's content overflows or not */
+.coachroot #myBagPage, .coachroot #gapVisualizerPage { scrollbar-width: none; -ms-overflow-style: none; }
+.coachroot #myBagPage::-webkit-scrollbar, .coachroot #gapVisualizerPage::-webkit-scrollbar { display: none; width: 0; height: 0; }
