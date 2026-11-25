@@ -202,7 +202,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
         <div style="background:#222222;border-radius:14px;padding:16px 18px;">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
             <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;">${ic('bell')} Recent Activity</div>
-            <button onclick="markCoachNotificationsRead()" id="markReadBtn" style="display:none;background:transparent;border:none;color:#44b8f0;font-size:11px;font-weight:700;cursor:pointer;height:auto;width:auto;max-width:none;padding:0;">Mark all read</button>
+            <button onclick="markCoachNotificationsRead()" id="markReadBtn" style="display:none;background:transparent;border:none;color:#44b8f0;font-size:11px;font-weight:700;cursor:pointer;height:auto;min-height:28px;width:auto;max-width:none;padding:4px 12px;white-space:nowrap;flex-shrink:0;">Mark all read</button>
           </div>
           <div id="coachActivityList"><div style="text-align:center;color:#9a9a9a;font-size:13px;padding:10px 0;">No recent activity.</div></div>
         </div>

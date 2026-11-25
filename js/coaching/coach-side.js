@@ -179,7 +179,7 @@ async function loadCoachActivityFeed() {
     var viewBtn = '';
     if (n.student_id) {
       var safeName = escapeHtml(n.student_name || 'Student').replace(/'/g, "\\'");
-      var bs = 'flex:1;min-width:0;height:30px;min-height:0;font-size:11px;font-weight:700;color:#ffffff;border:none;border-radius:6px;padding:0 4px;cursor:pointer;max-width:none;width:auto;white-space:nowrap;margin:0;';
+      var bs = 'flex:1;min-width:0;height:auto;min-height:30px;font-size:11px;font-weight:700;line-height:1.15;color:#ffffff;border:none;border-radius:6px;padding:4px 10px;cursor:pointer;max-width:none;width:auto;white-space:normal;margin:0;';
       viewBtn = '<div style="display:flex;gap:6px;margin-top:8px;"><button onclick="viewStudent(\'' + n.student_id + '\',\'' + safeName + '\',\'\')" style="' + bs + 'background:#2d7abc;">Profile</button>';
       if (n.type === 'live_round' && n.round_id) {
         viewBtn += '<button onclick="coachWatchLive(\'' + String(n.round_id).replace(/[^a-z0-9]/gi, '') + '\')" style="' + bs + 'background:#c8102e;">Watch</button>';
