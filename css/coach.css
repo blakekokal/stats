@@ -106,7 +106,7 @@ body.coach { background: #1e1e1e; }
 .coachroot .comb-hist-card .ch-score { font-size:22px; font-weight:800; }
 .coachroot .comb-hist-card .ch-note { font-size:11px; color:#9a9a9a; margin-top:3px; font-style:italic; }
 .coachroot .comb-hist-card .ch-meta { font-size:11px; color:#9a9a9a; margin-top:2px; }
-.coachroot .comb-hist-del { background:transparent; border:none; color:#d4706e; font-size:12px; cursor:pointer; padding:0; height:auto; max-width:none; width:auto; }
+.coachroot .comb-hist-del { background:transparent; border:none; color:#d4706e; font-size:16px; cursor:pointer; padding:0; width:32px; height:32px; min-width:32px; max-width:32px; min-height:0; flex-shrink:0; display:inline-flex; align-items:center; justify-content:center; border-radius:50% !important; }
 .coachroot .comb-dimmed { opacity:.35; pointer-events:none; }
 .coachroot #bagOptApp * { margin: 0; padding: 0; box-sizing: border-box; }
 .coachroot #bagOptApp { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 0; }
