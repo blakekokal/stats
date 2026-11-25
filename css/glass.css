@@ -79,5 +79,16 @@ body, body.coach { background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, 
   background: rgba(58,58,60,.38) !important;
   -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
 }
-/* Bars painted the old page colour (sticky tab rows, toggle groups). */
-.cx div[style*="background:#1e1e1e"] { background: rgba(35,35,37,.6) !important; -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+/* Rows painted the old page colour: toggle groups lose their backing (no bubble
+   behind the bubbles); sticky tab bars keep a frosted band so content scrolls under it. */
+.cx div[style*="background:#1e1e1e"] { background: transparent !important; }
+.cx div[style*="background:#1e1e1e"][style*="sticky"] { background: rgba(35,35,37,.6) !important; -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); }
+
+/* The course search's results are a plain list, not a stack of bubbles. */
+.cx .courseresults button:not(.linkbtn):not(.link):not(.glass-skip),
+.cx .courseresults button.on:not(.linkbtn):not(.link):not(.glass-skip) {
+  background: transparent !important; border: 0 !important; border-bottom: 1px solid #2c2c2c !important;
+  border-radius: 0 !important; box-shadow: none !important; -webkit-backdrop-filter: none; backdrop-filter: none;
+}
+.cx .courseresults button.on:not(.linkbtn):not(.link):not(.glass-skip) { background: rgba(61,139,242,.25) !important; }
+.cx .courseresults button::before { display: none; }
