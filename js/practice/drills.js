@@ -17,13 +17,6 @@ function getSubcategoriesForCategory(cat) {
   return Object.keys(subs).sort();
 }
 
-// Category colors for drill cards
-var drillCatColors = {
-  putting:   { bg: '#1a4a8a', border: '#2d7abc', tag: '#44b8f0' },
-  shortgame: { bg: '#1a4a8a', border: '#2d7abc', tag: '#44b8f0' },
-  fullswing: { bg: '#1a4a8a', border: '#2d7abc', tag: '#44b8f0' }
-};
-
 export function setDrillCategory(cat) {
   // Update tab button styles for both standalone and practice hub versions
   var prefix = S.drillsOnPracticeHub ? 'phDrillTab' : 'drillTab';
@@ -70,7 +63,6 @@ function renderDrillsList(cat, subFilter) {
   var drills = drillsData[cat] || [];
   var contentId = S.drillsOnPracticeHub ? 'phDrillContent' : 'drillContent';
   var content = document.getElementById(contentId);
-  var colors = drillCatColors[cat] || { bg: '#282828', border: '#3d3d3d', tag: '#606060' };
   
   // Filter by subcategory if set
   if (subFilter) {
@@ -91,7 +83,7 @@ function renderDrillsList(cat, subFilter) {
     var typeBadge = drill.type === 'block'
       ? '<span style="font-size:9px;font-weight:700;color:#44b8f0;background:rgba(111,168,220,0.15);padding:1px 5px;border-radius:4px;">Block</span>'
       : '<span style="font-size:9px;font-weight:700;color:#e6a84d;background:rgba(230,168,77,0.15);padding:1px 5px;border-radius:4px;">Random</span>';
-    html += '<div onclick="showDrillDetail(\'' + drill.id + '\', \'' + cat + '\')" style="background:' + colors.bg + ';border:1px solid ' + colors.border + ';border-radius:10px;padding:14px 10px;cursor:pointer;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;height:80px;">';
+    html += '<div onclick="showDrillDetail(\'' + drill.id + '\', \'' + cat + '\')" style="background:#222222;border:1px solid #282828;border-radius:10px;padding:14px 10px;cursor:pointer;box-sizing:border-box;display:flex;flex-direction:column;justify-content:space-between;height:80px;">';
     html += '<div style="font-size:15px;font-weight:700;color:#ffffff;line-height:1.3;">' + drill.title + '</div>';
     html += '<div style="margin-top:auto;">' + typeBadge + '</div>';
     html += '</div>';

@@ -523,6 +523,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.6', ['Drills: tiles are glass instead of blue']],
   ['1.20.5', ['Practice and Learning: icons in color, like Home']],
   ['1.20.4', ['My Bag: no bar behind the tabs, club tiles are glass', 'Number fields: no up/down arrows']],
   ['1.20.3', ['Performance Analysis: cards are glass instead of red and green; only the numbers show red or green']],
