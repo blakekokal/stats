@@ -408,7 +408,8 @@ export function renderDashboard(data, hcp, targetId, opts) {
     var p=Math.max(-R,Math.min(R,v))/R*50, c=sgC(v), ht=big?10:small?6:8;
     // One you can tap (it opens that category) is a glass bubble.
     return '<div'+(go!=null?' role="button" class="sgtap" onclick="showDashSub('+go+')" style="cursor:pointer;'+(small?'padding:8px 10px 10px;margin:0;':'padding:8px 14px 10px;margin:0 0 8px;')+'">':' style="padding:7px 0 8px;border-bottom:1px solid #282828;">')
-      +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:4px;margin-bottom:'+(small?5:6)+'px;">'
+      // SG: Total has its number in the middle; the others keep theirs on the right.
+      +'<div style="'+(big?'display:grid;grid-template-columns:1fr auto 1fr;':'display:flex;justify-content:space-between;')+'align-items:baseline;gap:4px;margin-bottom:'+(small?5:6)+'px;">'
       +'<span style="min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'+(big?'font-size:15px;font-weight:700;color:#ffffff;':small?'font-size:12.5px;color:#c4c4c4;':'font-size:14px;color:#c4c4c4;')+'">'+l+(go!=null&&!small?' <span style="color:#606060;font-weight:700;">›</span>':'')+'</span>'
       +'<span style="font-weight:800;font-variant-numeric:tabular-nums;font-size:'+(big?19:small?14:16)+'px;color:'+c+';">'+sgFmt(v)+'</span></div>'
       +'<div style="position:relative;height:'+ht+'px;border-radius:'+(ht/2)+'px;background:#282828;">'
@@ -457,7 +458,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
     +'<div style="font-size:14px;font-weight:800;color:#00b87a;">STROKES GAINED \u00b7 '+(opts.single?'this round':'per round')+'</div>'
     // A quiet text link on the same line as the heading.
     // The coach's view of a student keeps it here; the Stats Dashboard page has it beside its title.
-    +(opts.single||targetId!=='svDashContent'?'':'<button onclick="toggleDashFilters()" style="height:auto;min-height:0;font-size:11px;font-weight:600;background:none;border:none;border-radius:0;padding:0;margin:0;max-width:none;width:auto;color:#606060;line-height:1;letter-spacing:.03em;">Filter \u25be</button>')+'</div>';
+    +(opts.single||targetId!=='svDashContent'?'':'<button class="glass-skip" onclick="toggleDashFilters()" style="height:auto;min-height:0;font-size:11px;font-weight:600;background:none;border:none;border-radius:0;padding:0;margin:0;max-width:none;width:auto;color:#606060;line-height:1;letter-spacing:.03em;">Filter \u25be</button>')+'</div>';
   html+=sgBar('SG: Total', sgPer.tot, sgR, true, 1);
   // The four categories two by two, so more of Past rounds fits below.
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
@@ -475,12 +476,13 @@ export function renderDashboard(data, hcp, targetId, opts) {
     html+=hdr('PAST ROUNDS');
     html+='<div class="dashpast">';
     A.roundSGs.forEach(function(sr){
-      var cat=function(l,v){return l+' <b style="color:'+sgC(v)+';font-weight:700;">'+sgFmt(v)+'</b>';};
+      var cat=function(l,v){return '<span>'+l+' <b style="color:'+sgC(v)+';font-weight:700;">'+sgFmt(v)+'</b></span>';};
       html+='<div role="button" onclick="dashOneRound('+sr.i+')" style="cursor:pointer;padding:8px 0;border-bottom:1px solid #282828;">'
         +'<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;">'
         +'<span style="font-size:14px;font-weight:700;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+sr.date+' · '+escapeHtml(String(sr.course||''))+'</span>'
         +'<span style="white-space:nowrap;font-size:14px;font-weight:700;">'+sr.score+' <span style="color:'+ftpC(sr.toPar)+';">('+ftp(sr.toPar)+')</span> <span style="color:#606060;">›</span></span></div>'
-        +'<div style="font-size:11.5px;color:#7a7a7a;margin-top:3px;">'+[cat('SG',sr.tot),cat('OTT',sr.ott),cat('APP',sr.app),cat('ARG',sr.arg),cat('Putt',sr.putt)].join(' · ')+'</div></div>';
+        // One line: the five spread across, shrinking a little on narrow screens.
+        +'<div style="display:flex;justify-content:space-between;gap:4px;white-space:nowrap;font-size:clamp(9.5px,3.1vw,11.5px);color:#7a7a7a;margin-top:3px;">'+[cat('SG',sr.tot),cat('OTT',sr.ott),cat('APP',sr.app),cat('ARG',sr.arg),cat('Putt',sr.putt)].join('')+'</div></div>';
     });
     html+='</div>';
   }

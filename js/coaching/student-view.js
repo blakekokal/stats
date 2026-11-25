@@ -95,6 +95,10 @@ export function showStudentTab(tab) {
   var nBtn = document.getElementById('svTabNotes');
   var mBtn = document.getElementById('svTabMisc');
 
+  // The Dashboard tab is laid out like the Stats Dashboard: only Past rounds scrolls.
+  var svPage = document.getElementById('studentViewPage');
+  if (svPage) svPage.classList.toggle('svdashfixed', tab === 'dashboard');
+
   [['dashboard', dBtn], ['performance', pBtn], ['rounds', rBtn], ['practice', prBtn], ['notes', nBtn], ['misc', mBtn]].forEach(function(pair) {
     var active = tab === pair[0];
     if (pair[1]) {
@@ -354,7 +358,7 @@ function applySvDashFilters() {
   
   S.svDashData = filtered;
   S.activeDashTarget = 'svDashContent';
-  loading.style.display = 'none'; content.style.display = 'block';
+  loading.style.display = 'none'; content.style.display = ''; // shown (a block, or the fixed layout's column)
   
   // Reuse the same renderDashboard function but target svDashContent
   var hcpSel = document.getElementById('svDashHcpFilter');
