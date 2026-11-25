@@ -247,3 +247,9 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
    with a tab's length narrows the page and shifts everything sideways. */
 .coachroot, .coachroot * { scrollbar-width: none; -ms-overflow-style: none; }
 .coachroot::-webkit-scrollbar, .coachroot *::-webkit-scrollbar { display: none; width: 0; height: 0; }
+
+/* Performance Analysis > Combines: Putting and Wedge side by side, their cards
+   sharing rows (subgrid) so each pair is the same height whatever wraps. */
+#perfCombineGrid { align-items: stretch !important; row-gap: 6px !important; }
+#perfCombineGrid > div { display: grid; grid-row: span 4; grid-template-rows: subgrid; }
+#perfCombineGrid > div > [id$="Focus"] > div, #perfCombineGrid > div > [id$="Overview"] > div { height: 100%; margin-bottom: 0 !important; box-sizing: border-box; }
