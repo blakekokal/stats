@@ -523,6 +523,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.4', ['My Bag: no bar behind the tabs, club tiles are glass', 'Number fields: no up/down arrows']],
   ['1.20.3', ['Performance Analysis: cards are glass instead of red and green; only the numbers show red or green']],
   ['1.20.2', ['Course search: results are a plain list again', 'Performance Analysis and other toggles: no grey bubble behind the buttons']],
   ['1.20.1', ['Round type: Casual and Tournament are the same width; Tournament reads "USGA legal"']],
