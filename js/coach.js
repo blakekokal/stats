@@ -91,12 +91,12 @@ export function renderHome(view) {
 
   view.replaceChildren(page('center home',
     h('div', { class: 'homecol' },
-      // Help on the left, the title in the middle, search + settings on the right, in one row.
+      // Help on the left, the title in the middle, settings (search under it) on the right.
       h('div', { class: 'homehead' },
         h('button', { class: 'iconbtn', 'aria-label': 'Strokes Gained explained', onclick: () => { location.hash = '#/help'; } }, icEl('help')),
         brand,
-        h('div', { style: 'display:flex;gap:4px;' }, search,
-          gearBtn)),
+        // Settings with Search under it, so both sides are one button wide and the title stays centred.
+        h('div', { style: 'display:flex;flex-direction:column;gap:6px;' }, gearBtn, search)),
       go('map', 'GPS Overview / Yardage Books', '#1a4a8a', '#/scout'),
       go('flag', 'New Round', '#007a52', '#/new'),
       go('scorecard', 'Round History', '#00402c', '#/history'),
@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.30', ['Home: Search sits under Settings, so Blake Kokal Golf is always centred']],
   ['1.20.29', ['Settings (admin): Add 8 test rounds and Remove test rounds, for testing the dashboards and history']],
   ['1.20.28', ['Stats Dashboard: each strokes gained category is a glass bubble, so it looks tappable']],
   ['1.20.27', ['Stats Dashboard: tapping a category keeps its SG bar at the top with the title; only the stats under it scroll. SG: Total now shows its bar too']],
