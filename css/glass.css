@@ -92,3 +92,24 @@ body, body.coach { background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, 
 }
 .cx .courseresults button.on:not(.linkbtn):not(.link):not(.glass-skip) { background: rgba(61,139,242,.25) !important; }
 .cx .courseresults button::before { display: none; }
+
+/* Performance Analysis (and a player's, in Coaching): good / bad tinted cards
+   become plain glass panes; only the numbers and labels keep their green or red. */
+:is(#performanceAnalysisPage, #studentViewPage) [style*="#0a3020"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="rgb(10, 48, 32)"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="#0a3a20"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="rgb(10, 58, 32)"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="#3a1515"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="rgb(58, 21, 21)"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="#3d1515"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="rgb(61, 21, 21)"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="#2a2508"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="rgb(42, 37, 8)"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="#2a1510"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="rgb(42, 21, 16)"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="#3a3010"],
+:is(#performanceAnalysisPage, #studentViewPage) [style*="rgb(58, 48, 16)"] {
+  background: rgba(58,58,60,.38) !important;
+  border-color: rgba(255,255,255,.08) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
+}
