@@ -267,3 +267,15 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 .cx .reqtop b { font-size: 14px; min-width: 0; }
 .cx .reqnotes { color: #9a9a9a; overflow-wrap: anywhere; }
 .cx .rolebtn { flex: 1; height: 36px; font-size: 13px; }
+
+/* Pages where only one list scrolls (Round History's rounds, the Stats Dashboard's Past rounds):
+   the page fills the screen and doesn't move; the list scrolls inside it. */
+.cx.fixedpage { height: 100%; min-height: 0; overflow: hidden; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.cx.fixedpage .fixedcol { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.cx.fixedpage .scrollpane { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.cx.fixedpage #dashContent { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.cx.fixedpage #dashContent > div { flex-shrink: 0; }
+.cx.fixedpage #dashContent > .dsubContent { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.cx.fixedpage #dsub_0:has(.dashpast) { display: flex; flex-direction: column; }
+.cx.fixedpage #dsub_0 > * { flex-shrink: 0; }
+.cx.fixedpage #dsub_0 > .dashpast { flex: 1 1 auto; min-height: 140px; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }

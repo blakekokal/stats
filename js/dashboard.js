@@ -122,8 +122,9 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
   const content = h('div', { id: 'dashContent', style: 'text-align:left;' });
   const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: () => { if (!dashBack()) goBack(); } });
   back.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
-  view.replaceChildren(h('div', { class: 'cx top' }, back,
-    h('div', { style: 'width:100%;max-width:360px;' },
+  // Only Past rounds scrolls (and a category's detail page, which is long); the rest stays put.
+  view.replaceChildren(h('div', { class: 'cx top fixedpage' }, back,
+    h('div', { class: 'fixedcol', style: 'width:100%;max-width:360px;' },
       // The title, with Filter at its right (it shows or hides the filters below).
       h('div', { style: 'position:relative;margin-bottom:6px;' },
         h('div', { style: 'font-size:20px;font-weight:800;text-align:center;' }, icEl('bars', 'tint-blue'), only ? ' Round Stats' : ' Stats Dashboard'),
@@ -468,6 +469,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
   // the strokes gained for just that round.
   if(!opts.single&&A.roundSGs.length){
     html+=hdr('PAST ROUNDS');
+    html+='<div class="dashpast">';
     A.roundSGs.forEach(function(sr){
       var cat=function(l,v){return l+' <b style="color:'+sgC(v)+';font-weight:700;">'+sgFmt(v)+'</b>';};
       html+='<div role="button" onclick="dashOneRound('+sr.i+')" style="cursor:pointer;padding:8px 0;border-bottom:1px solid #282828;">'
@@ -476,6 +478,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
         +'<span style="white-space:nowrap;font-size:14px;font-weight:700;">'+sr.score+' <span style="color:'+ftpC(sr.toPar)+';">('+ftp(sr.toPar)+')</span> <span style="color:#606060;">›</span></span></div>'
         +'<div style="font-size:11.5px;color:#7a7a7a;margin-top:3px;">'+[cat('SG',sr.tot),cat('OTT',sr.ott),cat('APP',sr.app),cat('ARG',sr.arg),cat('Putt',sr.putt)].join(' · ')+'</div></div>';
     });
+    html+='</div>';
   }
   html+='</div>';
   
@@ -635,7 +638,7 @@ window.dashOneRound = dashOneRound; window.dashAllRounds = dashAllRounds; window
 function showDashSub(idx) {
   for(var i=0;i<6;i++){
     var el=document.getElementById('dsub_'+i);
-    if(el)el.style.display=i===idx?'block':'none';
+    if(el)el.style.display=i===idx?'':'none';
   }
   var top=document.getElementById('dsub_'+idx);
   if(top&&top.scrollIntoView)top.scrollIntoView({block:'nearest'});
