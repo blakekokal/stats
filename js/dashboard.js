@@ -405,7 +405,8 @@ export function renderDashboard(data, hcp, targetId, opts) {
   // the bar is a button that opens that category's detailed stats.
   function sgBar(l,v,R,big,go){
     var p=Math.max(-R,Math.min(R,v))/R*50, c=sgC(v), ht=big?10:8;
-    return '<div'+(go!=null?' role="button" onclick="showDashSub('+go+')" style="cursor:pointer;':' style="')+'padding:7px 0 8px;border-bottom:1px solid #282828;">'
+    // One you can tap (it opens that category) is a glass bubble.
+    return '<div'+(go!=null?' role="button" class="sgtap" onclick="showDashSub('+go+')" style="cursor:pointer;padding:8px 14px 10px;margin:0 0 8px;">':' style="padding:7px 0 8px;border-bottom:1px solid #282828;">')
       +'<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">'
       +'<span style="'+(big?'font-size:15px;font-weight:700;color:#ffffff;':'font-size:14px;color:#c4c4c4;')+'">'+l+(go!=null?' <span style="color:#606060;font-weight:700;">›</span>':'')+'</span>'
       +'<span style="font-weight:800;font-variant-numeric:tabular-nums;font-size:'+(big?19:16)+'px;color:'+c+';">'+sgFmt(v)+'</span></div>'
@@ -413,9 +414,9 @@ export function renderDashboard(data, hcp, targetId, opts) {
       +'<div style="position:absolute;top:0;bottom:0;border-radius:'+(ht/2)+'px;background:'+c+';left:'+(v>=0?50:50+p)+'%;width:'+Math.abs(p)+'%;"></div>'
       +'<div style="position:absolute;left:50%;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:#9a9a9a;"></div></div></div>';
   }
-  function sgScale(R){
+  function sgScale(R,inset){
     var f=function(x){return (x>0?'+':x<0?'\u2212':'')+Math.abs(x);};
-    return '<div style="display:flex;justify-content:space-between;font-size:11px;color:#606060;margin-top:6px;"><span>'+f(-R)+'</span><span>'+f(-R/2)+'</span><span>0</span><span>'+f(R/2)+'</span><span>'+f(R)+'</span></div>';
+    return '<div style="display:flex;justify-content:space-between;font-size:11px;color:#606060;margin-top:'+(inset?'0':'6px')+';'+(inset?'padding:0 14px;':'')+'"><span>'+f(-R)+'</span><span>'+f(-R/2)+'</span><span>0</span><span>'+f(R/2)+'</span><span>'+f(R)+'</span></div>';
   }
   function sgRow(l,v,s){return'<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #282828;"><span style="color:#9a9a9a;">'+l+'</span><span style="font-weight:700;color:'+sgC(v)+';">'+sgFmt(v)+(s?' <span style="font-size:11px;color:#606060;">'+s+'</span>':'')+'</span></div>';}
   
@@ -461,7 +462,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+=sgBar('SG: Approach', sgPer.app, sgR, false, 3);
   html+=sgBar('SG: Around Green', sgPer.arg, sgR, false, 4);
   html+=sgBar('SG: Putting', sgPer.putt, sgR, false, 5);
-  html+=sgScale(sgR);
+  html+=sgScale(sgR, true);
   // One round: View round opens it on the hole screen (the shots on the map).
   if(opts.single&&opts.index!=null)html+='<button onclick="dashViewRound('+opts.index+')" style="width:100%;max-width:none;height:46px;margin:16px 0 4px;font-size:15px;font-weight:800;background:#007a52;color:#ffffff;border:none;border-radius:12px;">\u26f3 View round</button>';
   // Past rounds: every round, newest first (scroll for these): the date, course and
