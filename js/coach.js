@@ -523,6 +523,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.19.3', ['My Clubs: no scroll bar, so the page no longer shifts sideways between My Bag, Find Yardages, Wedge Gapping and Speed']],
   ['1.19.2', ['App icon: back to the BLAKE KOKAL GOLF icon']],
   ['1.19.1', ['New app icon: BKG wearing the hat']],
   ['1.19.0', ['New courses: Rockwall Golf & Athletic Club (Rockwall), The Golf Club at Fossil Creek (Fort Worth), Whitestone Golf Club (Benbrook), Hawks Creek Golf Club (Westworth Village) and Oak Hollow Golf Course (McKinney), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
