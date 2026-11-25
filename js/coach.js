@@ -603,6 +603,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.24', ['Back button: now in the bottom-right corner, for one-handed use']],
   ['1.20.23', ['Stats Dashboard: new bars icon']],
   ['1.20.22', ['New Round: the page fits the screen and doesn’t scroll']],
   ['1.20.21', ['Round History and Stats Dashboard: the page stays put; only the list of past rounds scrolls']],

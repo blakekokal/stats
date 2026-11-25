@@ -18,8 +18,13 @@ body.coach { background: #1e1e1e; }
 .cx .holes9 { background: #007a52; }
 .cx .holes9.genbook { background: #1c3a5e; margin-top: 8px; }
 .cx .holes18 { background: #2d7abc; }
-.cx .back-btn-top { position: absolute; top: max(12px, env(safe-area-inset-top)); left: 12px; width: 36px; height: 36px; min-width: 36px; max-width: 36px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; z-index: 20; }
-.cx .back-btn-top svg { width: 20px; height: 20px; stroke: #fff; stroke-width: 2; fill: none; }
+.cx .back-btn-top { position: fixed; top: auto; left: auto; right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); width: 48px; height: 48px; min-width: 48px; max-width: 48px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; z-index: 20; }
+.cx .back-btn-top svg { width: 24px; height: 24px; stroke: #fff; stroke-width: 2; fill: none; }
+/* The Back button sits in the bottom-right corner (one-handed): every page with one
+   keeps room at its foot, so nothing ends up under it once you've scrolled down. */
+.cx:has(> .back-btn-top), .cx :has(> .back-btn-top) { padding-bottom: calc(76px + env(safe-area-inset-bottom)) !important; }
+/* With the button gone from the top, those pages start higher. */
+.cx:has(> .back-btn-top), .coachroot .page:has(> .back-btn-top) { padding-top: max(24px, calc(env(safe-area-inset-top) + 14px)); }
 .cx .bigsel { width: 100%; max-width: 320px; height: 44px; background: #282828; color: #fff; border-radius: 10px; border: none; text-align: center; font-size: 15px; appearance: none; -webkit-appearance: none; padding: 0 10px; }
 .cx .minisel { background: #282828; color: #fff; border: 1px solid #3d3d3d; border-radius: 6px; padding: 4px 6px; font-size: 11px; }
 .cx .homebtn { display: flex; align-items: center; justify-content: flex-start; gap: 16px; height: auto; padding: 13px 15px 13px 20px; font-size: 15px; font-weight: 700; border-radius: 13px; text-align: left; max-width: none; }
@@ -270,7 +275,7 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 
 /* Pages where only one list scrolls (Round History's rounds, the Stats Dashboard's Past rounds):
    the page fills the screen and doesn't move; the list scrolls inside it. */
-.cx.fixedpage { height: 100%; min-height: 0; overflow: hidden; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+.cx.fixedpage { height: 100%; min-height: 0; overflow: hidden; }
 .cx.fixedpage .fixedcol { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .cx.fixedpage .scrollpane { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 .cx.fixedpage #dashContent { flex: 1; min-height: 0; display: flex; flex-direction: column; }
