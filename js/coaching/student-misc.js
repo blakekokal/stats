@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from './core.js';
 import { expose } from './core.js';
 import { _BAG_ORDER, sortBagClubs } from './core.js';
@@ -218,7 +219,7 @@ async function saveSvBagClubs() {
   try {
     var { data, error } = await _sb.from('profiles').update({ bag_clubs: _svBagClubs }).eq('id', S.currentStudentId).select('bag_clubs');
     if (error) {
-      if (statusEl) { statusEl.style.color = '#d4706e'; statusEl.textContent = 'Save failed: ' + error.message; }
+      if (statusEl) { statusEl.style.color = '#d4706e'; statusEl.textContent = errText(error, 'Save failed: '); }
       return;
     }
     // Verify the write actually persisted (RLS can silently block updates)
@@ -228,7 +229,7 @@ async function saveSvBagClubs() {
     }
     if (statusEl) { statusEl.style.color = '#00b87a'; statusEl.textContent = 'Saved'; setTimeout(function() { if (statusEl.textContent === 'Saved') statusEl.textContent = ''; }, 2000); }
   } catch(e) {
-    if (statusEl) { statusEl.style.color = '#d4706e'; statusEl.textContent = 'Save error: ' + e.message; }
+    if (statusEl) { statusEl.style.color = '#d4706e'; statusEl.textContent = errText(e, 'Save error: '); }
   }
 }
 
@@ -275,7 +276,7 @@ async function loadStudentPracticeSessions() {
   msg.textContent = 'Loading...'; list.innerHTML = '';
 
   var { data, error } = await _sb.from('practice_sessions').select('*').eq('user_id', S.currentStudentId).order('session_date', {ascending: false}).order('created_at', {ascending: false});
-  if (error) { msg.textContent = 'Error: ' + error.message; return; }
+  if (error) { msg.textContent = errText(error, 'Error: '); return; }
   if (!data || data.length === 0) { msg.textContent = 'No practice sessions found for this student.'; return; }
   msg.textContent = '';
 

@@ -145,7 +145,7 @@ async function loadCoachingPageStudentView() {
   } else {
     coachContent.innerHTML = '<div style="text-align:center;padding:10px 0;">'
       + '<div style="font-size:28px;margin-bottom:8px;">' + ic('user') + '</div>'
-      + '<div style="color:#9a9a9a;font-size:13px;">No coach connected yet.<br>Share your invite code on the Info tab!</div></div>';
+      + '<div style="color:#9a9a9a;font-size:13px;">No coach connected yet.<br>Share your invite code above with your coach.</div></div>';
   }
 
   loadStudentCoachNotes();

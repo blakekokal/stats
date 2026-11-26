@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { onEnter } from '../coaching/core.js';
 import { S } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
@@ -5,9 +6,8 @@ import { _viewingAsStudent, activeUserId } from '../coaching/core.js';
 import { _sb } from '../coaching/core.js';
 import { loadPerfCombineData } from './combines.js';
 import { historyRounds } from '../rounds.js';
-import { toCoachRound } from '../dashboard.js';
+import { toCoachRound, getExpectedPutts, getExpectedStrokes } from '../dashboard.js'; // the Stats Dashboard's baseline
 import { isDriver } from '../model.js';
-import { getExpectedPutts, getExpectedStrokes } from '../coaching/sg-calc.js';
 import { ic } from '../icons.js';
 
 // ═══════════════════════════════════════════════════════════════
@@ -117,7 +117,7 @@ export async function loadPerformanceAnalysis() {
   } catch(e) {
     subtitle.textContent = 'Error loading data';
     noRounds.style.display = 'block';
-    document.getElementById('perfNoRounds').textContent = 'Could not load rounds: ' + e.message;
+    document.getElementById('perfNoRounds').textContent = errText(e, 'Could not load rounds: ');
   }
 }
 

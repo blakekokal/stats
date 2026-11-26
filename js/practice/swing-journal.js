@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { _viewingAsStudent, activeUserId } from '../coaching/core.js';
@@ -55,7 +56,7 @@ async function addSwingJournalEntry() {
   });
   if (error) {
     var c = document.getElementById('sjEntries');
-    if (c) c.innerHTML = '<div style="text-align:center;font-size:12px;color:#d4706e;padding:16px 0;">Save failed: ' + escHtml(error.message) + '</div>';
+    if (c) c.innerHTML = '<div style="text-align:center;font-size:12px;color:#d4706e;padding:16px 0;">' + escHtml(errText(error, 'Save failed: ')) + '</div>';
     return;
   }
   textInput.value = '';
@@ -67,7 +68,7 @@ async function deleteSwingJournalEntry(id) {
   // Only owner can delete; coaches viewing a student shouldn't delete the student's entries.
   if (_viewingAsStudent) return;
   var { error } = await _sb.from('swing_journal_entries').delete().eq('id', id).eq('user_id', activeUserId());
-  if (error) { alert('Delete failed: ' + error.message); return; }
+  if (error) { alert(errText(error, 'Delete failed: ')); return; }
   renderSwingJournal();
 }
 
@@ -85,7 +86,7 @@ async function renderSwingJournal() {
     .order('entry_date', { ascending: false })
     .order('created_at', { ascending: false });
   if (error) {
-    container.innerHTML = '<div style="text-align:center;font-size:12px;color:#d4706e;padding:16px 0;">Error: ' + escHtml(error.message) + '</div>';
+    container.innerHTML = '<div style="text-align:center;font-size:12px;color:#d4706e;padding:16px 0;">' + escHtml(errText(error, 'Error: ')) + '</div>';
     return;
   }
   var entries = data || [];

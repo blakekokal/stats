@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from './core.js';
 import { expose } from './core.js';
 import { showSvMiscSubTab, showSvPracticeSubTab } from './student-misc.js';
@@ -182,7 +183,7 @@ async function loadStudentPerfAnalysis() {
   } catch(e) {
     subtitle.textContent   = 'Error loading data';
     noRounds.style.display = 'block';
-    noRounds.textContent   = 'Could not load rounds: ' + e.message;
+    noRounds.textContent   = errText(e, 'Could not load rounds: ');
   }
 }
 
@@ -313,7 +314,7 @@ async function loadStudentDashboard() {
   try { data = await studentRounds(S.currentStudentId); } catch (e) { error = e; }
 
   if (error || !data || data.length === 0) {
-    loading.textContent = error ? 'Error: ' + error.message : 'No rounds found for this student.';
+    loading.textContent = error ? errText(error, 'Error: ') : 'No rounds found for this student.';
     return;
   }
 
@@ -374,7 +375,7 @@ export async function loadStudentRounds() {
   var data = null, error = null;
   try { data = await studentRounds(S.currentStudentId, true); } catch (e) { error = e; }
 
-  if (error) { msg.textContent = 'Error: ' + error.message; return; }
+  if (error) { msg.textContent = errText(error, 'Error: '); return; }
 
   S.svAllRounds = data || [];
   // Rounds being played right now can be watched live.

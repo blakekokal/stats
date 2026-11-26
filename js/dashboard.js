@@ -13,8 +13,9 @@ import { icEl } from './icons.js';
 const S = {}; // shared state for the ported dashboard code
 var hcpLabels = { 'pro': 'Tour Pro', '0': 'Scratch', '5': '5 HCP', '10': '10 HCP', '15': '15 HCP', '20': '20 HCP', '25': '25 HCP', '30': '30 HCP' };
 const lvl = hcp => levelFromPref(hcp) || 'Pro';
-function getExpectedPutts(ft, hcp) { return ft <= 0 ? 0 : expected('green', ft, lvl(hcp)); }
-function getExpectedStrokes(dist, lie, hcp) {
+// Also Performance Analysis's, so the two pages give the same strokes gained.
+export function getExpectedPutts(ft, hcp) { return ft <= 0 ? 0 : expected('green', ft, lvl(hcp)); }
+export function getExpectedStrokes(dist, lie, hcp) {
   const l = lie === 'TEE' ? 'tee' : lie === 'FAIRWAY' || lie === 'GREEN' ? 'fairway' : /BUNKER|SAND/.test(lie || '') ? 'bunker' : lie === 'RECOVERY' ? 'recovery' : 'rough';
   return expected(l, dist, lvl(hcp));
 }
@@ -107,6 +108,9 @@ export function toCoachRound(r) {
 
 // ---------- page ----------
 
+// 2026-11-08 -> 11/8/2026.
+const mdy = d => { const [y, m, dd] = String(d || '').split('-').map(Number); return y && m && dd ? `${m}/${dd}/${y}` : String(d || ''); };
+
 // With `roundId`, shows the stats for that one round (from Round History).
 export function renderStatsDashboard(view, renderLogin, roundId) {
   if (!sync.user) return renderLogin(view);
@@ -130,7 +134,7 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
         h('div', { style: 'font-size:20px;font-weight:800;text-align:center;' }, icEl('bars', 'tint-blue'), only ? ' Round Stats' : ' Stats Dashboard'),
         only ? null : h('button', { 'aria-label': 'Filter', onclick: () => toggleDashFilters(),
           style: 'position:absolute;right:0;top:50%;transform:translateY(-50%);width:auto;max-width:none;height:30px;padding:0 10px;font-size:12px;font-weight:700;background:#282828;color:#9a9a9a;border-radius:8px;' }, 'Filter \u25be')),
-      only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || courseById(only.course).name} · ${only.date}${only.player ? ' · ' + only.player : ''}`) : null,
+      only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || courseById(only.course).name} · ${mdy(only.date)}${only.player ? ' · ' + only.player : ''}`) : null,
       // Filters (round type, time, "vs" level): hidden until Filter (beside the title) is tapped.
       h('div', { id: 'dashFilters', style: 'display:none;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;' }, only ? [fHcp] : [fType, fTime, fHcp]),
       content)));

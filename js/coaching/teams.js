@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from './core.js';
 import { expose } from './core.js';
 import { loadRosterHandicaps } from './student-goals.js';
@@ -93,7 +94,7 @@ async function createCoachTeam() {
     team_name: name
   });
 
-  if (error) { msg.style.color = '#d4706e'; msg.textContent = 'Error: ' + error.message; return; }
+  if (error) { msg.style.color = '#d4706e'; msg.textContent = errText(error, 'Error: '); return; }
 
   msg.style.color = '#00b87a'; msg.textContent = '✓ Created "' + name + '"';
   input.value = '';

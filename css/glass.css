@@ -61,6 +61,16 @@ body, body.coach { background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, 
   background: linear-gradient(180deg, rgba(255,255,255,.6), rgba(255,255,255,.1) 35%, rgba(255,255,255,.1) 65%, rgba(255,255,255,.4)) !important;
 }
 .cx button.selected small, .cx button.on small { color: rgba(255,255,255,.85) !important; }
+/* Toggles that mark the picked one green (#00b87a / #007a52) and the others grey
+   text: the picked one is solid blue too. Unpicked grey text (#606060) is lifted
+   so it doesn't look switched off. */
+.cx :has(> button:is([style*="color:#606060"], [style*="color: rgb(96, 96, 96)"])) > button:not(.linkbtn):not(.link):not(.glass-skip):is([style*="background:#00b87a"], [style*="background: rgb(0, 184, 122)"], [style*="background:#007a52"], [style*="background: rgb(0, 122, 82)"]) {
+  background: var(--glass-on) !important; color: #fff !important;
+  box-shadow: inset 0 1.5px 2px rgba(255,255,255,.35), 0 2px 10px rgba(0,0,0,.3) !important;
+}
+.cx button:not(:disabled):is([style*="color:#606060"], [style*="color: rgb(96, 96, 96)"]) { color: #a8a8ad !important; }
+/* How Far Should I Hit It?: the picked tab is blue like every other. */
+.cx :is(button, div).dg-tab.dg-tab-active:not(.linkbtn):not(.link):not(.glass-skip) { background: var(--glass-on) !important; color: #fff !important; }
 
 /* Home: each button's colour moves to its icon, in the macOS palette. */
 .cx .homebtn[style*="#1a4a8a"] .ic, .cx .homebtn[style*="#2d7abc"] .ic { color: var(--mac-blue); }

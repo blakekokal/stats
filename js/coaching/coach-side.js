@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from './core.js';
 import { expose } from './core.js';
 import { populateCoachDrillList } from './assign.js';
@@ -249,7 +250,7 @@ async function coachAddStudentFromCoachingPage() {
   var { error: insertErr } = await _sb.from('coach_students').insert({
     coach_id: S.currentUser.id, student_id: profile.id, student_name: studentName, invite_code: code
   });
-  if (insertErr) { msg.style.color = '#d4706e'; msg.textContent = 'Error: ' + insertErr.message; return; }
+  if (insertErr) { msg.style.color = '#d4706e'; msg.textContent = errText(insertErr, 'Error: '); return; }
 
   await _sb.from('profiles').update({ coach_id: S.currentUser.id }).eq('id', profile.id);
 
@@ -276,7 +277,7 @@ async function sendCoachNote() {
   if (lessonDate) insertData.lesson_date = lessonDate;
 
   var { error } = await _sb.from('coach_notes').insert(insertData);
-  if (error) { msg.style.color = '#d4706e'; msg.textContent = 'Error: ' + error.message; return; }
+  if (error) { msg.style.color = '#d4706e'; msg.textContent = errText(error, 'Error: '); return; }
 
   var notifMsg = (lessonDate ? 'Lesson ' + lessonDate + ': ' : '') + (text.length > 70 ? text.slice(0,70) + '…' : text);
   await _sb.from('notifications').insert({
