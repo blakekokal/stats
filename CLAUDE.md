@@ -128,7 +128,11 @@ course, practice holes and range in the same boundary trimmed out). Rusted Rail 
 fairway and rough together: worth redoing from summer imagery). `tools/keep_found_bunkers.py` adds only the
 bunkers you name from `bunkers_from_imagery.py`'s finds. Champions Circle (Fort Worth; OSM's boundary has no
 name; GolfPass's ratings are for a longer layout, so none are given). Waterchase (Fort Worth; unnamed in OSM;
-its short course trimmed with `tools/trim_far.py`, which drops shapes far from every hole, optionally in a box). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
+its short course trimmed with `tools/trim_far.py`, which drops shapes far from every hole, optionally in a box). The Club at
+Frisco Farms (OSM: Plantation Golf Club; shift 4 m, fitted to the greens).
+
+Skipped for now: Meadowbrook (Fort Worth; GolfPass's card is a different layout from OSM's holes),
+Lost Creek (Aledo; GolfPass says it closed), Pecan Valley River (see below). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
 
 Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, every shape
 traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).

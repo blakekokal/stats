@@ -868,5 +868,20 @@
    567
   ],
   "source": "USGS 3DEP"
+ },
+ "friscofarms": {
+  "bounds": [
+   -96.787257,
+   33.115155,
+   -96.769101,
+   33.129262
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   719,
+   755
+  ],
+  "source": "USGS 3DEP"
  }
 }
