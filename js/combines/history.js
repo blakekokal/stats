@@ -155,6 +155,7 @@ export function renderCombCard(c, canDelete, canEditNote){
   }
   var dateStr=c.combine_date?new Date(c.combine_date+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'';
   var combBadge = c.is_combine ? '<span style="font-size:10px;background:#2d7abc;color:#ffffff;padding:2px 6px;border-radius:4px;margin-left:6px;font-weight:600;">COMBINE</span>' : '';
+  if (c.added_by) combBadge += ' <span class="coachtag">Added by coach</span>';
   var delBtn = canDelete ? '<button class="comb-hist-del" onclick="deleteCombScore(\''+c.id+'\')" title="Delete" aria-label="Delete">' + ic('trash') + '</button>' : '';
   var noteHtml = c.note ? ' • <em style="color:#9a9a9a;">'+escapeHtml(c.note)+'</em>' : '';
   var metaStr = c.holes_count + '-hole • vs '+c.handicap+strokesLine+noteHtml;

@@ -10,7 +10,7 @@
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast, complexHoles, partOf } from './app.js';
-import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity, saveStudentRound, updateRoundNotification, errText } from './store.js';
+import { store, sync, actingAs, fetchCoachStudents, fetchBagOf, fetchStudentActivity, saveStudentRound, updateRoundNotification, errText } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, drawnRing, YD_PER_M } from './geo.js';
 import { bookMapImage, bookGreenPage } from './book.js';
 import { expected, LEVELS } from './sg.js';
@@ -1517,7 +1517,7 @@ export function renderHole(view, n) {
   const liveBox = h('div', { class: 'leave livebox', hidden: true, onclick: e => { if (e.target === liveBox) liveBox.hidden = true; } });
   function drawLiveBtn() {
     const r = scouting || watching || viewing() ? null : currentRound();
-    liveBtn.hidden = !r;
+    liveBtn.hidden = !r || !!actingAs(); // a coach using the app as a student doesn't share it live
     liveBtn.classList.toggle('on', isLiveOn(r));
   }
   function openLiveBox() {

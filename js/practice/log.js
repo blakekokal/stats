@@ -1,5 +1,5 @@
 import { errText } from '../store.js';
-import { S } from '../coaching/core.js';
+import { S, addedByCoach } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { renderCombCard } from '../combines/history.js';
 import { activeUserId } from '../coaching/core.js';
@@ -149,6 +149,7 @@ async function savePracticeSession() {
 
   // INSERT new session
   var payload = {
+    ...addedByCoach(),
     user_id: activeUserId(),
     session_date: dateVal,
     combine_score_id: combineId,
@@ -212,7 +213,7 @@ export async function loadPracticeHistory() {
     html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
     var _dp = (s.session_date || '').split('-'), _mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
     var _dispDate = _dp.length === 3 ? (_mn[parseInt(_dp[1],10)-1] + ' ' + parseInt(_dp[2],10) + ', ' + _dp[0]) : (s.session_date || '');
-    html += '<div style="font-size:14px;font-weight:800;color:#ffffff;">' + _dispDate + '</div>';
+    html += '<div style="font-size:14px;font-weight:800;color:#ffffff;">' + _dispDate + (s.added_by ? ' <span class="coachtag">Added by coach</span>' : '') + '</div>';
     html += '<div style="font-size:13px;font-weight:700;color:#00b87a;">' + (s.total_minutes || 0) + ' min</div>';
     html += '</div>';
 

@@ -1,6 +1,6 @@
 import { yards, inPolygon } from './geo.js';
 import { ADMIN_EMAIL_SHA256 } from '../config.js';
-import { store, sync, init as initSync, fetchPublishedCourses, publishCourse, unpublishCourse, errText } from './store.js';
+import { store, sync, init as initSync, fetchPublishedCourses, publishCourse, unpublishCourse, errText, actingAs, actState, onActChange, stopActing } from './store.js';
 import { renderHole, closeHole, lastHole } from './hole.js';
 import { renderSettings } from './settings.js';
 import { renderAccount } from './account.js';
@@ -351,6 +351,8 @@ async function route() {
     location.replace(`${location.pathname}${location.search}#/hole/${watchHole()}`);
     return;
   }
+  // Using the app as a student: their account settings and the coach's own Coaching aren't part of it.
+  if (actingAs() && ['settings', 'account', 'device', 'coaching'].includes(parts[0])) { location.replace(location.pathname + location.search + '#/'); return; }
   track();
   if (parts[0] !== 'hole' && isWatching()) endWatching(); // leaving the holes leaves the live view
   // The page was reloaded while watching: fetch the round again first.
@@ -397,6 +399,29 @@ function renderLiveError(res, retry) {
     res === 'missing' ? null : h('button', { class: 'btn', onclick: retry }, '\u21bb Try again'),
     h('a', { class: 'btn', href: '#/' }, 'Home')));
 }
+
+// While a coach uses the app as a student: a bar across the top says whose app
+// it is (and whether their changes are saved), with Exit back to the coach's own.
+function drawActBar() {
+  const a = actingAs();
+  let bar = document.getElementById('actbar');
+  document.body.classList.toggle('acting', !!a);
+  if (!a) { bar?.remove(); return; }
+  if (!bar) { bar = h('div', { id: 'actbar', role: 'status' }); document.body.prepend(bar); }
+  const st = actState.error ? ' \u00b7 not saved yet' : actState.saving ? ' \u00b7 saving\u2026' : '';
+  bar.replaceChildren(h('span', {}, 'Using the app as ', h('b', {}, a.name), st), h('button', { onclick: exitActing }, 'Exit'));
+}
+async function exitActing() {
+  const a = actingAs(); if (!a) return;
+  if (!(await stopActing())) {
+    if (!confirm(`Some of ${a.name}\u2019s changes aren\u2019t saved yet (${actState.error || 'no signal'}). Exit anyway and lose them?`)) return;
+    await stopActing(true);
+  }
+  location.hash = '#/coaching';
+  setTimeout(() => { if (window.viewStudent) window.viewStudent(a.id, a.name, a.email); }, 300); // back to their profile
+}
+onActChange(drawActBar);
+drawActBar();
 
 window.addEventListener('hashchange', route);
 // Re-render when another device's changes arrive, but not while looking at a hole

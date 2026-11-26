@@ -1,5 +1,5 @@
 import { errText } from '../store.js';
-import { S } from '../coaching/core.js';
+import { S, addedByCoach } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { showAuthPage } from '../coaching/core.js';
 import { showStudentTab } from '../coaching/student-view.js';
@@ -602,6 +602,7 @@ async function combSave(){
   var saveUserId = (S.combSaveForStudent && S.combSaveForStudent.id) ? S.combSaveForStudent.id : activeUserId();
 
   var payload = {
+    ...(saveUserId === activeUserId() ? addedByCoach() : {}),
     user_id:       saveUserId,
     combine_date:  dateVal,
     combine_type:  combineType,

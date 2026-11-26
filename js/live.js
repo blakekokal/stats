@@ -11,7 +11,7 @@
 // Viewer: #/live/<share id> fetches that copy and opens it read-only on the
 // hole screen (rounds.js holds it in memory; nothing is saved on the device).
 
-import { store, sync, pushLive, deleteLive, fetchLive, notifyCoach, errText } from './store.js';
+import { store, sync, actingAs, pushLive, deleteLive, fetchLive, notifyCoach, errText } from './store.js';
 import { roundKeyOf, startWatching, watchingId, watchInfo } from './rounds.js';
 
 const infoKey = roundId => 'live:' + roundId;
@@ -51,6 +51,7 @@ function shares(r) {
 const pending = new Set(); // round ids waiting to be sent
 let timer = null, sending = false;
 function queue(roundId, force = false) {
+  if (actingAs()) return; // a coach using the app as a student: not shared live
   const r = store.get(roundKeyOf(roundId));
   if (!r || !(force || shares(r))) return;
   pending.add(roundId);

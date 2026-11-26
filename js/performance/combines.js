@@ -4,7 +4,8 @@ import { activeUserId } from '../coaching/core.js';
 import { _sb } from '../coaching/core.js';
 
 // ── COMBINE SCORES ANALYSIS ────────────────────────────────────
-export async function loadPerfCombineData() {
+// `userId`: whose combines (a coach's view of a student passes the student's; else the player's own).
+export async function loadPerfCombineData(userId) {
   var loadEl  = document.getElementById('perfCombineLoading');
   var gridEl  = document.getElementById('perfCombineGrid');
   var footEl  = document.getElementById('perfCombineFooter');
@@ -15,7 +16,7 @@ export async function loadPerfCombineData() {
     var resp = await _sb
       .from('combine_scores')
       .select('combine_date, combine_type, is_combine, total_sg, avg_pts, holes_count, filled_count, row_data, score_mode')
-      .eq('user_id', activeUserId())
+      .eq('user_id', userId || activeUserId())
       .eq('is_combine', true)
       .order('combine_date', { ascending: false })
       .limit(40);

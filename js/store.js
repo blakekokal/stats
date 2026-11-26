@@ -39,12 +39,22 @@ function clearLocal() {
 }
 
 export const store = {
-  get(key) { const d = docs[key]; return d && !d.deleted ? d.data : null; },
+  get(key) { const d = docOf(key); return d && !d.deleted ? d.data : null; },
   list(prefix) {
-    return Object.keys(docs).filter(k => k.startsWith(prefix) && !docs[k].deleted).map(k => docs[k].data);
+    // Rounds, while using the app as a student, are the student's.
+    const all = acting && prefix.startsWith('round:') ? acting.docs : docs;
+    return Object.keys(all).filter(k => k.startsWith(prefix) && !all[k].deleted).map(k => all[k].data);
   },
-  set(key, data) { const prev = store.get(key); docs[key] = { data, updated: Date.now() }; persist(); scheduleSync(); afterSet(key, data, prev); },
-  remove(key) { const prev = store.get(key); docs[key] = { data: null, updated: Date.now(), deleted: true }; persist(); scheduleSync(); afterSet(key, null, prev); },
+  set(key, data) {
+    const prev = store.get(key);
+    if (actingKey(key)) { actSet(key, data, false); afterSet(key, store.get(key), prev); return; }
+    docs[key] = { data, updated: Date.now() }; persist(); scheduleSync(); afterSet(key, data, prev);
+  },
+  remove(key) {
+    const prev = store.get(key);
+    if (actingKey(key)) { actSet(key, null, true); afterSet(key, null, prev); return; }
+    docs[key] = { data: null, updated: Date.now(), deleted: true }; persist(); scheduleSync(); afterSet(key, null, prev);
+  },
   onChange(fn) { listeners.add(fn); return () => listeners.delete(fn); },
   onSet(fn) { setHooks.add(fn); },
   exportAll() { return JSON.stringify(docs); },
@@ -56,6 +66,89 @@ export const store = {
     persist(); emit(); scheduleSync();
   },
 };
+
+// ---- Using the app as a student ----
+// A coach can use the whole app as one of their students (from the student's
+// profile in Coaching). Rounds ('round:' documents) then come from and save to
+// the student's account through coach_student_docs / coach_put_student_doc
+// (STUDENT_ACCESS_SQL), not this device's own documents, which stay untouched.
+// Anything the coach adds is marked addedBy, so the student sees it was the coach.
+// Kept per tab (sessionStorage), so a reload stays in the mode.
+const ACT_KEY = 'gs:act';
+let acting = null; // { id, name, email, hcp, docs: { key: { data, updated, deleted } }, pending: [keys] }
+try { acting = JSON.parse(sessionStorage.getItem(ACT_KEY) || 'null'); } catch { acting = null; }
+const actingKey = key => !!acting && key.startsWith('round:');
+function docOf(key) { return actingKey(key) ? acting.docs[key] : docs[key]; }
+function actPersist() { try { sessionStorage.setItem(ACT_KEY, JSON.stringify(acting)); } catch { /* full: still in memory */ } }
+// The student being used, or null: { id, name, email, hcp }.
+export const actingAs = () => (acting ? { id: acting.id, name: acting.name, email: acting.email, hcp: acting.hcp } : null);
+export const actState = { saving: false, error: '' }; // for the banner
+const actListeners = new Set();
+export function onActChange(fn) { actListeners.add(fn); }
+const actEmit = () => actListeners.forEach(fn => { try { fn(); } catch { /* ignore */ } });
+function actSet(key, data, deleted) {
+  const was = acting.docs[key];
+  if (!deleted) {
+    // Marked as the coach's: new rounds, and every later save of them.
+    const by = was && !was.deleted && was.data?.addedBy ? was.data.addedBy : (!was || was.deleted ? { id: sync.user?.id, name: sync.name || 'Coach' } : null);
+    if (by && !data.addedBy) data = { ...data, addedBy: by };
+  }
+  acting.docs[key] = deleted ? { data: null, updated: Date.now(), deleted: true } : { data, updated: Date.now() };
+  if (!acting.pending.includes(key)) acting.pending.push(key);
+  actPersist(); actSchedule();
+}
+let actTimer = null, actRunning = false;
+function actSchedule(ms = 1500) { clearTimeout(actTimer); actTimer = setTimeout(actFlush, ms); }
+// Sends the student's changed rounds; true once nothing is left to send.
+export async function actFlush() {
+  clearTimeout(actTimer);
+  if (!acting || !acting.pending.length) return true;
+  if (actRunning) { actSchedule(); return false; }
+  const c = getClient();
+  if (!c || !sync.user) return false;
+  actRunning = true; actState.saving = true; actEmit();
+  try {
+    for (const key of [...acting.pending]) {
+      const d = acting.docs[key];
+      const { error } = await c.rpc('coach_put_student_doc', { student: acting.id, doc_key: key, doc: { data: d.data, deleted: !!d.deleted }, doc_updated: d.updated });
+      if (error) throw new Error(/coach_put_student_doc/.test(error.message) ? 'the database needs STUDENT_ACCESS_SQL' : error.message);
+      if (acting.docs[key] === d) acting.pending = acting.pending.filter(k => k !== key);
+    }
+    actState.error = '';
+  } catch (e) {
+    actState.error = errText(e);
+    actSchedule(15000); // e.g. no signal: keep trying
+  } finally {
+    actRunning = false; actState.saving = false; actPersist(); actEmit();
+  }
+  return !acting.pending.length;
+}
+window.addEventListener('online', () => { if (acting?.pending.length) actFlush(); });
+// Starts using the app as `student` ({ id, name, email, hcp }): loads their rounds.
+export async function startActing(student) {
+  const c = getClient();
+  if (!c || !sync.user) throw new Error('not signed in');
+  const { data, error } = await c.rpc('coach_student_docs', { student: student.id });
+  if (error) throw new Error(errText(error));
+  const sdocs = {};
+  for (const r of data || []) if (r.key && r.key.startsWith('round:') && r.doc) sdocs[r.key] = { data: r.doc.data, updated: r.updated, ...(r.doc.deleted ? { deleted: true } : {}) };
+  // This device's own round in progress (and its edit state) is set aside until the coach is back.
+  const stash = {};
+  for (const k of ['gs:currentRound', 'gs:viewOnly', 'gs:editingPast', 'gs:editSnap']) { stash[k] = localStorage.getItem(k); localStorage.removeItem(k); }
+  acting = { id: student.id, name: student.name || 'Student', email: student.email || '', hcp: student.hcp || 'pro', docs: sdocs, pending: [], stash };
+  actPersist(); actEmit(); emit();
+}
+// Back to the coach's own app. Unsent changes are sent first; `force` leaves without them.
+export async function stopActing(force = false) {
+  if (!acting) return true;
+  const done = await actFlush();
+  if (!done && !force) return false;
+  for (const [k, v] of Object.entries(acting.stash || {})) { if (v == null) localStorage.removeItem(k); else localStorage.setItem(k, v); }
+  acting = null;
+  try { sessionStorage.removeItem(ACT_KEY); } catch { /* ignore */ }
+  actEmit(); emit();
+  return true;
+}
 
 // ---- Accounts and sync ----
 
@@ -515,6 +608,47 @@ create or replace function coach_save_student_doc(student uuid, doc_key text, do
   end $$;
 grant execute on function coach_save_student_doc(uuid, text, jsonb, bigint) to authenticated;
 alter table notifications add column if not exists round_id text;`;
+// Lets a coach use the app as one of their students (Coaching → a student →
+// Use app as …): add, edit and delete the student's rounds, combines, practice
+// sessions and swing journal entries. Only for students on the coach's roster.
+// Run STUDENT_ACCESS_SQL once in the Supabase SQL editor.
+export const STUDENT_ACCESS_SQL = `-- Is this player one of my students?
+create or replace function is_my_student(student uuid) returns boolean
+  language sql stable security definer set search_path = public
+  as $$ select exists (select 1 from coach_students cs where cs.coach_id = auth.uid() and cs.student_id = student)
+         or exists (select 1 from profiles p where p.id = student and p.coach_id = auth.uid()) $$;
+grant execute on function is_my_student(uuid) to authenticated;
+
+-- Rounds: add, edit or delete (a delete is kept as a tombstone, as the app's own sync does).
+-- A save older than what's there is ignored, so a student's newer edit is never overwritten.
+create or replace function coach_put_student_doc(student uuid, doc_key text, doc jsonb, doc_updated bigint)
+  returns void language plpgsql security definer set search_path = public
+  as $$ begin
+    if doc_key not like 'round:%' then raise exception 'only rounds can be changed'; end if;
+    if not is_my_student(student) then raise exception 'not your student'; end if;
+    insert into shot_tracker_docs (user_id, key, doc, updated)
+      values (student, doc_key, coach_put_student_doc.doc, doc_updated)
+      on conflict (user_id, key) do update set doc = excluded.doc, updated = excluded.updated
+      where shot_tracker_docs.updated < excluded.updated;
+  end $$;
+grant execute on function coach_put_student_doc(uuid, text, jsonb, bigint) to authenticated;
+
+-- Combines, practice sessions and swing journal: who added a row, when it was the coach.
+alter table combine_scores add column if not exists added_by uuid;
+alter table practice_sessions add column if not exists added_by uuid;
+alter table swing_journal_entries add column if not exists added_by uuid;
+
+-- ...and a coach can read, add, edit and delete them for their students.
+drop policy if exists "coach manages student combines" on combine_scores;
+create policy "coach manages student combines" on combine_scores for all to authenticated
+  using (is_my_student(user_id)) with check (is_my_student(user_id));
+drop policy if exists "coach manages student practice" on practice_sessions;
+create policy "coach manages student practice" on practice_sessions for all to authenticated
+  using (is_my_student(user_id)) with check (is_my_student(user_id));
+drop policy if exists "coach manages student journal" on swing_journal_entries;
+create policy "coach manages student journal" on swing_journal_entries for all to authenticated
+  using (is_my_student(user_id)) with check (is_my_student(user_id));`;
+
 // Tell the signed-in player's coach about something new (e.g. a round they
 // just finished), as a notification in the coach's Recent Activity. Finds the
 // coach from the profile, or from coach_students. Quietly does nothing offline
@@ -522,6 +656,7 @@ alter table notifications add column if not exists round_id text;`;
 export async function notifyCoach({ type, title, message, round_id }) {
   const c = getClient();
   if (!c || !sync.user) return;
+  if (acting) return; // a coach using the app as a student: nobody to tell
   try {
     const uid = sync.user.id;
     const { data: prof } = await c.from('profiles').select('coach_id, display_name').eq('id', uid).single();

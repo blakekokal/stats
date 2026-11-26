@@ -7,7 +7,8 @@ import { loadStudentCombines } from '../combines/history.js';
 import { loadPerfCombineData } from '../performance/combines.js';
 import { computePerfAnalysis, renderPerfAnalysis, togglePerfTab } from '../performance/rounds.js';
 import { escapeHtml } from './core.js';
-import { studentRounds, viewRound, replayRound, watchLive, liveStudents } from './gps.js';
+import { studentRounds, viewRound, replayRound, watchLive, liveStudents, forgetStudentRounds } from './gps.js';
+import { startActing } from '../store.js';
 import { _sb } from './core.js';
 import { ordinalSuffix } from './core.js';
 import { renderDashboard, setDashControls } from '../dashboard.js';
@@ -288,7 +289,7 @@ async function loadSvPerfCombineData() {
   S.currentUser = { id: S.currentStudentId };
 
   try {
-    await loadPerfCombineData();
+    await loadPerfCombineData(S.currentStudentId); // the student's, not the coach's own
   } catch(e) {
     var loadEl = document.getElementById('perfCombineLoading');
     if (loadEl) loadEl.textContent = 'Error loading combine data.';
@@ -454,6 +455,21 @@ function filterSvRounds() {
 
 // Open one of the student's rounds read-only on the hole screen, or watch it live.
 var _svLive = {}; // round id -> live share id, for rounds being played now
+// Use the whole app as this student: their rounds, combines, practice and bag,
+// with a bar across the top to come back (store.js startActing).
+async function svUseAppAs() {
+  var btn = document.getElementById('svUseAppBtn');
+  if (!S.currentStudentId || !btn) return;
+  var was = btn.textContent; btn.disabled = true; btn.textContent = 'Opening\u2026';
+  try {
+    forgetStudentRounds(S.currentStudentId); // what's added as them shows when you're back
+    await startActing({ id: S.currentStudentId, name: S.currentStudentName || document.getElementById('studentViewName').textContent, email: S.currentStudentEmail || '', hcp: S.currentStudentHcp || 'pro' });
+    location.hash = '#/';
+  } catch (e) {
+    alert(errText(e, 'Couldn\u2019t open their app: '));
+  } finally { btn.disabled = false; btn.textContent = was; }
+}
+
 function svViewRound(roundId) {
   var r = (S.svAllRounds || []).find(function(x) { return x.id === roundId; });
   if (r) viewRound(r._gps, document.getElementById('studentViewName').textContent);
@@ -465,4 +481,4 @@ function svReplayRound(roundId) {
 function svWatchLive(roundId) { if (_svLive[roundId]) watchLive(_svLive[roundId]); }
 
 // Functions called from inline HTML handlers
-expose({ toggleStudentHcpDropdown, showStudentTab, setSvPerfPage, toggleSvPerfTab, onSvDashHcpChange, applySvDashFilters, filterSvRounds, svViewRound, svReplayRound, svWatchLive });
+expose({ svUseAppAs, toggleStudentHcpDropdown, showStudentTab, setSvPerfPage, toggleSvPerfTab, onSvDashHcpChange, applySvDashFilters, filterSvRounds, svViewRound, svReplayRound, svWatchLive });
