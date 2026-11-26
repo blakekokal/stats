@@ -1018,5 +1018,20 @@
    601
   ],
   "source": "USGS 3DEP"
+ },
+ "hackberry": {
+  "bounds": [
+   -96.984125,
+   32.900193,
+   -96.964221,
+   32.915219
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   430,
+   519
+  ],
+  "source": "USGS 3DEP"
  }
 }
