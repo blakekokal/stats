@@ -120,7 +120,8 @@ bunker inside a fairway goes without the fairway), Sky Creek Ranch, Rockwall,
 Fossil Creek, Whitestone (winter imagery and brown sand: shift fitted to the greens, its bunkers judged
 by eye), Hawks Creek (Shady Oaks is next door: kept to its own boundary), Oak Hollow, Tenison Park Highlands and Glen
 (one OSM boundary for both: holes told apart by way id; winter imagery with snow in the shade, so
-OSM's bunkers kept as they are). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
+OSM's bunkers kept as they are). The Resort (Fort Worth; winter imagery and tan sand: shift
+fitted to the greens; OSM's 19th hole dropped). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
 
 Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, every shape
 traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).
@@ -133,7 +134,6 @@ Public, complete:
 - Texas Rangers Golf Club (Arlington): OSM's holes 1-9 are GolfPass's 10-18 and the
   other way round; check the club's current card before building
 - Pecan Valley (Fort Worth; two courses)
-- The Resort (Fort Worth)
 
 Private, complete: TPC Craig Ranch, TPC Four Seasons Las Colinas, Stonebriar,
 Dallas Athletic Club, Dallas National, Colonial, Northwood, Prestonwood Creeks,

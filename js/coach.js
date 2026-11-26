@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.22.0', ['New course: The Resort Golf Club (Fort Worth), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.21.0', ['New courses: Tenison Park Golf Course – Highlands and Glen (Dallas), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.20.56', ['Swiping from near the left edge uses only the phone’s own back swipe (it no longer shows three screens)']],
   ['1.20.55', ['The right-side strip is near black (not pure black), so a swiped screen can slide over it again']],
