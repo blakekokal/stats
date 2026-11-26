@@ -138,7 +138,8 @@ told apart by way id; Fazio #7's missing green grown from the imagery with `tool
 Blue (Gold not yet: see below). Dallas National (its big short-game area trimmed). Colonial (GolfPass 15181; its 21496 is
 in Florida). Northwood (GolfPass 12693). Prestonwood Creek (OSM's greens drawn ~3 m off its
 bunkers: `greenShift` in the config moves only the greens). Hackberry Creek (#5's missing green grown from the imagery). Eldorado (McKinney; boundary is two ways; #9's green
-tagged as a bunker: `retype` in the config, a `build_course.py` option).
+tagged as a bunker: `retype` in the config, a `build_course.py` option). Oakmont (Corinth;
+`greenShift` as at Prestonwood).
 
 Skipped for now: Meadowbrook (Fort Worth; GolfPass's card is a different layout from OSM's holes),
 Lost Creek (Aledo; GolfPass says it closed), Pecan Valley River (see below). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
@@ -153,7 +154,7 @@ Public, complete:
   no OSM hole); needs the current card from the club
 
 Private, complete (doing these next, one at a time):
-Oakmont, Shady Oaks.
+Shady Oaks.
 
 Mapped with gaps (better from a book, or fill the gaps from the imagery):
 - Mira Vista (Fort Worth): OSM's greens and bunkers don't fit the imagery (greens over bunkers;
