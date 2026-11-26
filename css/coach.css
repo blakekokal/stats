@@ -318,3 +318,11 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 @media (hover: hover) and (pointer: fine) {
   .cx .back-btn-top { right: max(16px, calc(50vw - 224px)); }
 }
+/* Offline imagery & backup (#/device): cards in a column like Settings. */
+.cx.devicepage .card { width: 100%; max-width: 360px; box-sizing: border-box; padding: 16px; }
+.cx.devicepage .card h3 { margin: 0 0 6px; }
+.cx.devicepage .card p { margin: 0 0 10px; font-size: 13px; }
+.cx.devicepage .card .row { display: flex; gap: 8px; }
+.cx.devicepage .card button { max-width: none; }
+.cx.devicepage .card button.danger { width: auto; height: 32px; padding: 0 14px; color: #d4706e; }
+.cx.devicepage > p.small { max-width: 360px; font-size: 11px; color: #9a9a9a; }

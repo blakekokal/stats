@@ -243,7 +243,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
 
       <!-- TOUR PRACTICE VIEW -->
       <div id="ppTourView" style="display:none;">
-        <button onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
+        <button class="stepback" onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
         <div style="font-size:18px;font-weight:800;text-align:center;margin-bottom:4px;">Tour Practice Routine</div>
         <p style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin:0 0 10px;">Typical PGA Tour practice structure</p>
         <!-- Season tabs -->
@@ -257,7 +257,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
 
       <!-- RECOMMENDED / TIMED PRACTICE VIEW -->
       <div id="ppRecommendedView" style="display:none;">
-        <button onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
+        <button class="stepback" onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
         <div id="ppRecTitle" style="font-size:18px;font-weight:800;text-align:center;margin-bottom:4px;">Recommended Practice</div>
         <p id="ppRecSubtitle" style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin:0 0 14px;">Based on your last 5 rounds</p>
         <!-- Time input -->
@@ -283,7 +283,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
 
       <!-- LOG SESSION VIEW (moved from old New Session) -->
       <div id="ppLogView" style="display:none;">
-        <button onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
+        <button class="stepback" onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
         <div id="ppNewSession">
         <div style="background:#222222;border-radius:12px;padding:16px;margin-bottom:12px;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:10px;">Session Details</div>
@@ -320,7 +320,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
 
       <!-- HISTORY VIEW -->
       <div id="ppHistoryView" style="display:none;">
-        <button onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
+        <button class="stepback" onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
         <div id="ppHistory">
           <div id="ppHistoryList" style="font-size:13px;color:#9a9a9a;text-align:center;padding:12px 0;">Loading...</div>
         </div>
@@ -328,7 +328,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
 
       <!-- CUSTOM PRACTICE VIEW -->
       <div id="ppCustomView" style="display:none;">
-        <button onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
+        <button class="stepback" onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
         <div style="font-size:18px;font-weight:800;text-align:center;margin-bottom:4px;">Custom Practice</div>
         <p style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin:0 0 14px;">Build your own plan</p>
         <!-- Saved plans list -->
@@ -348,13 +348,13 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
 
       <!-- CUSTOM PRACTICE USE VIEW (running a saved plan) -->
       <div id="ppCustomUseView" style="display:none;">
-        <button onclick="ppShowCustom()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
+        <button class="stepback" onclick="ppShowCustom()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
         <div id="ppCustomUseContent"></div>
       </div>
 
       <!-- PRACTICE GENERATOR VIEW -->
       <div id="ppGeneratorView" style="display:none;">
-        <button onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
+        <button class="stepback" onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
         <div style="font-size:18px;font-weight:800;text-align:center;margin-bottom:4px;">Practice Generator</div>
         <p style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin:0 0 14px;">Pick what you want to work on</p>
 
@@ -415,7 +415,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
 
       <!-- PRE-ROUND WARM UP VIEW -->
       <div id="ppWarmUpView" style="display:none;">
-        <button onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
+        <button class="stepback" onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
         <div style="font-size:18px;font-weight:800;text-align:center;margin-bottom:4px;">Pre-Round Warm Up</div>
         <p style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin:0 0 14px;">Get loose and dial in before your round</p>
         <div id="ppWarmUpContent"></div>
@@ -423,7 +423,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
 
       <!-- SWING JOURNAL VIEW -->
       <div id="ppSwingJournalView" style="display:none;">
-        <button onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
+        <button class="stepback" onclick="ppBackToLanding()" style="display:flex;align-items:center;gap:6px;background:none;border:none;color:#2d7abc;font-size:13px;font-weight:700;cursor:pointer;padding:0;margin-bottom:14px;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M15 18l-6-6 6-6"/></svg> Back</button>
         <div style="font-size:18px;font-weight:800;text-align:center;margin-bottom:4px;">Swing Journal</div>
         <p style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin:0 0 14px;">Track your current swing thoughts</p>
         <div id="sjAddForm" style="background:#222;border-radius:12px;padding:14px 16px;margin-bottom:12px;">

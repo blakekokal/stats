@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.42', ['Every panel and tile is in the new glass style: Pre-Round Warm Up, Recommended and Timed Practice, Tour Practice, drill details, Learning Library, Guide to Golf, Proximity Calculator, Distance Optimizer, combines, Performance Analysis and more', 'Practice: the in-page Back links are gone; the Back button does it', 'Offline imagery & backup has the new look']],
   ['1.20.41', ['GPS: double-tapping a button no longer zooms the screen']],
   ['1.20.40', ['Speed and Combine History: filters and tiles in the new glass style']],
   ['1.20.39', ['Wedge Gapping: %, ½, Body and Clear buttons are all the same size']],

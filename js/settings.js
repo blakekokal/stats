@@ -1,4 +1,4 @@
-import { h, course, toast, TILE_URL } from './app.js';
+import { h, course, toast, TILE_URL, goBack } from './app.js';
 import { store } from './store.js';
 import { boundsOf } from './geo.js';
 
@@ -40,8 +40,10 @@ export function renderSettings(view) {
     try { store.importAll(await f.text()); toast('Backup imported.'); } catch { toast('That file is not a valid backup.'); }
   } });
 
-  view.replaceChildren(h('div', { class: 'page' },
-    h('h1', {}, 'Settings'),
+  const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: goBack });
+  back.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
+  view.replaceChildren(h('div', { class: 'cx devicepage' }, back,
+    h('h2', {}, 'Offline imagery & backup'),
 
     h('div', { class: 'card' }, h('h3', {}, 'Offline imagery'),
       h('p', { class: 'muted' }, 'Save the satellite images for every hole on this device so the map works with no signal on the course. Needs the installed (https) version of the app.'),

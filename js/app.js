@@ -343,7 +343,7 @@ async function route() {
   const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag', 'coaching', 'performance', 'practice', 'help', 'search'].includes(parts[0]) ? parts[0] : 'home';
   // Pages laid out like the coaching app hide this app's top bar. Set before
   // waiting for the course, so the old top bar never shows while it loads.
-  document.body.classList.toggle('coach', ['home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout', 'coaching', 'performance', 'practice', 'help', 'search'].includes(tab));
+  document.body.classList.toggle('coach', ['device', 'home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout', 'coaching', 'performance', 'practice', 'help', 'search'].includes(tab));
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   document.body.classList.toggle('playing', tab === 'hole');
   await loadCourse(parts[0] === 'hole');
