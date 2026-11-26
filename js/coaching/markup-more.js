@@ -275,7 +275,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
         <div id="ppRecLoading" style="display:none;text-align:center;color:#606060;padding:20px;">Loading your round data...</div>
         <div id="ppRecNoData" style="display:none;text-align:center;color:#606060;padding:20px;">Play a few rounds first so we can analyze your game and build a plan.</div>
         <div id="ppRecResults" style="display:none;touch-action:pan-y;">
-          <canvas id="ppPieChart" width="280" height="280" style="display:block;margin:0 auto 16px;max-width:280px;touch-action:pan-y;"></canvas>
+          <canvas id="ppPieChart" width="240" height="240" style="display:block;margin:6px auto 20px;width:240px;height:240px;touch-action:pan-y;"></canvas>
           <div id="ppBreakdownList" style="display:flex;flex-direction:column;gap:8px;"></div>
           <button onclick="ppLogFromPractice('rec')" style="width:100%;margin-top:16px;padding:14px;font-size:15px;font-weight:700;color:#ffffff;background:#007a52;border:none;border-radius:12px;cursor:pointer;">Log Session</button>
         </div>

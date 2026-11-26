@@ -229,10 +229,10 @@ async function ppLoadAndRender() {
 function ppRenderPlan(sg) {
   // Categories: more negative SG = more strokes lost = needs more practice time
   var cats = [
-    { key:'ott', label:'OTT', fullLabel:'Off the Tee', sg:sg.ott, color:'#d4706e' },
-    { key:'app', label:'APP', fullLabel:'Approach', sg:sg.app, color:'#44b8f0' },
-    { key:'arg', label:'ARG', fullLabel:'Around the Green', sg:sg.arg, color:'#00b87a' },
-    { key:'putt', label:'Putt', fullLabel:'Putting', sg:sg.putt, color:'#f6b26b' }
+    { key:'ott', label:'OTT', fullLabel:'Off the Tee', sg:sg.ott, color:'#0A84FF' },
+    { key:'app', label:'APP', fullLabel:'Approach', sg:sg.app, color:'#BF5AF2' },
+    { key:'arg', label:'ARG', fullLabel:'Around the Green', sg:sg.arg, color:'#30D158' },
+    { key:'putt', label:'Putt', fullLabel:'Putting', sg:sg.putt, color:'#FFD60A' }
   ];
 
   // Convert SG to "need" weight: more negative = more weight
@@ -291,8 +291,9 @@ function ppRenderPlan(sg) {
     pieCats.unshift({ key: 'range', label: 'Range', fullLabel: 'Range', mins: rangeMins, pct: rangePct, color: '#d4706e' });
   }
 
-  // Draw pie chart with grouped categories
-  ppDrawPie(pieCats, practiceMins);
+  // Pie: one slice per category, in the rows' order and colours below
+  var pieOrder = ['app', 'ott', 'arg', 'putt'];
+  ppDrawPie(pieOrder.map(function(k) { return cats.filter(function(c) { return c.key === k; })[0]; }).filter(Boolean), practiceMins);
 
   // Build breakdown cards — order: APP, OTT, then rest (so range drills are together)
   var html = '';
@@ -305,7 +306,7 @@ function ppRenderPlan(sg) {
 
   // Show range header with combined time
   if (appCat || ottCat) {
-    html += '<div style="font-size:12px;font-weight:700;color:#d4706e;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Range — ' + rangeMins + ' min</div>';
+    html += '<div style="font-size:12px;font-weight:700;color:#9a9a9a;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Range — ' + rangeMins + ' min</div>';
   }
 
   var orderedCats = [];
@@ -317,7 +318,7 @@ function ppRenderPlan(sg) {
     var drills = ppGetDrills(c.key, c.mins, c.sg);
     html += '<div style="background:#222;border-radius:12px;padding:14px 16px;border-left:4px solid ' + c.color + ';">';
     html += '<div onclick="this.parentElement.querySelector(\'.pp-drill-detail\').style.display=this.parentElement.querySelector(\'.pp-drill-detail\').style.display===\'none\'?\'\':\'none\'" style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;">';
-    html += '<div style="font-size:14px;font-weight:700;color:#fff;">' + c.fullLabel + '</div>';
+    html += '<div style="font-size:14px;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:50%;background:' + c.color + ';flex-shrink:0;"></span>' + c.fullLabel + '</div>';
     html += '<div style="display:flex;align-items:center;gap:8px;">';
     html += '<span style="font-size:11px;font-weight:600;color:' + (c.sg < 0 ? '#d4706e' : '#00b87a') + ';">' + (c.sg >= 0 ? '+' : '') + c.sg.toFixed(1) + ' SG</span>';
     html += '<span style="font-size:13px;font-weight:700;color:' + c.color + ';">' + c.mins + ' min</span>';
