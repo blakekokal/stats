@@ -301,7 +301,7 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 :is(.cx.fixedpage, .svdashfixed) .dashdetail::-webkit-scrollbar { display: none; }
 /* A coach's view of a student, Dashboard tab: laid out like the Stats Dashboard (only Past rounds scrolls). */
 .svdashfixed #studentViewScroll { overflow: hidden !important; padding-bottom: 0 !important; }
-.svdashfixed #svDashTab { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.svdashfixed #svDashTab { flex: 1; min-height: 0; display: flex !important; flex-direction: column; } /* the tab is shown with an inline display: block */
 #svDashContent { text-align: left; }
 .svdashfixed #svDashTab > * { flex-shrink: 0; }
 /* Fixed pages (Round History, Stats Dashboard, a student's Dashboard tab): the list runs to the

@@ -617,6 +617,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.41.1', ['A student\u2019s dashboard scrolls like the Stats Dashboard']],
   ['1.41.0', ['Stats Dashboard and a student\u2019s dashboard: Filter sits right after the handicap to compare with']],
   ['1.40.0', ['Stats Dashboard: Filter opens a small box instead of pushing the page down; the handicap to compare with sits right after "per round"']],
   ['1.39.0', ['Practice and Learning: cards no longer show over the tabs while scrolling', 'Stats Dashboard: pick the handicap to compare with beside Strokes Gained']],
