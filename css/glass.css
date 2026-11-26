@@ -268,3 +268,15 @@ body.swiping .cx, body.swiping .cx *, body.swiping .cx *::before { -webkit-backd
 #swipeUnder { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, #1a1a1c 100%); }
 #swipeUnder .page { display: flex !important; height: 100%; }
 #swipeUnder #swipeUnderView > .cx { min-height: 100%; }
+
+/* Pages with a fixed header over a scrolling body (Practice and Learning, the
+   combines, ...). On iPhone, blurred glass inside a scrolling box isn't clipped
+   at the box's edge, so cards scrolled up drew over the tabs as dark grey bars.
+   Nothing scrolling there needs the blur (it sits on a flat background), and the
+   header, painted with the page's own background, stays on top of anything that
+   still slips under it. */
+.coachroot .page > .fixedhead {
+  position: relative; z-index: 3;
+  background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, #1a1a1c 100%) 0 0 / 100% 100vh no-repeat !important;
+}
+.coachroot .page > .fixedhead ~ div :is(button, div, a, input, select, textarea) { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }

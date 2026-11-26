@@ -123,6 +123,10 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
     draw();
     try { await sync.setLevel(levelFromPref(fHcp.value)); } catch { /* keep the local choice */ }
   });
+  // The level to compare with sits beside "Strokes gained · per round" (renderDashboard puts it there).
+  fHcp.style.cssText = 'flex:none;width:auto;max-width:none;min-width:0;height:28px;padding:0 26px 0 12px;font-size:12px;font-weight:700;border-radius:14px;';
+  fHcp.setAttribute('aria-label', 'Compare to');
+  S.hcpPicker = fHcp;
   const content = h('div', { id: 'dashContent', style: 'text-align:left;' });
   const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: () => { if (!dashBack()) goBack(); } });
   back.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
@@ -135,8 +139,8 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
         only ? null : h('button', { 'aria-label': 'Filter', onclick: () => toggleDashFilters(),
           style: 'position:absolute;right:0;top:50%;transform:translateY(-50%);width:auto;max-width:none;height:30px;padding:0 10px;font-size:12px;font-weight:700;background:#282828;color:#9a9a9a;border-radius:8px;' }, 'Filter \u25be')),
       only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || courseById(only.course).name} · ${mdy(only.date)}${only.player ? ' · ' + only.player : ''}`) : null,
-      // Filters (round type, time, "vs" level): hidden until Filter (beside the title) is tapped.
-      h('div', { id: 'dashFilters', style: 'display:none;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;' }, only ? [fHcp] : [fType, fTime, fHcp]),
+      // Filters (round type, time): hidden until Filter (beside the title) is tapped.
+      h('div', { id: 'dashFilters', style: 'display:none;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;' }, only ? [] : [fType, fTime]),
       content)));
 
   function draw() {
@@ -458,10 +462,11 @@ export function renderDashboard(data, hcp, targetId, opts) {
   // or, for one round picked from the list, which round it is (Back returns to all rounds).
   var top=opts.single&&data[0]?'<div style="display:flex;align-items:center;gap:8px;margin:2px 0 6px;">'
     +'<div style="font-size:13px;color:#9a9a9a;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(data[0].course_name||'')+' \u00b7 '+data[0].round_date+'</div></div>':'';
-  html+=top+'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:2px;">'
+  html+=top+'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:4px;">'
     +'<div style="font-size:14px;font-weight:800;color:#00b87a;">STROKES GAINED \u00b7 '+(opts.single?'this round':'per round')+'</div>'
     // A quiet text link on the same line as the heading.
     // The coach's view of a student keeps it here; the Stats Dashboard page has it beside its title.
+    +(targetId!=='svDashContent'?'<span id="dashHcpSlot" style="flex:none;display:flex;"></span>':'')
     +(opts.single||targetId!=='svDashContent'?'':'<button class="glass-skip" onclick="toggleDashFilters()" style="height:auto;min-height:0;font-size:11px;font-weight:600;background:none;border:none;border-radius:0;padding:0;margin:0;max-width:none;width:auto;color:#606060;line-height:1;letter-spacing:.03em;">Filter \u25be</button>')+'</div>';
   html+=sgBar('SG: Total', sgPer.tot, sgR, true, 1);
   // The four categories two by two, so more of Past rounds fits below.
@@ -618,7 +623,8 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+='</div></div>'; // .dashdetail, then the section
   
   content.innerHTML=html;
-  
+  // Stats Dashboard: the "compare to" level, beside the heading.
+  var slot=content.querySelector('#dashHcpSlot'); if(slot&&S.hcpPicker) slot.append(S.hcpPicker);
 }
 
 // SG by round: one round's dashboard, and back to all of them.
