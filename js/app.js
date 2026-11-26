@@ -117,6 +117,7 @@ export const COURSES = [
   { id: 'colonial', name: 'Colonial Country Club', file: 'data/colonial.json' },
   { id: 'northwood', name: 'The Northwood Club', file: 'data/northwood.json' },
   { id: 'prestonwood', name: 'Prestonwood Country Club – Creek', file: 'data/prestonwood.json' },
+  { id: 'hackberry', name: 'Hackberry Creek Country Club', file: 'data/hackberry.json' },
   { id: 'isabella-nina', name: 'Isabella Golf Course – Nina', file: 'data/isabella-nina.json', nines: 'isabella' },
   { id: 'isabella-pinta', name: 'Isabella Golf Course – Pinta', file: 'data/isabella-pinta.json', nines: 'isabella' },
   { id: 'isabella-santamaria', name: 'Isabella Golf Course – Santa Maria', file: 'data/isabella-santamaria.json', nines: 'isabella' },

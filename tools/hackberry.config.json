@@ -1,0 +1,19 @@
+{
+  "id": "hackberry",
+  "name": "Hackberry Creek Country Club",
+  "location": "Irving, TX",
+  "par": [4, 4, 5, 3, 5, 4, 4, 3, 4, 5, 3, 5, 3, 4, 4, 4, 3, 5],
+  "hcp": [7, 13, 1, 15, 3, 5, 17, 11, 9, 2, 16, 6, 14, 4, 10, 12, 18, 8],
+  "_comment_tees": "Scorecard from GolfPass (3055); its pars match OpenStreetMap's hole tags (par 72); its handicaps differ from OSM's and are used. Combination tees left out. Ratings matched by total yards: Texas = Gold (7013), Black = Blue (6562), White, Copper = Red (W) (5471, the women's); Silver has none.",
+  "_comment_drop": "Polygons containing these points are not part of the course: nothing here; trim_far.py drops the practice greens and range tee.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand; the greens agree).",
+  "shift": {"east": -0.3, "north": 1.0},
+  "tees": [
+    {"name": "Texas", "rating": 73.7, "slope": 132, "yards": [438, 429, 500, 241, 575, 382, 455, 165, 440, 523, 185, 545, 226, 372, 425, 445, 192, 485]},
+    {"name": "Black", "rating": 71.7, "slope": 124, "yards": [405, 389, 490, 201, 547, 352, 424, 143, 398, 507, 174, 531, 207, 358, 399, 410, 178, 469]},
+    {"name": "White", "rating": 70.2, "slope": 122, "yards": [378, 350, 480, 171, 537, 338, 395, 131, 388, 493, 155, 519, 194, 342, 379, 387, 168, 454]},
+    {"name": "Silver", "rating": null, "slope": null, "yards": [331, 350, 409, 115, 537, 338, 385, 131, 334, 476, 155, 510, 175, 321, 336, 367, 121, 405]},
+    {"name": "Copper", "rating": 71.4, "slope": 119, "yards": [331, 324, 409, 115, 488, 290, 338, 107, 334, 476, 103, 455, 149, 305, 336, 320, 121, 405]}
+  ]
+}
