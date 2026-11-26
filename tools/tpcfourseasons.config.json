@@ -1,0 +1,20 @@
+{
+  "id": "tpcfourseasons",
+  "name": "TPC Four Seasons Las Colinas",
+  "location": "Irving, TX",
+  "par": [4, 3, 4, 4, 3, 4, 5, 4, 4, 4, 4, 4, 3, 4, 4, 5, 3, 4],
+  "hcp": [7, 15, 1, 5, 17, 11, 13, 3, 9, 10, 18, 4, 16, 8, 2, 14, 12, 6],
+  "_comment_tees": "Scorecard from GolfPass (15024, TPC Las Colinas); OpenStreetMap's hole lines have no par tags, but their lengths match the card's Byron Nelson tees (par 70). Six of its nine tees kept. Its tee table rates other lengths; ratings only where close: Byron Nelson = its Black (7166), White (5836), Red = Red (W) (5030, the women's).",
+  "_comment_drop": "Polygons containing these points are not part of the course: an OSM bunker on grass by #12 (trim_far.py drops the range and practice greens).",
+  "drop": [[32.872846, -96.954648, "bunker"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand; the greens agree).",
+  "shift": {"east": -0.8, "north": 1.3},
+  "tees": [
+    {"name": "Byron Nelson", "rating": 76.0, "slope": 142, "yards": [452, 216, 520, 424, 172, 444, 538, 464, 421, 432, 322, 453, 176, 406, 497, 541, 196, 426]},
+    {"name": "Black", "rating": null, "slope": null, "yards": [434, 189, 502, 410, 147, 412, 530, 458, 403, 417, 322, 432, 172, 402, 478, 515, 191, 418]},
+    {"name": "Blue", "rating": null, "slope": null, "yards": [424, 166, 460, 373, 126, 383, 481, 432, 376, 394, 291, 423, 150, 370, 443, 491, 175, 402]},
+    {"name": "Gold", "rating": null, "slope": null, "yards": [364, 166, 410, 373, 126, 383, 481, 401, 348, 363, 291, 391, 133, 370, 410, 491, 153, 366]},
+    {"name": "White", "rating": 69.8, "slope": 127, "yards": [364, 138, 410, 363, 109, 364, 462, 401, 348, 363, 249, 391, 133, 347, 410, 434, 153, 366]},
+    {"name": "Red", "rating": 71.5, "slope": 135, "yards": [340, 121, 377, 332, 90, 291, 420, 366, 257, 333, 202, 333, 111, 294, 304, 406, 132, 303]}
+  ]
+}
