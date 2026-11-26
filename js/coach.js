@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.52', ['Removed the Screen check page']],
   ['1.20.51', ['Screen check (Search → Screen check): this phone’s screen size and edges, to make use of the strip down the right side']],
   ['1.20.50', ['Swiping between tabs switches at once, like tapping the tab']],
   ['1.20.49', ['Swiping between tabs moves only what’s under the tabs; the title and tab buttons stay put, like tapping a tab']],
@@ -1052,7 +1053,6 @@ function searchItems() {
     ['Coaching', 'Notes, messages and assignments', go('#/coaching'), 'coach lessons students'],
     ['Settings', 'Account and app settings', go('#/settings'), 'account profile'],
     ['Offline imagery & backup', 'Save maps for no signal, back up rounds', go('#/device'), 'offline backup restore download'],
-    ['Screen check', 'This phone’s screen size and edges', go('#/screen'), 'screen duo display size'],
     ['What’s New', `Version ${VERSION}`, go('#/whatsnew'), 'changes updates version'],
     ['Strokes Gained Explained', 'How strokes gained works', go('#/help'), 'sg help explained'],
   ].map(([title, sub, open, tags]) => ({ kind: 'Page', title, sub, open, tags }));
