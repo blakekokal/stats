@@ -26,7 +26,7 @@
 // flashes up while the app starts (js/app.js keeps this up to date after).
 (function () {
   var t = location.hash.replace(/^#\/?/, '').split('/')[0];
-  if (['hole', 'course', 'stats', 'device'].indexOf(t) >= 0) document.body.className = t === 'hole' ? 'playing' : '';
+  if (['hole', 'course', 'stats'].indexOf(t) >= 0) document.body.className = t === 'hole' ? 'playing' : '';
 })();
 </script>
 <nav id="nav">
