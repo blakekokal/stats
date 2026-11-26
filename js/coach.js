@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.45', ['My Clubs, Coaching and a student’s page: no strip behind the tab buttons']],
   ['1.20.44', ['Swipe left or right to change tabs (Practice and Learning, My Clubs, Coaching, Performance Analysis, How Far Should I Hit It?); swipe right on the first tab to go back']],
   ['1.20.43', ['Recommended and Timed Practice: new ring chart in the app’s colours and font, one slice per category matching the rows below']],
   ['1.20.42', ['Every panel and tile is in the new glass style: Pre-Round Warm Up, Recommended and Timed Practice, Tour Practice, drill details, Learning Library, Guide to Golf, Proximity Calculator, Distance Optimizer, combines, Performance Analysis and more', 'Practice: the in-page Back links are gone; the Back button does it', 'Offline imagery & backup has the new look']],
