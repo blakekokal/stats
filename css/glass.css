@@ -247,3 +247,6 @@ body, body.coach { background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, 
 .cx #bagOptApp .bo-distance-highlight { background: var(--glass-on) !important; }
 .cx #bagOptApp .bo-distance-highlight :is(.bo-result-label, .bo-result-value, .bo-result-unit) { color: #fff !important; }
 .cx #bagOptApp button.bo-toggle-btn.bo-active { background: var(--glass-on) !important; color: #fff !important; }
+
+/* While a screen is being swiped: no glass blur (redrawing it every frame stutters). */
+body.swiping .cx, body.swiping .cx *, body.swiping .cx *::before { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
