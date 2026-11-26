@@ -1,5 +1,6 @@
 // Swiping across a screen, like the phone's own swipe from the left edge:
-// the screen follows the finger and slides away. Swipe right to go back a
+// the screen follows the finger and slides away, with the screen before it
+// showing underneath (a copy kept when it was left). Swipe right to go back a
 // screen (on screens with tabs along the top, to the tab before first, and
 // out of a step of a tab, like a Practice plan, before that); swipe left for
 // the next tab. Every screen but the GPS map, and never from the very left
@@ -17,7 +18,7 @@ const EDGE = 28;    // px from the left edge kept for the phone's own back swipe
 const LOCK = 12;    // px before deciding sideways or up-and-down
 const DONE = 0.28;  // share of the screen's width that completes a swipe
 
-const shown = el => el.offsetParent !== null || getComputedStyle(el).position === 'fixed';
+const shown = el => el.offsetParent !== null || (getComputedStyle(el).position === 'fixed' && getComputedStyle(el).display !== 'none');
 // The picked tab: the solid blue of a selected glass button, or a tab's own "active" class.
 const isOn = b => /active|selected|\bon\b/.test(b.className) || getComputedStyle(b).backgroundColor === 'rgb(61, 139, 242)';
 
@@ -70,11 +71,111 @@ function arrive(el, from, w) {
   setTimeout(() => { clear(el); stopMoving(); }, 240);
 }
 
+// ---- The screens before this one ----
+// Each time a screen is left for another, a copy of it is kept (with how far it
+// was scrolled), so swiping back can show it underneath. Going back to a screen
+// drops its copy.
+const trail = []; // [{ key, node, scrolls, top }]
+let cur = null;   // { key, el }
+const keyOf = el => (el.closest('#coachroot') ? 'c:' + el.id : 'v:' + location.hash);
+const scrolled = new Map(); // element -> scrollTop, for the screen on now
+document.addEventListener('scroll', e => { const t = e.target === document ? document.scrollingElement : e.target; if (t && t.scrollTop != null) scrolled.set(t, t.scrollTop); }, { capture: true, passive: true });
+
+function copyOf(el) {
+  const all = [...el.querySelectorAll('*')];
+  const scrolls = [], view = document.getElementById('view');
+  let top = 0;
+  scrolled.forEach((v, node) => {
+    if (!v) return;
+    if (node === el) scrolls.push([-1, v]);
+    else if (node === view && view.contains(el)) top = v;
+    else { const i = all.indexOf(node); if (i >= 0) scrolls.push([i, v]); }
+  });
+  const node = el.cloneNode(true);
+  node.classList.add('active');
+  node.querySelectorAll('canvas').forEach((c, i) => { // drawings don't copy: keep a picture of each
+    const src = el.querySelectorAll('canvas')[i];
+    try { const img = new Image(); img.src = src.toDataURL(); img.style.cssText = c.style.cssText; img.width = src.width; img.height = src.height; img.className = c.className; c.replaceWith(img); } catch { /* blank is fine */ }
+  });
+  return { node, scrolls, top, inCoach: !!el.closest('#coachroot') };
+}
+
+function noticeScreen() {
+  const el = activeScreen();
+  if (!el || el.id === 'distanceGuidePage') return;
+  const key = keyOf(el);
+  if (cur && cur.el === el) return; // the same screen (its address may move before the next one is drawn)
+  if (cur && cur.key !== key) {
+    const top = trail[trail.length - 1];
+    if (top && top.key === key) trail.pop(); // came back to it
+    else { try { trail.push({ key: cur.key, ...copyOf(cur.el) }); } catch { /* no copy */ } if (trail.length > 12) trail.shift(); }
+  }
+  cur = { key, el };
+  scrolled.clear();
+}
+let noticing = false;
+const soon = () => { if (!noticing) { noticing = true; queueMicrotask(() => { noticing = false; noticeScreen(); }); } };
+function watch() {
+  const view = document.getElementById('view'), root = document.getElementById('coachroot');
+  if (!view || !root) { setTimeout(watch, 200); return; }
+  // A page taken out of #view stays whole once removed, and a coaching page stays in
+  // the document, so the copy can be made just after the change.
+  new MutationObserver(soon).observe(view, { childList: true, attributes: true, attributeFilter: ['hidden'] });
+  new MutationObserver(soon).observe(root, { attributes: true, subtree: true, attributeFilter: ['class', 'hidden'] });
+  window.addEventListener('hashchange', soon);
+  noticeScreen();
+}
+watch();
+
+// The copy of the screen before, laid under the one being swiped.
+function lay(entry) {
+  const under = document.createElement('div');
+  under.id = 'swipeUnder';
+  under.setAttribute('aria-hidden', 'true');
+  const host = document.createElement('div');
+  host.className = entry.inCoach ? 'cx coachroot' : '';
+  host.style.cssText = 'position:absolute;inset:0;overflow:hidden;';
+  const inner = document.createElement('div');
+  inner.style.cssText = `position:absolute;left:0;right:0;top:${-entry.top}px;height:100%;`;
+  if (!entry.inCoach) inner.id = 'swipeUnderView';
+  const node = entry.node.cloneNode(true);
+  inner.append(node); host.append(inner); under.append(host);
+  const shade = document.createElement('div');
+  shade.style.cssText = 'position:absolute;inset:0;background:#000;opacity:.35;pointer-events:none;';
+  under.append(shade);
+  document.body.append(under);
+  const all = [...node.querySelectorAll('*')];
+  entry.scrolls.forEach(([i, v]) => { const n = i < 0 ? node : all[i]; if (n) n.scrollTop = v; });
+  return { under, host, shade };
+}
+
 let g = null; // the gesture going on
 let frame = 0;
+const BG = 'linear-gradient(180deg, #2c2c2e 0%, #232325 45%, #1a1a1c 100%)';
+
+// Lift the screen being swiped over the copy of the one before: solid behind it,
+// a soft shadow down its left edge.
+function lift(box) {
+  const view = document.getElementById('view');
+  const st = view && view.contains(box) ? view.scrollTop : 0;
+  box.style.setProperty('background', `${BG} 0 ${st}px / 100% ${window.innerHeight}px no-repeat, #1a1a1c`, 'important');
+  box.style.boxShadow = '-14px 0 32px rgba(0,0,0,.45)';
+  box.style.zIndex = '1';
+}
+const unlift = box => { box.style.removeProperty('background'); box.style.boxShadow = ''; box.style.zIndex = ''; };
+function placeUnder(u, dx, w, ms) {
+  const k = Math.max(0, Math.min(1, dx / w));
+  const tr = ms ? `transform ${ms}ms cubic-bezier(.2,.8,.3,1), opacity ${ms}ms ease-out` : 'none';
+  u.host.style.transition = tr; u.shade.style.transition = tr;
+  u.host.style.transform = `translate3d(${(-0.3 + 0.3 * k) * w}px,0,0)`;
+  u.shade.style.opacity = String(0.35 * (1 - k));
+}
+function drop(g) { if (g.under) { g.under.under.remove(); g.under = null; } unlift(g.box); }
 
 document.addEventListener('touchstart', e => {
   g = null;
+  const stale = document.getElementById('swipeUnder');
+  if (stale) { if (moving) return; stale.remove(); } // left over: never let it block swiping
   if (e.touches.length !== 1 || document.body.classList.contains('playing')) return;
   const t = e.touches[0];
   if (t.clientX < EDGE) return;
@@ -83,7 +184,7 @@ document.addEventListener('touchstart', e => {
   // A full-screen tool open over the page (Learn's calculators) isn't this page.
   const over = e.target.closest('[style*="position:fixed"], [style*="position: fixed"]');
   if (over && over !== box && !box.contains(over)) return;
-  g = { x: t.clientX, y: t.clientY, box, dir: null, dx: 0, trail: [] };
+  g = { x: t.clientX, y: t.clientY, box, dir: null, dx: 0, trail: [], w: box.clientWidth || window.innerWidth };
 }, { passive: true });
 
 document.addEventListener('touchmove', e => {
@@ -95,35 +196,65 @@ document.addEventListener('touchmove', e => {
     g.dir = 'side';
     g.acts = actions(g.box);
     startMoving();
+    // Going back to another screen: show the one before underneath, if there's a copy of it.
+    const prev = trail[trail.length - 1];
+    if (dx > 0 && g.acts.right && !g.acts.right.same && prev && prev.key !== (cur && cur.key)) {
+      try { g.under = lay(prev); lift(g.box); placeUnder(g.under, 0, g.w, 0); } catch { g.under = null; }
+    }
   }
   e.preventDefault(); // no page scroll while the screen is being dragged
   const can = dx > 0 ? g.acts.right : g.acts.left;
   g.dx = can ? dx : dx * 0.2; // nowhere to go that way: it only gives a little
   const now = performance.now();
   g.trail.push([now, dx]); while (g.trail.length > 2 && now - g.trail[0][0] > 100) g.trail.shift();
-  if (!frame) frame = requestAnimationFrame(() => { frame = 0; if (g && g.dir) place(g.box, g.dx, 0); });
+  if (!frame) frame = requestAnimationFrame(() => {
+    frame = 0;
+    if (!g || !g.dir) return;
+    place(g.box, g.dx, 0);
+    if (g.under) placeUnder(g.under, Math.max(0, g.dx), g.w, 0);
+  });
 }, { passive: false });
 
 function end() {
   if (!g || !g.dir) { g = null; return; }
-  const { box, dx, acts, trail } = g; g = null;
+  const gg = g, { box, dx, acts, trail: tr, w } = gg; g = null;
   if (frame) { cancelAnimationFrame(frame); frame = 0; }
-  const w = box.clientWidth || window.innerWidth;
   const act = dx > 0 ? acts.right : acts.left;
-  const [t0, x0] = trail[0] || [0, 0], [t1, x1] = trail[trail.length - 1] || [1, 0];
+  const [t0, x0] = tr[0] || [0, 0], [t1, x1] = tr[tr.length - 1] || [1, 0];
   const v = (x1 - x0) / Math.max(1, t1 - t0); // px per ms
   const flick = Math.abs(v) > 0.4 && Math.sign(v) === Math.sign(dx) && Math.abs(dx) > 30;
   if (!act || (Math.abs(dx) < w * DONE && !flick)) {
-    place(box, 0, 200); setTimeout(() => { clear(box); stopMoving(); }, 220); return;
+    place(box, 0, 200);
+    if (gg.under) placeUnder(gg.under, 0, w, 200);
+    setTimeout(() => { clear(box); drop(gg); stopMoving(); }, 220);
+    return;
   }
   const out = dx > 0 ? 1 : -1;
-  const ms = Math.round(Math.max(90, Math.min(180, (w - Math.abs(dx)) / Math.max(Math.abs(v), 1.5))));
+  const ms = Math.round(Math.max(100, Math.min(220, (w - Math.abs(dx)) / Math.max(Math.abs(v), 1.2))));
+  if (gg.under && out > 0) {
+    // The screen before is already showing underneath: finish the slide, then swap the
+    // real one in where the copy is (no gap, no second animation).
+    place(box, w, ms);
+    placeUnder(gg.under, w, w, ms);
+    setTimeout(() => {
+      act.fn();
+      const began = performance.now();
+      const swap = () => {
+        const next = activeScreen();
+        if ((!next || next === box) && performance.now() - began < 800) { requestAnimationFrame(swap); return; }
+        clear(box); drop(gg); stopMoving();
+      };
+      requestAnimationFrame(swap);
+    }, ms);
+    return;
+  }
+  drop(gg); // (only shown when going back to another screen)
   place(box, out * w, ms, 0.5);
   if (act.same) { // a tab or a step: the same screen comes back with the new content
     setTimeout(() => { act.fn(); arrive(box, -out, w); }, ms);
     return;
   }
-  // Another screen: start loading it now, while this one is still sliding away.
+  // Another screen with no copy to show: start loading it now, while this one slides away.
   const began = performance.now();
   requestAnimationFrame(() => {
     act.fn();
@@ -138,6 +269,6 @@ function end() {
 }
 document.addEventListener('touchend', end, { passive: true });
 document.addEventListener('touchcancel', () => {
-  if (g && g.dir) { const b = g.box; place(b, 0, 200); setTimeout(() => { clear(b); stopMoving(); }, 220); }
+  if (g && g.dir) { const gg = g; place(gg.box, 0, 200); if (gg.under) placeUnder(gg.under, 0, gg.w, 200); setTimeout(() => { clear(gg.box); drop(gg); stopMoving(); }, 220); }
   g = null;
 }, { passive: true });
