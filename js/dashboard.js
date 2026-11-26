@@ -116,7 +116,7 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
   if (!sync.user) return renderLogin(view);
   const only = roundId ? historyRounds().find(r => r.id === roundId) : null;
   const prefOf = l => (l === 'Pro' ? 'pro' : l === 'Scratch' ? '0' : l);
-  const sel = (opts, def, onchange) => h('select', { class: 'minisel', style: 'flex:1;min-width:0;', onchange }, opts.map(([v, l]) => h('option', { value: v, selected: v === def }, l)));
+  const sel = (opts, def, onchange) => h('select', { class: 'minisel', style: 'width:100%;max-width:none;min-width:0;', onchange }, opts.map(([v, l]) => h('option', { value: v, selected: v === def }, l)));
   const fType = sel([['all', 'All Rounds'], ['Casual', 'Casual'], ['Tournament', 'Tournament']], 'all', () => draw());
   const fTime = sel([['all', 'All Time'], ['1', 'Last Month'], ['3', 'Last 3 Mo'], ['6', 'Last 6 Mo'], ['12', 'Last Year']], 'all', () => draw());
   const fHcp = sel(['pro', '0', '5', '10', '15', '20', '25', '30'].map(v => [v, 'vs ' + hcpLabels[v]]), sync.level ? prefOf(sync.level) : 'pro', async () => {
@@ -133,14 +133,15 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
   // Only Past rounds scrolls (and a category's detail page, which is long); the rest stays put.
   view.replaceChildren(h('div', { class: 'cx top fixedpage' }, back,
     h('div', { class: 'fixedcol', style: 'width:100%;max-width:360px;' },
-      // The title, with Filter at its right (it shows or hides the filters below).
+      // The title, with Filter at its right: it opens a small box of filters over the page
+      // (round type and time), so nothing below moves.
       h('div', { style: 'position:relative;margin-bottom:6px;' },
         h('div', { style: 'font-size:20px;font-weight:800;text-align:center;' }, icEl('bars', 'tint-blue'), only ? ' Round Stats' : ' Stats Dashboard'),
-        only ? null : h('button', { 'aria-label': 'Filter', onclick: () => toggleDashFilters(),
-          style: 'position:absolute;right:0;top:50%;transform:translateY(-50%);width:auto;max-width:none;height:30px;padding:0 10px;font-size:12px;font-weight:700;background:#282828;color:#9a9a9a;border-radius:8px;' }, 'Filter \u25be')),
+        only ? null : h('button', { class: 'dashfilterbtn', 'aria-label': 'Filter', onclick: () => toggleDashFilters(),
+          style: 'position:absolute;right:0;top:50%;transform:translateY(-50%);width:auto;max-width:none;height:30px;padding:0 10px;font-size:12px;font-weight:700;background:#282828;color:#9a9a9a;border-radius:8px;' }, 'Filter \u25be'),
+        only ? null : h('div', { id: 'dashFilters', class: 'dashfilterbox', style: 'display:none;' },
+          h('div', { class: 'lab' }, 'Rounds'), fType, h('div', { class: 'lab' }, 'Time'), fTime)),
       only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || courseById(only.course).name} · ${mdy(only.date)}${only.player ? ' · ' + only.player : ''}`) : null,
-      // Filters (round type, time): hidden until Filter (beside the title) is tapped.
-      h('div', { id: 'dashFilters', style: 'display:none;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;' }, only ? [] : [fType, fTime]),
       content)));
 
   function draw() {
@@ -462,12 +463,12 @@ export function renderDashboard(data, hcp, targetId, opts) {
   // or, for one round picked from the list, which round it is (Back returns to all rounds).
   var top=opts.single&&data[0]?'<div style="display:flex;align-items:center;gap:8px;margin:2px 0 6px;">'
     +'<div style="font-size:13px;color:#9a9a9a;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(data[0].course_name||'')+' \u00b7 '+data[0].round_date+'</div></div>':'';
-  html+=top+'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:4px;">'
+  html+=top+'<div style="display:flex;align-items:center;gap:8px;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:4px;">'
     +'<div style="font-size:14px;font-weight:800;color:#00b87a;">STROKES GAINED \u00b7 '+(opts.single?'this round':'per round')+'</div>'
     // A quiet text link on the same line as the heading.
     // The coach's view of a student keeps it here; the Stats Dashboard page has it beside its title.
     +(targetId!=='svDashContent'?'<span id="dashHcpSlot" style="flex:none;display:flex;"></span>':'')
-    +(opts.single||targetId!=='svDashContent'?'':'<button class="glass-skip" onclick="toggleDashFilters()" style="height:auto;min-height:0;font-size:11px;font-weight:600;background:none;border:none;border-radius:0;padding:0;margin:0;max-width:none;width:auto;color:#606060;line-height:1;letter-spacing:.03em;">Filter \u25be</button>')+'</div>';
+    +(opts.single||targetId!=='svDashContent'?'':'<button class="glass-skip" onclick="toggleDashFilters()" style="height:auto;min-height:0;font-size:11px;font-weight:600;background:none;border:none;border-radius:0;padding:0;margin:0 0 0 auto;max-width:none;width:auto;color:#606060;line-height:1;letter-spacing:.03em;">Filter \u25be</button>')+'</div>';
   html+=sgBar('SG: Total', sgPer.tot, sgR, true, 1);
   // The four categories two by two, so more of Past rounds fits below.
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
@@ -656,6 +657,11 @@ function toggleDashFilters() {
   var el = document.getElementById(_dash && _dash.targetId === 'svDashContent' ? 'svDashFilters' : 'dashFilters');
   if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
 }
+// The Stats Dashboard's filter box closes on a tap anywhere outside it.
+document.addEventListener('click', function (e) {
+  var box = document.getElementById('dashFilters');
+  if (box && box.style.display !== 'none' && !box.contains(e.target) && !e.target.closest('.dashfilterbtn')) box.style.display = 'none';
+});
 window.dashOneRound = dashOneRound; window.dashAllRounds = dashAllRounds; window.toggleDashFilters = toggleDashFilters;
 
 // Shows one part of the dashboard: 0 the SG bars, 1-5 a category's detailed stats.
