@@ -617,6 +617,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.40.0', ['Stats Dashboard: Filter opens a small box instead of pushing the page down; the handicap to compare with sits right after "per round"']],
   ['1.39.0', ['Practice and Learning: cards no longer show over the tabs while scrolling', 'Stats Dashboard: pick the handicap to compare with beside Strokes Gained']],
   ['1.38.0', ['App-wide tidy-up: clearer buttons and tabs, plain error messages, Performance matches the Stats Dashboard']],
   ['1.37.0', ['New course: Colonial Country Club (Fort Worth)']],
