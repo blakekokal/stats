@@ -838,10 +838,10 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
         <!-- SG OVERVIEW -->
         <div style="font-size:9px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#606060;margin-bottom:8px;">Strokes Gained Overview</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;">
-          <div id="perfCardOtt"  onclick="togglePerfTab('ott')"  style="border-radius:11px;padding:12px;cursor:pointer;"></div>
-          <div id="perfCardApp"  onclick="togglePerfTab('app')"  style="border-radius:11px;padding:12px;cursor:pointer;"></div>
-          <div id="perfCardArg"  onclick="togglePerfTab('arg')"  style="border-radius:11px;padding:12px;cursor:pointer;"></div>
-          <div id="perfCardPutt" onclick="togglePerfTab('putt')" style="border-radius:11px;padding:12px;cursor:pointer;"></div>
+          <div id="perfCardOtt"  onclick="togglePerfTab('ott', this)"  style="border-radius:11px;padding:12px;cursor:pointer;"></div>
+          <div id="perfCardApp"  onclick="togglePerfTab('app', this)"  style="border-radius:11px;padding:12px;cursor:pointer;"></div>
+          <div id="perfCardArg"  onclick="togglePerfTab('arg', this)"  style="border-radius:11px;padding:12px;cursor:pointer;"></div>
+          <div id="perfCardPutt" onclick="togglePerfTab('putt', this)" style="border-radius:11px;padding:12px;cursor:pointer;"></div>
         </div>
 
         <!-- DETAIL PANELS -->

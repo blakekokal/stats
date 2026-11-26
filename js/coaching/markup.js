@@ -508,18 +508,21 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
       <!-- Combines sub-page -->
       <div id="svPerfPageCombines" style="display:none;">
         <div id="svPerfCombineLoading" style="background:#222222;border-radius:12px;padding:18px;text-align:center;color:#9a9a9a;font-size:13px;margin-bottom:10px;">Loading combine data…</div>
-        <div id="svPerfCombineGrid" style="display:none;grid-template-columns:1fr 1fr;gap:10px;align-items:start;width:100%;">
-          <div style="grid-column:1/-1;">
+        <div id="svPerfCombineGrid" style="display:none;grid-template-columns:1fr 1fr;gap:8px;align-items:start;width:100%;">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#ffffff;margin-bottom:8px;text-align:center;">Putting</div>
             <div id="svPerfCombinePuttFocus"></div>
             <div id="svPerfCombinePuttOverview"></div>
-            <div id="svPerfCombinePuttDetail" style="display:none;"></div>
           </div>
-          <div style="grid-column:1/-1;">
+          <div>
+            <div style="font-size:15px;font-weight:800;color:#ffffff;margin-bottom:8px;text-align:center;">Wedge</div>
             <div id="svPerfCombineWedgeFocus"></div>
             <div id="svPerfCombineWedgeOverview"></div>
-            <div id="svPerfCombineWedgeDetail" style="display:none;"></div>
           </div>
         </div>
+        <!-- A tile's detail opens here, below the tiles (as on Performance Analysis) -->
+        <div id="svPerfCombinePuttDetail" style="display:none;margin-top:14px;"></div>
+        <div id="svPerfCombineWedgeDetail" style="display:none;margin-top:14px;"></div>
         <div id="svPerfCombineFooter" style="display:none;text-align:center;font-size:10px;color:#9a9a9a;margin-top:14px;">All stats vs scratch · combines only</div>
       </div>
     </div>

@@ -26,25 +26,25 @@ function perfHcpLabel(hcp) {
   return hcp + ' HCP averages';
 }
 
-function togglePerfTab(tab) {
-  var el = document.getElementById('perfTab-' + tab);
+// Opens or closes a card's detail below the cards (one at a time), on whichever
+// page the tap came from: this page, or a coach's view of a student (svPerf*).
+export function togglePerfTab(tab, from) {
+  var root = (from && from.closest && from.closest('#perfPageRounds, #svPerfPageRounds')) || document.getElementById('perfPageRounds');
+  if (!root) return;
+  var panel = function(t) { return root.querySelector('[id$="erfTab-' + t + '"]'); }; // perfTab-x or svPerfTab-x
+  var el = panel(tab);
   if (!el) return;
-  var isOpen = el.style.display !== 'none';
-  // Close all
+  var opening = el.style.display === 'none';
   ['ott','app','arg','putt'].forEach(function(t) {
-    var e = document.getElementById('perfTab-' + t);
-    if (e) e.style.display = 'none';
+    var e = panel(t); if (e) e.style.display = opening && t === tab ? 'block' : 'none';
   });
   // The cards' own captions follow: Close on the open one, View detail on the rest.
-  ['ott','app','arg','putt'].forEach(function(t) {
-    var c = document.getElementById('perfCaret-' + t);
-    if (c) c.textContent = (!isOpen && t === tab) ? 'Close \u25b2' : 'View detail \u2192';
+  root.querySelectorAll('.perfcaret[data-key]').forEach(function(c) {
+    c.textContent = opening && c.dataset.key === tab ? 'Close \u25b2' : 'View detail \u2192';
   });
-  // If it was closed, open it
-  if (!isOpen) {
-    el.style.display = 'block';
-    var page = document.getElementById('performanceAnalysisPage');
-    if (page) setTimeout(function(){ page.scrollTop += 140; }, 60);
+  if (opening) {
+    var sc = root.closest('#studentViewScroll') || document.getElementById('performanceAnalysisPage');
+    if (sc) setTimeout(function(){ sc.scrollTop += 140; }, 60);
   }
 }
 
@@ -517,7 +517,7 @@ export function renderPerfAnalysis(a) {
       '<div style="font-size:10px;text-align:center;color:#9a9a9a;">' + stat1 + stat2Html + '</div>' +
       '<div style="height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:8px;">' +
       '<div style="width:' + Math.max(5, Math.min(100, (val + 2) / 4 * 100)) + '%;height:3px;background:' + color + ';border-radius:2px;"></div></div>' +
-      '<div id="perfCaret-' + key + '" style="font-size:9px;color:#9a9a9a;margin-top:6px;text-align:right;">' + (active ? 'Close ▲' : 'View detail →') + '</div>';
+      '<div class="perfcaret" data-key="' + key + '" style="font-size:9px;color:#9a9a9a;margin-top:6px;text-align:right;">' + (active ? 'Close ▲' : 'View detail →') + '</div>';
   }
 
   var ottCard  = document.getElementById('perfCardOtt');
@@ -681,7 +681,7 @@ export function renderPerfAnalysis(a) {
 function perfTabHeader(key, title, color) {
   return '<div class="perfdetailhead">' +
     '<div style="font-size:14px;font-weight:800;color:' + color + ';">' + title + '</div>' +
-    '<button class="perfclose" onclick="togglePerfTab(\'' + key + '\')">Close \u25b2</button>' +
+    '<button class="perfclose" onclick="togglePerfTab(\'' + key + '\', this)">Close \u25b2</button>' +
     '</div>';
 }
 
