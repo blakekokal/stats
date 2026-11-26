@@ -973,5 +973,20 @@
    685
   ],
   "source": "USGS 3DEP"
+ },
+ "colonial": {
+  "bounds": [
+   -97.378805,
+   32.713845,
+   -97.362486,
+   32.724274
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   540,
+   673
+  ],
+  "source": "USGS 3DEP"
  }
 }

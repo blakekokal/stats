@@ -1,0 +1,206 @@
+{
+ "id": "colonial",
+ "name": "Colonial Country Club",
+ "location": "Fort Worth, TX",
+ "par": [
+  5,
+  4,
+  4,
+  3,
+  4,
+  4,
+  4,
+  3,
+  4,
+  4,
+  5,
+  4,
+  3,
+  4,
+  4,
+  3,
+  4,
+  4
+ ],
+ "hcp": [
+  9,
+  17,
+  5,
+  15,
+  1,
+  13,
+  3,
+  11,
+  7,
+  16,
+  8,
+  4,
+  14,
+  10,
+  2,
+  18,
+  6,
+  12
+ ],
+ "_comment_tees": "Scorecard from GolfPass (15181); its pars match OpenStreetMap's hole tags (par 70). Combination tees left out. Its tee table rates other lengths; ratings only where close: III = Gold (6527), II = White (6043). Men's ratings.",
+ "_comment_drop": "Polygons containing these points are not part of the course: five OSM bunkers on grass (one on a green) with no sand in the imagery (trim_far.py drops the short-game areas and range tees).",
+ "drop": [
+  [
+   32.716378,
+   -97.373076,
+   "bunker"
+  ],
+  [
+   32.716445,
+   -97.373057,
+   "bunker"
+  ],
+  [
+   32.716442,
+   -97.37335,
+   "bunker"
+  ],
+  [
+   32.715649,
+   -97.376163,
+   "bunker"
+  ],
+  [
+   32.715705,
+   -97.375006,
+   "bunker"
+  ]
+ ],
+ "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand; the greens agree).",
+ "shift": {
+  "east": -0.3,
+  "north": 1.3
+ },
+ "tees": [
+  {
+   "name": "V",
+   "rating": null,
+   "slope": null,
+   "yards": [
+    581,
+    385,
+    475,
+    248,
+    476,
+    410,
+    480,
+    194,
+    413,
+    407,
+    639,
+    457,
+    199,
+    456,
+    431,
+    197,
+    399,
+    442
+   ]
+  },
+  {
+   "name": "IV",
+   "rating": null,
+   "slope": null,
+   "yards": [
+    553,
+    378,
+    445,
+    230,
+    455,
+    386,
+    467,
+    177,
+    389,
+    388,
+    610,
+    423,
+    180,
+    433,
+    414,
+    185,
+    384,
+    414
+   ]
+  },
+  {
+   "name": "III",
+   "rating": 72.0,
+   "slope": 131,
+   "yards": [
+    537,
+    360,
+    435,
+    206,
+    431,
+    374,
+    440,
+    170,
+    363,
+    367,
+    573,
+    401,
+    163,
+    410,
+    388,
+    176,
+    366,
+    393
+   ]
+  },
+  {
+   "name": "II",
+   "rating": 69.7,
+   "slope": 127,
+   "yards": [
+    520,
+    341,
+    421,
+    181,
+    391,
+    354,
+    420,
+    157,
+    314,
+    357,
+    544,
+    365,
+    126,
+    380,
+    336,
+    123,
+    347,
+    367
+   ]
+  },
+  {
+   "name": "I",
+   "rating": null,
+   "slope": null,
+   "yards": [
+    489,
+    321,
+    409,
+    148,
+    358,
+    308,
+    369,
+    109,
+    262,
+    285,
+    495,
+    331,
+    112,
+    353,
+    325,
+    115,
+    297,
+    275
+   ]
+  }
+ ]
+}
