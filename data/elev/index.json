@@ -823,5 +823,20 @@
    665
   ],
   "source": "USGS 3DEP"
+ },
+ "rustedrail": {
+  "bounds": [
+   -96.452397,
+   32.61001,
+   -96.437646,
+   32.627154
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   350,
+   424
+  ],
+  "source": "USGS 3DEP"
  }
 }

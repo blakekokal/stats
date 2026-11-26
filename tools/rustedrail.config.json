@@ -1,0 +1,18 @@
+{
+  "id": "rustedrail",
+  "name": "Rusted Rail Golf Club",
+  "location": "Crandall, TX",
+  "par": [4, 4, 5, 4, 5, 4, 3, 4, 3, 4, 4, 4, 3, 5, 3, 5, 4, 4],
+  "hcp": [10, 2, 4, 12, 6, 14, 16, 8, 18, 9, 7, 1, 17, 5, 15, 11, 13, 3],
+  "_comment_tees": "Scorecard from GolfPass (2845, formerly Creekview); its pars match OpenStreetMap's hole tags (par 72). Men's ratings, except Red's (71.2 for 5459 yards is presumably the women's).",
+  "_comment_drop": "Polygons containing these points are not part of the course: two OSM bunkers on grass by the pond at #5/#17.",
+  "drop": [[32.615179, -96.445838, "bunker"], [32.615265, -96.446008, "bunker"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 0},
+  "tees": [
+    {"name": "Gold", "rating": 74.1, "slope": 119, "yards": [426, 424, 581, 391, 598, 334, 205, 383, 177, 416, 394, 458, 211, 552, 221, 561, 418, 468]},
+    {"name": "Blue", "rating": 71.8, "slope": 117, "yards": [402, 390, 567, 363, 573, 315, 162, 369, 162, 394, 373, 441, 167, 529, 197, 553, 383, 430]},
+    {"name": "White", "rating": 68.7, "slope": 110, "yards": [395, 347, 531, 323, 525, 285, 129, 334, 146, 373, 347, 406, 134, 500, 182, 470, 343, 391]},
+    {"name": "Red", "rating": 71.2, "slope": 115, "yards": [366, 304, 493, 294, 469, 255, 86, 309, 124, 337, 303, 365, 100, 472, 142, 402, 294, 344]}
+  ]
+}
