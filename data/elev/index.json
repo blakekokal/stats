@@ -1063,5 +1063,20 @@
    674
   ],
   "source": "USGS 3DEP"
+ },
+ "shadyoaks": {
+  "bounds": [
+   -97.428864,
+   32.746875,
+   -97.411476,
+   32.7577
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   560,
+   718
+  ],
+  "source": "USGS 3DEP"
  }
 }

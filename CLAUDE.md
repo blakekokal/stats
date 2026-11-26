@@ -139,7 +139,8 @@ Blue (Gold not yet: see below). Dallas National (its big short-game area trimmed
 in Florida). Northwood (GolfPass 12693). Prestonwood Creek (OSM's greens drawn ~3 m off its
 bunkers: `greenShift` in the config moves only the greens). Hackberry Creek (#5's missing green grown from the imagery). Eldorado (McKinney; boundary is two ways; #9's green
 tagged as a bunker: `retype` in the config, a `build_course.py` option). Oakmont (Corinth;
-`greenShift` as at Prestonwood).
+`greenShift` as at Prestonwood). Shady Oaks (holes named "SOCC n"; its par-3 course trimmed; OSM
+predates the 2020 renovation: 58 bunkers on grass dropped, 14 added from the imagery).
 
 Skipped for now: Meadowbrook (Fort Worth; GolfPass's card is a different layout from OSM's holes),
 Lost Creek (Aledo; GolfPass says it closed), Pecan Valley River (see below). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
@@ -152,9 +153,6 @@ from OSM; OSM numbers Pinta 10-18, so `tools/isabella/course.py` names each nine
 Public, complete:
 - Maridoe (Carrollton): GolfPass has the pre-renovation card (pars and yards fit
   no OSM hole); needs the current card from the club
-
-Private, complete (doing these next, one at a time):
-Shady Oaks.
 
 Mapped with gaps (better from a book, or fill the gaps from the imagery):
 - Mira Vista (Fort Worth): OSM's greens and bunkers don't fit the imagery (greens over bunkers;
