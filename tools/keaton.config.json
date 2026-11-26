@@ -1,0 +1,18 @@
+{
+  "id": "keaton",
+  "name": "Grover C. Keaton Golf Course",
+  "location": "Dallas, TX",
+  "par": [4, 3, 5, 4, 4, 5, 4, 3, 4, 4, 3, 4, 5, 3, 4, 4, 4, 5],
+  "hcp": [7, 15, 1, 5, 13, 3, 9, 17, 11, 14, 16, 10, 4, 18, 2, 8, 6, 12],
+  "_comment_tees": "Scorecard from GolfPass (2866, 'Keeton Park Golf Course', 2323 N Jim Miller Rd); its pars and handicaps match OpenStreetMap's hole tags (par 72). Its tee table rates older lengths (Blue 6521, White 6062, Red 5054 yards) that match none of the card's tees, so no ratings are given.",
+  "_comment_drop": "Polygons containing these points are not part of the course: three practice greens and a practice tee by the clubhouse, and a target green on the range.",
+  "drop": [[32.756439, -96.706954, "green"], [32.756144, -96.706112, "green"], [32.755873, -96.706954, "green"], [32.758114, -96.708675, "green"], [32.756446, -96.70598, "tee"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (none: the greens sit on the imagery).",
+  "shift": {"east": 0, "north": 0},
+  "tees": [
+    {"name": "Black", "rating": null, "slope": null, "yards": [390, 171, 563, 382, 344, 561, 402, 172, 405, 382, 177, 362, 500, 164, 440, 420, 410, 513]},
+    {"name": "Blue", "rating": null, "slope": null, "yards": [361, 147, 556, 369, 321, 521, 375, 156, 344, 343, 156, 357, 481, 145, 419, 389, 387, 463]},
+    {"name": "White", "rating": null, "slope": null, "yards": [330, 135, 477, 343, 296, 490, 366, 141, 315, 321, 149, 330, 468, 130, 402, 361, 331, 440]},
+    {"name": "Red", "rating": null, "slope": null, "yards": [260, 103, 392, 284, 260, 417, 272, 127, 236, 272, 124, 274, 394, 94, 312, 293, 277, 367]}
+  ]
+}
