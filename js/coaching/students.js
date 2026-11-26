@@ -213,6 +213,9 @@ async function viewStudent(studentId, name, email) {
   S.currentStudentHcp = 'pro'; // default while loading
   document.getElementById('studentViewName').textContent = name;
   document.getElementById('studentViewEmail').textContent = email;
+  var useBtn = document.getElementById('svUseAppBtn');
+  if (useBtn) useBtn.textContent = 'Use app as ' + (String(name || '').split(' ')[0] || 'student');
+  S.currentStudentName = name; S.currentStudentEmail = email;
   // Hide badge while we fetch
   var badge = document.getElementById('studentViewHcpBadge');
   if (badge) badge.style.display = 'none';

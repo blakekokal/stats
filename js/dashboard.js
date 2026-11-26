@@ -3,7 +3,7 @@
 // app's shot-by-shot round format first, then the ported code renders them.
 
 import { goBack, h, courseById } from './app.js';
-import { store, sync, levelFromPref } from './store.js';
+import { store, sync, levelFromPref, actingAs, supabaseClient } from './store.js';
 import { expected } from './sg.js';
 import { yards } from './geo.js';
 import { isDriver } from './model.js';
@@ -117,10 +117,12 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
   const only = roundId ? historyRounds().find(r => r.id === roundId) : null;
   const prefOf = l => (l === 'Pro' ? 'pro' : l === 'Scratch' ? '0' : l);
   // What's shown: the level to compare with (beside "Strokes gained"), and Filter's round type and time.
-  const st = { hcp: sync.level ? prefOf(sync.level) : 'pro', type: 'all', time: 'all' };
+  const as = actingAs(); // a coach using the app as a student: the student's level
+  const st = { hcp: as ? as.hcp : sync.level ? prefOf(sync.level) : 'pro', type: 'all', time: 'all' };
   setDashControls('dashContent', { filters: !only, get: () => st, set: (k, v) => {
     st[k] = v; draw();
-    if (k === 'hcp') sync.setLevel(levelFromPref(v)).catch(() => { /* keep the local choice */ });
+    if (k === 'hcp' && as) supabaseClient()?.from('profiles').update({ hcp_preference: v }).eq('id', as.id).then(() => {}, () => {}); // the student's setting
+    else if (k === 'hcp') sync.setLevel(levelFromPref(v)).catch(() => { /* keep the local choice */ });
   } });
   const content = h('div', { id: 'dashContent', style: 'text-align:left;' });
   const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: () => { if (!dashBack()) goBack(); } });

@@ -1,5 +1,5 @@
 import { errText } from '../store.js';
-import { S } from '../coaching/core.js';
+import { S, addedByCoach } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { _viewingAsStudent, activeUserId } from '../coaching/core.js';
 import { _sb } from '../coaching/core.js';
@@ -27,7 +27,7 @@ function ppShowSwingJournal() {
   ppHideAllViews();
   document.getElementById('ppSwingJournalView').style.display = '';
   var addForm = document.getElementById('sjAddForm');
-  if (addForm) addForm.style.display = _viewingAsStudent ? 'none' : '';
+  if (addForm) addForm.style.display = ''; // a coach using the app as the student adds and deletes too
   var dateInput = document.getElementById('sjEntryDate');
   if (dateInput && !dateInput.value) {
     var d = new Date();
@@ -49,6 +49,7 @@ async function addSwingJournalEntry() {
     return;
   }
   var { error } = await _sb.from('swing_journal_entries').insert({
+    ...addedByCoach(),
     user_id: activeUserId(),
     entry_date: date,
     text: text,
@@ -65,8 +66,6 @@ async function addSwingJournalEntry() {
 
 async function deleteSwingJournalEntry(id) {
   if (!S.currentUser) return;
-  // Only owner can delete; coaches viewing a student shouldn't delete the student's entries.
-  if (_viewingAsStudent) return;
   var { error } = await _sb.from('swing_journal_entries').delete().eq('id', id).eq('user_id', activeUserId());
   if (error) { alert(errText(error, 'Delete failed: ')); return; }
   renderSwingJournal();
@@ -98,7 +97,7 @@ async function renderSwingJournal() {
   entries.forEach(function(e) { (groups[e.entry_date] = groups[e.entry_date] || []).push(e); });
   var dates = Object.keys(groups).sort(function(a,b) { return b.localeCompare(a); });
   var months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  var canDelete = !_viewingAsStudent;
+  var canDelete = true;
   var html = '';
   dates.forEach(function(d) {
     var dp = d.split('-');
@@ -108,7 +107,7 @@ async function renderSwingJournal() {
     html += '<ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:1.7;">';
     groups[d].forEach(function(e) {
       html += '<li style="display:flex;align-items:flex-start;gap:8px;">';
-      html += '<span style="flex:1;">' + escHtml(e.text) + '</span>';
+      html += '<span style="flex:1;">' + escHtml(e.text) + (e.added_by ? ' <span class="coachtag">Added by coach</span>' : '') + '</span>';
       if (canDelete) {
         html += '<button onclick="deleteSwingJournalEntry(\'' + e.id + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:11px;cursor:pointer;padding:0 4px;height:auto;max-width:none;width:auto;flex-shrink:0;">×</button>';
       }

@@ -439,6 +439,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
       </div>
     </div>
     <div id="studentViewEmail" style="font-size:12px;color:#606060;"></div>
+    <button id="svUseAppBtn" class="svuseapp" onclick="svUseAppAs()">Use app as student</button>
   </div>
   <div style="display:flex;gap:6px;width:100%;max-width:360px;margin-bottom:0;background:transparent;overflow:visible;flex-shrink:0;">
     <button onclick="showStudentTab('dashboard')" id="svTabDash" style="flex:1;height:38px;font-size:10px;background:#2d7abc;border-radius:0;border:none;color:#ffffff;font-weight:700;max-width:none;width:auto;padding:0;margin:0;">Dashboard</button>

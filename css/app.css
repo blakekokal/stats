@@ -689,3 +689,8 @@ button:has(> .tileic) > div { min-width: 0; white-space: normal; }
 .tileic .ico { width: 34px; height: 34px; }
 /* Search boxes: a magnifier drawn inside the box, left of the text. */
 input.searchbox { padding-left: 36px !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239a9a9a' stroke-width='2.2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M16.5 16.5L21 21'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-size: 16px 16px !important; background-position: 12px center !important; }
+
+/* A coach using the app as a student: the bar across the top (above every page). */
+#actbar { flex: none; display: flex; align-items: center; justify-content: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 5px) 12px 5px; background: #5c4a08; color: #fff; font: 13px/1.2 system-ui, -apple-system, sans-serif; z-index: 2100; position: relative; }
+#actbar b { color: #f0c830; }
+#actbar button { flex: none; height: 26px; padding: 0 12px; border: 0; border-radius: 13px; background: rgba(255,255,255,.18); color: #fff; font: 700 12px system-ui, -apple-system, sans-serif; cursor: pointer; }

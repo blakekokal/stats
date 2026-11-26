@@ -2,8 +2,8 @@
 // coaching app. My Bag, Performance Analysis, Practice and Learning and
 // Coaching are the coaching app's own pages (js/coaching).
 
-import { h, course, toast, COURSES, courseById, setActiveCourse, goBack, ninesWith, comboId, isAdmin } from './app.js';
-import { store, sync, submitCourseRequest, fetchCourseRequests, setCourseRequestStatus, countNewCourseRequests, markCourseRequestsSeen, errText } from './store.js';
+import { h, course, toast, COURSES, courseById, setActiveCourse, goBack, ninesWith, comboId, isAdmin, exitActing } from './app.js';
+import { store, sync, actingAs, levelFromPref, submitCourseRequest, fetchCourseRequests, setCourseRequestStatus, countNewCourseRequests, markCourseRequestsSeen, errText } from './store.js';
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
 import { checkCoachingDot } from './coaching/index.js';
@@ -21,7 +21,8 @@ import { libraryVideos } from './learn/library.js';
 
 const levelOpt = (l, sel, short) => h('option', { value: l, selected: l === sel },
   short ? `vs ${l === 'Pro' ? 'Tour Pro' : l === 'Scratch' ? 'Scratch' : l + ' HCP'}` : `SG: ${l === 'Pro' ? 'Tour Pro' : l === 'Scratch' ? 'Scratch' : l + ' HCP'}`); // short enough for the half-width field
-const profileLevel = () => (LEVELS.includes(sync.level) ? sync.level : 'Pro');
+// The level to compare with: the player's own, or the student's while a coach uses the app as them.
+const profileLevel = () => { const l = actingAs() ? levelFromPref(actingAs().hcp) : sync.level; return LEVELS.includes(l) ? l : 'Pro'; };
 const today = () => new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD, local
 const fmtDate = d => { const [y, m, dd] = d.split('-').map(Number); return `${m}/${dd}/${y}`; };
 
@@ -80,7 +81,9 @@ export function renderHome(view) {
   // One line, between the ? and the search / settings buttons; version and the player's name under it.
   brand.innerHTML = `<div class="hometitle">Blake Kokal Golf</div><div class="homesub"><span class="wn" style="color:#606060;font-weight:700;cursor:pointer;">v${VERSION}</span><span class="wn" style="color:#44b8f0;font-weight:600;cursor:pointer;">&#x2190; What's new</span></div>`;
   brand.querySelectorAll('.wn').forEach(el => el.addEventListener('click', () => { location.hash = '#/whatsnew'; }));
-  brand.append(h('div', { class: 'homeuser' }, sync.user ? [icEl('user'), ' ' + sync.name] : ''));
+  brand.append(h('div', { class: 'homeuser' }, actingAs() ? [icEl('user'), ' ' + actingAs().name] : sync.user ? [icEl('user'), ' ' + sync.name] : ''));
+  // Using the app as a student: their account's Settings and the coach's Coaching aren't part of it.
+  if (actingAs()) gearBtn.style.visibility = 'hidden';
 
   // Coaching, with a dot when a note, message or assignment is waiting.
   const coaching = go('cap', 'Coaching', '#00402c', '#/coaching');
@@ -106,7 +109,9 @@ export function renderHome(view) {
       go('bag', 'My Bag', '#1a4a8a', '#/bag'),
       divider(),
       practice,
-      coaching),
+      // Using the app as a student: Coaching's place is the way back to the coach's own app.
+      actingAs() ? h('button', { class: 'homebtn stopacting', onclick: exitActing },
+        h('span', { class: 'ic' }, icEl('user')), h('div', {}, h('div', { class: 't' }, `Stop viewing as ${actingAs().name.split(' ')[0]}`))) : coaching),
     sync.user ? null : h('button', { class: 'linkbtn', style: 'margin-top:10px;flex:none;', onclick: () => { location.hash = '#/account'; } }, 'Log In / Sign Up')));
   // Everything fits, so a drag on Home shouldn't move the page at all: on iPhone
   // the whole screen otherwise slides and springs back (rubber-band bounce).
@@ -117,7 +122,7 @@ export function renderHome(view) {
 
 // GPS Scouting uses the same page with just the course and tee box: nothing is saved.
 export function renderNewRound(view, { scout = false } = {}) {
-  const name = h('input', { placeholder: 'Player Name', value: sync.user ? sync.name : '' });
+  const name = h('input', { placeholder: 'Player Name', value: actingAs() ? actingAs().name : sync.user ? sync.name : '' });
   const level = h('select', { class: 'bigsel', style: 'flex:1;', 'aria-label': 'Compare to' }, LEVELS.map(l => levelOpt(l, profileLevel())));
   const date = h('input', { type: 'date', value: today(), style: 'flex:1;' });
   const lastTee = (store.get('settings') || {}).tee;
@@ -178,7 +183,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     if (askResume()) return; // one round at a time
     const most = Math.min(18, chosen.holes.length);
     if (custom.value && !(+custom.value >= 3 && +custom.value <= most)) { err.textContent = `Custom holes must be 3 to ${most}.`; return; }
-    const r = { ...newRound(course, tee.value, date.value || today()), courseName: course.name, player: name.value.trim() || (sync.user ? sync.name : ''),
+    const r = { ...newRound(course, tee.value, date.value || today()), courseName: course.name, player: name.value.trim() || (actingAs() ? actingAs().name : sync.user ? sync.name : ''),
       level: level.value, type: type.value, place: null, holeCount: Math.min(holes, chosen.holes.length) };
     store.set(roundKeyOf(r.id), r);
     setActiveCourse(course.id);
@@ -323,7 +328,7 @@ export function renderHistory(view) {
     return h('div', { class: 'card', style: s.incomplete ? 'border-left:3px solid #d4706e;cursor:pointer;' : '', onclick: s.incomplete ? resume : null },
       h('div', { style: 'display:flex;justify-content:space-between;align-items:center;' },
         h('div', {},
-          h('div', { style: 'font-weight:700;font-size:15px;' }, r.courseName || course.name, s.incomplete ? h('span', { style: 'color:#f0c830;font-size:10px;font-weight:700;' }, [' ', icEl('pause'), ' In Progress']) : null),
+          h('div', { style: 'font-weight:700;font-size:15px;' }, r.courseName || course.name, r.addedBy ? h('span', { class: 'coachtag' }, 'Added by coach') : null, s.incomplete ? h('span', { style: 'color:#f0c830;font-size:10px;font-weight:700;' }, [' ', icEl('pause'), ' In Progress']) : null),
           r.type === 'Tournament' ? h('div', { style: 'color:#f0c830;font-size:11px;font-weight:700;margin-top:2px;' }, '★ Tournament' + (r.place ? ` — ${ordinal(r.place)} Place` : '')) : null,
           h('div', { style: 'font-size:12px;color:#9a9a9a;' }, `${fmtDate(r.date)} · ${holesInfo}${r.player ? ' · ' + r.player : ''}`)),
         h('div', { style: 'text-align:right;' }, s.incomplete
@@ -617,6 +622,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.48.0', ['Coaches: Use app as a student (on their profile) to see and log their rounds, combines and practice; what you add is marked Added by coach. Exit or Stop viewing to come back', 'A student\u2019s Performance Analysis shows their own combines']],
   ['1.47.0', ['New course: Shady Oaks Country Club (Fort Worth), built without a yardage book: greens, fairways, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture (renovated since mapping), trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.46.0', ['New course: Oakmont Country Club (Corinth), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.45.0', ['New course: Eldorado Country Club (McKinney), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],

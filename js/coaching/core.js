@@ -2,7 +2,7 @@
 // app's core: shared state, the Supabase client, its page router and a few
 // helpers, mapped onto this app.
 
-import { sync, supabaseClient } from '../store.js';
+import { sync, supabaseClient, actingAs, onActChange } from '../store.js';
 import { toast, goBack } from '../app.js';
 
 export const S = {
@@ -89,9 +89,15 @@ expose({ show, appBack });
 export const showAuthPage = () => show('authPage');
 
 // ---- session ----
-export var _viewingAsStudent = null;
-export function activeUserId() { return sync.user.id; }
-export function enterStudentView() { /* viewing the whole app as a student isn't part of this app */ }
+// A coach using the app as one of their students (store.js startActing): the
+// coaching pages then read and save the student's combines, practice, journal
+// and bag, as the student's own app would.
+export var _viewingAsStudent = actingAs();
+onActChange(() => { _viewingAsStudent = actingAs(); });
+export function activeUserId() { return _viewingAsStudent ? _viewingAsStudent.id : sync.user.id; }
+// What a row added while using the app as a student carries: who added it (shown as "Added by coach").
+export const addedByCoach = () => (_viewingAsStudent ? { added_by: sync.user.id } : {});
+export function enterStudentView() { /* see store.js startActing */ }
 
 // ---- helpers ----
 export function ordinalSuffix(n) { var s = ['th', 'st', 'nd', 'rd'], v = n % 100; return n + (s[(v - 20) % 10] || s[v] || s[0]); }

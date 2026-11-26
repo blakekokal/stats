@@ -8,6 +8,8 @@ import { courseById } from '../app.js';
 import { summarize, startWatching, firstHoleOf } from '../rounds.js';
 
 const cache = new Map(); // student id -> { at, rounds }
+// Forget a student's cached rounds (they're about to change, e.g. the coach uses the app as them).
+export const forgetStudentRounds = id => cache.delete(id);
 window.addEventListener('gs:studentSaved', () => cache.clear()); // a coach edited a round: fetch afresh
 // The student's rounds, newest first: coaching-format rounds, each with `_gps`
 // (the round as this app saved it). Kept for a minute so tabs don't refetch.

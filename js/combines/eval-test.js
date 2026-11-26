@@ -1,5 +1,5 @@
 import { errText } from '../store.js';
-import { S } from '../coaching/core.js';
+import { S, addedByCoach } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { goToDriverDrill } from './driver-drill.js';
 import { goToCombines, goToPuttingCombine } from './history.js';
@@ -137,6 +137,7 @@ async function evalSaveSummary(score, totalSg){
   if(!S.currentUser){ if(msg){ msg.style.color='#d4706e'; msg.textContent='Log in to save your Evaluation Test.'; } return; }
   if(msg){ msg.style.color='#9affc8'; msg.textContent='Saving...'; }
   var payload = {
+    ...addedByCoach(),
     user_id:       activeUserId(),
     combine_date:  getTodayCentral(),
     combine_type:  'Evaluation Test',

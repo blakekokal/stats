@@ -1,5 +1,5 @@
 import { errText } from '../store.js';
-import { S } from '../coaching/core.js';
+import { S, addedByCoach } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { _evalState, evalCaptureResult } from './eval-test.js';
 import { show } from '../coaching/core.js';
@@ -300,6 +300,7 @@ async function lineDrillSave(){
   if (msg) { msg.style.color = '#9affc8'; msg.textContent = 'Saving...'; }
 
   var payload = {
+    ...addedByCoach(),
     user_id:       activeUserId(),
     combine_date:  getTodayCentral(),
     combine_type:  'Line Drill',
