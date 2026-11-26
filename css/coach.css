@@ -247,9 +247,9 @@ body.coach { background: #1e1e1e; }
 /* No rubber-band bounce or pull-to-refresh on Home. */
 html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-behavior: none; }
 .cx.home { touch-action: none; }
-/* Menus: no double-tap zoom (scrolling and pinch still work). :where() keeps this
-   at zero specificity so maps and Home's own touch-action still win. */
-:where(body.coach, body.coach *) { touch-action: manipulation; }
+/* No double-tap zoom anywhere, GPS screen included (scrolling and pinch still work).
+   :where() keeps this at zero specificity so the maps and Home's own touch-action still win. */
+:where(html, body, body *) { touch-action: manipulation; }
 
 /* No scroll bars anywhere in the coaching pages (they still scroll): a bar that comes and goes
    with a tab's length narrows the page and shifts everything sideways. */
