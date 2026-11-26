@@ -808,5 +808,20 @@
    624
   ],
   "source": "USGS 3DEP"
+ },
+ "watterscreek": {
+  "bounds": [
+   -96.708826,
+   33.067653,
+   -96.689416,
+   33.084819
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   554,
+   665
+  ],
+  "source": "USGS 3DEP"
  }
 }
