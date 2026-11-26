@@ -87,6 +87,13 @@ def main(src, cfg_path, dst):
                 polys.append([o] + [i for i in inners if inside(i[0], o)])
         for p in polys:
             feats.append({"t": kind, "p": p})
+    # "greenShift" {east, north} (metres, on top of "shift"): where OSM's greens were drawn offset from its
+    # bunkers (Prestonwood), move only the greens (and so the pins) onto the imagery.
+    if cfg.get("greenShift"):
+        gs = cfg["greenShift"]; dla = gs.get("north", 0) / 111320; dlo = gs.get("east", 0) / (111320 * math.cos(math.radians(els_lat(src))))
+        for f in feats:
+            if f["t"] == "green":
+                f["p"] = [[[round(q[0] + dla, R), round(q[1] + dlo, R)] for q in r] for r in f["p"]]
     # a drop point may name a type ([lat, lng, "bunker"]) so a bunker inside a fairway goes but not the fairway
     feats = [f for f in feats if not any(inside(d[:2], f["p"][0]) and (len(d) < 3 or d[2] == f["t"]) for d in cfg.get("drop", []))]
     lines = {}

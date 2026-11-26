@@ -1003,5 +1003,20 @@
    608
   ],
   "source": "USGS 3DEP"
+ },
+ "prestonwood": {
+  "bounds": [
+   -96.814822,
+   32.953096,
+   -96.805833,
+   32.969556
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   529,
+   601
+  ],
+  "source": "USGS 3DEP"
  }
 }
