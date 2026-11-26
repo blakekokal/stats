@@ -2,7 +2,7 @@
 // and, once signed in, the profile's strokes-gained handicap.
 
 import { h, toast } from './app.js';
-import { sync } from './store.js';
+import { sync, errText } from './store.js';
 import { LEVELS } from './sg.js';
 
 export const levelName = l => (l === 'Pro' ? 'Tour Pro' : l === 'Scratch' ? 'Scratch' : `${l} handicap`);
@@ -20,7 +20,7 @@ export function renderAccount(view) {
   const extra = h('div', { class: 'stack', hidden: true }, confirm, name);
   const msg = h('p', { class: 'muted' });
   const say = (text, bad) => { msg.textContent = text; msg.className = bad ? 'bad' : 'muted'; };
-  const busy = async (text, fn) => { say(text); try { await fn(); } catch (e) { say(e.message || String(e), true); } };
+  const busy = async (text, fn) => { say(text); try { await fn(); } catch (e) { say(errText(e), true); } };
 
   const loginBtn = h('button', { class: 'primary', onclick: () => {
     if (signup) { signup = false; extra.hidden = true; loginBtn.textContent = 'Log in'; signupBtn.textContent = 'Create account'; say(''); return; }
@@ -82,6 +82,6 @@ function newPassword(view) {
         if (pass.value.length < 6) return say('Password must be at least 6 characters.', true);
         if (pass.value !== confirm.value) return say('Passwords do not match.', true);
         say('Saving…');
-        try { await sync.setPassword(pass.value); toast('Password updated.'); location.hash = '#/'; } catch (e) { say(e.message || String(e), true); }
+        try { await sync.setPassword(pass.value); toast('Password updated.'); location.hash = '#/'; } catch (e) { say(errText(e), true); }
       } }, 'Save password'), msg)));
 }

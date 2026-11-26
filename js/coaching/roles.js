@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from './core.js';
 import { expose } from './core.js';
 import { checkCoachingStudentNotifications } from './student-side.js';
@@ -199,7 +200,7 @@ async function submitCoachRequest() {
     }, 1500);
   } catch(e) {
     modalMsg.style.color = '#d4706e';
-    modalMsg.textContent = 'Error: ' + (e.message || e);
+    modalMsg.textContent = errText(e, 'Error: ');
     sendBtn.disabled = false;
     sendBtn.textContent = 'Send Request';
   }

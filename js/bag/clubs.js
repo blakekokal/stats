@@ -611,7 +611,6 @@ export function setBagTab(tab) {
 
 onEnter('myBagPage', function() {
   if (!S.currentUser) {
-    alert('Please log in to access My Bag.');
     showAuthPage();
     return false;
   }

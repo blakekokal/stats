@@ -9,6 +9,7 @@
   straight away, so it goes live (GitHub Pages serves `main`). Don't ask first,
   unless the owner says otherwise for that change.
 - Bump `js/version.js` with every release and add a line to What's New in `js/coach.js`.
+  Keep it short: a new course is just `New course: <name> (<city>)`, no build details.
 
 ## More than one session works on this repo at once
 

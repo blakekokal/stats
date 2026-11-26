@@ -10,9 +10,8 @@
 // distances switch to feet for putts, and a Holed button finishes the hole.
 
 import { h, course, TILE_URL, LIE_COLOR, teePosition, isAdmin, toast, complexHoles, partOf } from './app.js';
-import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity, saveStudentRound, updateRoundNotification } from './store.js';
+import { store, sync, fetchCoachStudents, fetchBagOf, fetchStudentActivity, saveStudentRound, updateRoundNotification, errText } from './store.js';
 import { lieAt, yards, inPolygon, boundsOf, distToLine, drawnRing, YD_PER_M } from './geo.js';
-import { VERSION } from './version.js';
 import { bookMapImage, bookGreenPage } from './book.js';
 import { expected, LEVELS } from './sg.js';
 import { newRound, analyzeHole, analyzeRound, CAT_LABEL, CATS, isWater } from './model.js';
@@ -225,7 +224,7 @@ export function renderHole(view, n) {
     const r = wi0.round; // the student's round, even if the hole screen has been left since
     try { await saveStudentRound(wi0.studentId, { ...r }); coachDirty = false;
       updateRoundNotification(wi0.studentId, r, scoreLine(r, course)).catch(e => console.warn('[coach edit] notification not updated:', e)); window.dispatchEvent(new Event('gs:studentSaved')); if (!quiet) toast(`Saved to ${wi0.name || 'the student'}’s round`); return true; }
-    catch (e) { toast('Couldn’t save to the student’s round: ' + (e.message || e)); return false; }
+    catch (e) { toast(errText(e, 'Couldn’t save to the student’s round: ')); return false; }
   };
   const strokesIn = hl => Math.max(0, (hl.shots || []).length - (hl.done ? 0 : 1));
   const holeNow = () => {
@@ -316,7 +315,7 @@ export function renderHole(view, n) {
   const setDispOn = v => { showDisp = v; localStorage.setItem('gs:disp', v ? '1' : '0'); if (!v) arcAdjOpen = false; dispBtn?.classList.toggle('on', v); dispBtn?.setAttribute('aria-pressed', String(v)); };
   const onlyOne = keep => { if (keep !== 'arc' && showArc) setArcOn(false); if (keep !== 'disp' && showDisp) setDispOn(false); if (keep !== 'appr' && showAppr) setApprOn(false); };
   const arcBtn = toggle('arc', 'Arc', '◠', 'Dispersion arc at the crosshair', () => showArc, v => { setArcOn(v); if (v) onlyOne('arc'); });
-  const dispBtn = toggle('disp', 'Disp', '⬭', 'Dispersion oval with 15 shots, scored for SG', () => showDisp, v => { setDispOn(v); if (v) onlyOne('disp'); });
+  const dispBtn = toggle('disp', 'Spread', '⬭', 'Dispersion oval with 15 shots, scored for SG', () => showDisp, v => { setDispOn(v); if (v) onlyOne('disp'); });
   const dispAdjBtn = h('button', { class: 'fab arcadj dispadj', 'aria-label': 'Adjust dispersion width', title: 'Adjust dispersion width', hidden: true,
     onclick: () => { arcAdjOpen = !arcAdjOpen; update(); } }, h('span', {}, '⇔'), h('small', {}, 'Adj'));
   const arcAdjBtn = h('button', { class: 'fab arcadj', 'aria-label': 'Adjust arc width', title: 'Adjust arc width', hidden: true,
@@ -352,9 +351,9 @@ export function renderHole(view, n) {
     apprSlider.replaceChildren(
       tourney ? null : h('div', { class: 'modes' }, mode('ft', 'Distance'), mode('sg', 'SG')),
       h('div', { class: 'presets' }, presets),
-      h('div', { class: 'slide' }, h('span', {}, 'Appr'), range, value));
+      h('div', { class: 'slide' }, h('span', {}, 'Approach'), range, value));
   }
-  const apprBtn = toggle('appr', 'Appr', '◎', 'Approach circle around the crosshair', () => showAppr, v => { setApprOn(v); if (v) onlyOne('appr'); });
+  const apprBtn = toggle('appr', 'Approach', '◎', 'Approach circle around the crosshair', () => showAppr, v => { setApprOn(v); if (v) onlyOne('appr'); });
   // Like Arc: Appr turns the circle on or off; a small Adj button beside it opens its slider.
   let apprAdjOpen = false;
   const apprAdjBtn = h('button', { class: 'fab arcadj appradj', 'aria-label': 'Adjust approach circle', title: 'Adjust approach circle', hidden: true,
@@ -786,7 +785,7 @@ export function renderHole(view, n) {
   const compBtn = h('button', { class: 'fab comp', 'aria-label': 'Compare clubs', title: 'Compare 2-3 clubs on one line (on / off)', onclick: () => {
     if (!showComp && compClubs.filter(c => compYards(c)).length < 2) { openCompPicker(); return; } // first time: pick the clubs
     setComp(!showComp);
-  } }, h('span', {}, '⫶'), h('small', {}, 'Comp'));
+  } }, h('span', {}, '⫶'), h('small', {}, 'Compare'));
   const compSetBtn = h('button', { class: 'fab compset', 'aria-label': 'Compare settings', title: 'Pick the compared clubs, and arcs or dispersion', hidden: true, onclick: openCompPicker }, '⚙');
   const compLegend = h('div', { class: 'zonelegend compkey', hidden: true });
   // View: a clean look at the hole — no crosshair or its yardages, no aiming
@@ -1069,7 +1068,7 @@ export function renderHole(view, n) {
     btn.label = label;
     return btn;
   };
-  const toolsBtn = groupBtn('tools', 'gs:toolsOpen', 'Tools', 'Width, Arc, Disp and Appr');
+  const toolsBtn = groupBtn('tools', 'gs:toolsOpen', 'Tools', 'Width, Arc, Spread and Approach');
   if (tourney) toolsBtn.open = false; // never open (or shown) in a tournament
   const sgBtn = groupBtn('sgtools', 'gs:sgOpen', 'SG', 'Auto target and Compare clubs');
   const drawGroup = (btn, members, onCount, icon, openCls) => {
@@ -1077,7 +1076,7 @@ export function renderHole(view, n) {
     btn.setAttribute('aria-expanded', String(btn.open));
     btn.classList.toggle('on', !btn.open && onCount > 0);
     btn.firstChild.textContent = btn.open ? '✕' : onCount ? String(onCount) : icon;
-    btn.lastChild.textContent = btn.open ? 'Close' : btn.label;
+    btn.lastChild.textContent = btn.label; // open: ✕ over its own name, so the two groups' close buttons differ
     holeEl()?.classList.toggle(openCls, btn.open);
   };
   const compDots = h('div', { class: 'compdots' });
@@ -1388,7 +1387,7 @@ export function renderHole(view, n) {
     const apply = () => styleElevation(m);
     const slider = (label, key, min, max, step, show) => h('label', { class: 'setrow' }, h('span', {}, label), h('input', { type: 'range', min, max, step, value: elevPrefs[key], oninput: e => { elevPrefs[key] = +e.target.value; e.target.nextSibling.textContent = show(elevPrefs[key]); apply(); } }), h('b', {}, show(elevPrefs[key])));
     const draw = () => setSheet.replaceChildren(h('div', { class: 'clubbox setbox' },
-      h('div', { class: 'clubhead' }, h('strong', {}, 'Settings · contour lines'), h('button', { class: 'x', onclick: () => { setSheet.hidden = true; } }, '✕')),
+      h('div', { class: 'clubhead' }, h('strong', {}, 'Contour lines'), h('button', { class: 'x', onclick: () => { setSheet.hidden = true; } }, '✕')),
       h('label', { class: 'setrow' }, h('span', {}, 'Colour'), h('input', { type: 'color', value: elevPrefs.contourColor, oninput: e => { elevPrefs.contourColor = e.target.value; e.target.nextSibling.textContent = elevPrefs.contourColor; apply(); } }), h('b', {}, elevPrefs.contourColor)),
       slider('Opacity', 'contourOpacity', 0.05, 1, 0.05, v => `${Math.round(v * 100)}%`),
       slider('Width', 'contourWidth', 0.5, 4, 0.1, v => `${v.toFixed(1)}×`),
@@ -1426,10 +1425,10 @@ export function renderHole(view, n) {
         course.tees.map(t => h('option', { value: t.name, selected: t.name === teeName }, `${t.name} · ${t.yards.reduce((a, b) => a + b, 0)} yd`)))),
       h('button', { class: 'btn', onclick: () => { menu.hidden = true; if (currentRound()) leave.hidden = false; else location.hash = '#/'; } }, 'Home'),
       currentRound() ? h('a', { class: 'btn', href: `#/round/${currentRound().id}/edit` }, 'Round info') : null,
-      isAdmin ? h('a', { class: 'btn', href: '#/course' }, 'Edit course outlines') : null,
+      isAdmin && !course.parts ? h('button', { class: 'btn', onclick: () => { menu.hidden = true; editBoundaries(); } }, icEl('pencil'), ' Edit boundaries') : null,
       h('a', { class: 'btn', href: '#/settings' }, 'Settings'),
       credit);
-  menu.insertBefore(h('button', { class: 'btn', onclick: () => { menu.hidden = true; openSettings(); } }, icEl('gear'), ' Settings'), credit);
+  menu.insertBefore(h('button', { class: 'btn', onclick: () => { menu.hidden = true; openSettings(); } }, 'Contour lines'), credit);
 
   // Strokes Gained panel while viewing a past round (filled in by drawSgView).
   const sgView = h('div', { class: 'sgview', hidden: true });
@@ -1534,7 +1533,7 @@ export function renderHole(view, n) {
     };
     const share = navigator.share ? () => navigator.share({ title: 'Watch my round', text: `Follow ${r.player || 'my'} round live`, url: link }).catch(() => {}) : null;
     const st = liveStatus.state;
-    const statusText = st === 'error' ? `Couldn’t update the live view yet (${liveStatus.error}). It will keep trying.`
+    const statusText = st === 'error' ? (/^No connection/.test(liveStatus.error) ? 'No signal: the live view catches up when you’re back online.' : `Couldn’t update the live view yet (${liveStatus.error}). It will keep trying.`)
       : st === 'sending' ? 'Updating…' : st === 'ok' && on ? 'Live view is up to date.' : '';
     liveBox.replaceChildren(h('div', { class: 'leavebox' },
       h('strong', {}, 'Live view'),
@@ -1557,7 +1556,7 @@ export function renderHole(view, n) {
   if (!scouting && !watching && !viewing()) shareCurrent();
 
   view.replaceChildren(h('div', { class: 'holeview' + (watching ? ' watching' : '') + (wi && !wi.id.startsWith('sv-') ? ' watchlive' : '') + (toolsBtn.open ? ' toolsopen' : '') + (sgBtn.open ? ' sgopen' : '') + (bookView ? ' bookmode' : '') }, mapEl, bookEl,
-    watching ? liveTag : h('div', { class: 'vertag' + (scouting ? ' scouting' : '') + (tourney ? ' tourney' : '') }, scouting ? `GPS Overview${tourney ? ' · Tournament' : ''}` : `v${VERSION}`), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, playsWrap, expPill), scorecard,
+    watching ? liveTag : (scouting || tourney ? h('div', { class: 'vertag' + (scouting ? ' scouting' : '') + (tourney ? ' tourney' : '') }, scouting ? `GPS Overview${tourney ? ' · Tournament' : ''}` : 'Tournament') : null), liveBtn, liveBox, refreshBtn, lastShotBar, compass, wind, chips, sgViewBtn, h('div', { class: 'topright' }, playsWrap, expPill), scorecard,
     h('div', { class: 'crosshair' }), toPinEl, fromTeeEl,
     h('button', { class: 'fab menu', 'aria-label': 'Menu', onclick: () => { closeView(); menu.hidden = !menu.hidden; } }, '☰'),
     addBtn, gpsBtn, h('div', { class: 'gpstop' }, gpsDist), gpsShotBtn, holedBtn, setPinBtn, undoBtn, editBtn, saveBtn, cancelBtn, shotList, sgView, teeBtn, pinBtn, setTeeBtn, setPinHereBtn, setDropBtn, penaltySheet, clubBtn, compBtn, autoBtn, viewBtn, viewBox, toolsBtn, sgBtn, compSetBtn, apprBtn, apprAdjBtn, dispBtn, dispAdjBtn, arcBtn, arcAdjBtn, widthBtn, clubPicker, shotConfirm, compSheet, setSheet, slidersEl, banner, menu, leave, compDots, h('div', { class: 'keys' }, zoneLegend, ringLegend, compLegend, autoKey),
@@ -2499,7 +2498,7 @@ export function renderHole(view, n) {
     update();
     // Auto on: this hole opens with its pick made (and shown).
     if (autoWanted() && !tourney && stage() === 'play' && !viewing() && !watching && !rp) runAuto();
-    if (scouting && isAdmin && resumeEditAt(n)) editBoundaries(); // moved here with ‹ › while editing boundaries
+    if (isAdmin && !viewing() && !watching && !rp && resumeEditAt(n)) editBoundaries(); // moved here with ‹ › while editing boundaries
     if (rp) {
       m.addSource('replay', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
       m.addLayer({ id: 'replay-shadow', type: 'line', source: 'replay', filter: ['==', '$type', 'LineString'], paint: { 'line-color': '#000', 'line-width': 6, 'line-opacity': 0.35 }, layout: { 'line-cap': 'round' } });

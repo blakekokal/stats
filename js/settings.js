@@ -2,6 +2,9 @@ import { h, course, toast, TILE_URL, goBack } from './app.js';
 import { store } from './store.js';
 import { boundsOf } from './geo.js';
 
+// 2026-11-08 -> 11/8/2026, as dates read everywhere else in the app.
+const mdy = d => { const [y, m, dd] = String(d || '').split('-').map(Number); return y && m && dd ? `${m}/${dd}/${y}` : String(d || ''); };
+
 function tileList() {
   const urls = new Set();
   for (const ch of course.holes) {
@@ -60,8 +63,8 @@ export function renderSettings(view) {
 
     h('div', { class: 'card' }, h('h3', {}, 'Rounds'),
       store.list('round:').sort((a, b) => (a.date < b.date ? 1 : -1)).map(r =>
-        h('div', { class: 'row between' }, h('span', {}, `${r.date} · ${r.tee}`),
-          h('button', { class: 'danger', onclick: () => { if (confirm(`Delete the round from ${r.date}? This removes it from every synced device.`)) { store.remove('round:' + r.id); renderSettings(view); } } }, 'Delete'))),
+        h('div', { class: 'row between' }, h('span', { style: 'flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;' }, `${mdy(r.date)} · ${r.courseName || ''}${r.courseName ? ' · ' : ''}${r.tee}`),
+          h('button', { class: 'danger', style: 'flex:none;width:84px;', onclick: () => { if (confirm(`Delete the round from ${mdy(r.date)}? This removes it from every synced device.`)) { store.remove('round:' + r.id); renderSettings(view); } } }, 'Delete'))),
       store.list('round:').length ? null : h('p', { class: 'muted' }, 'No rounds yet.')),
 
     h('p', { class: 'muted small' }, course.attribution + '. Imagery © Esri and its data providers. Strokes-gained baselines by handicap level.'),

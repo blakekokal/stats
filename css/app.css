@@ -105,6 +105,7 @@ pre { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; 
 
 #toast { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translate(-50%, 20px); background: #000d; color: #fff; padding: 10px 16px; border-radius: 10px; opacity: 0; pointer-events: none; transition: .2s; max-width: 90vw; text-align: center; z-index: 2000; }
 #toast.show { opacity: 1; transform: translate(-50%, 0); }
+body.playing #toast { bottom: calc(118px + env(safe-area-inset-bottom)); } /* above the hole bar and score box */
 
 /* hole viewer */
 .holeview { position: relative; height: 100%; overflow: hidden; background: var(--bg); }
@@ -423,8 +424,9 @@ body:not(.admin) #nav a[data-tab="course"] { display: none; }
 
 /* ---- Live view ---- */
 /* Scoring: the Live button beside the version tag, and its box. */
-.fab.livebtn { top: calc(6px + env(safe-area-inset-top)); bottom: auto; left: 74px; width: auto; height: 24px; padding: 0 10px 0 8px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; z-index: 4; box-shadow: 0 1px 4px #0008; }
+.fab.livebtn { top: calc(6px + env(safe-area-inset-top)); bottom: auto; left: 54px; width: auto; height: 24px; padding: 0 10px 0 8px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; display: inline-flex; align-items: center; gap: 6px; z-index: 4; box-shadow: 0 1px 4px #0008; }
 .fab.livebtn[hidden] { display: none; }
+.vertag ~ .fab.livebtn { left: 104px; } /* beside the Tournament tag */
 .fab.livebtn i { width: 8px; height: 8px; border-radius: 50%; background: #8a8a8a; }
 .fab.livebtn.on { background: #c8102e; }
 .fab.livebtn.on i { background: #fff; animation: livepulse 1.6s ease-in-out infinite; }

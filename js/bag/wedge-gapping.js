@@ -233,7 +233,7 @@ function wgRenderClubGrid() {
       'flex:1;min-width:0;height:36px;font-size:12px;font-weight:700;border-radius:8px;cursor:pointer;' +
       'background:' + (sel ? '#2d7abc' : '#282828') + ';' +
       'border:1px solid ' + (sel ? '#2d7abc' : inBag ? '#282828' : '#282828') + ';' +
-      'color:' + (sel ? '#ffffff' : inBag ? '#ffffff' : '#3d3d3d') + ';">' + w + '</button>';
+      'color:' + (sel ? '#ffffff' : inBag ? '#ffffff' : '#8a8a8a') + ';">' + w + '</button>';
   }
   grid.innerHTML =
     '<div style="width:100%;">' +

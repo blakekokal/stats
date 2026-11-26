@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { showAuthPage } from '../coaching/core.js';
@@ -126,7 +127,15 @@ function combShortGameBack() {
   document.getElementById('comb-practice-sub').style.display = '';
 }
 
+// The page heading: which combine this is.
+export function combSetPageTitle(type) {
+  var t = { putting: 'Putting', wedge: 'Wedge', driver: 'Driver', 'chip-prox': 'Short Game', 'chip-hole': 'Short Game', shortgame: 'Short Game' }[type];
+  var el = document.getElementById('comb-page-title');
+  if (el) el.textContent = t ? t + ' Combine' : 'Combines';
+}
+
 export function combShowModeSelect(type) {
+  combSetPageTitle(type);
   // During an Evaluation Test, skip the Combine/Custom prompt — open a 9-hole combine directly
   if (_evalState && _evalState.active) {
     combOpen(type, 'combine');
@@ -161,6 +170,7 @@ function combOpenFromModeSelect(mode) {
 
 export function combOpen(type, mode) {
   combCurType=type; combCurMode=mode;
+  combSetPageTitle(type);
   document.getElementById('comb-home-view').style.display='none';
   document.getElementById('comb-tracker-view').style.display='block';
 
@@ -181,7 +191,7 @@ export function combOpen(type, mode) {
 
   // title
   var names={putting:'Putting','chip-prox':'Chipping (Prox)','chip-hole':'Chip Hole Out',wedge:'Wedge',driver:'Driver'};
-  document.getElementById('comb-title').textContent = (isCombine ? '[COMBINE] ' : '') + names[type];
+  document.getElementById('comb-title').textContent = names[type] + (isCombine ? ' Combine' : '');
 
   // strokes box
   document.getElementById('comb-strokes-box').style.display = (type==='putting'||type==='chip-hole') ? '' : 'none';
@@ -612,7 +622,7 @@ async function combSave(){
   var resp = await _sb.from('combine_scores').insert(payload);
   if(resp.error){
     btn.disabled=false; btn.innerHTML=ic('save')+' Save to Profile';
-    msg.style.color='#d4706e'; msg.textContent='Save failed: '+resp.error.message;
+    msg.style.color='#d4706e'; msg.textContent=errText(resp.error, 'Save failed: ');
     return;
   }
   btn.textContent='✓ Saved!';
