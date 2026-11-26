@@ -1,0 +1,18 @@
+{
+  "id": "duckcreek",
+  "name": "Duck Creek Golf Club",
+  "location": "Garland, TX",
+  "par": [4, 4, 5, 4, 3, 5, 3, 4, 4, 4, 3, 4, 5, 4, 4, 4, 3, 4],
+  "hcp": [3, 5, 13, 7, 11, 17, 15, 9, 1, 12, 14, 6, 18, 10, 8, 2, 16, 4],
+  "_comment_tees": "Scorecard from GolfPass (2945, 2800 Diamond Oaks Dr); its pars and handicaps match OpenStreetMap's hole tags (par 71). Ratings matched to tees by total yards (Back = Black, Middle = White); Gold has none, and the Forward rating is for 5103 yards, not Red's 5019, so Red has none.",
+  "_comment_drop": "Polygons containing these points are not part of the course.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 0},
+  "tees": [
+    {"name": "Black", "rating": 71.3, "slope": 125, "yards": [418, 426, 475, 385, 183, 513, 157, 384, 385, 389, 175, 425, 475, 394, 354, 410, 182, 393]},
+    {"name": "White", "rating": 69.2, "slope": 119, "yards": [398, 401, 442, 368, 168, 478, 142, 369, 376, 373, 149, 414, 457, 356, 326, 383, 150, 347]},
+    {"name": "Gold", "rating": null, "slope": null, "yards": [341, 391, 408, 314, 146, 448, 133, 312, 351, 338, 137, 404, 445, 290, 284, 291, 88, 246]},
+    {"name": "Red", "rating": null, "slope": null, "yards": [336, 328, 404, 310, 113, 441, 129, 307, 347, 333, 129, 320, 408, 222, 280, 286, 84, 242]}
+  ]
+}

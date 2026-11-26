@@ -793,5 +793,20 @@
    498
   ],
   "source": "USGS 3DEP"
+ },
+ "duckcreek": {
+  "bounds": [
+   -96.683929,
+   32.931529,
+   -96.665114,
+   32.94617
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   554,
+   624
+  ],
+  "source": "USGS 3DEP"
  }
 }
