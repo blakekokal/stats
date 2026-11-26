@@ -327,6 +327,11 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 .cx.devicepage .card button.danger { width: auto; height: 32px; padding: 0 14px; color: #d4706e; }
 .cx.devicepage > p.small { max-width: 360px; font-size: 11px; color: #9a9a9a; }
 
-/* Stats Dashboard: Filter opens this box over the page (nothing below moves). */
+/* Stats Dashboard (and a coach's view of a student): the heading, with the level to
+   compare with and Filter right after it; Filter opens a box over the page (nothing moves). */
+.cx .dashsghead { position: relative; display: flex; align-items: center; gap: 5px; max-width: 100%; margin: 14px 0 4px; padding-bottom: 4px; border-bottom: 2px solid #007a52; }
+.cx select.dashhcpsel { flex: none; width: auto; max-width: none; min-width: 0; height: 28px; padding: 0 18px 0 9px; font-size: 11.5px; font-weight: 700; border-radius: 14px; }
+.cx button.dashfilterbtn { flex: none; width: auto; max-width: none; height: 28px; margin: 0; padding: 0 10px; font-size: 11.5px; font-weight: 700; color: #d0d0d4; border-radius: 14px; }
 .cx .dashfilterbox { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; flex-direction: column; align-items: stretch; gap: 6px; width: 210px; padding: 12px; box-sizing: border-box; background: #2c2c2e; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08); text-align: left; }
 .cx .dashfilterbox .lab { font-size: 11px; font-weight: 700; color: #9a9a9a; text-transform: uppercase; letter-spacing: .04em; }
+.cx .dashfilterbox select { width: 100%; max-width: none; height: 34px; font-size: 13px; }

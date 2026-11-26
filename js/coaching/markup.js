@@ -452,7 +452,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
     
     <!-- Student Dashboard -->
     <div id="svDashTab" style="width:100%;max-width:360px;">
-      <!-- Filters and the "vs" level: hidden until Filter (beside "per round") is tapped. -->
+      <!-- The filters and the "vs" level, always hidden: the dashboard heading's picker and Filter box set them. -->
       <div id="svDashFilters" style="display:none;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;">
         <select id="svDashFilterType" onchange="applySvDashFilters()" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:4px 6px;font-size:11px;flex:1;min-width:0;">
           <option value="all">All Rounds</option>
