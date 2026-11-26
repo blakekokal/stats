@@ -1,3 +1,4 @@
+import { ic } from '../icons.js';
 import { S } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { _BAG_ORDER, getBagClubs, saveBagClubs, sortBagClubs } from './clubs.js';
@@ -122,12 +123,12 @@ export function renderSpeedTab() {
   list.innerHTML = filtered.map(function(s) {
     var d = new Date(s.date + 'T12:00:00');
     var dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-    return '<div style="background:#222222;border-radius:12px;padding:12px;">' +
+    return '<div class="glasstile" style="padding:14px;">' +
       '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">' +
         '<div style="font-size:14px;font-weight:800;color:#9a9a9a;">' + s.club + '</div>' +
         '<div style="display:flex;align-items:center;gap:8px;">' +
           '<div style="font-size:11px;color:#9a9a9a;">' + dateStr + ' · ' + s.shots.length + ' swings</div>' +
-          '<button onclick="spDeleteSession(\'' + s.id + '\')" style="background:#2a1a1a;border:1px solid #351a1a;border-radius:6px;color:#d4706e;font-size:13px;cursor:pointer;width:26px;height:26px;padding:0;display:flex;align-items:center;justify-content:center;">×</button>' +
+          '<button class="comb-hist-del" onclick="spDeleteSession(\'' + s.id + '\')" title="Delete" aria-label="Delete">' + ic('trash') + '</button>' +
         '</div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">' +
