@@ -13,8 +13,8 @@
   --mac-blue: #0A84FF; --mac-green: #30D158; --mac-yellow: #FFD60A; --mac-red: #FF453A;
 }
 /* Also the colour of the strip down the right side of phones that keep one for the clock
-   (and what shows on an overscroll): the middle shade of the page behind it. */
-html { background: #232325; }
+   (and what shows on an overscroll): pure black, so an OLED screen leaves it off. */
+html { background: #000; }
 body, body.coach { background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, #1a1a1c 100%) !important; }
 .cx, .cx.coachroot, .coachroot .page { background: transparent !important; }
 
