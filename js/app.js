@@ -103,6 +103,7 @@ export const COURSES = [
   { id: 'resort', name: 'The Resort Golf Club', file: 'data/resort.json' },
   { id: 'pecanvalley-hills', name: 'Pecan Valley Golf Course – Hills', file: 'data/pecanvalley-hills.json' },
   { id: 'rangers', name: 'Texas Rangers Golf Club', file: 'data/rangers.json' },
+  { id: 'keaton', name: 'Grover C. Keaton Golf Course', file: 'data/keaton.json' },
   { id: 'isabella-nina', name: 'Isabella Golf Course – Nina', file: 'data/isabella-nina.json', nines: 'isabella' },
   { id: 'isabella-pinta', name: 'Isabella Golf Course – Pinta', file: 'data/isabella-pinta.json', nines: 'isabella' },
   { id: 'isabella-santamaria', name: 'Isabella Golf Course – Santa Maria', file: 'data/isabella-santamaria.json', nines: 'isabella' },

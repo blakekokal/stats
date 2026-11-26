@@ -122,7 +122,8 @@ by eye), Hawks Creek (Shady Oaks is next door: kept to its own boundary), Oak Ho
 (one OSM boundary for both: holes told apart by way id; winter imagery with snow in the shade, so
 OSM's bunkers kept as they are). The Resort (Fort Worth; winter imagery and tan sand: shift
 fitted to the greens; OSM's 19th hole dropped). Pecan Valley Hills (River not yet: see below). Texas Rangers
-(GolfPass's card has the nines swapped: the club's #1 is the 589-yard par 5, as in OSM). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
+(GolfPass's card has the nines swapped: the club's #1 is the 589-yard par 5, as in OSM). Grover C. Keaton
+(GolfPass lists it as Keeton Park; its ratings are for old lengths, so none are given). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
 
 Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, every shape
 traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).
