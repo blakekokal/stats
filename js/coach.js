@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.47', ['Swiping is smoother, the previous screen comes up as soon as you let go, and a quick flick is enough']],
   ['1.20.46', ['Swipe right from anywhere on a screen to go back (every screen but the GPS map); the screen follows your finger and slides away. Tabs slide the same way']],
   ['1.20.45', ['My Clubs, Coaching and a student’s page: no strip behind the tab buttons']],
   ['1.20.44', ['Swipe left or right to change tabs (Practice and Learning, My Clubs, Coaching, Performance Analysis, How Far Should I Hit It?); swipe right on the first tab to go back']],
