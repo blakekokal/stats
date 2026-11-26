@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.28.0', ['New course: Rusted Rail Golf Club (Crandall), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.27.0', ['New course: The Courses at Watters Creek – Traditions (Plano), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.26.0', ['New course: Duck Creek Golf Club (Garland), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.25.0', ['New course: Grover C. Keaton Golf Course (Dallas), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
