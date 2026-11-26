@@ -853,5 +853,20 @@
    682
   ],
   "source": "USGS 3DEP"
+ },
+ "waterchase": {
+  "bounds": [
+   -97.164152,
+   32.760391,
+   -97.147756,
+   32.779052
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   448,
+   567
+  ],
+  "source": "USGS 3DEP"
  }
 }
