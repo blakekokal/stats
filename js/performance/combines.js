@@ -150,29 +150,14 @@ function renderCombinePutt(sessions) {
   var focusSub   = worst ? (worst.avg >= 0 ? '+' : '') + worst.avg.toFixed(2) + ' SG avg' : '';
   var focusRange = worst ? (worst.key + (worst.key.indexOf('yds') === -1 ? ' ft' : '')) : '\u2014';
 
-  focusEl.innerHTML = '<div style="border-radius:10px;padding:10px 11px;margin-bottom:6px;border:1px solid ' + focusBord + ';background:' + focusBg + ';">' +
-    '<div style="font-size:8px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;">' + focusEye + '</div>' +
-    '<div style="font-size:15px;font-weight:800;color:#ffffff;line-height:1.1;margin-bottom:1px;">' + focusRange + '</div>' +
-    '<div style="font-size:9px;font-weight:700;color:' + (focusIsBad ? '#d4706e' : '#00b87a') + ';">' + focusSub + '</div></div>';
+  focusEl.innerHTML = combFocusCard(focusEye, focusRange, focusSub, focusIsBad, focusBg, focusBord);
 
   var sgCol = overallSg === null ? '#9a9a9a' : overallSg >= 0 ? '#00b87a' : '#d4706e';
   var ovBg   = overallSg === null ? '#1e1e1e' : overallSg >= 0 ? '#0a3020' : '#3a1515';
   var ovBord = overallSg === null ? '#282828' : overallSg >= 0 ? '#0a3020' : '#3d1515';
   var sgStr  = overallSg !== null ? (overallSg >= 0 ? '+' : '') + overallSg.toFixed(2) : 'N/A';
 
-  overviewEl.innerHTML = '<div style="border-radius:11px;padding:12px 13px;border:1px solid ' + ovBord + ';background:' + ovBg + ';cursor:pointer;user-select:none;margin-bottom:6px;" onclick="toggleCombineDetail(\'Putt\')">' +
-    '<div style="font-size:10px;margin-bottom:8px;">' + (trendStr || '<span style="color:#606060;">\u2014 steady</span>') + '</div>' +
-    '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
-    '<div style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 5px;text-align:center;">' +
-    '<div style="font-size:15px;font-weight:800;line-height:1;color:' + sgCol + ';white-space:nowrap;">' + sgStr + '</div>' +
-    '<div style="font-size:7px;color:#606060;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">SG / Round</div></div>' +
-    '<div style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 5px;text-align:center;">' +
-    '<div style="font-size:15px;font-weight:800;line-height:1;color:#ffffff;">' + (avgPuttsPerHole !== null ? avgPuttsPerHole : '\u2014') + '</div>' +
-    '<div style="font-size:7px;color:#606060;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">Putts / Hole</div></div></div>' +
-    '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
-    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#ffffff;">' + sessions.length + '</span><span style="font-size:8px;color:#9a9a9a;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">combines</span></div>' +
-    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#ffffff;">' + totalHolesAll + '</span><span style="font-size:8px;color:#9a9a9a;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">holes</span></div></div>' +
-    '<div style="font-size:9px;color:#9a9a9a;text-align:right;" id="perfCombinePuttCaret">View detail \u2192</div></div>';
+  overviewEl.innerHTML = combOverviewCard('Putt', 'SG / Round', overallSg, sgStr, sgCol, trendStr, (avgPuttsPerHole !== null ? avgPuttsPerHole + ' putts/hole \u00b7 ' : '') + sessions.length + ' combines', ovBg, ovBord);
 
   // Build bucket detail (hidden)
   var dHtml = '';
@@ -276,29 +261,14 @@ function renderCombineWedge(sessions) {
   var focusSub   = worst ? (worst.avg >= 0 ? '+' : '') + worst.avg.toFixed(2) + ' SG avg' : '';
   var focusRange = worst ? worst.key + ' yds' : '\u2014';
 
-  focusEl.innerHTML = '<div style="border-radius:10px;padding:10px 11px;margin-bottom:6px;border:1px solid ' + focusBord + ';background:' + focusBg + ';">' +
-    '<div style="font-size:8px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:3px;">' + focusEye + '</div>' +
-    '<div style="font-size:15px;font-weight:800;color:#ffffff;line-height:1.1;margin-bottom:1px;">' + focusRange + '</div>' +
-    '<div style="font-size:9px;font-weight:700;color:' + (focusIsBad ? '#d4706e' : '#00b87a') + ';">' + focusSub + '</div></div>';
+  focusEl.innerHTML = combFocusCard(focusEye, focusRange, focusSub, focusIsBad, focusBg, focusBord);
 
   var sgCol  = overallSg === null ? '#9a9a9a' : overallSg >= 0 ? '#00b87a' : '#d4706e';
   var ovBg   = overallSg === null ? '#1e1e1e' : overallSg >= 0 ? '#0a3020' : '#3a1515';
   var ovBord = overallSg === null ? '#282828' : overallSg >= 0 ? '#0a3020' : '#3d1515';
   var sgStr  = overallSg !== null ? (overallSg >= 0 ? '+' : '') + overallSg.toFixed(2) : 'N/A';
 
-  overviewEl.innerHTML = '<div style="border-radius:11px;padding:12px 13px;border:1px solid ' + ovBord + ';background:' + ovBg + ';cursor:pointer;user-select:none;margin-bottom:6px;" onclick="toggleCombineDetail(\'Wedge\')">' +
-    '<div style="font-size:10px;margin-bottom:8px;">' + (trendStr || '<span style="color:#606060;">\u2014 steady</span>') + '</div>' +
-    '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
-    '<div style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 5px;text-align:center;">' +
-    '<div style="font-size:15px;font-weight:800;line-height:1;color:' + sgCol + ';white-space:nowrap;">' + sgStr + '</div>' +
-    '<div style="font-size:7px;color:#606060;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">SG / Shot</div></div>' +
-    '<div style="flex:1;min-width:0;background:rgba(255,255,255,0.05);border-radius:8px;padding:6px 5px;text-align:center;">' +
-    '<div style="font-size:15px;font-weight:800;line-height:1;color:#ffffff;">' + (avgScore !== null ? avgScore : '\u2014') + '</div>' +
-    '<div style="font-size:7px;color:#606060;margin-top:3px;text-transform:uppercase;letter-spacing:0.2px;">Avg Score</div></div></div>' +
-    '<div style="display:flex;gap:6px;margin-bottom:8px;">' +
-    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#ffffff;">' + sessions.length + '</span><span style="font-size:8px;color:#9a9a9a;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">combines</span></div>' +
-    '<div style="flex:1;text-align:center;"><span style="font-size:13px;font-weight:800;color:#ffffff;">' + totalShotsAll + '</span><span style="font-size:8px;color:#9a9a9a;margin-left:3px;text-transform:uppercase;letter-spacing:0.3px;">shots hit</span></div></div>' +
-    '<div style="font-size:9px;color:#9a9a9a;text-align:right;" id="perfCombineWedgeCaret">View detail \u2192</div></div>';
+  overviewEl.innerHTML = combOverviewCard('Wedge', 'SG / Shot', overallSg, sgStr, sgCol, trendStr, (avgScore !== null ? 'Avg score ' + avgScore + ' \u00b7 ' : totalShotsAll + ' shots \u00b7 ') + sessions.length + ' combines', ovBg, ovBord);
 
   var dHtml = '';
   wedgeBucketDefs.forEach(function(bk) {
@@ -322,6 +292,26 @@ function renderCombineWedge(sessions) {
     dHtml += combStatCard(bk + ' yds', col, bg, bord, (avgSg >= 0 ? '+' : '') + avgSg.toFixed(2) + ' SG', info);
   });
   detailEl.innerHTML = dHtml;
+}
+
+// The tiles, laid out like Past Rounds' strokes-gained cards (same size, padding and type).
+function combFocusCard(eye, range, sub, bad, bg, bord) {
+  return '<div style="border-radius:11px;padding:12px;margin-bottom:8px;border:1px solid ' + bord + ';background:' + bg + ';text-align:center;">' +
+    '<div style="font-size:10px;font-weight:800;letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">' + eye + '</div>' +
+    '<div style="font-size:22px;font-weight:800;color:#ffffff;line-height:1.1;margin-bottom:4px;">' + range + '</div>' +
+    '<div style="font-size:11px;font-weight:700;color:' + (bad ? '#d4706e' : '#00b87a') + ';">' + sub + '</div></div>';
+}
+function combOverviewCard(key, title, val, valStr, col, trendStr, stat, bg, bord) {
+  var w = val === null ? 5 : Math.max(5, Math.min(100, (val + 2) / 4 * 100));
+  return '<div style="border-radius:11px;padding:12px;border:1px solid ' + bord + ';background:' + bg + ';cursor:pointer;user-select:none;margin-bottom:8px;" onclick="toggleCombineDetail(\'' + key + '\')">' +
+    '<div style="font-size:10px;color:#ffffff;font-weight:800;margin-bottom:6px;text-align:center;letter-spacing:0.3px;">' + title + '</div>' +
+    '<div style="text-align:center;margin-bottom:6px;">' +
+    '<div style="font-size:26px;font-weight:800;color:' + col + ';line-height:1;">' + valStr + '</div>' +
+    '<div style="font-size:10px;margin-top:3px;">' + (trendStr || '<span style="color:#9a9a9a;">\u2014 steady</span>') + '</div></div>' +
+    '<div style="font-size:10px;text-align:center;color:#9a9a9a;">' + stat + '</div>' +
+    '<div style="height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:8px;">' +
+    '<div style="width:' + w + '%;height:3px;background:' + col + ';border-radius:2px;"></div></div>' +
+    '<div style="font-size:9px;color:#9a9a9a;margin-top:6px;text-align:right;" id="perfCombine' + key + 'Caret">View detail \u2192</div></div>';
 }
 
 function combStatCard(label, col, bg, border, badgeText, infoLine) {
