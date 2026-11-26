@@ -1,0 +1,166 @@
+{
+ "id": "prestonwood",
+ "name": "Prestonwood Country Club – Creek",
+ "location": "Dallas, TX",
+ "par": [
+  4,
+  4,
+  4,
+  3,
+  4,
+  5,
+  5,
+  3,
+  4,
+  4,
+  3,
+  4,
+  4,
+  5,
+  4,
+  4,
+  3,
+  4
+ ],
+ "hcp": [
+  9,
+  3,
+  13,
+  15,
+  11,
+  1,
+  17,
+  5,
+  7,
+  6,
+  16,
+  12,
+  14,
+  2,
+  8,
+  4,
+  18,
+  10
+ ],
+ "_comment_tees": "Scorecard from GolfPass (2858, The Clubs of Prestonwood - The Creek); its pars match OpenStreetMap's hole tags (par 71). Combination tees left out. Men's ratings; Green's is for 5514 yards (the card's Green is 5590).",
+ "_comment_drop": "Polygons containing these points are not part of the course: an OSM bunker on grass (trim_far.py drops the practice greens and short-game area).",
+ "drop": [
+  [
+   32.962448,
+   -96.811118,
+   "bunker"
+  ]
+ ],
+ "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand).",
+ "shift": {
+  "east": -0.5,
+  "north": 1.0
+ },
+ "_comment_greenShift": "OSM's greens sit about 3 m north-west of its bunkers: with the bunkers fitted to the sand, the greens move a further 1.8 m east and 2.5 m south (fit_shift.py green, checked by eye).",
+ "greenShift": {
+  "east": 1.8,
+  "north": -2.5
+ },
+ "tees": [
+  {
+   "name": "Gold",
+   "rating": 72.9,
+   "slope": 141,
+   "yards": [
+    392,
+    386,
+    379,
+    170,
+    384,
+    551,
+    512,
+    225,
+    384,
+    396,
+    149,
+    378,
+    275,
+    527,
+    420,
+    409,
+    155,
+    412
+   ]
+  },
+  {
+   "name": "Blue",
+   "rating": 71.4,
+   "slope": 137,
+   "yards": [
+    379,
+    363,
+    361,
+    155,
+    376,
+    510,
+    498,
+    210,
+    347,
+    375,
+    128,
+    349,
+    258,
+    493,
+    398,
+    389,
+    140,
+    385
+   ]
+  },
+  {
+   "name": "Green",
+   "rating": 68.7,
+   "slope": 128,
+   "yards": [
+    360,
+    263,
+    337,
+    131,
+    349,
+    469,
+    478,
+    166,
+    301,
+    352,
+    112,
+    337,
+    246,
+    452,
+    377,
+    362,
+    123,
+    375
+   ]
+  },
+  {
+   "name": "Red",
+   "rating": 67.4,
+   "slope": 124,
+   "yards": [
+    318,
+    234,
+    327,
+    112,
+    335,
+    435,
+    464,
+    127,
+    301,
+    361,
+    92,
+    327,
+    240,
+    446,
+    321,
+    359,
+    115,
+    303
+   ]
+  }
+ ]
+}
