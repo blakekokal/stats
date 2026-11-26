@@ -110,6 +110,7 @@ export const COURSES = [
   { id: 'championscircle', name: 'The Golf Club at Champions Circle', file: 'data/championscircle.json' },
   { id: 'waterchase', name: 'Waterchase Golf Club', file: 'data/waterchase.json' },
   { id: 'friscofarms', name: 'The Club at Frisco Farms', file: 'data/friscofarms.json' },
+  { id: 'tpccraigranch', name: 'TPC Craig Ranch', file: 'data/tpccraigranch.json' },
   { id: 'isabella-nina', name: 'Isabella Golf Course – Nina', file: 'data/isabella-nina.json', nines: 'isabella' },
   { id: 'isabella-pinta', name: 'Isabella Golf Course – Pinta', file: 'data/isabella-pinta.json', nines: 'isabella' },
   { id: 'isabella-santamaria', name: 'Isabella Golf Course – Santa Maria', file: 'data/isabella-santamaria.json', nines: 'isabella' },

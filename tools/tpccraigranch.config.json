@@ -1,0 +1,20 @@
+{
+  "id": "tpccraigranch",
+  "name": "TPC Craig Ranch",
+  "location": "McKinney, TX",
+  "par": [4, 4, 4, 3, 5, 4, 3, 4, 5, 4, 4, 5, 4, 4, 3, 4, 3, 5],
+  "hcp": [7, 9, 5, 17, 1, 11, 13, 3, 15, 4, 8, 12, 2, 16, 10, 6, 18, 14],
+  "_comment_tees": "Scorecard from GolfPass (22200); its pars match OpenStreetMap's hole tags (par 72); its handicaps differ from OSM's and are used. Its six named tees are kept (the I-IV rows look like combinations). Its tee table rates other lengths; ratings are given only where a tee's length is close: Tpc = PGA Tour (7414), Craig Ranch = Craig Ranch (6688), West = Forward (5145). Men's ratings. The club's own card (tpc.com) couldn't be read from here.",
+  "_comment_drop": "Polygons containing these points are not part of the course: nothing here; trim_far.py drops the range, practice greens and short-game area east of #1 and #2.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand; the greens agree).",
+  "shift": {"east": -0.5, "north": 1.3},
+  "tees": [
+    {"name": "Tpc", "rating": 76.7, "slope": 147, "yards": [430, 435, 405, 215, 645, 365, 230, 500, 545, 485, 470, 540, 505, 350, 205, 495, 145, 480]},
+    {"name": "North", "rating": null, "slope": null, "yards": [380, 400, 395, 165, 580, 340, 170, 450, 535, 435, 450, 530, 415, 320, 185, 435, 135, 540]},
+    {"name": "Craig Ranch", "rating": 73.0, "slope": 135, "yards": [380, 385, 370, 165, 555, 340, 170, 450, 500, 435, 410, 510, 415, 300, 185, 435, 125, 500]},
+    {"name": "East", "rating": null, "slope": null, "yards": [360, 385, 370, 155, 555, 340, 145, 385, 500, 390, 410, 510, 390, 300, 165, 415, 125, 500]},
+    {"name": "South", "rating": null, "slope": null, "yards": [360, 330, 340, 135, 495, 320, 135, 375, 425, 365, 320, 480, 345, 260, 160, 360, 115, 465]},
+    {"name": "West", "rating": 65.2, "slope": 120, "yards": [315, 320, 290, 125, 400, 270, 100, 335, 425, 305, 305, 430, 345, 205, 135, 360, 100, 390]}
+  ]
+}

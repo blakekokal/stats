@@ -883,5 +883,20 @@
    755
   ],
   "source": "USGS 3DEP"
+ },
+ "tpccraigranch": {
+  "bounds": [
+   -96.729049,
+   33.12917,
+   -96.717606,
+   33.152353
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   616,
+   724
+  ],
+  "source": "USGS 3DEP"
  }
 }
