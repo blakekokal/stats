@@ -1,0 +1,20 @@
+{
+  "id": "waterchase",
+  "name": "Waterchase Golf Club",
+  "location": "Fort Worth, TX",
+  "par": [4, 3, 5, 4, 4, 5, 3, 4, 4, 5, 4, 3, 5, 3, 4, 3, 4, 5],
+  "hcp": [11, 15, 7, 13, 1, 3, 17, 5, 9, 4, 10, 16, 6, 14, 12, 18, 2, 8],
+  "_comment_tees": "Scorecard from GolfPass (22702, 8951 Creek Run Rd); its pars match OpenStreetMap's hole tags (par 72). Its tee table rates other lengths (Black 7289, Gold 7006, Blue 6661, White 6175, Green 5524, Red 4941 yards) than the card's tees, so no ratings are given.",
+  "_comment_drop": "Polygons containing these points are not part of the course: nothing here; trim_far.py drops the short course and practice greens south of #1 and #2.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it. Winter imagery, dull sand: fitted to the greens (fit_shift.py green).",
+  "shift": {"east": -0.3, "north": 1.0},
+  "tees": [
+    {"name": "Black", "rating": null, "slope": null, "yards": [439, 227, 549, 374, 433, 523, 179, 417, 430, 630, 375, 140, 604, 201, 426, 168, 479, 565]},
+    {"name": "Gold", "rating": null, "slope": null, "yards": [415, 198, 537, 353, 424, 514, 174, 404, 410, 610, 346, 138, 588, 197, 408, 154, 460, 552]},
+    {"name": "Blue", "rating": null, "slope": null, "yards": [379, 172, 521, 339, 398, 512, 155, 351, 396, 574, 271, 125, 568, 177, 374, 132, 421, 543]},
+    {"name": "White", "rating": null, "slope": null, "yards": [344, 134, 460, 304, 367, 425, 132, 328, 386, 534, 269, 118, 544, 175, 346, 123, 393, 486]},
+    {"name": "Green", "rating": null, "slope": null, "yards": [317, 100, 432, 253, 337, 408, 113, 288, 332, 497, 239, 95, 474, 151, 315, 123, 364, 460]},
+    {"name": "Red", "rating": null, "slope": null, "yards": [257, 83, 397, 239, 309, 381, 93, 281, 312, 462, 239, 85, 460, 100, 278, 108, 297, 394]}
+  ]
+}

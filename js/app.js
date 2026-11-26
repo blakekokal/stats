@@ -108,6 +108,7 @@ export const COURSES = [
   { id: 'watterscreek', name: 'The Courses at Watters Creek – Traditions', file: 'data/watterscreek.json' },
   { id: 'rustedrail', name: 'Rusted Rail Golf Club', file: 'data/rustedrail.json' },
   { id: 'championscircle', name: 'The Golf Club at Champions Circle', file: 'data/championscircle.json' },
+  { id: 'waterchase', name: 'Waterchase Golf Club', file: 'data/waterchase.json' },
   { id: 'isabella-nina', name: 'Isabella Golf Course – Nina', file: 'data/isabella-nina.json', nines: 'isabella' },
   { id: 'isabella-pinta', name: 'Isabella Golf Course – Pinta', file: 'data/isabella-pinta.json', nines: 'isabella' },
   { id: 'isabella-santamaria', name: 'Isabella Golf Course – Santa Maria', file: 'data/isabella-santamaria.json', nines: 'isabella' },
