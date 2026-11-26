@@ -1,0 +1,212 @@
+{
+ "id": "pecanvalley-river",
+ "name": "Pecan Valley Golf Course – River",
+ "location": "Fort Worth, TX",
+ "courseName": "River Course",
+ "par": [
+  4,
+  4,
+  3,
+  4,
+  4,
+  3,
+  5,
+  4,
+  4,
+  4,
+  4,
+  4,
+  3,
+  4,
+  4,
+  4,
+  3,
+  5
+ ],
+ "hcp": [
+  7,
+  1,
+  13,
+  17,
+  3,
+  9,
+  11,
+  5,
+  15,
+  14,
+  8,
+  16,
+  18,
+  10,
+  2,
+  6,
+  12,
+  4
+ ],
+ "_comment_tees": "Scorecard from GolfPass (2919); its pars match OpenStreetMap's hole tags (par 70). Men's ratings.",
+ "_comment_drop": "Polygons containing these points are not part of the course: the driving range (mapped as a fairway with a green), its two tees and a practice bunker, and the practice green by the clubhouse (with the fairway round it). Also four OSM bunkers on sunlit grass with no sand in the imagery (River #6, #7 and #5 and #9 greens).",
+ "drop": [
+  [
+   32.657841,
+   -97.45348,
+   "green"
+  ],
+  [
+   32.657799,
+   -97.452969,
+   "fairway"
+  ],
+  [
+   32.658,
+   -97.451634,
+   "tee"
+  ],
+  [
+   32.657992,
+   -97.451873,
+   "tee"
+  ],
+  [
+   32.657634,
+   -97.451896,
+   "bunker"
+  ],
+  [
+   32.659248,
+   -97.451049,
+   "green"
+  ],
+  [
+   32.659226,
+   -97.451063,
+   "fairway"
+  ],
+  [
+   32.655841,
+   -97.450016,
+   "bunker"
+  ],
+  [
+   32.656106,
+   -97.449935,
+   "bunker"
+  ],
+  [
+   32.657255,
+   -97.444614,
+   "bunker"
+  ],
+  [
+   32.661356,
+   -97.443579,
+   "bunker"
+  ]
+ ],
+ "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it. Winter imagery and tan sand: fitted to the greens (fit_shift.py green).",
+ "shift": {
+  "east": 0,
+  "north": 1.0
+ },
+ "tees": [
+  {
+   "name": "Blue",
+   "rating": 71.8,
+   "slope": 126,
+   "yards": [
+    426,
+    458,
+    186,
+    366,
+    410,
+    236,
+    485,
+    446,
+    367,
+    373,
+    378,
+    365,
+    154,
+    376,
+    460,
+    364,
+    180,
+    579
+   ]
+  },
+  {
+   "name": "White",
+   "rating": 69.2,
+   "slope": 115,
+   "yards": [
+    397,
+    430,
+    165,
+    340,
+    379,
+    197,
+    455,
+    415,
+    329,
+    340,
+    330,
+    346,
+    135,
+    339,
+    422,
+    329,
+    158,
+    538
+   ]
+  },
+  {
+   "name": "Red",
+   "rating": 66.2,
+   "slope": 111,
+   "yards": [
+    361,
+    401,
+    159,
+    314,
+    343,
+    168,
+    423,
+    367,
+    280,
+    316,
+    297,
+    297,
+    114,
+    254,
+    382,
+    282,
+    128,
+    495
+   ]
+  },
+  {
+   "name": "Gold",
+   "rating": 63.5,
+   "slope": 106,
+   "yards": [
+    315,
+    369,
+    124,
+    249,
+    292,
+    143,
+    385,
+    336,
+    249,
+    284,
+    265,
+    261,
+    98,
+    231,
+    344,
+    253,
+    99,
+    454
+   ]
+  }
+ ]
+}
