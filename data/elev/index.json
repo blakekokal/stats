@@ -958,5 +958,20 @@
    579
   ],
   "source": "USGS 3DEP"
+ },
+ "dallasnational": {
+  "bounds": [
+   -96.91538,
+   32.728833,
+   -96.899208,
+   32.741833
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   499,
+   685
+  ],
+  "source": "USGS 3DEP"
  }
 }
