@@ -4,15 +4,18 @@ and practice greens that sit inside the same OpenStreetMap boundary. A green mor
 from every pin, and a bunker, fairway or tee more than OTHER_M from every hole line, goes; ponds
 stay (hazards either way). With a box, only shapes whose middle is inside it are looked at.
 
-Usage: trim_far.py course.json [GREEN_M=15] [OTHER_M=45] [S,W,N,E]
+Usage: trim_far.py course.json [GREEN_M=15] [OTHER_M=45] [S,W,N,E|-] [other.json ...]
+Other course files on the same ground (Stonebriar's two courses) add their holes, so neither
+course's shapes are taken for practice ones.
 """
 import json, math, sys
 from shapely.geometry import LineString, Point, Polygon
 p = sys.argv[1]; d = json.load(open(p))
 G = float(sys.argv[2]) if len(sys.argv) > 2 else 15; O = float(sys.argv[3]) if len(sys.argv) > 3 else 45
-box = tuple(map(float, sys.argv[4].split(','))) if len(sys.argv) > 4 else None
+box = tuple(map(float, sys.argv[4].split(','))) if len(sys.argv) > 4 and sys.argv[4] != '-' else None
+holes = d['holes'] + [h for q in sys.argv[5:] for h in json.load(open(q))['holes']]
 K = 111320 * math.cos(math.radians(d['holes'][0]['pin'][0])); xy = lambda q: (q[1] * K, q[0] * 110574)
-lines = [LineString([xy(q) for q in h['line']]) for h in d['holes']]; pins = [Point(xy(h['pin'])) for h in d['holes']]
+lines = [LineString([xy(q) for q in h['line']]) for h in holes]; pins = [Point(xy(h['pin'])) for h in holes]
 def keep(f):
     if f['t'] not in ('green', 'bunker', 'fairway', 'tee'): return True
     c = Polygon([xy(q) for q in f['p'][0]]).buffer(0).representative_point()

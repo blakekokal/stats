@@ -913,5 +913,35 @@
    532
   ],
   "source": "USGS 3DEP"
+ },
+ "stonebriar-fazio": {
+  "bounds": [
+   -96.858087,
+   33.086021,
+   -96.84117,
+   33.10081
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   567,
+   693
+  ],
+  "source": "USGS 3DEP"
+ },
+ "stonebriar-cc": {
+  "bounds": [
+   -96.857855,
+   33.088104,
+   -96.839277,
+   33.106999
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   562,
+   714
+  ],
+  "source": "USGS 3DEP"
  }
 }
