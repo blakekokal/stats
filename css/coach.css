@@ -313,3 +313,8 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
    keeps the last item clear of the Back button. */
 #coachingCoachView { margin-bottom: calc(-66px - env(safe-area-inset-bottom)); }
 #coachingCoachView > div[style*="overflow-y:auto"] { padding-bottom: calc(80px + env(safe-area-inset-bottom)) !important; }
+/* Desktop browsers: the Back button sits at the right edge of the app's column (under
+   Home's Settings and Search), not far off in the window's corner. Phones keep the corner. */
+@media (hover: hover) and (pointer: fine) {
+  .cx .back-btn-top { right: max(16px, calc(50vw - 224px)); }
+}
