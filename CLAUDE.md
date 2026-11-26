@@ -129,7 +129,9 @@ fairway and rough together: worth redoing from summer imagery). `tools/keep_foun
 bunkers you name from `bunkers_from_imagery.py`'s finds. Champions Circle (Fort Worth; OSM's boundary has no
 name; GolfPass's ratings are for a longer layout, so none are given). Waterchase (Fort Worth; unnamed in OSM;
 its short course trimmed with `tools/trim_far.py`, which drops shapes far from every hole, optionally in a box). The Club at
-Frisco Farms (OSM: Plantation Golf Club; shift 4 m, fitted to the greens).
+Frisco Farms (OSM: Plantation Golf Club; shift 4 m, fitted to the greens). TPC Craig Ranch (private;
+OSM predates its 2020-21 renovation: bunkers from the imagery with `tools/swap_bunkers.py`, which cuts the
+sand out of greens it overlaps).
 
 Skipped for now: Meadowbrook (Fort Worth; GolfPass's card is a different layout from OSM's holes),
 Lost Creek (Aledo; GolfPass says it closed), Pecan Valley River (see below). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
@@ -143,7 +145,7 @@ Public, complete:
 - Maridoe (Carrollton): GolfPass has the pre-renovation card (pars and yards fit
   no OSM hole); needs the current card from the club
 
-Private, complete: TPC Craig Ranch, TPC Four Seasons Las Colinas, Stonebriar,
+Private, complete (doing these next, one at a time): TPC Four Seasons Las Colinas, Stonebriar,
 Dallas Athletic Club, Dallas National, Colonial, Northwood, Prestonwood Creeks,
 Hackberry Creek, Mira Vista, Eldorado, Oakmont, Shady Oaks.
 
