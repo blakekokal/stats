@@ -14,7 +14,7 @@ const TAB_BARS = [
   '#perfTabBtnRounds, #perfTabBtnCombines',
   '#dgTab_pga, #dgTab_lpga, #dgTab_handicap, #dgTab_speed, #dgTab_profile',
 ];
-const EDGE = 28;    // px from the left edge kept for the phone's own back swipe
+const EDGE = 50;    // px from the left edge kept for the phone's own back swipe (both at once showed three screens)
 const LOCK = 12;    // px before deciding sideways or up-and-down
 const DONE = 0.28;  // share of the screen's width that completes a swipe
 
