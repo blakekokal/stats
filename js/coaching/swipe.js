@@ -44,6 +44,7 @@ function actions(box) {
   const step = [...box.querySelectorAll('.stepback')].some(b => b.parentElement.offsetParent);
   const back = [...box.querySelectorAll('.back-btn-top')].find(shown);
   return {
+    region: tabs.length ? below(tabs[0].parentElement, box) : null,
     left: i >= 0 && i < tabs.length - 1 ? { fn: () => tabs[i + 1].click(), same: true } : null,
     right: step ? { fn: () => window.appBack?.(), same: true }
       : i > 0 ? { fn: () => tabs[i - 1].click(), same: true }
@@ -51,22 +52,35 @@ function actions(box) {
   };
 }
 
+// What sits under a row of tabs: the next things after it on the screen (going up
+// from the row until there are some), less anything pinned in place like Back.
+// Swiping between tabs moves only these, as tapping a tab changes only these.
+function below(bar, box) {
+  for (let el = bar; el && el !== box; el = el.parentElement) {
+    const after = [];
+    for (let n = el.nextElementSibling; n; n = n.nextElementSibling) if (shown(n) && getComputedStyle(n).position !== 'fixed') after.push(n);
+    if (after.length) return after;
+  }
+  return null;
+}
+
 // Moving a screen: transform only, on its own layer; the glass blur is paused while
 // anything moves (redrawing it every frame is what made it stutter).
 function place(el, x, ms, opacity = 1) {
+  if (Array.isArray(el)) { el.forEach(e => place(e, x, ms, opacity)); return; }
   el.style.willChange = 'transform';
   el.style.transition = ms ? `transform ${ms}ms cubic-bezier(.2,.8,.3,1), opacity ${ms}ms ease-out` : 'none';
   el.style.transform = `translate3d(${x}px,0,0)`;
   el.style.opacity = opacity === 1 ? '' : String(opacity);
 }
-const clear = el => { el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; el.style.willChange = ''; };
+const clear = el => { if (Array.isArray(el)) { el.forEach(clear); return; } el.style.transition = ''; el.style.transform = ''; el.style.opacity = ''; el.style.willChange = ''; };
 let moving = 0;
 const startMoving = () => { moving++; document.body.classList.add('swiping'); };
 const stopMoving = () => { if (--moving <= 0) { moving = 0; document.body.classList.remove('swiping'); } };
 // Bring a screen in from the side it was left on.
 function arrive(el, from, w) {
   place(el, from * w * 0.3, 0, 0.5);
-  el.getBoundingClientRect();
+  (Array.isArray(el) ? el[0] : el)?.getBoundingClientRect();
   place(el, 0, 220);
   setTimeout(() => { clear(el); stopMoving(); }, 240);
 }
@@ -210,7 +224,10 @@ document.addEventListener('touchmove', e => {
   if (!frame) frame = requestAnimationFrame(() => {
     frame = 0;
     if (!g || !g.dir) return;
-    place(g.box, g.dx, 0);
+    const m = g.dx > 0 && g.acts.right && !g.acts.right.same ? g.box : (g.acts.region || g.box);
+    if (g.m && g.m !== m) clear(g.m);
+    g.m = m;
+    place(m, g.dx, 0);
     if (g.under) placeUnder(g.under, Math.max(0, g.dx), g.w, 0);
   });
 }, { passive: false });
@@ -224,9 +241,9 @@ function end() {
   const v = (x1 - x0) / Math.max(1, t1 - t0); // px per ms
   const flick = Math.abs(v) > 0.4 && Math.sign(v) === Math.sign(dx) && Math.abs(dx) > 30;
   if (!act || (Math.abs(dx) < w * DONE && !flick)) {
-    place(box, 0, 200);
+    place(gg.m || box, 0, 200);
     if (gg.under) placeUnder(gg.under, 0, w, 200);
-    setTimeout(() => { clear(box); drop(gg); stopMoving(); }, 220);
+    setTimeout(() => { clear(gg.m || box); drop(gg); stopMoving(); }, 220);
     return;
   }
   const out = dx > 0 ? 1 : -1;
@@ -249,11 +266,14 @@ function end() {
     return;
   }
   drop(gg); // (only shown when going back to another screen)
-  place(box, out * w, ms, 0.5);
-  if (act.same) { // a tab or a step: the same screen comes back with the new content
-    setTimeout(() => { act.fn(); arrive(box, -out, w); }, ms);
+  if (act.same) { // a tab or a step: only what's under the tabs moves, as when a tab is tapped
+    const m = acts.region || box;
+    if (gg.m && gg.m !== m) clear(gg.m);
+    place(m, out * w, ms, 0.5);
+    setTimeout(() => { act.fn(); clear(m); arrive(acts.region ? (actions(box).region || m) : m, -out, w); }, ms);
     return;
   }
+  place(box, out * w, ms, 0.5);
   // Another screen with no copy to show: start loading it now, while this one slides away.
   const began = performance.now();
   requestAnimationFrame(() => {
