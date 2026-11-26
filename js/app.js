@@ -410,8 +410,9 @@ function drawActBar() {
   if (!bar) { bar = h('div', { id: 'actbar', role: 'status' }); document.body.prepend(bar); }
   const st = actState.error ? ' \u00b7 not saved yet' : actState.saving ? ' \u00b7 saving\u2026' : '';
   bar.replaceChildren(h('span', {}, 'Using the app as ', h('b', {}, a.name), st), h('button', { onclick: exitActing }, 'Exit'));
+  bar.title = 'Exit goes back to your own app';
 }
-async function exitActing() {
+export async function exitActing() {
   const a = actingAs(); if (!a) return;
   if (!(await stopActing())) {
     if (!confirm(`Some of ${a.name}\u2019s changes aren\u2019t saved yet (${actState.error || 'no signal'}). Exit anyway and lose them?`)) return;

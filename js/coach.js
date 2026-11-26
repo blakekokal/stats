@@ -2,7 +2,7 @@
 // coaching app. My Bag, Performance Analysis, Practice and Learning and
 // Coaching are the coaching app's own pages (js/coaching).
 
-import { h, course, toast, COURSES, courseById, setActiveCourse, goBack, ninesWith, comboId, isAdmin } from './app.js';
+import { h, course, toast, COURSES, courseById, setActiveCourse, goBack, ninesWith, comboId, isAdmin, exitActing } from './app.js';
 import { store, sync, actingAs, levelFromPref, submitCourseRequest, fetchCourseRequests, setCourseRequestStatus, countNewCourseRequests, markCourseRequestsSeen, errText } from './store.js';
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
@@ -109,7 +109,9 @@ export function renderHome(view) {
       go('bag', 'My Bag', '#1a4a8a', '#/bag'),
       divider(),
       practice,
-      actingAs() ? null : coaching),
+      // Using the app as a student: Coaching's place is the way back to the coach's own app.
+      actingAs() ? h('button', { class: 'homebtn stopacting', onclick: exitActing },
+        h('span', { class: 'ic' }, icEl('user')), h('div', {}, h('div', { class: 't' }, `Stop viewing as ${actingAs().name.split(' ')[0]}`))) : coaching),
     sync.user ? null : h('button', { class: 'linkbtn', style: 'margin-top:10px;flex:none;', onclick: () => { location.hash = '#/account'; } }, 'Log In / Sign Up')));
   // Everything fits, so a drag on Home shouldn't move the page at all: on iPhone
   // the whole screen otherwise slides and springs back (rubber-band bounce).
