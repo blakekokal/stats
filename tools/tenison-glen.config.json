@@ -1,0 +1,18 @@
+{
+  "id": "tenison-glen",
+  "name": "Tenison Park Golf Course – Glen",
+  "location": "Dallas, TX",
+  "par": [5, 5, 3, 4, 4, 3, 4, 4, 4, 4, 3, 4, 4, 5, 4, 3, 4, 5],
+  "hcp": [3, 1, 17, 7, 15, 13, 9, 11, 5, 12, 16, 10, 8, 2, 14, 18, 6, 4],
+  "_comment_tees": "Scorecard from GolfPass (2871); its handicaps match OpenStreetMap's hole tags, its pars too except #13 (OSM: par 5; card: par 4, 410 yards), so the card's are used (par 72). Ratings matched to tees by total yards; men's, Red has only the women's rating.",
+  "_comment_drop": "Polygons containing these points are not part of the course: the two practice greens by the clubhouse (and the fairway round one) and a chipping green west of the Highlands' #1.",
+  "drop": [[32.79566, -96.737107, "green"], [32.79566, -96.737107, "fairway"], [32.796122, -96.737107, "green"], [32.799048, -96.738697, "green"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 0},
+  "tees": [
+    {"name": "Gold", "rating": 71.8, "slope": 119, "yards": [525, 501, 186, 413, 362, 215, 400, 320, 432, 355, 217, 380, 410, 525, 329, 166, 383, 488]},
+    {"name": "Blue", "rating": 70.5, "slope": 115, "yards": [500, 466, 170, 404, 342, 204, 384, 299, 416, 340, 204, 368, 400, 501, 315, 155, 349, 472]},
+    {"name": "White", "rating": 68.9, "slope": 112, "yards": [468, 452, 155, 392, 312, 190, 334, 286, 401, 327, 174, 342, 390, 466, 284, 145, 336, 446]},
+    {"name": "Red", "rating": 70.8, "slope": 123, "yards": [459, 300, 131, 318, 232, 137, 315, 233, 347, 287, 145, 325, 356, 407, 268, 114, 316, 411]}
+  ]
+}

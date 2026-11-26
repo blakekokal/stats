@@ -703,5 +703,35 @@
    634
   ],
   "source": "USGS 3DEP"
+ },
+ "tenison-highlands": {
+  "bounds": [
+   -96.741546,
+   32.792151,
+   -96.725273,
+   32.805893
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   395,
+   546
+  ],
+  "source": "USGS 3DEP"
+ },
+ "tenison-glen": {
+  "bounds": [
+   -96.741057,
+   32.79193,
+   -96.718388,
+   32.805946
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   395,
+   543
+  ],
+  "source": "USGS 3DEP"
  }
 }

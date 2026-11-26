@@ -1,0 +1,19 @@
+{
+  "id": "tenison-highlands",
+  "name": "Tenison Park Golf Course – Highlands",
+  "location": "Dallas, TX",
+  "par": [4, 3, 5, 4, 3, 5, 4, 4, 4, 4, 5, 4, 3, 4, 4, 5, 3, 4],
+  "hcp": [7, 17, 1, 5, 15, 9, 13, 3, 11, 10, 6, 12, 16, 4, 18, 8, 14, 2],
+  "_comment_tees": "Scorecard from GolfPass (2856); its pars and handicaps match OpenStreetMap's hole tags (par 72). Men's ratings.",
+  "_comment_drop": "Polygons containing these points are not part of the course: the two practice greens by the clubhouse (and the fairway round one) and a chipping green west of the Highlands' #1.",
+  "drop": [[32.79566, -96.737107, "green"], [32.79566, -96.737107, "fairway"], [32.796122, -96.737107, "green"], [32.799048, -96.738697, "green"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 0},
+  "tees": [
+    {"name": "Diamond", "rating": 73.7, "slope": 130, "yards": [435, 144, 625, 452, 189, 502, 332, 433, 378, 419, 583, 430, 178, 417, 396, 508, 209, 448]},
+    {"name": "Gold", "rating": 71.7, "slope": 128, "yards": [399, 127, 545, 432, 175, 485, 301, 411, 360, 378, 566, 401, 152, 396, 371, 489, 194, 428]},
+    {"name": "Granite", "rating": 69.8, "slope": 123, "yards": [399, 127, 484, 385, 157, 485, 301, 353, 331, 378, 514, 401, 152, 356, 371, 489, 155, 404]},
+    {"name": "Silver", "rating": 68.1, "slope": 118, "yards": [383, 111, 484, 385, 157, 440, 265, 353, 331, 342, 514, 344, 115, 356, 343, 448, 155, 404]},
+    {"name": "Pearl", "rating": 63.9, "slope": 110, "yards": [311, 95, 382, 334, 126, 340, 236, 283, 276, 291, 446, 308, 83, 279, 260, 354, 136, 343]}
+  ]
+}

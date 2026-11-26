@@ -98,6 +98,8 @@ export const COURSES = [
   { id: 'whitestone', name: 'Whitestone Golf Club', file: 'data/whitestone.json' },
   { id: 'hawkscreek', name: 'Hawks Creek Golf Club', file: 'data/hawkscreek.json' },
   { id: 'oakhollow', name: 'Oak Hollow Golf Course', file: 'data/oakhollow.json' },
+  { id: 'tenison-highlands', name: 'Tenison Park Golf Course – Highlands', file: 'data/tenison-highlands.json', shares: 'tenison-glen' },
+  { id: 'tenison-glen', name: 'Tenison Park Golf Course – Glen', file: 'data/tenison-glen.json', shares: 'tenison-highlands' },
   { id: 'isabella-nina', name: 'Isabella Golf Course – Nina', file: 'data/isabella-nina.json', nines: 'isabella' },
   { id: 'isabella-pinta', name: 'Isabella Golf Course – Pinta', file: 'data/isabella-pinta.json', nines: 'isabella' },
   { id: 'isabella-santamaria', name: 'Isabella Golf Course – Santa Maria', file: 'data/isabella-santamaria.json', nines: 'isabella' },
