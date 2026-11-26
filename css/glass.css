@@ -13,8 +13,10 @@
   --mac-blue: #0A84FF; --mac-green: #30D158; --mac-yellow: #FFD60A; --mac-red: #FF453A;
 }
 /* Also the colour of the strip down the right side of phones that keep one for the clock
-   (and what shows on an overscroll): pure black, so an OLED screen leaves it off. */
-html { background: #000; }
+   (and what shows on an overscroll): as near black as can be, nearly off on an OLED
+   screen. Not pure #000: with that the phone seemed to draw the strip as a solid edge,
+   and a swiped screen no longer slid over it. */
+html { background: #030303; }
 body, body.coach { background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, #1a1a1c 100%) !important; }
 .cx, .cx.coachroot, .coachroot .page { background: transparent !important; }
 
