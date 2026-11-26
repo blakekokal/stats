@@ -10,7 +10,18 @@ import { escapeHtml } from './core.js';
 import { studentRounds, viewRound, replayRound, watchLive, liveStudents } from './gps.js';
 import { _sb } from './core.js';
 import { ordinalSuffix } from './core.js';
-import { renderDashboard } from '../dashboard.js';
+import { renderDashboard, setDashControls } from '../dashboard.js';
+
+// The dashboard heading's level and Filter boxes drive the (hidden) filters below, as on the Stats Dashboard.
+const svEl = id => document.getElementById(id);
+setDashControls('svDashContent', {
+  filters: true,
+  get: () => ({ hcp: svEl('svDashHcpFilter')?.value || 'pro', type: svEl('svDashFilterType')?.value || 'all', time: svEl('svDashFilterTime')?.value || 'all' }),
+  set: (k, v) => {
+    if (k === 'hcp') { svEl('svDashHcpFilter').value = v; onSvDashHcpChange(v); }
+    else { svEl(k === 'type' ? 'svDashFilterType' : 'svDashFilterTime').value = v; applySvDashFilters(); }
+  },
+});
 
 export function svHcpBadgeLabel(hcp) {
   if (hcp === 'pro') return 'vs Tour Pro';
