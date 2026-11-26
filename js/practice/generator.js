@@ -295,67 +295,44 @@ function ppGenPickFromGroups(allGroups, totalMins, drillCountPref, cat) {
   return results;
 }
 
+// The practice plan's ring: one rounded slice per category with small gaps, in the
+// same colours as the rows under it, on a faint track; the total in the middle,
+// in the app's own font.
 export function ppDrawPie(cats, total) {
   var canvas = document.getElementById('ppPieChart');
   var ctx = canvas.getContext('2d');
-  var dpr = window.devicePixelRatio || 1;
-  canvas.width = 280 * dpr;
-  canvas.height = 280 * dpr;
+  var dpr = window.devicePixelRatio || 1, S = 240;
+  canvas.width = S * dpr; canvas.height = S * dpr;
+  canvas.style.width = S + 'px'; canvas.style.height = S + 'px';
   ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, 280, 280);
-
-  var cx = 140, cy = 140, r = 110, ir = 60;
-  var startAngle = -Math.PI / 2;
-  var endAngle = startAngle + Math.PI * 2;
-  var angle = startAngle;
-
-  cats.forEach(function(c, idx) {
-    var isLast = idx === cats.length - 1;
-    var sliceEnd = isLast ? endAngle : angle + (c.mins / total) * Math.PI * 2;
+  ctx.clearRect(0, 0, S, S);
+  var font = getComputedStyle(document.body).fontFamily || 'system-ui, sans-serif';
+  var cx = S / 2, cy = S / 2, w = 22, r = S / 2 - w / 2 - 4;
+  ctx.lineWidth = w;
+  ctx.lineCap = 'round';
+  ctx.strokeStyle = 'rgba(255,255,255,0.06)';
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.stroke();
+  var shown = cats.filter(function(c) { return c.mins > 0; });
+  var cap = (w / 2) / r, gap = 0.05;
+  var angle = -Math.PI / 2;
+  shown.forEach(function(c) {
+    var sweep = (c.mins / total) * Math.PI * 2;
+    var a0 = angle, a1 = angle + sweep;
+    if (shown.length > 1) { a0 += cap + gap / 2; a1 -= cap + gap / 2; }
+    ctx.strokeStyle = c.color;
     ctx.beginPath();
-    ctx.moveTo(cx + ir * Math.cos(angle), cy + ir * Math.sin(angle));
-    ctx.arc(cx, cy, r, angle, sliceEnd);
-    ctx.arc(cx, cy, ir, sliceEnd, angle, true);
-    ctx.closePath();
-    ctx.fillStyle = c.color;
-    ctx.fill();
-    // Label: category name + time on the slice
-    var mid = (angle + sliceEnd) / 2;
-    var lr = (r + ir) / 2;
-    var lx = cx + lr * Math.cos(mid);
-    var ly = cy + lr * Math.sin(mid);
-    // Clamp labels so they don't hang off the canvas edge
-    var pad = 24;
-    if (lx < pad) lx = pad;
-    if (lx > 280 - pad) lx = 280 - pad;
-    if (ly < pad) ly = pad;
-    if (ly > 280 - pad) ly = 280 - pad;
-    ctx.fillStyle = '#fff';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    // Only show labels if slice is big enough
-    var sliceAngle = sliceEnd - angle;
-    if (sliceAngle > 0.6) {
-      ctx.font = 'bold 11px sans-serif';
-      ctx.fillText(c.label, lx, ly - 7);
-      ctx.font = 'bold 13px sans-serif';
-      ctx.fillText(c.mins + ' min', lx, ly + 8);
-    } else if (sliceAngle > 0.3) {
-      ctx.font = 'bold 10px sans-serif';
-      ctx.fillText(c.mins + 'm', lx, ly);
-    }
-    angle = sliceEnd;
+    if (a1 > a0) ctx.arc(cx, cy, r, a0, a1); else ctx.arc(cx, cy, r, angle + sweep / 2, angle + sweep / 2 + 0.0001);
+    ctx.stroke();
+    angle += sweep;
   });
-
-  // Center text
-  ctx.fillStyle = '#fff';
-  ctx.font = 'bold 22px sans-serif';
+  ctx.fillStyle = '#ffffff';
   ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(total + ' min', cx, cy - 6);
-  ctx.font = '11px sans-serif';
+  ctx.textBaseline = 'alphabetic';
+  ctx.font = '800 44px ' + font;
+  ctx.fillText(String(total), cx, cy + 8);
+  ctx.font = '600 13px ' + font;
   ctx.fillStyle = '#9a9a9a';
-  ctx.fillText('total practice', cx, cy + 14);
+  ctx.fillText('min of practice', cx, cy + 30);
 }
 
 // Functions called from inline HTML handlers
