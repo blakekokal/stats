@@ -118,7 +118,9 @@ Old American (GolfPass's card is one hole off: its #1 is #2; its tan waste bunke
 check, so they were judged by eye; a `drop` point can name its type, `[lat, lng, "bunker"]`, so a
 bunker inside a fairway goes without the fairway), Sky Creek Ranch, Rockwall,
 Fossil Creek, Whitestone (winter imagery and brown sand: shift fitted to the greens, its bunkers judged
-by eye), Hawks Creek (Shady Oaks is next door: kept to its own boundary), Oak Hollow.
+by eye), Hawks Creek (Shady Oaks is next door: kept to its own boundary), Oak Hollow, Tenison Park Highlands and Glen
+(one OSM boundary for both: holes told apart by way id; winter imagery with snow in the shade, so
+OSM's bunkers kept as they are). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
 
 Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, every shape
 traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).
@@ -126,7 +128,6 @@ Outside DFW: Isabella (Hot Springs Village, AR; three nines, Nina, Pinta and San
 from OSM; OSM numbers Pinta 10-18, so `tools/isabella/course.py` names each nine's holes by way id).
 
 Public, complete:
-- Tenison Park (Dallas; two courses, East and Glen, like Fields Ranch)
 - Maridoe (Carrollton): GolfPass has the pre-renovation card (pars and yards fit
   no OSM hole); needs the current card from the club
 - Texas Rangers Golf Club (Arlington): OSM's holes 1-9 are GolfPass's 10-18 and the
