@@ -44,28 +44,31 @@ export async function loadPerfCombineData() {
   }
 }
 
-// Opens a combine's detail below the tiles (closing the other one), as Past Rounds does.
-function toggleCombineDetail(key) {
-  var detail = document.getElementById('perfCombine' + key + 'Detail');
+// Opens a combine's detail below the tiles (closing the other one), as Past Rounds
+// does, on whichever page the tap came from (this page, or a student's: svPerf*).
+function toggleCombineDetail(key, from) {
+  var root = (from && from.closest && from.closest('#perfPageCombines, #svPerfPageCombines')) || document.getElementById('perfPageCombines');
+  if (!root) return;
+  var detail = root.querySelector('[id$="Combine' + key + 'Detail"]');
   if (!detail) return;
   var opening = detail.style.display === 'none';
   ['Putt', 'Wedge'].forEach(function(k) {
-    var d = document.getElementById('perfCombine' + k + 'Detail');
-    var c = document.getElementById('perfCombine' + k + 'Caret');
+    var d = root.querySelector('[id$="Combine' + k + 'Detail"]');
+    var c = root.querySelector('.perfcaret[data-key="' + k + '"]');
     var on = opening && k === key;
     if (d) d.style.display = on ? 'block' : 'none';
     if (c) c.textContent = on ? 'Close \u25b2' : 'View detail \u2192';
   });
   if (opening) {
-    var page = document.getElementById('performanceAnalysisPage');
-    if (page) setTimeout(function(){ page.scrollTop += 140; }, 60);
+    var sc = root.closest('#studentViewScroll') || document.getElementById('performanceAnalysisPage');
+    if (sc) setTimeout(function(){ sc.scrollTop += 140; }, 60);
   }
 }
 // The detail's heading, the same as Past Rounds' (perfTabHeader).
 function combDetailHeader(key, title) {
   return '<div class="perfdetailhead">' +
     '<div style="font-size:14px;font-weight:800;color:#ffffff;">' + title + '</div>' +
-    '<button class="perfclose" onclick="toggleCombineDetail(\'' + key + '\')">Close \u25b2</button></div>';
+    '<button class="perfclose" onclick="toggleCombineDetail(\'' + key + '\', this)">Close \u25b2</button></div>';
 }
 
 function parseCombineRows(session) {
@@ -318,7 +321,7 @@ function combFocusCard(eye, range, sub, bad, bg, bord) {
 }
 function combOverviewCard(key, title, val, valStr, col, trendStr, stat, bg, bord) {
   var w = val === null ? 5 : Math.max(5, Math.min(100, (val + 2) / 4 * 100));
-  return '<div style="border-radius:11px;padding:12px;border:1px solid ' + bord + ';background:' + bg + ';cursor:pointer;user-select:none;margin-bottom:8px;" onclick="toggleCombineDetail(\'' + key + '\')">' +
+  return '<div style="border-radius:11px;padding:12px;border:1px solid ' + bord + ';background:' + bg + ';cursor:pointer;user-select:none;margin-bottom:8px;" onclick="toggleCombineDetail(\'' + key + '\', this)">' +
     '<div style="font-size:10px;color:#ffffff;font-weight:800;margin-bottom:6px;text-align:center;letter-spacing:0.3px;">' + title + '</div>' +
     '<div style="text-align:center;margin-bottom:6px;">' +
     '<div style="font-size:26px;font-weight:800;color:' + col + ';line-height:1;">' + valStr + '</div>' +
@@ -326,7 +329,7 @@ function combOverviewCard(key, title, val, valStr, col, trendStr, stat, bg, bord
     '<div style="font-size:10px;text-align:center;color:#9a9a9a;">' + stat + '</div>' +
     '<div style="height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:8px;">' +
     '<div style="width:' + w + '%;height:3px;background:' + col + ';border-radius:2px;"></div></div>' +
-    '<div style="font-size:9px;color:#9a9a9a;margin-top:6px;text-align:right;" id="perfCombine' + key + 'Caret">View detail \u2192</div></div>';
+    '<div style="font-size:9px;color:#9a9a9a;margin-top:6px;text-align:right;" class="perfcaret" data-key="' + key + '">View detail \u2192</div></div>';
 }
 
 function combStatCard(label, col, bg, border, badgeText, infoLine) {

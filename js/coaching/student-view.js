@@ -5,7 +5,7 @@ import { showSvMiscSubTab, showSvPracticeSubTab } from './student-misc.js';
 import { loadSvNotes } from './student-notes.js';
 import { loadStudentCombines } from '../combines/history.js';
 import { loadPerfCombineData } from '../performance/combines.js';
-import { computePerfAnalysis, renderPerfAnalysis } from '../performance/rounds.js';
+import { computePerfAnalysis, renderPerfAnalysis, togglePerfTab } from '../performance/rounds.js';
 import { escapeHtml } from './core.js';
 import { studentRounds, viewRound, replayRound, watchLive, liveStudents } from './gps.js';
 import { _sb } from './core.js';
@@ -198,18 +198,8 @@ async function loadStudentPerfAnalysis() {
   }
 }
 
-function toggleSvPerfTab(key) {
-  var el = document.getElementById('svPerfTab-' + key);
-  if (!el) return;
-  var isOpen = el.style.display !== 'none';
-  ['ott','app','arg','putt'].forEach(function(t) {
-    var e = document.getElementById('svPerfTab-' + t);
-    if (e) e.style.display = 'none';
-  });
-  if (!isOpen) el.style.display = '';
-  var scroll = document.getElementById('studentViewScroll');
-  if (scroll && !isOpen) setTimeout(function(){ el.scrollIntoView({behavior:'smooth',block:'nearest'}); }, 80);
-}
+// A student's Past Rounds card: opens its detail as on Performance Analysis.
+function toggleSvPerfTab(key) { togglePerfTab(key, document.getElementById('svPerfPageRounds')); }
 
 function renderSvPerfAnalysis(a) {
   if (!a) return;
@@ -254,7 +244,7 @@ function renderSvPerfAnalysis(a) {
   // Re-wire onclick for svPerf card toggles so they call toggleSvPerfTab
   ['ott','app','arg','putt'].forEach(function(k) {
     var card = document.getElementById('svPerfCard' + k.charAt(0).toUpperCase() + k.slice(1));
-    if (card) card.onclick = function(){ toggleSvPerfTab(k); };
+    if (card) card.onclick = function(){ togglePerfTab(k, card); };
   });
 }
 
