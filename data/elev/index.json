@@ -838,5 +838,20 @@
    424
   ],
   "source": "USGS 3DEP"
+ },
+ "championscircle": {
+  "bounds": [
+   -97.307407,
+   33.014242,
+   -97.285663,
+   33.027621
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   588,
+   682
+  ],
+  "source": "USGS 3DEP"
  }
 }

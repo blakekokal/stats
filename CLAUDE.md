@@ -126,7 +126,8 @@ fitted to the greens; OSM's 19th hole dropped). Pecan Valley Hills (River not ye
 (GolfPass lists it as Keeton Park; its ratings are for old lengths, so none are given). Duck Creek (Garland). Watters Creek Traditions (Plano; the short
 course, practice holes and range in the same boundary trimmed out). Rusted Rail (Crandall; OSM's fairways are drawn wide,
 fairway and rough together: worth redoing from summer imagery). `tools/keep_found_bunkers.py` adds only the
-bunkers you name from `bunkers_from_imagery.py`'s finds. `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
+bunkers you name from `bunkers_from_imagery.py`'s finds. Champions Circle (Fort Worth; OSM's boundary has no
+name; GolfPass's ratings are for a longer layout, so none are given). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
 
 Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, every shape
 traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).
