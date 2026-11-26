@@ -617,6 +617,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.41.3', ['Performance Analysis: Past Rounds and Combines open and close details the same way; Close no longer overlaps']],
   ['1.41.2', ['Performance Analysis: Combines tiles are the same size as Past Rounds\u2019']],
   ['1.41.1', ['A student\u2019s dashboard scrolls like the Stats Dashboard']],
   ['1.41.0', ['Stats Dashboard and a student\u2019s dashboard: Filter sits right after the handicap to compare with']],

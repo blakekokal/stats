@@ -861,15 +861,16 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
           <div style="font-size:15px;font-weight:800;color:#ffffff;margin-bottom:8px;text-align:center;">Putting</div>
           <div id="perfCombinePuttFocus"></div>
           <div id="perfCombinePuttOverview"></div>
-          <div id="perfCombinePuttDetail" style="display:none;"></div>
         </div>
         <div>
           <div style="font-size:15px;font-weight:800;color:#ffffff;margin-bottom:8px;text-align:center;">Wedge</div>
           <div id="perfCombineWedgeFocus"></div>
           <div id="perfCombineWedgeOverview"></div>
-          <div id="perfCombineWedgeDetail" style="display:none;"></div>
         </div>
       </div>
+      <!-- A tile's detail opens here, below the tiles (as Past Rounds' does) -->
+      <div id="perfCombinePuttDetail" style="display:none;margin-top:14px;"></div>
+      <div id="perfCombineWedgeDetail" style="display:none;margin-top:14px;"></div>
       <div id="perfCombineFooter" style="display:none;text-align:center;font-size:10px;color:#9a9a9a;margin-top:14px;">All stats vs scratch · combines only</div>
     </div>
 

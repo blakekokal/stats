@@ -335,3 +335,7 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 .cx .dashfilterbox { position: absolute; right: 0; top: calc(100% + 6px); z-index: 30; flex-direction: column; align-items: stretch; gap: 6px; width: 210px; padding: 12px; box-sizing: border-box; background: #2c2c2e; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08); text-align: left; }
 .cx .dashfilterbox .lab { font-size: 11px; font-weight: 700; color: #9a9a9a; text-transform: uppercase; letter-spacing: .04em; }
 .cx .dashfilterbox select { width: 100%; max-width: none; height: 34px; font-size: 13px; }
+
+/* Performance Analysis: a detail panel's heading (Past Rounds and Combines alike). */
+.cx .perfdetailhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 2px 0 10px; }
+.cx button.perfclose { flex: none; width: auto; max-width: none; height: 28px; margin: 0; padding: 0 12px; font-size: 12px; font-weight: 700; color: #d0d0d4; border-radius: 14px; }

@@ -44,13 +44,28 @@ export async function loadPerfCombineData() {
   }
 }
 
+// Opens a combine's detail below the tiles (closing the other one), as Past Rounds does.
 function toggleCombineDetail(key) {
   var detail = document.getElementById('perfCombine' + key + 'Detail');
-  var caret  = document.getElementById('perfCombine' + key + 'Caret');
   if (!detail) return;
-  var isOpen = detail.style.display !== 'none';
-  detail.style.display = isOpen ? 'none' : 'block';
-  if (caret) caret.textContent = isOpen ? 'View detail \u2192' : 'Close \u25b2';
+  var opening = detail.style.display === 'none';
+  ['Putt', 'Wedge'].forEach(function(k) {
+    var d = document.getElementById('perfCombine' + k + 'Detail');
+    var c = document.getElementById('perfCombine' + k + 'Caret');
+    var on = opening && k === key;
+    if (d) d.style.display = on ? 'block' : 'none';
+    if (c) c.textContent = on ? 'Close \u25b2' : 'View detail \u2192';
+  });
+  if (opening) {
+    var page = document.getElementById('performanceAnalysisPage');
+    if (page) setTimeout(function(){ page.scrollTop += 140; }, 60);
+  }
+}
+// The detail's heading, the same as Past Rounds' (perfTabHeader).
+function combDetailHeader(key, title) {
+  return '<div class="perfdetailhead">' +
+    '<div style="font-size:14px;font-weight:800;color:#ffffff;">' + title + '</div>' +
+    '<button class="perfclose" onclick="toggleCombineDetail(\'' + key + '\')">Close \u25b2</button></div>';
 }
 
 function parseCombineRows(session) {
@@ -180,7 +195,7 @@ function renderCombinePutt(sessions) {
     var info = (isWorst ? '<span style="color:#d4706e;">\u26a0 Needs work</span> \u00b7 ' : '') + rb.count + ' shots' + trendH;
     dHtml += combStatCard(bk + ' ft', col, bg, bord, (avgSg >= 0 ? '+' : '') + avgSg.toFixed(2) + ' SG', info);
   });
-  detailEl.innerHTML = dHtml;
+  detailEl.innerHTML = combDetailHeader('Putt', 'Putting \u00b7 Detail') + dHtml;
 }
 
 function renderCombineWedge(sessions) {
@@ -291,7 +306,7 @@ function renderCombineWedge(sessions) {
     var info = (isWorst ? '<span style="color:#d4706e;">\u26a0 Needs work</span> \u00b7 ' : '') + rb.count + ' shots \u00b7 ' + Math.round(avgPts) + ' avg score' + trendH;
     dHtml += combStatCard(bk + ' yds', col, bg, bord, (avgSg >= 0 ? '+' : '') + avgSg.toFixed(2) + ' SG', info);
   });
-  detailEl.innerHTML = dHtml;
+  detailEl.innerHTML = combDetailHeader('Wedge', 'Wedge \u00b7 Detail') + dHtml;
 }
 
 // The tiles, laid out like Past Rounds' strokes-gained cards (same size, padding and type).
