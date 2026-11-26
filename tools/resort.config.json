@@ -1,0 +1,18 @@
+{
+  "id": "resort",
+  "name": "The Resort Golf Club",
+  "location": "Fort Worth, TX",
+  "par": [4, 3, 4, 4, 4, 5, 3, 5, 4, 4, 5, 4, 3, 4, 3, 4, 4, 5],
+  "hcp": [5, 15, 13, 7, 11, 9, 3, 17, 1, 10, 6, 4, 18, 8, 16, 2, 12, 14],
+  "_comment_tees": "Scorecard from GolfPass (22701); its pars match OpenStreetMap's hole tags (par 72). Men's ratings; Red has only the women's.",
+  "_comment_drop": "Polygons containing these points are not part of the course: the 19th hole (a bonus par 3: green and three tees), the range tee, and the practice greens (and the fairway round one, and a practice bunker).",
+  "drop": [[32.952441, -97.489716, "green"], [32.952296, -97.488773, "tee"], [32.952401, -97.488503, "tee"], [32.952437, -97.488356, "tee"], [32.952568, -97.487528, "green"], [32.952579, -97.487521, "fairway"], [32.953311, -97.489803, "tee"], [32.953017, -97.489489, "green"], [32.953584, -97.490236, "green"], [32.95395, -97.489727, "bunker"], [32.95385, -97.489599, "green"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it. Winter imagery and tan sand: fitted to the greens (fit_shift.py green).",
+  "shift": {"east": 0, "north": 1.8},
+  "tees": [
+    {"name": "Black", "rating": 72.8, "slope": 144, "yards": [361, 177, 342, 363, 380, 507, 198, 499, 412, 416, 543, 390, 155, 382, 196, 416, 352, 547]},
+    {"name": "Blue", "rating": 70.5, "slope": 142, "yards": [352, 157, 320, 347, 346, 491, 176, 480, 394, 372, 524, 361, 143, 363, 139, 400, 323, 494]},
+    {"name": "White", "rating": 69.1, "slope": 136, "yards": [349, 144, 301, 323, 336, 436, 153, 437, 377, 368, 496, 346, 129, 323, 131, 371, 285, 483]},
+    {"name": "Red", "rating": 70.9, "slope": 126, "yards": [330, 134, 281, 288, 315, 381, 110, 417, 310, 330, 430, 308, 102, 299, 121, 341, 220, 446]}
+  ]
+}
