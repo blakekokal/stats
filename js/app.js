@@ -4,6 +4,7 @@ import { store, sync, init as initSync, fetchPublishedCourses, publishCourse, un
 import { renderHole, closeHole, lastHole } from './hole.js';
 import { renderCourseEditor } from './editor.js';
 import { renderSettings } from './settings.js';
+import { renderScreenCheck } from './duocheck.js';
 import { renderStats } from './stats.js';
 import { renderAccount } from './account.js';
 import { renderStatsDashboard } from './dashboard.js';
@@ -340,10 +341,10 @@ async function route() {
     const res = await loadWatch(id);
     if (res !== 'ok') { document.body.classList.add('coach'); document.body.classList.remove('playing'); closeHole(); renderLiveError(res, route); return; }
   }
-  const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag', 'coaching', 'performance', 'practice', 'help', 'search'].includes(parts[0]) ? parts[0] : 'home';
+  const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag', 'coaching', 'performance', 'practice', 'help', 'search', 'screen'].includes(parts[0]) ? parts[0] : 'home';
   // Pages laid out like the coaching app hide this app's top bar. Set before
   // waiting for the course, so the old top bar never shows while it loads.
-  document.body.classList.toggle('coach', ['device', 'home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout', 'coaching', 'performance', 'practice', 'help', 'search'].includes(tab));
+  document.body.classList.toggle('coach', ['screen', 'device', 'home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout', 'coaching', 'performance', 'practice', 'help', 'search'].includes(tab));
   document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   document.body.classList.toggle('playing', tab === 'hole');
   await loadCourse(parts[0] === 'hole');
@@ -365,6 +366,7 @@ async function route() {
   else if (tab === 'scout') renderNewRound(view, { scout: true });
   else if (tab === 'help') renderHelp(view);
   else if (tab === 'search') renderSearch(view);
+  else if (tab === 'screen') renderScreenCheck(view);
   else if (coachTab) renderCoaching(view, tab);
   else renderHome(view);
   // A round left going is settled before anything else (see askResume).
