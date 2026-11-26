@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.53', ['The strip down the right side of the screen is a lighter grey, closer to the app']],
   ['1.20.52', ['Removed the Screen check page']],
   ['1.20.51', ['Screen check (Search → Screen check): this phone’s screen size and edges, to make use of the strip down the right side']],
   ['1.20.50', ['Swiping between tabs switches at once, like tapping the tab']],
