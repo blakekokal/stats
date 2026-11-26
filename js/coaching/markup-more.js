@@ -856,7 +856,7 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
     <!-- ── COMBINES PAGE ── -->
     <div id="perfPageCombines" style="display:none;">
       <div id="perfCombineLoading" style="background:#1e1e1e;border-radius:12px;padding:18px;text-align:center;color:#9a9a9a;font-size:13px;margin-bottom:10px;">Loading combine data…</div>
-      <div id="perfCombineGrid" style="display:none;grid-template-columns:1fr 1fr;gap:10px;align-items:start;width:100%;">
+      <div id="perfCombineGrid" style="display:none;grid-template-columns:1fr 1fr;gap:8px;align-items:start;width:100%;">
         <div>
           <div style="font-size:15px;font-weight:800;color:#ffffff;margin-bottom:8px;text-align:center;">Putting</div>
           <div id="perfCombinePuttFocus"></div>
