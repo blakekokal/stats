@@ -1,0 +1,191 @@
+{
+ "id": "stonebriar-cc",
+ "name": "Stonebriar Country Club – Country Club",
+ "location": "Frisco, TX",
+ "par": [
+  4,
+  3,
+  5,
+  4,
+  4,
+  3,
+  4,
+  5,
+  4,
+  4,
+  4,
+  4,
+  4,
+  3,
+  4,
+  5,
+  3,
+  5
+ ],
+ "hcp": [
+  13,
+  15,
+  1,
+  7,
+  9,
+  17,
+  11,
+  5,
+  3,
+  12,
+  6,
+  14,
+  8,
+  16,
+  2,
+  10,
+  18,
+  4
+ ],
+ "_comment_tees": "Scorecard from GolfPass (2935); its pars match OpenStreetMap's hole lines (par 72). The White/Green combination tee is left out. Men's ratings; Red's is the women's; Purple has none.",
+ "_comment_drop": "Polygons containing these points are not part of the course: an OSM bunker on grass (trim_far.py drops the practice greens and bunkers by the clubhouse).",
+ "drop": [
+  [
+   33.105226,
+   -96.848362,
+   "bunker"
+  ]
+ ],
+ "_comment_pins": "#7 and #15 share a double green: each pin at its own hole line's end.",
+ "pinAtLineEnd": [
+  7,
+  15
+ ],
+ "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand; the greens agree).",
+ "shift": {
+  "east": -1.8,
+  "north": 0
+ },
+ "tees": [
+  {
+   "name": "Blue",
+   "rating": 74.8,
+   "slope": 140,
+   "yards": [
+    382,
+    215,
+    568,
+    465,
+    443,
+    148,
+    327,
+    577,
+    438,
+    366,
+    442,
+    363,
+    436,
+    218,
+    423,
+    509,
+    188,
+    556
+   ]
+  },
+  {
+   "name": "White",
+   "rating": 72.6,
+   "slope": 132,
+   "yards": [
+    365,
+    194,
+    546,
+    444,
+    422,
+    123,
+    316,
+    541,
+    411,
+    359,
+    422,
+    328,
+    416,
+    186,
+    399,
+    491,
+    168,
+    527
+   ]
+  },
+  {
+   "name": "Green",
+   "rating": 70.5,
+   "slope": 127,
+   "yards": [
+    352,
+    145,
+    510,
+    368,
+    398,
+    103,
+    310,
+    522,
+    389,
+    344,
+    393,
+    325,
+    375,
+    172,
+    359,
+    472,
+    142,
+    479
+   ]
+  },
+  {
+   "name": "Red",
+   "rating": 74.1,
+   "slope": 130,
+   "yards": [
+    347,
+    138,
+    455,
+    363,
+    383,
+    103,
+    284,
+    492,
+    306,
+    319,
+    361,
+    295,
+    354,
+    170,
+    352,
+    436,
+    108,
+    441
+   ]
+  },
+  {
+   "name": "Purple",
+   "rating": null,
+   "slope": null,
+   "yards": [
+    286,
+    138,
+    395,
+    363,
+    360,
+    103,
+    284,
+    400,
+    306,
+    276,
+    303,
+    295,
+    354,
+    91,
+    352,
+    436,
+    108,
+    400
+   ]
+  }
+ ]
+}

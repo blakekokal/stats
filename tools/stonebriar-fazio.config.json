@@ -1,0 +1,161 @@
+{
+ "id": "stonebriar-fazio",
+ "name": "Stonebriar Country Club – Fazio",
+ "location": "Frisco, TX",
+ "par": [
+  4,
+  4,
+  5,
+  4,
+  4,
+  3,
+  5,
+  3,
+  4,
+  3,
+  4,
+  5,
+  4,
+  4,
+  3,
+  4,
+  4,
+  5
+ ],
+ "hcp": [
+  13,
+  1,
+  7,
+  5,
+  11,
+  17,
+  3,
+  15,
+  9,
+  18,
+  6,
+  2,
+  4,
+  10,
+  16,
+  14,
+  12,
+  8
+ ],
+ "_comment_tees": "Scorecard from GolfPass (22706); its pars and Blue yards match OpenStreetMap's hole lines (par 72). Combination tees left out. Ratings matched by total yards: Blue, White (6610), Red = Red (W) (5208); Green's (5647) doesn't fit its 6054 yards, so none.",
+ "_comment_drop": "Polygons containing these points are not part of the course: an OSM bunker on grass (trim_far.py drops the practice greens and bunkers by the clubhouse).",
+ "drop": [
+  [
+   33.105226,
+   -96.848362,
+   "bunker"
+  ]
+ ],
+ "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand; the greens agree).",
+ "shift": {
+  "east": -1.8,
+  "north": 0
+ },
+ "tees": [
+  {
+   "name": "Blue",
+   "rating": 73.8,
+   "slope": 137,
+   "yards": [
+    366,
+    408,
+    578,
+    445,
+    430,
+    136,
+    546,
+    210,
+    413,
+    190,
+    412,
+    553,
+    449,
+    421,
+    165,
+    323,
+    429,
+    547
+   ]
+  },
+  {
+   "name": "White",
+   "rating": 71.6,
+   "slope": 136,
+   "yards": [
+    347,
+    391,
+    562,
+    416,
+    394,
+    110,
+    532,
+    190,
+    372,
+    170,
+    379,
+    540,
+    439,
+    391,
+    155,
+    323,
+    394,
+    518
+   ]
+  },
+  {
+   "name": "Green",
+   "rating": null,
+   "slope": null,
+   "yards": [
+    317,
+    378,
+    513,
+    362,
+    372,
+    100,
+    519,
+    148,
+    353,
+    142,
+    323,
+    491,
+    388,
+    367,
+    135,
+    291,
+    368,
+    487
+   ]
+  },
+  {
+   "name": "Red",
+   "rating": 66.1,
+   "slope": 116,
+   "yards": [
+    249,
+    277,
+    396,
+    311,
+    313,
+    90,
+    434,
+    148,
+    299,
+    113,
+    323,
+    434,
+    388,
+    340,
+    135,
+    247,
+    321,
+    390
+   ]
+  }
+ ]
+}
