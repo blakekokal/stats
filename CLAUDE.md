@@ -123,7 +123,8 @@ by eye), Hawks Creek (Shady Oaks is next door: kept to its own boundary), Oak Ho
 OSM's bunkers kept as they are). The Resort (Fort Worth; winter imagery and tan sand: shift
 fitted to the greens; OSM's 19th hole dropped). Pecan Valley Hills (River not yet: see below). Texas Rangers
 (GolfPass's card has the nines swapped: the club's #1 is the 589-yard par 5, as in OSM). Grover C. Keaton
-(GolfPass lists it as Keeton Park; its ratings are for old lengths, so none are given). Duck Creek (Garland). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
+(GolfPass lists it as Keeton Park; its ratings are for old lengths, so none are given). Duck Creek (Garland). Watters Creek Traditions (Plano; the short
+course, practice holes and range in the same boundary trimmed out). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
 
 Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, every shape
 traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).
