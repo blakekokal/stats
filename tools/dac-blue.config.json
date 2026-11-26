@@ -1,0 +1,281 @@
+{
+ "id": "dac-blue",
+ "name": "Dallas Athletic Club – Blue",
+ "location": "Dallas, TX",
+ "par": [
+  5,
+  4,
+  5,
+  3,
+  4,
+  4,
+  3,
+  4,
+  4,
+  5,
+  4,
+  4,
+  5,
+  3,
+  4,
+  3,
+  4,
+  4
+ ],
+ "hcp": [
+  13,
+  3,
+  11,
+  9,
+  1,
+  7,
+  15,
+  17,
+  5,
+  10,
+  6,
+  12,
+  18,
+  16,
+  4,
+  14,
+  2,
+  8
+ ],
+ "_comment_tees": "Scorecard from GolfPass (2865); its pars match OpenStreetMap's hole tags (par 72); its handicaps differ from OSM's and are used. Its tee table rates other lengths (Black 6922, Gold 6621, Blue 6174, White 5790, Red 5288) than the card's star tees, so no ratings are given.",
+ "_comment_drop": "Polygons containing these points are not part of the course: 20 OSM bunkers on grass with no sand in the imagery (many by greens reshaped since); trim_far.py drops the practice area and short holes in the middle of the site.",
+ "drop": [
+  [
+   32.846604,
+   -96.642866,
+   "bunker"
+  ],
+  [
+   32.840218,
+   -96.639762,
+   "bunker"
+  ],
+  [
+   32.84084,
+   -96.643317,
+   "bunker"
+  ],
+  [
+   32.843343,
+   -96.63705,
+   "bunker"
+  ],
+  [
+   32.844657,
+   -96.64547,
+   "bunker"
+  ],
+  [
+   32.844808,
+   -96.648055,
+   "bunker"
+  ],
+  [
+   32.843397,
+   -96.651471,
+   "bunker"
+  ],
+  [
+   32.843084,
+   -96.652263,
+   "bunker"
+  ],
+  [
+   32.845735,
+   -96.651766,
+   "bunker"
+  ],
+  [
+   32.844607,
+   -96.652687,
+   "bunker"
+  ],
+  [
+   32.846453,
+   -96.650547,
+   "bunker"
+  ],
+  [
+   32.846403,
+   -96.650815,
+   "bunker"
+  ],
+  [
+   32.846298,
+   -96.65079,
+   "bunker"
+  ],
+  [
+   32.838294,
+   -96.645397,
+   "bunker"
+  ],
+  [
+   32.839196,
+   -96.647924,
+   "bunker"
+  ],
+  [
+   32.839143,
+   -96.648017,
+   "bunker"
+  ],
+  [
+   32.841503,
+   -96.651208,
+   "bunker"
+  ],
+  [
+   32.841579,
+   -96.65132,
+   "bunker"
+  ],
+  [
+   32.842131,
+   -96.651963,
+   "bunker"
+  ],
+  [
+   32.841811,
+   -96.64748,
+   "bunker"
+  ]
+ ],
+ "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand; the greens roughly agree).",
+ "shift": {
+  "east": -3.0,
+  "north": 0.5
+ },
+ "tees": [
+  {
+   "name": "Champs",
+   "rating": null,
+   "slope": null,
+   "yards": [
+    520,
+    437,
+    583,
+    206,
+    408,
+    454,
+    204,
+    350,
+    387,
+    518,
+    403,
+    385,
+    544,
+    176,
+    393,
+    226,
+    457,
+    426
+   ]
+  },
+  {
+   "name": "One Star",
+   "rating": null,
+   "slope": null,
+   "yards": [
+    510,
+    403,
+    523,
+    175,
+    388,
+    380,
+    168,
+    322,
+    370,
+    502,
+    351,
+    336,
+    505,
+    161,
+    384,
+    174,
+    432,
+    404
+   ]
+  },
+  {
+   "name": "Two Star",
+   "rating": null,
+   "slope": null,
+   "yards": [
+    486,
+    386,
+    503,
+    158,
+    354,
+    360,
+    142,
+    305,
+    349,
+    484,
+    333,
+    317,
+    478,
+    149,
+    363,
+    147,
+    388,
+    356
+   ]
+  },
+  {
+   "name": "Three Star",
+   "rating": null,
+   "slope": null,
+   "yards": [
+    462,
+    382,
+    468,
+    136,
+    340,
+    338,
+    122,
+    257,
+    318,
+    477,
+    302,
+    303,
+    461,
+    141,
+    317,
+    122,
+    361,
+    314
+   ]
+  },
+  {
+   "name": "Four Star",
+   "rating": null,
+   "slope": null,
+   "yards": [
+    412,
+    332,
+    419,
+    104,
+    310,
+    278,
+    103,
+    240,
+    264,
+    459,
+    268,
+    284,
+    424,
+    121,
+    295,
+    90,
+    312,
+    265
+   ]
+  }
+ ]
+}

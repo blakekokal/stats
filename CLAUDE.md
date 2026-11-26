@@ -133,7 +133,8 @@ Frisco Farms (OSM: Plantation Golf Club; shift 4 m, fitted to the greens). TPC C
 OSM predates its 2020-21 renovation: bunkers from the imagery with `tools/swap_bunkers.py`, which cuts the
 sand out of greens it overlaps). TPC Four Seasons Las Colinas (OSM's holes have no par tags:
 pars from the card). Stonebriar Fazio and Country Club (two courses in one boundary: holes
-told apart by way id; Fazio #7's missing green grown from the imagery with `tools/green_from_seed.py`).
+told apart by way id; Fazio #7's missing green grown from the imagery with `tools/green_from_seed.py`). Dallas Athletic Club
+Blue (Gold not yet: see below).
 
 Skipped for now: Meadowbrook (Fort Worth; GolfPass's card is a different layout from OSM's holes),
 Lost Creek (Aledo; GolfPass says it closed), Pecan Valley River (see below). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
@@ -148,10 +149,12 @@ Public, complete:
   no OSM hole); needs the current card from the club
 
 Private, complete (doing these next, one at a time):
-Dallas Athletic Club, Dallas National, Colonial, Northwood, Prestonwood Creeks,
+Dallas National, Colonial, Northwood, Prestonwood Creeks,
 Hackberry Creek, Mira Vista, Eldorado, Oakmont, Shady Oaks.
 
 Mapped with gaps (better from a book, or fill the gaps from the imagery):
+- Dallas Athletic Club Gold: OSM's #16-#18 don't match GolfPass's card (see `tools/dac/README.md`);
+  needs the club's current card (Blue is live)
 - Pecan Valley River (Fort Worth): no fairways on 8 holes, no greens on #9 and #14; winter imagery
   hides the fairways (Hills is live; `tools/pecanvalley/` has the River's config)
 - tee boxes or fairways missing: Pecan Hollow, Mesquite Municipal, Luna Vista, Lake Arlington
