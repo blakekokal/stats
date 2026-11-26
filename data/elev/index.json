@@ -898,5 +898,20 @@
    724
   ],
   "source": "USGS 3DEP"
+ },
+ "tpcfourseasons": {
+  "bounds": [
+   -96.963012,
+   32.861704,
+   -96.945507,
+   32.880251
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   417,
+   532
+  ],
+  "source": "USGS 3DEP"
  }
 }
