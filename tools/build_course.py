@@ -94,6 +94,10 @@ def main(src, cfg_path, dst):
         for f in feats:
             if f["t"] == "green":
                 f["p"] = [[[round(q[0] + dla, R), round(q[1] + dlo, R)] for q in r] for r in f["p"]]
+    # "retype" [[lat, lng, from, to], ...]: a shape OSM tagged wrongly (Eldorado's #9 green is tagged a bunker)
+    for la, lo, a, b in cfg.get("retype", []):
+        for f in feats:
+            if f["t"] == a and inside([la, lo], f["p"][0]): f["t"] = b
     # a drop point may name a type ([lat, lng, "bunker"]) so a bunker inside a fairway goes but not the fairway
     feats = [f for f in feats if not any(inside(d[:2], f["p"][0]) and (len(d) < 3 or d[2] == f["t"]) for d in cfg.get("drop", []))]
     lines = {}
