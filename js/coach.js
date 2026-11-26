@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.32.0', ['New course: TPC Craig Ranch (McKinney), built without a yardage book: greens, fairways, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers and trees from the picture, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.31.0', ['New course: The Club at Frisco Farms (formerly Plantation Golf Club, Frisco), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.30.0', ['New course: Waterchase Golf Club (Fort Worth), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.29.0', ['New course: The Golf Club at Champions Circle (Fort Worth), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
