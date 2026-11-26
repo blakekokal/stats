@@ -1033,5 +1033,50 @@
    519
   ],
   "source": "USGS 3DEP"
+ },
+ "eldorado": {
+  "bounds": [
+   -96.660802,
+   33.172532,
+   -96.640484,
+   33.186151
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   535,
+   686
+  ],
+  "source": "USGS 3DEP"
+ },
+ "oakmont": {
+  "bounds": [
+   -97.096419,
+   33.142398,
+   -97.079724,
+   33.164413
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   561,
+   674
+  ],
+  "source": "USGS 3DEP"
+ },
+ "shadyoaks": {
+  "bounds": [
+   -97.428864,
+   32.746875,
+   -97.411476,
+   32.7577
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   560,
+   718
+  ],
+  "source": "USGS 3DEP"
  }
 }
