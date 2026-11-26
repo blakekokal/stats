@@ -250,3 +250,7 @@ body, body.coach { background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, 
 
 /* While a screen is being swiped: no glass blur (redrawing it every frame stutters). */
 body.swiping .cx, body.swiping .cx *, body.swiping .cx *::before { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+/* The screen before, shown under one being swiped back (js/coaching/swipe.js). */
+#swipeUnder { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, #1a1a1c 100%); }
+#swipeUnder .page { display: flex !important; height: 100%; }
+#swipeUnder #swipeUnderView > .cx { min-height: 100%; }
