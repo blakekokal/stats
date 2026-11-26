@@ -1,0 +1,18 @@
+{
+  "id": "championscircle",
+  "name": "The Golf Club at Champions Circle",
+  "location": "Fort Worth, TX",
+  "par": [4, 5, 3, 4, 4, 3, 4, 4, 5, 4, 4, 3, 3, 5, 4, 4, 3, 5],
+  "hcp": [9, 1, 13, 11, 15, 3, 5, 7, 17, 14, 10, 12, 16, 4, 2, 18, 8, 6],
+  "_comment_tees": "Scorecard from GolfPass (22704, formerly Doral Tesoro); its pars match OpenStreetMap's hole tags (par 71); its handicaps are used (OSM's have #1 and #3 both 13 and #10/#11 swapped). Its tee table rates a longer layout (Black 7027, Blue 6496, White 5841, Red 5143 yards, par 72) that matches none of the card's tees, so no ratings are given.",
+  "_comment_drop": "Polygons containing these points are not part of the course: the range tee.",
+  "drop": [[33.016504, -97.292111, "tee"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it. Winter imagery, dull sand: fitted to the greens (fit_shift.py green).",
+  "shift": {"east": -0.3, "north": 1.3},
+  "tees": [
+    {"name": "Black", "rating": null, "slope": null, "yards": [395, 616, 185, 415, 353, 215, 454, 433, 483, 334, 305, 181, 166, 525, 437, 343, 157, 506]},
+    {"name": "Gold", "rating": null, "slope": null, "yards": [373, 593, 160, 390, 331, 199, 411, 404, 465, 318, 261, 163, 142, 475, 384, 308, 127, 466]},
+    {"name": "White", "rating": null, "slope": null, "yards": [341, 544, 138, 327, 318, 178, 379, 365, 423, 260, 217, 147, 131, 442, 348, 277, 111, 440]},
+    {"name": "Red", "rating": null, "slope": null, "yards": [309, 512, 101, 279, 304, 134, 346, 336, 375, 239, 200, 111, 112, 416, 279, 230, 89, 381]}
+  ]
+}
