@@ -748,5 +748,20 @@
    758
   ],
   "source": "USGS 3DEP"
+ },
+ "pecanvalley-hills": {
+  "bounds": [
+   -97.462718,
+   32.65195,
+   -97.443563,
+   32.665201
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   607,
+   749
+  ],
+  "source": "USGS 3DEP"
  }
 }
