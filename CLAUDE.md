@@ -121,7 +121,8 @@ Fossil Creek, Whitestone (winter imagery and brown sand: shift fitted to the gre
 by eye), Hawks Creek (Shady Oaks is next door: kept to its own boundary), Oak Hollow, Tenison Park Highlands and Glen
 (one OSM boundary for both: holes told apart by way id; winter imagery with snow in the shade, so
 OSM's bunkers kept as they are). The Resort (Fort Worth; winter imagery and tan sand: shift
-fitted to the greens; OSM's 19th hole dropped). Pecan Valley Hills (River not yet: see below). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
+fitted to the greens; OSM's 19th hole dropped). Pecan Valley Hills (River not yet: see below). Texas Rangers
+(GolfPass's card has the nines swapped: the club's #1 is the 589-yard par 5, as in OSM). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
 
 Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, every shape
 traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).
@@ -131,8 +132,6 @@ from OSM; OSM numbers Pinta 10-18, so `tools/isabella/course.py` names each nine
 Public, complete:
 - Maridoe (Carrollton): GolfPass has the pre-renovation card (pars and yards fit
   no OSM hole); needs the current card from the club
-- Texas Rangers Golf Club (Arlington): OSM's holes 1-9 are GolfPass's 10-18 and the
-  other way round; check the club's current card before building
 
 Private, complete: TPC Craig Ranch, TPC Four Seasons Las Colinas, Stonebriar,
 Dallas Athletic Club, Dallas National, Colonial, Northwood, Prestonwood Creeks,
