@@ -224,10 +224,11 @@ document.addEventListener('touchmove', e => {
   if (!frame) frame = requestAnimationFrame(() => {
     frame = 0;
     if (!g || !g.dir) return;
-    const m = g.dx > 0 && g.acts.right && !g.acts.right.same ? g.box : (g.acts.region || g.box);
+    // Only a swipe back to another screen moves anything; tabs change at once on release.
+    const m = g.dx > 0 && g.acts.right && !g.acts.right.same ? g.box : (g.acts.region ? null : g.box);
     if (g.m && g.m !== m) clear(g.m);
     g.m = m;
-    place(m, g.dx, 0);
+    if (m) place(m, g.dx, 0);
     if (g.under) placeUnder(g.under, Math.max(0, g.dx), g.w, 0);
   });
 }, { passive: false });
@@ -240,6 +241,11 @@ function end() {
   const [t0, x0] = tr[0] || [0, 0], [t1, x1] = tr[tr.length - 1] || [1, 0];
   const v = (x1 - x0) / Math.max(1, t1 - t0); // px per ms
   const flick = Math.abs(v) > 0.4 && Math.sign(v) === Math.sign(dx) && Math.abs(dx) > 30;
+  if (act && act.same && (Math.abs(dx) > 50 || flick)) { // a tab or a step: at once, as a tap
+    if (gg.m) clear(gg.m);
+    drop(gg); act.fn(); stopMoving();
+    return;
+  }
   if (!act || (Math.abs(dx) < w * DONE && !flick)) {
     place(gg.m || box, 0, 200);
     if (gg.under) placeUnder(gg.under, 0, w, 200);

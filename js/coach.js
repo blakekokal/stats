@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.50', ['Swiping between tabs switches at once, like tapping the tab']],
   ['1.20.49', ['Swiping between tabs moves only what’s under the tabs; the title and tab buttons stay put, like tapping a tab']],
   ['1.20.48', ['Swiping back shows the screen before underneath as you drag, like the swipe from the left edge']],
   ['1.20.47', ['Swiping is smoother, the previous screen comes up as soon as you let go, and a quick flick is enough']],
