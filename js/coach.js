@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.56', ['Swiping from near the left edge uses only the phone’s own back swipe (it no longer shows three screens)']],
   ['1.20.55', ['The right-side strip is near black (not pure black), so a swiped screen can slide over it again']],
   ['1.20.54', ['The strip down the right side of the screen is pure black']],
   ['1.20.53', ['The strip down the right side of the screen is a lighter grey, closer to the app']],
