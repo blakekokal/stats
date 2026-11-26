@@ -620,6 +620,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.20.40', ['Speed and Combine History: filters and tiles in the new glass style']],
   ['1.20.39', ['Wedge Gapping: %, ½, Body and Clear buttons are all the same size']],
   ['1.20.38', ['Desktop: the Back button sits by the app, under Settings and Search, not in the window’s corner']],
   ['1.20.37', ['Coaching: Recent Activity runs to the bottom of the screen']],

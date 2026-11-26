@@ -166,8 +166,8 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
       <!-- Combine History -->
       <div style="margin-top:16px;">
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:8px;">Combine History</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;">
-          <select id="phCombFilterType" onchange="loadPHCombineHistory()" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:5px 8px;font-size:12px;">
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <select id="phCombFilterType" onchange="loadPHCombineHistory()" class="glassselect" style="flex:1;min-width:0;height:44px;color:#ffffff;font-size:14px;padding:0 12px;box-sizing:border-box;">
             <option value="all">All Types</option>
             <option value="Putting">Putting</option>
             <option value="Chipping (Prox)">Chipping Prox</option>
@@ -176,7 +176,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
             <option value="Driver">Driver</option>
             <option value="Line Drill">Line Drill</option>
           </select>
-          <select id="phCombFilterMode" onchange="loadPHCombineHistory()" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:5px 8px;font-size:12px;">
+          <select id="phCombFilterMode" onchange="loadPHCombineHistory()" class="glassselect" style="flex:1;min-width:0;height:44px;color:#ffffff;font-size:14px;padding:0 12px;box-sizing:border-box;">
             <option value="all">Custom &amp; Combine</option>
             <option value="combine">Combine Only</option>
             <option value="custom">Custom Only</option>
@@ -1096,8 +1096,8 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <button onclick="spStartNewSession()" style="width:100%;height:44px;background:#007a52;border:none;border-radius:12px;color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;">+ New Speed Session</button>
 
       <!-- Filters -->
-      <div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:10px;justify-content:center;">
-        <select id="spClubFilterSel" onchange="spSetClubFilter(this.value)" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:4px 6px;font-size:11px;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <select id="spClubFilterSel" onchange="spSetClubFilter(this.value)" class="glassselect" style="flex:1;min-width:0;height:44px;color:#ffffff;font-size:14px;padding:0 12px;box-sizing:border-box;">
           <option value="all">All Clubs</option>
           <option value="driver">Driver</option>
           <option value="woods">Woods</option>
@@ -1105,7 +1105,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
           <option value="irons">Irons</option>
           <option value="wedges">Wedges</option>
         </select>
-        <select id="spDateFilterSel" onchange="spSetDateFilter(this.value)" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:4px 6px;font-size:11px;">
+        <select id="spDateFilterSel" onchange="spSetDateFilter(this.value)" class="glassselect" style="flex:1;min-width:0;height:44px;color:#ffffff;font-size:14px;padding:0 12px;box-sizing:border-box;">
           <option value="all">All Time</option>
           <option value="1mo">Last Month</option>
           <option value="3mo">Last 3 Months</option>
@@ -1115,7 +1115,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       </div>
 
       <!-- Summary averages -->
-      <div id="spSummaryCard" style="background:#222222;border-radius:12px;padding:12px;margin-bottom:12px;display:none;">
+      <div id="spSummaryCard" class="glasstile" style="padding:14px;margin-bottom:12px;display:none;">
         <div style="font-size:11px;color:#44b8f0;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">Filtered Averages</div>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;" id="spSummaryGrid"></div>
       </div>
