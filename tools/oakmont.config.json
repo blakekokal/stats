@@ -1,0 +1,20 @@
+{
+  "id": "oakmont",
+  "name": "Oakmont Country Club",
+  "location": "Corinth, TX",
+  "par": [4, 4, 5, 3, 4, 5, 4, 3, 4, 4, 4, 3, 5, 4, 5, 4, 3, 4],
+  "hcp": [15, 5, 13, 9, 1, 11, 7, 17, 3, 4, 10, 14, 6, 12, 18, 2, 16, 8],
+  "_comment_tees": "Scorecard from GolfPass (2835); its pars match OpenStreetMap's hole tags (par 72). The Blue/White combination is left out. Ratings by total yards: Gold = its Black (6799), Blue, White men's; Red's is the women's.",
+  "_comment_drop": "Polygons containing these points are not part of the course: nothing here; trim_far.py drops the practice greens.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand).",
+  "shift": {"east": -0.5, "north": 2.2},
+  "_comment_greenShift": "OSM's greens sit about 3 m west of its bunkers: with the bunkers fitted to the sand, the greens move a further 3.0 m east and 0.3 m north (fit_shift.py green, checked by eye).",
+  "greenShift": {"east": 3.0, "north": 0.3},
+  "tees": [
+    {"name": "Gold", "rating": 72.6, "slope": 127, "yards": [362, 352, 524, 195, 393, 567, 405, 173, 433, 418, 387, 172, 567, 316, 533, 420, 162, 422]},
+    {"name": "Blue", "rating": 71.1, "slope": 121, "yards": [340, 340, 508, 183, 368, 542, 383, 152, 414, 389, 369, 152, 540, 306, 474, 395, 140, 401]},
+    {"name": "White", "rating": 67.4, "slope": 113, "yards": [305, 326, 460, 132, 351, 494, 353, 130, 360, 346, 313, 136, 523, 285, 451, 354, 138, 330]},
+    {"name": "Red", "rating": 69.2, "slope": 118, "yards": [250, 292, 450, 103, 302, 388, 275, 122, 355, 283, 266, 127, 457, 256, 405, 293, 123, 266]}
+  ]
+}
