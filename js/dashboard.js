@@ -13,8 +13,9 @@ import { icEl } from './icons.js';
 const S = {}; // shared state for the ported dashboard code
 var hcpLabels = { 'pro': 'Tour Pro', '0': 'Scratch', '5': '5 HCP', '10': '10 HCP', '15': '15 HCP', '20': '20 HCP', '25': '25 HCP', '30': '30 HCP' };
 const lvl = hcp => levelFromPref(hcp) || 'Pro';
-function getExpectedPutts(ft, hcp) { return ft <= 0 ? 0 : expected('green', ft, lvl(hcp)); }
-function getExpectedStrokes(dist, lie, hcp) {
+// Also Performance Analysis's, so the two pages give the same strokes gained.
+export function getExpectedPutts(ft, hcp) { return ft <= 0 ? 0 : expected('green', ft, lvl(hcp)); }
+export function getExpectedStrokes(dist, lie, hcp) {
   const l = lie === 'TEE' ? 'tee' : lie === 'FAIRWAY' || lie === 'GREEN' ? 'fairway' : /BUNKER|SAND/.test(lie || '') ? 'bunker' : lie === 'RECOVERY' ? 'recovery' : 'rough';
   return expected(l, dist, lvl(hcp));
 }
@@ -107,32 +108,28 @@ export function toCoachRound(r) {
 
 // ---------- page ----------
 
+// 2026-11-08 -> 11/8/2026.
+const mdy = d => { const [y, m, dd] = String(d || '').split('-').map(Number); return y && m && dd ? `${m}/${dd}/${y}` : String(d || ''); };
+
 // With `roundId`, shows the stats for that one round (from Round History).
 export function renderStatsDashboard(view, renderLogin, roundId) {
   if (!sync.user) return renderLogin(view);
   const only = roundId ? historyRounds().find(r => r.id === roundId) : null;
   const prefOf = l => (l === 'Pro' ? 'pro' : l === 'Scratch' ? '0' : l);
-  const sel = (opts, def, onchange) => h('select', { class: 'minisel', style: 'flex:1;min-width:0;', onchange }, opts.map(([v, l]) => h('option', { value: v, selected: v === def }, l)));
-  const fType = sel([['all', 'All Rounds'], ['Casual', 'Casual'], ['Tournament', 'Tournament']], 'all', () => draw());
-  const fTime = sel([['all', 'All Time'], ['1', 'Last Month'], ['3', 'Last 3 Mo'], ['6', 'Last 6 Mo'], ['12', 'Last Year']], 'all', () => draw());
-  const fHcp = sel(['pro', '0', '5', '10', '15', '20', '25', '30'].map(v => [v, 'vs ' + hcpLabels[v]]), sync.level ? prefOf(sync.level) : 'pro', async () => {
-    draw();
-    try { await sync.setLevel(levelFromPref(fHcp.value)); } catch { /* keep the local choice */ }
-  });
+  // What's shown: the level to compare with (beside "Strokes gained"), and Filter's round type and time.
+  const st = { hcp: sync.level ? prefOf(sync.level) : 'pro', type: 'all', time: 'all' };
+  setDashControls('dashContent', { filters: !only, get: () => st, set: (k, v) => {
+    st[k] = v; draw();
+    if (k === 'hcp') sync.setLevel(levelFromPref(v)).catch(() => { /* keep the local choice */ });
+  } });
   const content = h('div', { id: 'dashContent', style: 'text-align:left;' });
   const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: () => { if (!dashBack()) goBack(); } });
   back.innerHTML = '<svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>';
   // Only Past rounds scrolls (and a category's detail page, which is long); the rest stays put.
   view.replaceChildren(h('div', { class: 'cx top fixedpage' }, back,
     h('div', { class: 'fixedcol', style: 'width:100%;max-width:360px;' },
-      // The title, with Filter at its right (it shows or hides the filters below).
-      h('div', { style: 'position:relative;margin-bottom:6px;' },
-        h('div', { style: 'font-size:20px;font-weight:800;text-align:center;' }, icEl('bars', 'tint-blue'), only ? ' Round Stats' : ' Stats Dashboard'),
-        only ? null : h('button', { 'aria-label': 'Filter', onclick: () => toggleDashFilters(),
-          style: 'position:absolute;right:0;top:50%;transform:translateY(-50%);width:auto;max-width:none;height:30px;padding:0 10px;font-size:12px;font-weight:700;background:#282828;color:#9a9a9a;border-radius:8px;' }, 'Filter \u25be')),
-      only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || courseById(only.course).name} · ${only.date}${only.player ? ' · ' + only.player : ''}`) : null,
-      // Filters (round type, time, "vs" level): hidden until Filter (beside the title) is tapped.
-      h('div', { id: 'dashFilters', style: 'display:none;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;' }, only ? [fHcp] : [fType, fTime, fHcp]),
+      h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:6px;' }, icEl('bars', 'tint-blue'), only ? ' Round Stats' : ' Stats Dashboard'),
+      only ? h('div', { style: 'font-size:12px;color:#9a9a9a;text-align:center;margin-bottom:6px;' }, `${only.courseName || courseById(only.course).name} · ${mdy(only.date)}${only.player ? ' · ' + only.player : ''}`) : null,
       content)));
 
   function draw() {
@@ -140,12 +137,12 @@ export function renderStatsDashboard(view, renderLogin, roundId) {
       .sort((a, b) => (a.round_date < b.round_date ? 1 : a.round_date > b.round_date ? -1 : 0));
     if (!all.length) { content.innerHTML = '<div style="text-align:center;color:#606060;padding:20px;">No rounds saved yet. Finish at least one hole to see stats.</div>'; return; }
     const data = all.filter(r => {
-      if (fType.value !== 'all' && r.round_type !== fType.value) return false;
-      if (fTime.value !== 'all') { const c = new Date(); c.setMonth(c.getMonth() - +fTime.value); if (new Date(r.round_date + 'T12:00:00') < c) return false; }
+      if (st.type !== 'all' && r.round_type !== st.type) return false;
+      if (st.time !== 'all') { const c = new Date(); c.setMonth(c.getMonth() - +st.time); if (new Date(r.round_date + 'T12:00:00') < c) return false; }
       return true;
     });
     if (!data.length) { content.innerHTML = '<div style="text-align:center;color:#606060;padding:20px;">No rounds match these filters.</div>'; return; }
-    renderDashboard(data, fHcp.value);
+    renderDashboard(data, st.hcp);
   }
   draw();
 }
@@ -179,6 +176,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
   var content = document.getElementById(targetId || 'dashContent');
   if (!opts.single) _dash = { data: data, hcp: hcp, targetId: targetId };
   _dash.single = !!opts.single;
+  _dash.index = opts.single ? opts.index : null;
   
   // ===== AGGREGATE ALL DATA =====
   var A = { n: data.length, holes: 0, totScore: 0, totPar: 0, totPutts: 0,
@@ -453,12 +451,19 @@ export function renderDashboard(data, hcp, targetId, opts) {
   // Heading (a coach's view of a student has Filter beside "per round": round type, time and the level to compare with),
   // or, for one round picked from the list, which round it is (Back returns to all rounds).
   var top=opts.single&&data[0]?'<div style="display:flex;align-items:center;gap:8px;margin:2px 0 6px;">'
-    +'<div style="font-size:13px;color:#9a9a9a;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(data[0].course_name||'')+' \u00b7 '+data[0].round_date+'</div></div>':'';
-  html+=top+'<div style="display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:2px;">'
-    +'<div style="font-size:14px;font-weight:800;color:#00b87a;">STROKES GAINED \u00b7 '+(opts.single?'this round':'per round')+'</div>'
-    // A quiet text link on the same line as the heading.
-    // The coach's view of a student keeps it here; the Stats Dashboard page has it beside its title.
-    +(opts.single||targetId!=='svDashContent'?'':'<button class="glass-skip" onclick="toggleDashFilters()" style="height:auto;min-height:0;font-size:11px;font-weight:600;background:none;border:none;border-radius:0;padding:0;margin:0;max-width:none;width:auto;color:#606060;line-height:1;letter-spacing:.03em;">Filter \u25be</button>')+'</div>';
+    +'<div style="font-size:13px;color:#9a9a9a;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+escapeHtml(data[0].course_name||'')+' \u00b7 '+mdy(data[0].round_date)+'</div></div>':'';
+  // The heading, then the level to compare with and Filter (round type and time, in a box
+  // over the page): the same on the Stats Dashboard and in a coach's view of a student.
+  var ctl=CTL[targetId||'dashContent'], cv=ctl?ctl.get():null;
+  var opt=function(pairs,v){return pairs.map(function(p){return '<option value="'+p[0]+'"'+(String(p[0])===String(v)?' selected':'')+'>'+p[1]+'</option>';}).join('');};
+  html+=top+'<div class="dashsghead">'
+    +'<div style="font-size:12.5px;font-weight:800;color:#00b87a;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;">STROKES GAINED \u00b7 '+(opts.single?'this round':'per round')+'</div>'
+    +(cv?'<select class="minisel dashhcpsel" aria-label="Compare to" onchange="dashSet(\'hcp\',this.value)">'+opt(HCP_OPTS,cv.hcp)+'</select>':'')
+    +(cv&&ctl.filters&&!opts.single?'<button class="dashfilterbtn" aria-label="Filter" onclick="toggleDashFilters(this)">Filter</button>'
+      +'<div class="dashfilterbox" style="display:none;">'
+      +'<div class="lab">Rounds</div><select class="minisel" onchange="dashSet(\'type\',this.value)">'+opt(TYPE_OPTS,cv.type)+'</select>'
+      +'<div class="lab">Time</div><select class="minisel" onchange="dashSet(\'time\',this.value)">'+opt(TIME_OPTS,cv.time)+'</select></div>':'')
+    +'</div>';
   html+=sgBar('SG: Total', sgPer.tot, sgR, true, 1);
   // The four categories two by two, so more of Past rounds fits below.
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
@@ -614,7 +619,6 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+='</div></div>'; // .dashdetail, then the section
   
   content.innerHTML=html;
-  
 }
 
 // SG by round: one round's dashboard, and back to all of them.
@@ -642,10 +646,30 @@ function dashViewRound(i) {
 window.dashViewRound = dashViewRound;
 function dashAllRounds() { if (_dash) renderDashboard(_dash.data, _dash.hcp, _dash.targetId); }
 // Filter (beside the title, or beside "per round" in a coach's view of a student): shows or hides the page's filters (round type, time, and the level to compare with).
-function toggleDashFilters() {
-  var el = document.getElementById(_dash && _dash.targetId === 'svDashContent' ? 'svDashFilters' : 'dashFilters');
-  if (el) el.style.display = el.style.display === 'none' ? 'flex' : 'none';
+function toggleDashFilters(btn) {
+  var box = btn && btn.parentElement.querySelector('.dashfilterbox');
+  if (box) box.style.display = box.style.display === 'none' ? 'flex' : 'none';
 }
+// A Filter box closes on a tap anywhere outside it.
+document.addEventListener('click', function (e) {
+  document.querySelectorAll('.dashfilterbox').forEach(function (box) {
+    if (box.style.display !== 'none' && !box.contains(e.target) && !box.parentElement.contains(e.target.closest('.dashfilterbtn'))) box.style.display = 'none';
+  });
+});
+// The heading's controls for each dashboard (by its target id): get() gives
+// { hcp, type, time }; set(key, value) applies a change and redraws.
+var CTL = {};
+var HCP_OPTS = ['pro', '0', '5', '10', '15', '20', '25', '30'].map(function (v) { return [v, 'vs ' + hcpLabels[v]]; });
+var TYPE_OPTS = [['all', 'All Rounds'], ['Casual', 'Casual'], ['Tournament', 'Tournament']];
+var TIME_OPTS = [['all', 'All Time'], ['1', 'Last Month'], ['3', 'Last 3 Mo'], ['6', 'Last 6 Mo'], ['12', 'Last Year']];
+export function setDashControls(targetId, ctl) { CTL[targetId] = ctl; }
+function dashSet(key, v) {
+  var c = CTL[(_dash && _dash.targetId) || 'dashContent']; if (!c) return;
+  var one = _dash && _dash.single && _dash.index != null ? _dash.index : null; // one round picked from Past rounds
+  c.set(key, v);
+  if (key === 'hcp' && one != null) dashOneRound(one); // stays on that round, with the new level
+}
+window.dashSet = dashSet;
 window.dashOneRound = dashOneRound; window.dashAllRounds = dashAllRounds; window.toggleDashFilters = toggleDashFilters;
 
 // Shows one part of the dashboard: 0 the SG bars, 1-5 a category's detailed stats.

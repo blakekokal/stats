@@ -16,7 +16,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SRIQYISbFAIcbNaYD9H3Lyhy8N96NP5RRX2q1tV79XzJ-UsSxpxXkWx8KPcXa1bPC1p675MtCz6tisJQx7heESOxUTVHGrU7tn2UaJlcy55msyaHXsCgcpIXsoaieWPXMnxU7FV5SMPdhtIjX61O92OjbugQQ7DOvCy2K-idN_0KicmYifCOtkwOQmtS5d3Nkqkxlfx5hApWuqwcdWBKE0oc2Z8GbT3UzbuFjo=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Driver</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;text-align:left;">
           <li>Feet wide</li>
           <li>Ball by front foot</li>
           <li>Tall tee</li>
@@ -30,7 +30,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SSlzxe1ZkAQFMoPwx7a2hsJ14qmu95s6ouidrhGGPeFk3lakIWozxBBnngq0sN6O58bz8PJsNz68h4ouDCjBWtxXOz8pKditU_Ewbwg2x7FgD3BAxv2S4HhjgiEDntGacgfCxAtOpE7dUk3fM5P1nspByJPlG1e-AS7UOjjCCi3F9olICzO9bA_hZkl6fr_UzinsL2NLifuv_G8xZmQr-7uVMFyN-IJji2E=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Hybrid / 3 Wood</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;text-align:left;">
           <li>Feet slightly wider than shoulder width</li>
           <li>Ball slightly forward in stance</li>
           <li>Shoulders level</li>
@@ -44,7 +44,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SSSafVu6pyn9CtjE6MCwlqPIoUlbor4rsToLB8w_qPy40arVW_DzAOFUO4WmMmwzpnLgvG7eJUNSKWGlbsrX3myrbTV0oGOufhGungQJikKiFO_dTRcQnIbhLxflEAIn2mqepcA8DMfzcPNTajR0IrRR0mXw58avsULIYvS-uRWFEkHdb3-dun82JAAf9WGadxmZU8g9SIg7gDw1YfwRuqDnmQlwFn_QeupMqg=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Irons</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;text-align:left;">
           <li>Feet shoulder width</li>
           <li>Ball in middle of stance</li>
           <li>Shoulders level</li>
@@ -58,7 +58,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0STiquwMUrI8swVnJjsZAyR3CNWXbbTFGaloKaBtGrMbDayuXszg5bXFF6GUjDi3Kh5iQE2FbrYkffIuPVvXtlht46QXHefD4ur3dg5c2LkB3tIKuRZNaa9ap9oRTUwhyYZa-Trp5q2kVltJ431dO0_Ffkx9NIfIAFHy7OdYgEyNSmjzK4RijsdFndo9X67CsiV8k9BQAGUJ1SXy692rZ7JAbDgRjlHfYQtZ=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Chipping (Low)</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;text-align:left;">
           <li>Use PW or SW</li>
           <li>70-80% of weight on front foot</li>
           <li>Feet closer together</li>
@@ -73,7 +73,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SS8CLkEWl7AKcDzVO_5yFgF_rAKOF0PSfuLe-yEvDZJk6DUoLZm7y7vnBc6k4QVSPomKBVtW8VU0S_zwF1-L22TrnB04frfTTfIgglnjVYqBLGNQfZ9LfNbmzA6RnJZ2MJKcQN2gVfHLIxK1PedKbKmHGFofUTOzjp2HB_KGfrW1QGNcV_0R_Z7_Ca0XRD0NFt-7XgqLTZnLvBseBU2-RWzlchEk-RPzbpIgpU=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Chipping (High)</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;text-align:left;">
           <li>Use SW</li>
           <li>70-80% of weight on front foot</li>
           <li>Feet closer together</li>
@@ -88,7 +88,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SQrqmzOjd-3aSmwHpP9uFiRovqAxRbe_GyURl2VqM5RINn_oFS-95mSwHrBq_8M-9O8fCpY60AFND55zzOm2Bs9byZArW7xLj36xLcXXe-pfIeRl9Aws7-FZxTQsrwYayCEWFyJ2UBQwIWSSm7w-NwnRnMedR9NpkiuF7DlL1fWRzVWJblQ79gm3UNKcby3OYuLpCxjRHxQgHjSVjLIIuin6w14Xkemsw=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Bunker / Sand</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;text-align:left;">
           <li>Use SW</li>
           <li>Feet shoulder width</li>
           <li>Ball in front of stance</li>
@@ -103,7 +103,7 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
       <img src="https://lh3.googleusercontent.com/sitesv/APaQ0SRlfRyfWIZrDSnLIuxViVrMdPARpebxXiCvAMvDQn6BasIERfCXMGoiZdielgP_UhyNUHHooSIYo3uDKmg-afYdgCW5x7U7yRlNPDHxGq7qqxYGT3vjvfhKunecI5Ftm5FG3gmWFZ7GbLuynIbpSmToZcridjh3TB5GKiRDUtSa1NST7ThbR-OG9NLdxnT9TGPYgmU9p_uKzZuhGmjSSkpkBkI0815qChg1hFI=w1280" alt="" onerror="this.style.display='none'" style="width:100%;display:block;border-radius:14px 14px 0 0;">
       <div style="padding:14px 16px;">
         <div style="font-size:17px;font-weight:800;margin-bottom:8px;">Putting</div>
-        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;">
+        <ul style="margin:0;padding-left:18px;font-size:13px;color:#9a9a9a;line-height:2;text-align:left;">
           <li>Feet around shoulder width</li>
           <li>Ball in middle/front of stance</li>
           <li>No wrists, rock back and shoulders back and forth</li>
@@ -483,9 +483,6 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     <div style="font-size:20px;font-weight:800;margin-bottom:12px;text-align:center;">Distance Optimizer</div>
     <div id="learnDistanceOptimizerContainer" style="width:100%;">
 <div id="bagOptApp">
-  <div class="bo-header">
-    <h2>Bag Optimizer <span style="font-size:0.5em;font-weight:normal;opacity:0.7;">v2.5</span></h2>
-  </div>
   <div class="bo-content">
     <div class="bo-results" id="bo_results">
       <h3>Optimal Results</h3>
@@ -859,20 +856,21 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
     <!-- ── COMBINES PAGE ── -->
     <div id="perfPageCombines" style="display:none;">
       <div id="perfCombineLoading" style="background:#1e1e1e;border-radius:12px;padding:18px;text-align:center;color:#9a9a9a;font-size:13px;margin-bottom:10px;">Loading combine data…</div>
-      <div id="perfCombineGrid" style="display:none;grid-template-columns:1fr 1fr;gap:10px;align-items:start;width:100%;">
+      <div id="perfCombineGrid" style="display:none;grid-template-columns:1fr 1fr;gap:8px;align-items:start;width:100%;">
         <div>
           <div style="font-size:15px;font-weight:800;color:#ffffff;margin-bottom:8px;text-align:center;">Putting</div>
           <div id="perfCombinePuttFocus"></div>
           <div id="perfCombinePuttOverview"></div>
-          <div id="perfCombinePuttDetail" style="display:none;"></div>
         </div>
         <div>
           <div style="font-size:15px;font-weight:800;color:#ffffff;margin-bottom:8px;text-align:center;">Wedge</div>
           <div id="perfCombineWedgeFocus"></div>
           <div id="perfCombineWedgeOverview"></div>
-          <div id="perfCombineWedgeDetail" style="display:none;"></div>
         </div>
       </div>
+      <!-- A tile's detail opens here, below the tiles (as Past Rounds' does) -->
+      <div id="perfCombinePuttDetail" style="display:none;margin-top:14px;"></div>
+      <div id="perfCombineWedgeDetail" style="display:none;margin-top:14px;"></div>
       <div id="perfCombineFooter" style="display:none;text-align:center;font-size:10px;color:#9a9a9a;margin-top:14px;">All stats vs scratch · combines only</div>
     </div>
 
@@ -912,7 +910,7 @@ export const DRILLS_PAGES = `<div id="drillsPage" class="page" style="justify-co
 export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;padding-bottom:80px;align-items:center;">
   <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
   <div style="text-align:center;margin-bottom:12px;">
-    <div style="font-size:22px;font-weight:800;">${ic('bag', 'tint-blue')} My Clubs</div>
+    <div style="font-size:22px;font-weight:800;">${ic('bag', 'tint-blue')} My Bag</div>
   </div>
 
   <!-- Coach Student Selector -->
@@ -925,10 +923,10 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
   <!-- Tabs -->
   <div style="position:sticky;top:0;z-index:10;width:100%;display:flex;justify-content:center;background:#1e1e1e;padding:0 0 16px;">
     <div style="display:grid;grid-template-columns:repeat(4,1fr);width:100%;max-width:360px;background:#222222;border-radius:12px;overflow:hidden;border:1px solid #333333;">
-      <button id="bagTabMyBag" onclick="setBagTab('myBag')" style="height:40px;font-size:10px;font-weight:700;border:none;cursor:pointer;background:#2d7abc;color:#ffffff;padding:0 2px;">My Bag</button>
-      <button id="bagTabFindYardages" onclick="setBagTab('findYardages')" style="height:40px;font-size:10px;font-weight:700;border:none;cursor:pointer;background:transparent;color:#606060;padding:0 2px;">Find Yardages</button>
-      <button id="bagTabWedgeGap" onclick="setBagTab('wedgeGap')" style="height:40px;font-size:10px;font-weight:700;border:none;cursor:pointer;background:transparent;color:#606060;padding:0 2px;">Wedge Gapping</button>
-      <button id="bagTabSpeed" onclick="setBagTab('speed')" style="height:40px;font-size:10px;font-weight:700;border:none;cursor:pointer;background:transparent;color:#606060;padding:0 2px;">Speed</button>
+      <button id="bagTabMyBag" onclick="setBagTab('myBag')" style="height:40px;font-size:13px;font-weight:700;border:none;cursor:pointer;background:#2d7abc;color:#ffffff;padding:0 2px;">Bag</button>
+      <button id="bagTabFindYardages" onclick="setBagTab('findYardages')" style="height:40px;font-size:13px;font-weight:700;border:none;cursor:pointer;background:transparent;color:#606060;padding:0 2px;">Yardages</button>
+      <button id="bagTabWedgeGap" onclick="setBagTab('wedgeGap')" style="height:40px;font-size:13px;font-weight:700;border:none;cursor:pointer;background:transparent;color:#606060;padding:0 2px;">Wedges</button>
+      <button id="bagTabSpeed" onclick="setBagTab('speed')" style="height:40px;font-size:13px;font-weight:700;border:none;cursor:pointer;background:transparent;color:#606060;padding:0 2px;">Speed</button>
     </div>
   </div>
 
@@ -1495,14 +1493,10 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
             The <strong style="color:#00b87a;">Evaluation Test</strong> runs a series of mini combines to build a baseline of your game. You'll get a total score out of 100, your strokes gained, and a handicap comparison.
           </div>
         </div>
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:8px;">Choose Format</div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:8px;">Start</div>
         <button onclick="evalStart('lm')" style="width:100%;height:auto;padding:16px;background:#1a4a8a;border:2px solid #2d7abc;border-radius:12px;text-align:left;color:#ffffff;cursor:pointer;margin-bottom:10px;max-width:none;">
           <div style="font-size:1rem;font-weight:800;">Launch Monitor</div>
           <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:3px;">Full evaluation using launch monitor data</div>
-        </button>
-        <button onclick="evalStart('nolm')" style="width:100%;height:auto;padding:16px;background:#282828;border:2px solid #333333;border-radius:12px;text-align:left;color:#ffffff;cursor:pointer;max-width:none;">
-          <div style="font-size:1rem;font-weight:800;">No Launch Monitor</div>
-          <div style="font-size:11px;color:rgba(255,255,255,0.55);margin-top:3px;">Coming soon</div>
         </button>
       </div>
 
@@ -1543,7 +1537,7 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
   <!-- Fixed header -->
   <div class="fixedhead" style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
     <button id="comb-header-back-btn" class="back-btn-top" aria-label="Back" onclick="combHeaderBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <div style="font-size:1.2rem;font-weight:800;color:#ffffff;">Short Game Combines</div>
+    <div id="comb-page-title" style="font-size:1.2rem;font-weight:800;color:#ffffff;">Combines</div>
     <div id="combStudentBanner" style="display:none;background:#007a52;color:#ffffff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;margin-top:4px;"></div>
   </div>
 

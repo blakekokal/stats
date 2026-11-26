@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from './core.js';
 import { expose } from './core.js';
 import { _sb } from './core.js';
@@ -36,7 +37,7 @@ async function sendCoachDrillAssignment() {
     drill_category: drillCat, note: note || null, coach_name: coachName,
     completed: false, created_at: new Date().toISOString()
   });
-  if (error) { msg.style.color = '#d4706e'; msg.textContent = 'Error: ' + error.message; return; }
+  if (error) { msg.style.color = '#d4706e'; msg.textContent = errText(error, 'Error: '); return; }
 
   await _sb.from('notifications').insert({
     user_id: studentId, type: 'drill_assigned', title: coachName + ' assigned you a drill',
@@ -241,7 +242,7 @@ async function sendCoachCombineAssignment() {
   }
 
   var { error } = await _sb.from('coach_combine_assignments').insert(insertData);
-  if (error) { msg.style.color = '#d4706e'; msg.textContent = 'Error: ' + error.message; return; }
+  if (error) { msg.style.color = '#d4706e'; msg.textContent = errText(error, 'Error: '); return; }
 
   var notifMsg = combType + (target ? ' — target: ' + target : '') + (note ? ' — ' + note : '');
   await _sb.from('notifications').insert({

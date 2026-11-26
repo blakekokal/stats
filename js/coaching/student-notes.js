@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from './core.js';
 import { expose } from './core.js';
 import { _sb } from './core.js';
@@ -157,7 +158,7 @@ async function sendSvNote() {
   if (_editingSvNoteId) {
     var updateData = { note_text: text, note_type: noteType, lesson_date: lessonDate || null };
     var { data: updatedRows, error } = await _sb.from('coach_notes').update(updateData).eq('id', _editingSvNoteId).eq('coach_id', S.currentUser.id).select();
-    if (error) { msg.style.color = '#d4706e'; msg.textContent = 'Error: ' + error.message; return; }
+    if (error) { msg.style.color = '#d4706e'; msg.textContent = errText(error, 'Error: '); return; }
     if (!updatedRows || updatedRows.length === 0) { msg.style.color = '#d4706e'; msg.textContent = 'Error: Could not update note'; return; }
     // Update local cache immediately so UI reflects changes
     if (S.svAllNotes) {
@@ -186,7 +187,7 @@ async function sendSvNote() {
   if (lessonDate) insertData.lesson_date = lessonDate;
 
   var { error } = await _sb.from('coach_notes').insert(insertData);
-  if (error) { msg.style.color = '#d4706e'; msg.textContent = 'Error: ' + error.message; return; }
+  if (error) { msg.style.color = '#d4706e'; msg.textContent = errText(error, 'Error: '); return; }
 
   var notifMsg = (lessonDate ? 'Lesson ' + lessonDate + ': ' : '') + (text.length > 70 ? text.slice(0,70) + '…' : text);
   await _sb.from('notifications').insert({
@@ -204,7 +205,7 @@ async function sendSvNote() {
 async function deleteSvNote(noteId) {
   if (!confirm('Delete this note?')) return;
   var { error } = await _sb.from('coach_notes').delete().eq('id', noteId).eq('coach_id', S.currentUser.id);
-  if (error) { alert('Error deleting: ' + error.message); return; }
+  if (error) { alert(errText(error, 'Error deleting: ')); return; }
   var el = document.getElementById('svNote_' + noteId);
   if (el) el.remove();
   // Update stored data

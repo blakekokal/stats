@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { onEnter } from '../coaching/core.js';
 import { S } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
@@ -5,9 +6,8 @@ import { _viewingAsStudent, activeUserId } from '../coaching/core.js';
 import { _sb } from '../coaching/core.js';
 import { loadPerfCombineData } from './combines.js';
 import { historyRounds } from '../rounds.js';
-import { toCoachRound } from '../dashboard.js';
+import { toCoachRound, getExpectedPutts, getExpectedStrokes } from '../dashboard.js'; // the Stats Dashboard's baseline
 import { isDriver } from '../model.js';
-import { getExpectedPutts, getExpectedStrokes } from '../coaching/sg-calc.js';
 import { ic } from '../icons.js';
 
 // ═══════════════════════════════════════════════════════════════
@@ -34,6 +34,11 @@ function togglePerfTab(tab) {
   ['ott','app','arg','putt'].forEach(function(t) {
     var e = document.getElementById('perfTab-' + t);
     if (e) e.style.display = 'none';
+  });
+  // The cards' own captions follow: Close on the open one, View detail on the rest.
+  ['ott','app','arg','putt'].forEach(function(t) {
+    var c = document.getElementById('perfCaret-' + t);
+    if (c) c.textContent = (!isOpen && t === tab) ? 'Close \u25b2' : 'View detail \u2192';
   });
   // If it was closed, open it
   if (!isOpen) {
@@ -117,7 +122,7 @@ export async function loadPerformanceAnalysis() {
   } catch(e) {
     subtitle.textContent = 'Error loading data';
     noRounds.style.display = 'block';
-    document.getElementById('perfNoRounds').textContent = 'Could not load rounds: ' + e.message;
+    document.getElementById('perfNoRounds').textContent = errText(e, 'Could not load rounds: ');
   }
 }
 
@@ -512,7 +517,7 @@ export function renderPerfAnalysis(a) {
       '<div style="font-size:10px;text-align:center;color:#9a9a9a;">' + stat1 + stat2Html + '</div>' +
       '<div style="height:3px;background:rgba(255,255,255,0.08);border-radius:2px;margin-top:8px;">' +
       '<div style="width:' + Math.max(5, Math.min(100, (val + 2) / 4 * 100)) + '%;height:3px;background:' + color + ';border-radius:2px;"></div></div>' +
-      '<div style="font-size:9px;color:#9a9a9a;margin-top:6px;text-align:right;">' + (active ? 'Close ▲' : 'View detail →') + '</div>';
+      '<div id="perfCaret-' + key + '" style="font-size:9px;color:#9a9a9a;margin-top:6px;text-align:right;">' + (active ? 'Close ▲' : 'View detail →') + '</div>';
   }
 
   var ottCard  = document.getElementById('perfCardOtt');
@@ -672,10 +677,11 @@ export function renderPerfAnalysis(a) {
     puttRow('25+ ft (3-putts)',    pb['25+'].threePutts || 0, pb['25+'].att || 0, true);
 }
 
+// A detail panel's heading, the same on Past Rounds and Combines: the title, and Close.
 function perfTabHeader(key, title, color) {
-  return '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+  return '<div class="perfdetailhead">' +
     '<div style="font-size:14px;font-weight:800;color:' + color + ';">' + title + '</div>' +
-    '<button onclick="togglePerfTab(\'' + key + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:12px;cursor:pointer;height:auto;max-width:none;width:auto;padding:0;">✕ Close</button>' +
+    '<button class="perfclose" onclick="togglePerfTab(\'' + key + '\')">Close \u25b2</button>' +
     '</div>';
 }
 

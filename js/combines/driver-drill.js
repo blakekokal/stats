@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { _evalState, evalCaptureResult } from './eval-test.js';
@@ -263,7 +264,7 @@ async function driverDrillSave(){
 
   var resp = await _sb.from('combine_scores').insert(payload);
   if (resp.error) {
-    if (msg) { msg.style.color = '#d4706e'; msg.textContent = 'Save failed: ' + resp.error.message; }
+    if (msg) { msg.style.color = '#d4706e'; msg.textContent = errText(resp.error, 'Save failed: '); }
     return;
   }
   if (msg) { msg.style.color = '#9affc8'; msg.textContent = '✓ Saved to your profile'; }

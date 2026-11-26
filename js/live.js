@@ -11,7 +11,7 @@
 // Viewer: #/live/<share id> fetches that copy and opens it read-only on the
 // hole screen (rounds.js holds it in memory; nothing is saved on the device).
 
-import { store, sync, pushLive, deleteLive, fetchLive, notifyCoach } from './store.js';
+import { store, sync, pushLive, deleteLive, fetchLive, notifyCoach, errText } from './store.js';
 import { roundKeyOf, startWatching, watchingId, watchInfo } from './rounds.js';
 
 const infoKey = roundId => 'live:' + roundId;
@@ -70,7 +70,7 @@ async function flush() {
     const info = ensureInfo(roundId);
     const at = (r.id === currentId() && +sessionStorage.getItem('hole')) || null;
     try { await pushLive(info.id, { round: r, at, live: isLiveOn(r), name: r.player || sync.name || '', sent: Date.now() }); }
-    catch (e) { pending.add(roundId); failed = e.message || String(e); break; }
+    catch (e) { pending.add(roundId); failed = errText(e); break; }
     announce(r, info);
   }
   sending = false;

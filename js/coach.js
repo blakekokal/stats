@@ -3,7 +3,7 @@
 // Coaching are the coaching app's own pages (js/coaching).
 
 import { h, course, toast, COURSES, courseById, setActiveCourse, goBack, ninesWith, comboId, isAdmin } from './app.js';
-import { store, sync, submitCourseRequest, fetchCourseRequests, setCourseRequestStatus, countNewCourseRequests, markCourseRequestsSeen } from './store.js';
+import { store, sync, submitCourseRequest, fetchCourseRequests, setCourseRequestStatus, countNewCourseRequests, markCourseRequestsSeen, errText } from './store.js';
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
 import { checkCoachingDot } from './coaching/index.js';
@@ -150,11 +150,9 @@ export function renderNewRound(view, { scout = false } = {}) {
   // the Rules of Golf allow (distances only: no plays-like, wind, contours,
   // strokes gained or club advice on the hole screen).
   const type = { value: '' };
-  const typeNote = h('div', { style: 'width:100%;max-width:320px;text-align:center;font-size:12px;color:#606060;margin-top:-4px;' });
   const typeBtn = (v, label, sub) => h('button', { class: 'roundtype', 'aria-pressed': 'false', onclick: () => {
     type.value = v; err.textContent = '';
     typeRow.querySelectorAll('button').forEach(b => { const on = b === typeRow.querySelector(`[data-v="${v}"]`); b.classList.toggle('on', on); b.setAttribute('aria-pressed', String(on)); });
-    typeNote.textContent = v === 'Tournament' ? 'Tournament mode: USGA legal features enabled' : 'Casual: every tool available';
   }, 'data-v': v }, h('b', {}, label), h('small', {}, sub));
   const typeRow = h('div', { class: 'roundtypes', role: 'group', 'aria-label': 'Round type' },
     typeBtn('Casual', 'Casual', 'Every tool available'), typeBtn('Tournament', 'Tournament', 'USGA legal'));
@@ -258,7 +256,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     view.replaceChildren(page('top', backBtn(),
       h('div', { style: 'font-size:20px;font-weight:800;padding:0 44px;line-height:1.2;' }, icEl('map', 'tint-blue'), ' GPS Overview / Yardage Books'),
       h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:-4px;' }, `${COURSES.length} courses added`),
-      courseBox, ninesBox, tee, teeInfo, typeRow, typeNote, confirm, genBook, savedBooksBtn, err, reqBtn()));
+      courseBox, ninesBox, tee, teeInfo, typeRow, confirm, genBook, savedBooksBtn, err, reqBtn()));
     return;
   }
   // The page fits the screen and doesn't scroll (the course list scrolls inside its drop-down).
@@ -267,7 +265,7 @@ export function renderNewRound(view, { scout = false } = {}) {
     name,
     h('div', { class: 'row' }, level, date),
     courseBox, ninesBox,
-    tee, teeInfo, typeRow, typeNote,
+    tee, teeInfo, typeRow,
     h('div', { class: 'row' }, b9, b18),
     custom,
     confirm, err, reqBtn()));
@@ -305,7 +303,7 @@ export function renderHistory(view) {
       return true;
     }).sort((x, y) => ({ 'date-desc': y.r.date.localeCompare(x.r.date) || y.r.updated - x.r.updated, 'date-asc': x.r.date.localeCompare(y.r.date),
       'score-asc': x.s.score - y.s.score, 'score-desc': y.s.score - x.s.score })[sort.value]);
-    msg.textContent = `${shown.length} of ${all.length} round(s)`;
+    msg.textContent = `${shown.length} of ${all.length} round${all.length === 1 ? '' : 's'}`;
     const n = [fType, fHoles, fTime, fStatus].filter(f => f.value !== 'all').length + (sort.value !== 'date-desc' ? 1 : 0);
     filterBtn.lastChild.textContent = n ? `Filter · ${n}` : 'Filter';
     filterBtn.style.background = n ? '#2d7abc' : '#282828';
@@ -409,7 +407,8 @@ export function renderEditRound(view, id) {
 // Submit a new course: a logged-in player names a course to be added; it lands
 // in the admin's Settings (Course Requests) with a dot on Home's gear.
 function openCourseRequest(prefill = '') {
-  const close = () => ov.remove();
+  const close = () => { ov.remove(); window.removeEventListener('hashchange', close); };
+  window.addEventListener('hashchange', close); // leaving the page (a swipe back, say) closes it
   const name = h('input', { placeholder: 'Course name', value: prefill, maxlength: 120, 'aria-label': 'Course name' });
   const place = h('input', { placeholder: 'City, State', maxlength: 120, 'aria-label': 'City and state' });
   const notes = h('input', { placeholder: 'Website or notes (optional)', maxlength: 1000, 'aria-label': 'Website or notes' });
@@ -420,7 +419,7 @@ function openCourseRequest(prefill = '') {
     if (!p) { msg.textContent = 'Enter the city and state'; msg.className = 'msg err'; return; }
     send.disabled = true; msg.textContent = 'Sending…'; msg.className = 'msg ok';
     try { await submitCourseRequest({ name: n, place: p, notes: notes.value.trim() }); close(); toast('Thanks! Your course request was sent.'); }
-    catch (e) { msg.textContent = e.message || String(e); msg.className = 'msg err'; send.disabled = false; }
+    catch (e) { msg.textContent = errText(e); msg.className = 'msg err'; send.disabled = false; }
   } }, 'SUBMIT');
   const ov = h('div', { class: 'cx reqov', onclick: e => { if (e.target === ov) close(); } },
     h('div', { class: 'reqbox' },
@@ -457,7 +456,7 @@ function courseRequestsSection() {
     list.replaceChildren(...rows.map(r => {
       const d = new Date(r.created);
       const sel = h('select', { class: 'minisel', 'aria-label': 'Status of ' + r.name, onchange: async () => {
-        try { await setCourseRequestStatus(r.id, sel.value); card.dataset.status = sel.value; } catch (e) { toast(e.message || String(e)); sel.value = card.dataset.status; }
+        try { await setCourseRequestStatus(r.id, sel.value); card.dataset.status = sel.value; } catch (e) { toast(errText(e)); sel.value = card.dataset.status; }
       } }, STATUS.map(([v, l]) => h('option', { value: v, selected: v === r.status }, l)));
       const card = h('div', { class: 'reqcard', 'data-status': r.status },
         h('div', { class: 'reqtop' }, h('b', {}, r.name), sel),
@@ -466,7 +465,7 @@ function courseRequestsSection() {
         h('div', { class: 'small muted' }, `${r.who || r.email || 'A player'} · ${d.getMonth() + 1}/${d.getDate()}/${d.getFullYear()}`));
       return card;
     }));
-  }).catch(e => list.replaceChildren(h('div', { class: 'small', style: 'color:#d4706e;' }, e.message || String(e))));
+  }).catch(e => list.replaceChildren(h('div', { class: 'small', style: 'color:#d4706e;' }, errText(e))));
   return h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Course Requests'), list);
 }
 
@@ -486,16 +485,16 @@ function accountRoleSection() {
       if (!confirm('Coach access lets you add students, view their rounds and assign drills. Send a request to the admin?')) return;
       say('Sending…', true);
       try { say((await sendCoachRequest()) === 'pending' ? 'Your request is already waiting for approval.' : "✓ Request sent! You'll be notified when it's approved.", true); }
-      catch (e) { say(e.message || String(e)); }
+      catch (e) { say(errText(e)); }
       return;
     }
     const was = me.role; me.role = role; show();
     try { await saveRole(role); say(role === 'coach' ? '✓ Coach: Coaching shows your students.' : '✓ Student: Coaching shows your coach.', true); }
-    catch (e) { me.role = was; show(); say(e.message || String(e)); }
+    catch (e) { me.role = was; show(); say(errText(e)); }
   };
   const student = h('button', { class: 'rolebtn', disabled: true, onclick: () => pick('student') }, 'Student');
   const coach = h('button', { class: 'rolebtn', disabled: true, onclick: () => pick('coach') }, 'Coach');
-  fetchMyRole().then(r => { me = r; show(); if (r.isAdmin) say('Admins are always coaches.', true); }).catch(e => say(e.message || String(e)));
+  fetchMyRole().then(r => { me = r; show(); if (r.isAdmin) say('Admins are always coaches.', true); }).catch(e => say(errText(e)));
   return h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Account Role'),
     h('div', { style: 'display:flex;gap:6px;width:100%;max-width:280px;' }, student, coach), msg);
 }
@@ -523,13 +522,10 @@ export function renderSettingsPage(view) {
   } }, LEVELS.map(l => levelOpt(l, profileLevel(), true)));
   const pw1 = h('input', { type: 'password', placeholder: 'New Password (min 6 chars)', autocomplete: 'new-password' });
   const pw2 = h('input', { type: 'password', placeholder: 'Confirm New Password', autocomplete: 'new-password' });
-  const off = text => h('button', { disabled: true, title: 'Coming soon', style: 'flex:1;height:36px;font-size:12px;background:#333;border-radius:8px;font-weight:600;color:#606060;' }, text);
 
   view.replaceChildren(page('top', backBtn(),
     h('div', { style: 'width:100%;max-width:320px;display:flex;flex-direction:column;align-items:center;gap:4px;' },
       h('div', { style: 'font-size:18px;font-weight:800;' }, icEl('gear'), ' Settings'),
-      isAdmin ? courseRequestsSection() : null,
-      isAdmin ? testRoundsSection() : null,
       h('div', { style: 'font-size:13px;color:#9a9a9a;' }, u.email),
       h('div', { style: 'font-size:11px;color:#606060;margin-bottom:2px;' }, joined ? `Joined ${joined.getMonth() + 1}/${joined.getDate()}/${joined.getFullYear()}` : ''),
       nameIn,
@@ -537,24 +533,25 @@ export function renderSettingsPage(view) {
         const n = nameIn.value.trim();
         if (!n) return say(nameMsg, 'Name cannot be empty');
         say(nameMsg, 'Saving...', true);
-        try { await sync.setName(n); say(nameMsg, '✓ Name updated!', true); } catch (e) { say(nameMsg, e.message || String(e)); }
+        try { await sync.setName(n); say(nameMsg, '✓ Name updated!', true); } catch (e) { say(nameMsg, errText(e)); }
       } }, 'SAVE NAME'), nameMsg,
       accountRoleSection(),
       h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Strokes Gained Comparison'), hcp, hcpMsg),
       h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Avg Total Drive'), drive,
         h('div', { style: 'font-size:11px;color:#606060;max-width:280px;' }, 'Par 4s and 5s open with the crosshair this far from the tee. Leave blank to use the spot where a drive down the fairway gains 0 strokes.'),
         driveMsg),
-      h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Launch Monitor'),
-        h('div', { style: 'display:flex;gap:6px;width:100%;max-width:280px;' }, off('I have one'), off("I don't have one"))),
       h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Change Password'), pw1, pw2,
         h('button', { style: 'background:#f0c830;', onclick: async () => {
           if (pw1.value.length < 6) return say(pwMsg, 'Password must be at least 6 characters');
           if (pw1.value !== pw2.value) return say(pwMsg, 'Passwords do not match');
           say(pwMsg, 'Updating...', true);
-          try { await sync.changePassword(pw1.value); say(pwMsg, '✓ Password updated!', true); pw1.value = pw2.value = ''; } catch (e) { say(pwMsg, e.message || String(e)); }
+          try { await sync.changePassword(pw1.value); say(pwMsg, '✓ Password updated!', true); pw1.value = pw2.value = ''; } catch (e) { say(pwMsg, errText(e)); }
         } }, 'UPDATE PASSWORD'), pwMsg),
       h('button', { style: 'background:#d4706e;margin-top:8px;', onclick: async () => { await sync.signOut(); location.hash = '#/'; } }, 'LOG OUT'),
       h('button', { class: 'linkbtn', style: 'margin-top:14px;font-size:12px;', onclick: () => { location.hash = '#/device'; } }, 'Offline imagery & backup'),
+      isAdmin ? h('div', { class: 'section' }, h('div', { class: 'lab' }, 'Admin')) : null,
+      isAdmin ? courseRequestsSection() : null,
+      isAdmin ? testRoundsSection() : null,
       deleteAccountSection(),
       h('a', { href: 'privacy.html', target: '_blank', rel: 'noopener', style: 'margin-top:10px;font-size:12px;color:#9a9a9a;' }, 'Privacy policy'))));
 }
@@ -568,7 +565,7 @@ function deleteAccountSection() {
     if (!confirm('Delete your account and every round, shot and setting saved to it? This cannot be undone.')) return;
     go.disabled = true; msg.textContent = 'Deleting…'; msg.className = 'msg ok';
     try { await sync.deleteAccount(pw.value); location.hash = '#/'; toast('Your account has been deleted.'); }
-    catch (e) { msg.textContent = e.message || String(e); msg.className = 'msg err'; go.disabled = false; }
+    catch (e) { msg.textContent = errText(e); msg.className = 'msg err'; go.disabled = false; }
   } }, 'DELETE MY ACCOUNT');
   const box = h('div', { class: 'section', hidden: true },
     h('div', { class: 'lab', style: 'color:#d4706e;' }, 'Delete Account'),
@@ -595,7 +592,7 @@ export function renderLogin(view) {
     if (signup) { signup = false; extra.hidden = true; loginBtn.textContent = 'LOG IN'; signupBtn.textContent = 'SIGN UP'; say(''); return; }
     if (!email.value.trim() || !pass.value) return say('Email and password required');
     say('Logging in...', '#606060');
-    try { await sync.signIn(email.value.trim(), pass.value); after(); } catch (e) { say(e.message || String(e)); }
+    try { await sync.signIn(email.value.trim(), pass.value); after(); } catch (e) { say(errText(e)); }
   } }, 'LOG IN');
   const signupBtn = h('button', { class: 'holes9', onclick: async () => {
     if (!signup) { signup = true; extra.hidden = false; signupBtn.textContent = 'CREATE ACCOUNT'; loginBtn.textContent = '← BACK TO LOGIN'; say(''); return; }
@@ -604,12 +601,12 @@ export function renderLogin(view) {
     if (pass.value !== confirm.value) return say('Passwords do not match');
     say('Creating account...', '#606060');
     try { await sync.signUp(email.value.trim(), pass.value, name.value.trim()); after(); }
-    catch (e) { say(e.message || String(e), /Confirm the email/.test(e.message) ? '#00b87a' : '#d4706e'); }
+    catch (e) { say(errText(e), /Confirm the email/.test(e.message) ? '#00b87a' : '#d4706e'); }
   } }, 'SIGN UP');
   const forgot = h('button', { class: 'linkbtn', style: 'font-size:12px;', onclick: async () => {
     if (!email.value.trim()) return say('Enter your email above, then tap Forgot Password');
     say('Sending reset link...', '#606060');
-    try { await sync.resetPassword(email.value.trim()); say('✓ Password reset email sent! Check your inbox.', '#00b87a'); } catch (e) { say(e.message || String(e)); }
+    try { await sync.resetPassword(email.value.trim()); say('✓ Password reset email sent! Check your inbox.', '#00b87a'); } catch (e) { say(errText(e)); }
   } }, 'Forgot Password?');
   view.replaceChildren(page('center', backBtn(),
     h('div', { style: 'font-size:24px;font-weight:800;' }, 'Account'), msg, email, pass, extra, loginBtn, signupBtn, forgot,
@@ -620,23 +617,30 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
-  ['1.37.0', ['New course: Colonial Country Club (Fort Worth), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.36.0', ['New course: Dallas National Golf Club (Dallas), built without a yardage book: greens, fairways, bunkers, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.35.0', ['New course: Dallas Athletic Club – Blue (Dallas), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.34.0', ['New courses: Stonebriar Country Club – Fazio and Country Club (Frisco), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.33.0', ['New course: TPC Four Seasons Las Colinas (Irving), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.32.0', ['New course: TPC Craig Ranch (McKinney), built without a yardage book: greens, fairways, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers and trees from the picture, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.31.0', ['New course: The Club at Frisco Farms (formerly Plantation Golf Club, Frisco), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.30.0', ['New course: Waterchase Golf Club (Fort Worth), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.29.0', ['New course: The Golf Club at Champions Circle (Fort Worth), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.28.0', ['New course: Rusted Rail Golf Club (Crandall), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.27.0', ['New course: The Courses at Watters Creek – Traditions (Plano), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.26.0', ['New course: Duck Creek Golf Club (Garland), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.25.0', ['New course: Grover C. Keaton Golf Course (Dallas), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.24.0', ['New course: Texas Rangers Golf Club (Arlington), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.23.0', ['New course: Pecan Valley Golf Course – Hills (Fort Worth), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.22.0', ['New course: The Resort Golf Club (Fort Worth), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.21.0', ['New courses: Tenison Park Golf Course – Highlands and Glen (Dallas), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
+  ['1.41.3', ['Performance Analysis: Past Rounds and Combines open and close details the same way; Close no longer overlaps']],
+  ['1.41.2', ['Performance Analysis: Combines tiles are the same size as Past Rounds\u2019']],
+  ['1.41.1', ['A student\u2019s dashboard scrolls like the Stats Dashboard']],
+  ['1.41.0', ['Stats Dashboard and a student\u2019s dashboard: Filter sits right after the handicap to compare with']],
+  ['1.40.0', ['Stats Dashboard: Filter opens a small box instead of pushing the page down; the handicap to compare with sits right after "per round"']],
+  ['1.39.0', ['Practice and Learning: cards no longer show over the tabs while scrolling', 'Stats Dashboard: pick the handicap to compare with beside Strokes Gained']],
+  ['1.38.0', ['App-wide tidy-up: clearer buttons and tabs, plain error messages, Performance matches the Stats Dashboard']],
+  ['1.37.0', ['New course: Colonial Country Club (Fort Worth)']],
+  ['1.36.0', ['New course: Dallas National Golf Club (Dallas)']],
+  ['1.35.0', ['New course: Dallas Athletic Club – Blue (Dallas)']],
+  ['1.34.0', ['New courses: Stonebriar Country Club – Fazio and Country Club (Frisco)']],
+  ['1.33.0', ['New course: TPC Four Seasons Las Colinas (Irving)']],
+  ['1.32.0', ['New course: TPC Craig Ranch (McKinney)']],
+  ['1.31.0', ['New course: The Club at Frisco Farms (formerly Plantation Golf Club, Frisco)']],
+  ['1.30.0', ['New course: Waterchase Golf Club (Fort Worth)']],
+  ['1.29.0', ['New course: The Golf Club at Champions Circle (Fort Worth)']],
+  ['1.28.0', ['New course: Rusted Rail Golf Club (Crandall)']],
+  ['1.27.0', ['New course: The Courses at Watters Creek – Traditions (Plano)']],
+  ['1.26.0', ['New course: Duck Creek Golf Club (Garland)']],
+  ['1.25.0', ['New course: Grover C. Keaton Golf Course (Dallas)']],
+  ['1.24.0', ['New course: Texas Rangers Golf Club (Arlington)']],
+  ['1.23.0', ['New course: Pecan Valley Golf Course – Hills (Fort Worth)']],
+  ['1.22.0', ['New course: The Resort Golf Club (Fort Worth)']],
+  ['1.21.0', ['New courses: Tenison Park Golf Course – Highlands and Glen (Dallas)']],
   ['1.20.56', ['Swiping from near the left edge uses only the phone’s own back swipe (it no longer shows three screens)']],
   ['1.20.55', ['The right-side strip is near black (not pure black), so a swiped screen can slide over it again']],
   ['1.20.54', ['The strip down the right side of the screen is pure black']],
@@ -701,7 +705,7 @@ const CHANGES = [
   ['1.19.3', ['My Clubs: no scroll bar, so the page no longer shifts sideways between My Bag, Find Yardages, Wedge Gapping and Speed']],
   ['1.19.2', ['App icon: back to the BLAKE KOKAL GOLF icon']],
   ['1.19.1', ['New app icon: BKG wearing the hat']],
-  ['1.19.0', ['New courses: Rockwall Golf & Athletic Club (Rockwall), The Golf Club at Fossil Creek (Fort Worth), Whitestone Golf Club (Benbrook), Hawks Creek Golf Club (Westworth Village) and Oak Hollow Golf Course (McKinney), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
+  ['1.19.0', ['New courses: Rockwall Golf & Athletic Club (Rockwall), The Golf Club at Fossil Creek (Fort Worth), Whitestone Golf Club (Benbrook), Hawks Creek Golf Club (Westworth Village) and Oak Hollow Golf Course (McKinney)']],
   ['1.18.13', ['Stats Dashboard: the Filter button sits to the right of the title (it was beside “per round”)']],
   ['1.18.12', ['Round History: one Filter button instead of five boxes. Tap it for a menu with Type, Holes, Time, Status and Sort (Clear resets them); it turns blue and shows how many are on']],
   ['1.18.11', ['Strokes Gained Explained: the same font as the rest of the app (the worked sums were in a typewriter font), with the app’s title size and weights and no text smaller than 11']],
@@ -727,31 +731,31 @@ const CHANGES = [
   ['1.16.3', ['Coaching: View round and Strokes gained on a New Round notification open that round (the course it names, played that day), not the one the student edited most recently']],
   ['1.16.2', ['Around the green is 30 yards or less everywhere (Stats, the round dashboard, Performance and practice plans); approach is everything over 30. Approach by distance starts with 30–75 and 75–100 yards, shown even before you have shots there']],
   ['1.16.1', ['Average drive: a Driver figure (tee shots logged with Driver) and an All clubs figure, both from par 4s and 5s only, on the Stats page, the Off the Tee tab and Performance']],
-  ['1.16.0', ['New course: Isabella Golf Course (Hot Springs Village, Arkansas), all three nines (Nina, Pinta and Santa Maria): play any nine, or any two as 18. Greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
+  ['1.16.0', ['New course: Isabella Golf Course (Hot Springs Village, Arkansas), all three nines (Nina, Pinta and Santa Maria): play any nine, or any two as 18']],
   ['1.15.3', ['Yardage book, green page: no blue line down the middle of the green (the grid runs through as usual)']],
   ['1.15.2', ['Yardage book, par 5s: the whole-hole spread’s points are every 25 yards to the front of the green (25, 50, 75 …), so the red numbers are round, with the yards from the tee under each']],
   ['1.15.1', ['Yardage book: the back of the green is purple on every page (the green page’s back dot and depth too); the front stays a yellow dot with red yards. On a par 5’s whole-hole spread, a point every 25 yards off the tee, in the middle of the fairway, with its yards to the front']],
-  ['1.15.0', ['New courses: The Tribute Golf Club and Old American Golf Club (The Colony) and Sky Creek Ranch Golf Club (Keller), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
+  ['1.15.0', ['New courses: The Tribute Golf Club and Old American Golf Club (The Colony) and Sky Creek Ranch Golf Club (Keller)']],
   ['1.14.3', ['Yardage book: the front and back of the green are now its earliest and furthest points as you come in (shown up the middle); the green page’s grid and depth start at the front, and every yardage to the front uses it. On a par 5’s approach page, a purple dot marks the back of the green, the same colour as the numbers to the back']],
   ['1.14.2', ['Yardage book, par 5s: the whole-hole spread now starts at the fairway (the tees in their box), turned to fill both pages, with the hole number, yards and par in the corner. The approach page fills its page with numbers every 25 yards: red to the front of the green and, in brackets, to the back']],
   ['1.14.1', ['Yardage book, par 5s: like a tour book, two spreads instead of one. First the whole hole drawn across both pages (the green end on top, the tees on the bottom), then the green page over a close-up of the approach (the last 175 yards, drawn bigger). On the screen, in Reader mode and in every print layout']],
-  ['1.14.0', ['New courses: The Golf Club at Twin Creeks (Allen), Woodbridge Golf Club (Sachse) and Buffalo Creek Golf Club (Heath), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
+  ['1.14.0', ['New courses: The Golf Club at Twin Creeks (Allen), Woodbridge Golf Club (Sachse) and Buffalo Creek Golf Club (Heath)']],
   ['1.13.5', ['Yardage book, Satellite style: the hole overview page now has its contours and downhill arrows too (in white over the picture), like the flat book. In Reader mode, Preview and edit and the PDF; the Contours & slope arrows switch turns them off']],
   ['1.13.4', ['Yardage book Reader mode, Flip up: the hole overview comes first, then its green: swipe up from the overview to the green, then up again to the next hole’s overview']],
   ['1.13.3', ['Yardage book Reader mode: Flip up now shows one page at a time, filling the screen: swipe up from the green page to the hole overview, then up again to the next hole’s green (down goes back). The menu arrow at the top is just the arrow now, no button behind it']],
   ['1.13.2', ['Yardage book: new Reader mode (GEN BOOK > Reader mode), the book read like an e-reader: just the pages, filling the screen. Side by side (green page left, hole page right; swipe left for the next hole) or Flip up (green page on top of the hole page; swipe up for the next hole). Tapping the edge of the page turns it too. The little arrow at the top pulls down a menu (close, hole, Flat or Satellite, Side by side or Flip up) and tucks it away again. Preview and edit is back the way it was']],
   ['1.13.1', ['Yardage book Preview and edit opens like the book itself: the green page and the hole page together, filling the screen (one over the other, or side by side on a wide screen). Swipe up to turn to the next hole, down to go back (the mouse wheel or arrow keys on a computer). Zoom in with + to look closer; − back to Fit to swipe again. On a phone the buttons sit in one row at the top (swipe it sideways for the rest)']],
-  ['1.13.0', ['New courses: Cottonwood Valley Golf Course (Irving) and The Trails of Frisco Golf Club (Frisco), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
+  ['1.13.0', ['New courses: Cottonwood Valley Golf Course (Irving) and The Trails of Frisco Golf Club (Frisco)']],
   ['1.12.4', ['Yardage book Edit: move the start, where every “from the tee” number is measured. Tap another tee box (on the map, or its yards in the TEES box) to measure from its front, or drag the yellow start dot anywhere; every number on the hole updates. ↺ Start from the … tee again under the page puts it back. Kept in that yardage book only']],
   ['1.12.3', ['Yardage book: no more dotted line from the tee to the green on the hole page (and the Center line switch is gone); the yellow dot at the front of the green, where every number is measured to, stays']],
   ['1.12.2', ['Yardage book Edit: tap any point (its dot or its numbers), including the book’s yardage markers and bunker numbers, to select it (a yellow ring), then Delete point; or drag a point to move it, and its yards update for where you put it. Tap the map to add a point, or to deselect']],
   ['1.12.1', ['Yardage book: the 50, 100, 150… yardage markers sit in the middle of the fairway (not on the hole line, which can run along its side). Yards to the front of the green are measured to the front as you come into the green on the approach (the yellow dot), not the side of the green facing the tee; on a dogleg that changes the tee’s yards to the front and some bunker numbers by the green']],
-  ['1.12.0', ['New course: Prairie Lakes Golf Course (Grand Prairie), all three nines (Red, White and Blue): play any nine, or any two as 18. Traced from the satellite picture (greens, fairways, ponds, bunkers, trees), routed from the club\u2019s course map, with out-of-bounds line and elevation (contours and plays-like yardages). Each hole has one tee box (the back one); the shorter tees use the card yardages']],
+  ['1.12.0', ['New course: Prairie Lakes Golf Course (Grand Prairie), all three nines (Red, White and Blue): play any nine, or any two as 18']],
   ['1.11.4', ['Yardage book: Add point is now Edit. In Edit, tap the hole page to add a point, or tap any point to delete it, including the book’s own (yardage markers, bunker and green numbers). Deleted book points stay gone in that yardage book; Bring back under the page restores them. Tap Done to finish']],
   ['1.11.3', ['Yardage book: written in your device’s own system font, and every outline (greens, fairways, bunkers, water, trees) and contour is drawn as a smooth, rounded curve instead of short straight pieces. The PDF is printed at 300 dpi (was 200), so lines stay sharp on paper']],
   ['1.11.2', ['Yardage book: each hole page is turned so your tee shot goes straight up the page, as you see it from the tee (to the landing zone, the hole line’s first bend), not tee-to-green; on a dogleg the rest of the hole bends off to the side. The TEES box moves to the top right (and the north arrow to the top left) when the green or fairway would be under it']],
   ['1.11.1', ['Cowboys #14–18: the fairway now runs under the green with a collar round it (no more cut-out for the green), like #10–13; bunkers stay cut out']],
-  ['1.11.0', ['New courses: Stevens Park Golf Course (Dallas), Tierra Verde Golf Club (Arlington) and Riverside Golf Club (Grand Prairie), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the sand in the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)', 'Riverside: #13 and #18 share one big double green, so each hole measures to its own end of it']],
+  ['1.11.0', ['New courses: Stevens Park Golf Course (Dallas), Tierra Verde Golf Club (Arlington) and Riverside Golf Club (Grand Prairie)', 'Riverside: #13 and #18 share one big double green, so each hole measures to its own end of it']],
   ['1.10.4', ['Cowboys: trees added along every hole (935 round trees on the tree canopy in the satellite picture, none in OB or on greens, fairways, tees, bunkers or water); everything else, including your published edits, is unchanged']],
   ['1.10.3', ['Hole editor: Save and Save & finish no longer get stuck on Saving…. The phone’s storage had filled up with copies of every course’s edits; Save & finish now publishes first and keeps no copy of its own, copies already published are cleared when the app opens, and if saving fails it says why and leaves your changes on screen to try again (publishing gives up after 30 s)']],
   ['1.10.2', ['Cowboys: greens redrawn on the putting surface only (the brighter fringe round them is now fairway) on 16 holes, and the fairway round every green follows the mown grass: #1 has the fairway left of the green, #2 the fringe round it, #12 the approach no longer part of the green']],
@@ -778,7 +782,7 @@ const CHANGES = [
   ['1.8.0', ['GPS Overview: Yardage book view in the View box. Switch it on and the hole turns into its yardage book pages (the green page over the hole page, from your tee box), with no tools or crosshair; ‹ › on the hole pill still go round the holes, and it stays on until you switch it off']],
   ['1.7.2', ['Yardage book: tee boxes are grey instead of green, and the one you’re playing from is dark with a heavy outline so it stands out']],
   ['1.7.1', ['Yardage book: the tees box is small and top left. It shows just the tee markers as they’re drawn on the map (with a little ground in front), a yellow dot on the front of each and lines out to a ruler, so the gaps are measured front to front. Beside the ruler, each tee’s yards to the front and how far it is from yours: red + for further back (add it to the black numbers from that tee), green − for further forward']],
-  ['1.7.0', ['New course: Cedar Crest Golf Course (Dallas), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the sand in the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
+  ['1.7.0', ['New course: Cedar Crest Golf Course (Dallas)']],
   ['1.6.14', ['Yardage book: on par 4s and 5s the hole page starts just short of the fairway, so the hole is drawn bigger, and the tee boxes go in a small box at the top left with each one’s tees and yards to the front, like a tour book (Show › Tees in a box turns it off). Par 3s still show the whole hole']],
   ['1.6.13', ['Yardage book printing starts on Fold · letter (cut once): two strips per sheet, cut once down the middle, fold each in half and staple along the folds. Each strip sits in the middle of its half with even margins, and its pages fill it (3¾ in wide; 5¼ in tall on letter, 6¾ on legal, folding to 4¼ × 7)', 'Yardage book: Double-sided · letter puts four cards on a sheet again (two big ones is its own option)', 'Yardage book: the dotted line down the hole stops at the front of the green, where the numbers are measured to, with a yellow dot']],
   ['1.6.12', ['Yardage book: printing starts on Double-sided · letter (8½ × 11, two cards per sheet, about 4 × 6.6 in each), the paper most printers and print shops use. Legal and the fold layouts are still in the menu']],
@@ -798,16 +802,16 @@ const CHANGES = [
   ['1.5.0', ['GPS Overview: under the title it now shows how many courses have been added, in place of “Plan shots on any hole · nothing is saved”']],
   ['1.4.0', ['Tournament mode: Contours is back in the View box as its own switch, off at the start of every tournament round. On, it shows the contour lines and downhill arrows everywhere except on and within 15 yards of any green (the Rules only allow green maps at a tiny scale). Plays-like yardages stay off']],
   ['1.3.1', ['Tournament mode: the Tools button (Width, Arc, Disp, Appr) is gone completely']],
-  ['1.3.0', ['New courses: Fields Ranch – East and West (PGA Frisco), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines for both courses from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundaries, and elevation (contours and plays-like yardages)']],
-  ['1.2.0', ['New course: Iron Horse Golf Course (North Richland Hills), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the sand in the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['1.1.0', ['New courses: Indian Creek Golf Club – Creek and Lakes (Carrollton), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap, scorecards with Black/Blue/White/Red ratings and yardages, out-of-bounds line from the course boundary, trees from the satellite picture as circles, and elevation (contours and plays-like yardages)']],
+  ['1.3.0', ['New courses: Fields Ranch – East and West (PGA Frisco)']],
+  ['1.2.0', ['New course: Iron Horse Golf Course (North Richland Hills)']],
+  ['1.1.0', ['New courses: Indian Creek Golf Club – Creek and Lakes (Carrollton)']],
   ['1.0.0', ['Version 1.0']],
-  ['0.102.0', ['New course: Texas Star Golf Course (Euless), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the sand in the picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['0.101.0', ['New course: Firewheel Golf Park – Lakes (Garland), built from its yardage book: greens, fairways, bunkers, water, tee boxes and hole lines lined up on the satellite picture, bunkers checked against the sand in the picture, trees as circles, out-of-bounds line from the park boundary, and elevation (contours and plays-like yardages)']],
-  ['0.100.0', ['New course: Coyote Ridge Golf Club (Carrollton), built from its yardage book: greens, fairways, bunkers, water, tee boxes and hole lines lined up on the satellite picture, every bunker checked against the sand in the picture, trees as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
-  ['0.99.0', ['New course: Lake Park Golf Course – Executive (Lewisville), the 9-hole par-28 course, built without a yardage book: greens, fairways, water, tee boxes and hole lines from OpenStreetMap, Blue/White/Red yardages from the scorecard (no rating or slope is published), out-of-bounds line from the course boundary, trees from the satellite picture as circles, and elevation (contours and plays-like yardages)']],
-  ['0.98.0', ['New course: Lake Park Golf Course – Championship (Lewisville), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap, out-of-bounds line from the course boundary, trees from the satellite picture as circles, and elevation (contours and plays-like yardages)']],
-  ['0.97.0', ['New course: Lantana Golf Club (Lantana), built without a yardage book: greens, fairways, bunkers, water and tee boxes from OpenStreetMap lined up on the satellite picture, hole lines worked out from the scorecard, out-of-bounds line from the course boundary, trees from the picture as circles, and elevation (contours and plays-like yardages)']],
+  ['0.102.0', ['New course: Texas Star Golf Course (Euless)']],
+  ['0.101.0', ['New course: Firewheel Golf Park – Lakes (Garland)']],
+  ['0.100.0', ['New course: Coyote Ridge Golf Club (Carrollton)']],
+  ['0.99.0', ['New course: Lake Park Golf Course – Executive (Lewisville), the 9-hole par-28 course']],
+  ['0.98.0', ['New course: Lake Park Golf Course – Championship (Lewisville)']],
+  ['0.97.0', ['New course: Lantana Golf Club (Lantana)']],
   ['0.96.4', ['GPS Overview: the Score box above the hole pill is gone (nothing is scored there)']],
   ['0.96.3', ['New Round: the Entry Mode GPS button above START is gone (it did nothing)']],
   ['0.96.2', ['New Round and GPS Overview start with Casual picked; tap Tournament to change it']],
@@ -824,10 +828,10 @@ const CHANGES = [
   ['0.92.0', ['Auto keeps the shots out of bunkers, trees, water and OB: it now takes a line with no shots landing in a hazard over one with a few, even at a small cost in SG (up to 0.15), and searches finer (half a degree) so it finds the gaps. In the Auto list, a club whose shots have trees close in front says so (trees in the way), which is why it can rank below a club with a lower SG']],
   ['0.91.0', ['Comp just turns on and off now. While it’s on, a ⚙ above it lets you change the compared clubs and pick arcs or dispersion dots (the first time, Comp opens the club picker)', 'Auto stays on from hole to hole: each new hole opens with the best club and line picked and shown, or with Comp on, each compared club on its own best line, and Comp stays on']],
   ['0.90.0', ['Grapevine – Pecan has elevation now: contour lines with downhill arrows and plays-like yardages, on its own or as either nine of an 18 with Bluebonnet or Mockingbird']],
-  ['0.89.0', ['New course: Grapevine Golf Course \u2013 Pecan, the last of its three nines, built from its yardage book. Play it as 9, or with Bluebonnet or Mockingbird to make 18']],
+  ['0.89.0', ['New course: Grapevine Golf Course \u2013 Pecan, the last of its three nines']],
   ['0.88.0', ['Nine-hole courses: picking one in New Round or GPS Overview asks whether to play just those 9 or add another nine at the same club to make 18 (e.g. Bluebonnet front 9, Mockingbird back 9). The back nine is holes 10–18, with the tee boxes’ yardages added up, and each hole keeps its own contours and plays-like heights']],
   ['0.87.0', ['Elevation on every course: contour lines with downhill arrows (View box) and plays-like yardages now work at Bear Creek East and West, Bridlewood, Cross Timbers, Grapevine Bluebonnet, Sherrill Park #1 and #2, Squaw Creek, Tangle Ridge, Tour 18 Dallas and Grapevine Mockingbird, as well as Cowboys']],
-  ['0.86.0', ['New course: Grapevine Golf Course \u2013 Mockingbird, the second of its three nines, built from its yardage book']],
+  ['0.86.0', ['New course: Grapevine Golf Course \u2013 Mockingbird, the second of its three nines']],
   ['0.85.3', ['Fixed: the app opened to a blank screen after 0.85.2']],
   ['0.85.2', ['Text you couldn’t read is readable now: dark grey words on the dark background (subtitles, empty messages, small labels and delete buttons in My Bag, Practice, Coaching and Performance Analysis) are a lighter grey', 'Combine buttons (Short Game Combines, Evaluation Test): the name and its description sit on two lines again instead of running together off the screen']],
   ['0.85.1', ['Plays like: the plays-like number lines up right under the yardage. The Wind box is smaller and sits lower, with just the direction and speed sliders (the Into / Helping / From left / From right buttons are gone); tap Live to go back to the live wind']],
@@ -844,8 +848,8 @@ const CHANGES = [
   ['0.80.1', ['Contours & slope: the downhill arrows now sit on the contour lines (thin line arrows, tail on the line, pointing straight downhill) instead of scattered over the ground']],
   ['0.80.0', ['Contours & slope (View box, Cowboys): contour lines now every 1, 3 or 5 yards, and only around the hole you’re on, fading out at the edges. Little arrows point downhill, bigger where it’s steeper; zoom in for more of them']],
   ['0.79.0', ['Elevation on the hole map (Cowboys Golf Club for now): the View box has Hillshade, to see the slopes (Soft, Medium or Strong), and Contour lines every 1, 2, 5 or 10 ft, with every fifth line bolder. Heights come from USGS lidar']],
-  ['0.78.0', ['New course: Tour 18 Golf Course Dallas (Flower Mound), built from its yardage book: greens, fairways, bunkers, water, tee boxes and hole lines, lined up on the satellite picture, with every bunker checked against the sand in the picture; trees from the picture as circles. No out-of-bounds line yet: draw it in the hole editor (Draw new boundary \u2192 Course boundary)']],
-  ['0.77.0', ['New course: Grapevine Golf Course \u2013 Bluebonnet (the first of its three nines), built from its yardage book. Nine-hole courses start a 9-hole round (no 18-hole option); ratings and slopes to come from the club']],
+  ['0.78.0', ['New course: Tour 18 Golf Course Dallas (Flower Mound)']],
+  ['0.77.0', ['New course: Grapevine Golf Course \u2013 Bluebonnet (the first of its three nines)']],
   ['0.76.2', ['Fewer trees to edit: where 2\u20135 small trees stood together, one bigger tree now covers the same spot (Sherrill Park #1 and #2, Bear Creek West, Bridlewood). Your published edits are kept']],
   ['0.76.1', ['Bridlewood: trees added from the satellite picture as circles (a few big ones in each wood, one per lone tree), inside the course boundary only and off greens, fairways, tees, bunkers and water. Nothing else changed']],
   ['0.76.0', ['Recording a shot: Lost ball is now Penalty / drop, with Re-tee or Replay (+1), Drop +1, Drop +2, or Free relief with no penalty (cart path, ground under repair). While you place a drop, a dotted line follows the crosshair from where the ball finished, as the shot tracer shows afterwards']],
@@ -868,11 +872,11 @@ const CHANGES = [
   ['0.72.1', ['Sherrill Park Course 2 is gone for now while it\u2019s redrawn from scratch. Rounds already played there show up under the default course']],
   ['0.72.0', ['Sherrill Park Golf Course \u2013 Course 1: trees, bunkers, water, fairways, greens and tee boxes are now taken from the course\u2019s yardage book instead of traced by eye from the satellite picture, so they match the course much more closely. Each hole\u2019s line follows the book\u2019s centre line, and every tee box is a real one']],
   ['0.71.1', ['Sherrill Park Course 2 redrawn from its yardage book: tee boxes are where the book marks them, hole lines follow the doglegs, and fairways are fewer, simpler shapes that start past the tees. Its trees are gone, to be drawn by hand']],
-  ['0.71.0', ['New course: Sherrill Park Golf Course \u2013 Course 1 (Richardson). Yardages, pars and handicaps are from the club\u2019s scorecard; fairways, greens, bunkers, ponds and trees were traced from the satellite imagery, so check the outlines and tee spots on your first round']],
-  ['0.70.0', ['New course: Sherrill Park Golf Course \u2013 Course 2 (Richardson). Yardages, pars and handicaps are from the club\u2019s scorecard; fairways, greens, bunkers, ponds and trees were traced from the satellite imagery, so check the outlines and tee spots on your first round']],
+  ['0.71.0', ['New course: Sherrill Park Golf Course \u2013 Course 1 (Richardson)']],
+  ['0.70.0', ['New course: Sherrill Park Golf Course \u2013 Course 2 (Richardson)']],
   ['0.69.2', ['Trees: a ball in the trees now counts as a recovery lie for strokes gained, not rough']],
   ['0.69.1', ['Bear Creek West and East: each hole only uses its own course\u2019s tee boxes, even with outline edits saved before v0.47.3 (West #1 Blue, Silver and Red were teeing off from East #1)']],
-  ['0.69.0', ['New course: Cross Timbers Golf Course (Azle). Fairways, greens, bunkers, the pond and trees were traced from the satellite imagery, so check the hole numbers and outlines on your first round']],
+  ['0.69.0', ['New course: Cross Timbers Golf Course (Azle)']],
   ['0.68.1', ['Courses: every recovery area is now trees, so Auto steers around them. A ball in one counts as rough unless another lie is drawn there']],
   ['0.68.0', ['Trees: a new boundary type to draw on a course (Edit boundaries). Auto keeps its targets clear of trees, won\u2019t pick a line that has to climb over trees close in front of the ball, and avoids leaving trees between your ball and the hole']],
   ['0.67.2', ['GPS: the \ud83d\udccd Shot button now sits just below the GPS button; the yardage to the hole stays at the top. Home: removed the NEW! tag from Practice and Learning']],

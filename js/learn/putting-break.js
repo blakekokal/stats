@@ -346,10 +346,17 @@ function draw() {
   ctx.fillStyle = '#44b8f0';
   ctx.shadowColor = 'rgba(0,0,0,0.8)';
   ctx.shadowBlur = 4;
-  ctx.fillText(aimDotText, aim.x + Math.max(drawDotR, 10) + 6, aim.y);
+  // Right of the aim point, else left of it, else above it: never off the edge.
+  var aimGap = Math.max(drawDotR, 10) + 6, aimW = ctx.measureText(aimDotText).width, aimTextX = aim.x + aimGap, aimTextY = aim.y;
+  if (aimTextX + aimW > W - 4) {
+    if (aim.x - aimGap - aimW >= 4) { ctx.textAlign = 'right'; aimTextX = aim.x - aimGap; }
+    else { ctx.textAlign = 'center'; aimTextX = Math.min(W - 4 - aimW / 2, Math.max(4 + aimW / 2, aim.x)); aimTextY = aim.y - aimGap - Math.round(W * 0.035 * aimTextScale) / 2; }
+  }
+  ctx.fillText(aimDotText, aimTextX, aimTextY);
   var angleLabel = fromFall + '\u00b0';
-  var ft = Math.floor(distInches / 12);
-  var ins = Math.round(distInches % 12);
+  var totalIns = Math.round(distInches);
+  var ft = Math.floor(totalIns / 12);
+  var ins = totalIns % 12;
   var distLabel = ft + "' " + ins + '"';
   var isMobile = W < 500;
   var textScale = isMobile ? 2.0 : 1.0;

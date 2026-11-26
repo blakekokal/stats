@@ -28,15 +28,18 @@ function _renderMessages(msgs, container, myId) {
 export async function loadStudentMessages() {
   if (!S.currentUser) return;
   var list = document.getElementById('cstMessagesList');
+  var compose = document.getElementById('cstMsgCompose');
   // Find coach ID
   if (!_dmCoachId) {
     var { data: p } = await _sb.from('profiles').select('coach_id').eq('id', S.currentUser.id).single();
     if (!p || !p.coach_id) {
       list.innerHTML = '<div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">Connect with a coach to send messages.</div>';
+      if (compose) compose.style.display = 'none'; // nobody to send to yet
       return;
     }
     _dmCoachId = p.coach_id;
   }
+  if (compose) compose.style.display = '';
   var { data: msgs } = await _sb.from('coach_messages')
     .select('*')
     .or('and(sender_id.eq.' + S.currentUser.id + ',receiver_id.eq.' + _dmCoachId + '),and(sender_id.eq.' + _dmCoachId + ',receiver_id.eq.' + S.currentUser.id + ')')

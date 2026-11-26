@@ -175,6 +175,14 @@ export const sync = {
   onStatus(fn) { statusListeners.add(fn); },
 };
 
+// An error as a person should read it: no signal reads as such, not as
+// "TypeError: Failed to fetch"; anything else is its own message, after `prefix`.
+export function errText(e, prefix = '') {
+  const m = (e && (e.message || e.error_description)) || String(e || '');
+  if (/failed to fetch|networkerror|load failed|network request failed|fetch failed/i.test(m) || (typeof navigator !== 'undefined' && navigator.onLine === false)) return 'No connection, try again';
+  return prefix + m;
+}
+
 const statusListeners = new Set();
 function setStatus(status, error = '') { sync.status = status; sync.error = error; statusListeners.forEach(fn => fn()); }
 

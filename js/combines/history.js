@@ -1,8 +1,9 @@
+import { errText } from '../store.js';
 import { S } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { setBagTab } from '../bag/clubs.js';
 import { goToDriverDrill } from './driver-drill.js';
-import { combShowModeSelect, getCombGradeFromCard, gradeColor } from './table.js';
+import { combShowModeSelect, combSetPageTitle, getCombGradeFromCard, gradeColor } from './table.js';
 import { show } from '../coaching/core.js';
 import { activeUserId } from '../coaching/core.js';
 import { _sb } from '../coaching/core.js';
@@ -35,7 +36,7 @@ async function combLoadHistory(){
   if(modeF==='custom')  query = query.eq('is_combine', false);
 
   var {data,error} = await query;
-  if(error){ msg.textContent='Error: '+error.message; return; }
+  if(error){ msg.textContent=errText(error, 'Error: '); return; }
   if(!data||data.length===0){ msg.textContent='No scores saved yet — complete a session and hit Save!'; return; }
 
   msg.textContent='';
@@ -79,7 +80,7 @@ export async function loadMyCombines(){
     query=query.gte('combine_date',cutoff.toISOString().split('T')[0]);
   }
   var {data,error} = await query;
-  if(error){msg.textContent='Error: '+error.message;return;}
+  if(error){msg.textContent=errText(error, 'Error: ');return;}
   if(!data||data.length===0){msg.textContent='No combine scores saved yet.';return;}
   msg.textContent='';
   list.innerHTML = data.map(function(c){ return renderCombCard(c, true); }).join('');
@@ -113,7 +114,7 @@ export async function loadStudentCombines(){
     query=query.gte('combine_date',cutoff.toISOString().split('T')[0]);
   }
   var {data,error} = await query;
-  if(error){msg.textContent='Error: '+error.message;return;}
+  if(error){msg.textContent=errText(error, 'Error: ');return;}
   if(!data||data.length===0){msg.textContent='No combine scores found for this student.';return;}
   msg.textContent='';
   list.innerHTML = data.map(function(c){ return renderCombCard(c, false, true); }).join('');
@@ -257,7 +258,7 @@ function toggleCombDetails(id) {
 async function deleteCombScore(id){
   if(!confirm('Delete this combine score?')) return;
   var {error} = await _sb.from('combine_scores').delete().eq('id',id).eq('user_id',activeUserId());
-  if(error){ alert('Delete failed: '+error.message); return; }
+  if(error){ alert(errText(error, 'Delete failed: ')); return; }
   var card = document.getElementById('combcard-'+id);
   if(card) card.remove();
 }
@@ -288,7 +289,7 @@ async function saveCombNote(id, userId) {
   var ownerId = userId || activeUserId();
   msgEl.style.color = '#606060'; msgEl.textContent = 'Saving...';
   var { data: updatedRows, error } = await _sb.from('combine_scores').update({ note: newNote }).eq('id', id).eq('user_id', ownerId).select();
-  if (error) { msgEl.style.color = '#d4706e'; msgEl.textContent = 'Error: ' + error.message; return; }
+  if (error) { msgEl.style.color = '#d4706e'; msgEl.textContent = errText(error, 'Error: '); return; }
   if (!updatedRows || updatedRows.length === 0) { msgEl.style.color = '#d4706e'; msgEl.textContent = 'Error: Could not update note'; return; }
   // Update cached data
   if (S.combNoteMap) S.combNoteMap[id] = newNote;
@@ -328,6 +329,7 @@ export function goToCombines(){
   var banner = document.getElementById('combStudentBanner');
   if (banner) banner.style.display = 'none';
   show('combinesPage');
+  combSetPageTitle('shortgame');
   // Go directly to short game select (Proximity / Up & Downs)
   document.getElementById('comb-home-view').style.display = '';
   document.getElementById('comb-tracker-view').style.display = 'none';

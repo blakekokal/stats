@@ -1,10 +1,8 @@
 import { yards, inPolygon } from './geo.js';
 import { ADMIN_EMAIL_SHA256 } from '../config.js';
-import { store, sync, init as initSync, fetchPublishedCourses, publishCourse, unpublishCourse } from './store.js';
+import { store, sync, init as initSync, fetchPublishedCourses, publishCourse, unpublishCourse, errText } from './store.js';
 import { renderHole, closeHole, lastHole } from './hole.js';
-import { renderCourseEditor } from './editor.js';
 import { renderSettings } from './settings.js';
-import { renderStats } from './stats.js';
 import { renderAccount } from './account.js';
 import { renderStatsDashboard } from './dashboard.js';
 import { askResume, renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin, renderWhatsNew, renderEditRound, renderHelp, renderSearch } from './coach.js';
@@ -263,8 +261,8 @@ export async function saveCourseEdits(features, { publish = true } = {}) {
       try { if (store.get(key)) store.remove(key); } catch { /* left as it is */ }
       msg = 'Saved and published: everyone now sees these outlines.';
     } catch (e) {
-      msg = keepHere() ? `Saved on this device only: publishing for everyone failed (${e.message}).`
-        : `Not saved: publishing failed (${e.message}) and this device’s storage is full. Your changes are still on screen; try again.`;
+      msg = keepHere() ? `Saved on this device only: publishing for everyone failed (${errText(e)}).`
+        : `Not saved: publishing failed (${errText(e)}) and this device’s storage is full. Your changes are still on screen; try again.`;
     }
   }
   try { await loadCourse(true); } catch (e) { console.error('reload course', e); }
@@ -280,7 +278,7 @@ export async function resetCourseEdits() {
   store.remove('course:' + course.id);
   let msg = 'Outlines reset to the original map for everyone.';
   try { await unpublishCourse(course.id); const { [course.id]: _, ...rest } = published; published = rest; cachePublished(); }
-  catch (e) { msg = `Reset on this device only: unpublishing failed (${e.message}).`; }
+  catch (e) { msg = `Reset on this device only: unpublishing failed (${errText(e)}).`; }
   await loadCourse(true);
   return msg;
 }
@@ -339,7 +337,7 @@ export function goBack() {
 
 async function route() {
   const parts = location.hash.replace(/^#\/?/, '').split('/');
-  if (parts[0] === 'course' && !isAdmin) { location.hash = '#/'; return; } // course editing is for admins
+  if (parts[0] === 'course' || parts[0] === 'stats') { location.replace(location.pathname + location.search + '#/'); return; } // old pages, now gone
   // A live view link: fetch the shared round, then open it (read-only) on the hole being played.
   if (parts[0] === 'live') {
     document.body.classList.add('coach'); document.body.classList.remove('playing');
@@ -360,11 +358,10 @@ async function route() {
     const res = await loadWatch(id);
     if (res !== 'ok') { document.body.classList.add('coach'); document.body.classList.remove('playing'); closeHole(); renderLiveError(res, route); return; }
   }
-  const tab = ['hole', 'course', 'settings', 'stats', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag', 'coaching', 'performance', 'practice', 'help', 'search'].includes(parts[0]) ? parts[0] : 'home';
+  const tab = ['hole', 'settings', 'account', 'new', 'history', 'device', 'whatsnew', 'dashboard', 'round', 'scout', 'bag', 'coaching', 'performance', 'practice', 'help', 'search'].includes(parts[0]) ? parts[0] : 'home';
   // Pages laid out like the coaching app hide this app's top bar. Set before
   // waiting for the course, so the old top bar never shows while it loads.
   document.body.classList.toggle('coach', ['device', 'home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout', 'coaching', 'performance', 'practice', 'help', 'search'].includes(tab));
-  document.querySelectorAll('#nav a').forEach(a => a.classList.toggle('on', a.dataset.tab === tab));
   document.body.classList.toggle('playing', tab === 'hole');
   await loadCourse(parts[0] === 'hole');
   if (tab !== 'hole') closeHole();
@@ -372,10 +369,8 @@ async function route() {
   const coachTab = ['coaching', 'bag', 'performance', 'practice'].includes(tab);
   if (!coachTab) closeCoaching();
   if (tab === 'hole') renderHole(view, Math.min(course.holes.length, Math.max(1, parseInt(parts[1], 10) || lastHole())));
-  else if (tab === 'course') renderCourseEditor(view);
   else if (tab === 'settings') renderSettingsPage(view);
   else if (tab === 'device') renderSettings(view);
-  else if (tab === 'stats') renderStats(view);
   else if (tab === 'account') { if (sync.recovering) renderAccount(view); else if (sync.user) { trail.pop(); location.hash = '#/settings'; } /* handed on to Settings: not a page to come back to */ else renderLogin(view); }
   else if (tab === 'new') renderNewRound(view);
   else if (tab === 'history') renderHistory(view);
@@ -385,6 +380,7 @@ async function route() {
   else if (tab === 'scout') renderNewRound(view, { scout: true });
   else if (tab === 'help') renderHelp(view);
   else if (tab === 'search') renderSearch(view);
+  else if (tab === 'bag' && !sync.user) { closeCoaching(); renderLogin(view); } // log in first, as on Round History and Settings
   else if (coachTab) renderCoaching(view, tab);
   else renderHome(view);
   // A round left going is settled before anything else (see askResume).
@@ -414,10 +410,6 @@ async function checkAdmin() {
   return ADMIN_EMAIL_SHA256.includes([...new Uint8Array(hash)].map(x => x.toString(16).padStart(2, '0')).join(''));
 }
 sync.onStatus(() => {
-  const dot = document.getElementById('sync-dot');
-  dot.className = sync.status;
-  dot.title = { off: 'Accounts unavailable', 'signed-out': 'Not logged in', syncing: 'Syncing…', ok: 'Synced', error: 'Sync error: ' + sync.error }[sync.status];
-  document.getElementById('account-name').textContent = sync.user ? sync.name : 'Log in';
   // Logging in or out changes what most pages show.
   const user = sync.user?.id || null;
   if (user !== lastUser) {

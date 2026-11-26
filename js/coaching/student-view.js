@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from './core.js';
 import { expose } from './core.js';
 import { showSvMiscSubTab, showSvPracticeSubTab } from './student-misc.js';
@@ -9,7 +10,18 @@ import { escapeHtml } from './core.js';
 import { studentRounds, viewRound, replayRound, watchLive, liveStudents } from './gps.js';
 import { _sb } from './core.js';
 import { ordinalSuffix } from './core.js';
-import { renderDashboard } from '../dashboard.js';
+import { renderDashboard, setDashControls } from '../dashboard.js';
+
+// The dashboard heading's level and Filter boxes drive the (hidden) filters below, as on the Stats Dashboard.
+const svEl = id => document.getElementById(id);
+setDashControls('svDashContent', {
+  filters: true,
+  get: () => ({ hcp: svEl('svDashHcpFilter')?.value || 'pro', type: svEl('svDashFilterType')?.value || 'all', time: svEl('svDashFilterTime')?.value || 'all' }),
+  set: (k, v) => {
+    if (k === 'hcp') { svEl('svDashHcpFilter').value = v; onSvDashHcpChange(v); }
+    else { svEl(k === 'type' ? 'svDashFilterType' : 'svDashFilterTime').value = v; applySvDashFilters(); }
+  },
+});
 
 export function svHcpBadgeLabel(hcp) {
   if (hcp === 'pro') return 'vs Tour Pro';
@@ -182,7 +194,7 @@ async function loadStudentPerfAnalysis() {
   } catch(e) {
     subtitle.textContent   = 'Error loading data';
     noRounds.style.display = 'block';
-    noRounds.textContent   = 'Could not load rounds: ' + e.message;
+    noRounds.textContent   = errText(e, 'Could not load rounds: ');
   }
 }
 
@@ -313,7 +325,7 @@ async function loadStudentDashboard() {
   try { data = await studentRounds(S.currentStudentId); } catch (e) { error = e; }
 
   if (error || !data || data.length === 0) {
-    loading.textContent = error ? 'Error: ' + error.message : 'No rounds found for this student.';
+    loading.textContent = error ? errText(error, 'Error: ') : 'No rounds found for this student.';
     return;
   }
 
@@ -374,7 +386,7 @@ export async function loadStudentRounds() {
   var data = null, error = null;
   try { data = await studentRounds(S.currentStudentId, true); } catch (e) { error = e; }
 
-  if (error) { msg.textContent = 'Error: ' + error.message; return; }
+  if (error) { msg.textContent = errText(error, 'Error: '); return; }
 
   S.svAllRounds = data || [];
   // Rounds being played right now can be watched live.

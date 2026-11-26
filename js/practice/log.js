@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { renderCombCard } from '../combines/history.js';
@@ -23,7 +24,7 @@ export async function loadPHCombineHistory() {
   if (modeF === 'custom')  query = query.eq('is_combine', false);
 
   var { data, error } = await query;
-  if (error) { msg.textContent = 'Error: ' + error.message; return; }
+  if (error) { msg.textContent = errText(error, 'Error: '); return; }
   if (!data || data.length === 0) { msg.textContent = 'No scores saved yet — complete a session and hit Save!'; return; }
   msg.textContent = '';
   list.innerHTML = data.map(function(c) { return renderCombCard(c, true); }).join('');
@@ -135,7 +136,7 @@ async function savePracticeSession() {
       total_minutes: totalMins
     };
     var { error } = await _sb.from('practice_sessions').update(updatePayload).eq('id', S.editingPracticeSessionId).eq('user_id', activeUserId());
-    if (error) { msg.style.color = '#d4706e'; msg.textContent = 'Update failed: ' + error.message; return; }
+    if (error) { msg.style.color = '#d4706e'; msg.textContent = errText(error, 'Update failed: '); return; }
     msg.style.color = '#00b87a'; msg.textContent = 'Practice session updated!';
     S.editingPracticeSessionId = null;
     S.practiceNotes = [];
@@ -157,7 +158,7 @@ async function savePracticeSession() {
   };
 
   var { error } = await _sb.from('practice_sessions').insert(payload);
-  if (error) { msg.style.color = '#d4706e'; msg.textContent = 'Save failed: ' + error.message; return; }
+  if (error) { msg.style.color = '#d4706e'; msg.textContent = errText(error, 'Save failed: '); return; }
 
   msg.style.color = '#00b87a'; msg.textContent = 'Practice session saved!';
   S.practiceNotes = [];
@@ -188,7 +189,7 @@ export async function loadPracticeHistory() {
   list.textContent = 'Loading...';
 
   var { data, error } = await _sb.from('practice_sessions').select('*').eq('user_id', activeUserId()).order('session_date', {ascending: false}).order('created_at', {ascending: false});
-  if (error) { list.textContent = 'Error: ' + error.message; return; }
+  if (error) { list.textContent = errText(error, 'Error: '); return; }
   if (!data || data.length === 0) { list.textContent = 'No practice sessions yet. Log your first session!'; return; }
 
   // Fetch any linked combines
@@ -278,7 +279,7 @@ function editPracticeSession(id) {
 async function deletePracticeSession(id) {
   if (!confirm('Delete this practice session?')) return;
   var { error } = await _sb.from('practice_sessions').delete().eq('id', id).eq('user_id', activeUserId());
-  if (error) { alert('Delete failed: ' + error.message); return; }
+  if (error) { alert(errText(error, 'Delete failed: ')); return; }
   loadPracticeHistory();
 }
 

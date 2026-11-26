@@ -18,7 +18,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
     <div style="background:#222222;border-radius:14px;padding:28px 20px;text-align:center;margin-top:20px;">
       <div style="font-size:36px;margin-bottom:12px;">${ic('lock')}</div>
       <div style="font-size:15px;font-weight:700;margin-bottom:6px;">Sign In Required</div>
-      <div style="font-size:13px;color:#606060;margin-bottom:18px;">Create an account or log in to access coaching features.</div>
+      <div style="font-size:13px;color:#9a9a9a;margin-bottom:18px;">Create an account or log in to access coaching features.</div>
       <button onclick="show('authPage')" style="background:#2d7abc;width:100%;height:44px;font-size:14px;font-weight:700;max-width:none;">Log In / Sign Up</button>
     </div>
   </div>
@@ -30,11 +30,11 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
 
     <!-- Tab bar -->
     <div style="display:flex;gap:0;width:100%;flex-shrink:0;border-radius:10px;overflow:hidden;">
-      <button id="cstTab0" onclick="showStudentCoachingTab(0)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#2d7abc;border-radius:0;border:none;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">Feedback</button>
-      <button id="cstTab1" onclick="showStudentCoachingTab(1)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Drills</button>
-      <button id="cstTab2" onclick="showStudentCoachingTab(2)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Goals</button>
-      <button id="cstTab3" onclick="showStudentCoachingTab(3)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Messages</button>
-      <button id="cstTab4" onclick="showStudentCoachingTab(4)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Info</button>
+      <button id="cstTab0" onclick="showStudentCoachingTab(0)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#2d7abc;border-radius:0;border:none;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">Feedback</button>
+      <button id="cstTab1" onclick="showStudentCoachingTab(1)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Drills</button>
+      <button id="cstTab2" onclick="showStudentCoachingTab(2)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Goals</button>
+      <button id="cstTab3" onclick="showStudentCoachingTab(3)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Messages</button>
+      <button id="cstTab4" onclick="showStudentCoachingTab(4)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Info</button>
     </div>
 
     <!-- Tab content -->
@@ -126,7 +126,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
         <div id="cstMessagesList" style="flex:1;overflow-y:auto;padding:14px 16px 10px;">
           <div style="text-align:center;color:#9a9a9a;font-size:13px;padding:20px 0;">No messages yet.</div>
         </div>
-        <div style="flex-shrink:0;padding:8px 16px 20px;background:#1e1e1e;border-top:1px solid #282828;">
+        <div id="cstMsgCompose" style="flex-shrink:0;padding:8px 16px 20px;background:#1e1e1e;border-top:1px solid #282828;">
           <div id="cstMsgStatus" style="font-size:11px;min-height:14px;text-align:center;margin-bottom:4px;"></div>
           <div style="display:flex;gap:8px;">
             <input type="text" id="cstMsgInput" placeholder="Message your coach..." onkeydown="if(event.key==='Enter')sendStudentMessage()" style="flex:1;height:40px;box-sizing:border-box;font-size:14px;">
@@ -169,11 +169,11 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
 
     <!-- Tab bar: hidden. The coach side is one page (Home); Students opens from its tile. -->
     <div style="display:none;gap:0;width:100%;flex-shrink:0;border-radius:10px;overflow:hidden;">
-      <button id="cctTab0" onclick="showCoachCoachingTab(0)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#2d7abc;border-radius:0;border:none;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">Home</button>
-      <button id="cctTab1" onclick="showCoachCoachingTab(1)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Notes</button>
-      <button id="cctTab2" onclick="showCoachCoachingTab(2)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Assign</button>
-      <button id="cctTab3" onclick="showCoachCoachingTab(3)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Messages</button>
-      <button id="cctTab4" onclick="showCoachCoachingTab(4)" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Students</button>
+      <button id="cctTab0" onclick="showCoachCoachingTab(0)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#2d7abc;border-radius:0;border:none;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">Home</button>
+      <button id="cctTab1" onclick="showCoachCoachingTab(1)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Notes</button>
+      <button id="cctTab2" onclick="showCoachCoachingTab(2)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Assign</button>
+      <button id="cctTab3" onclick="showCoachCoachingTab(3)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Messages</button>
+      <button id="cctTab4" onclick="showCoachCoachingTab(4)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Students</button>
     </div>
 
     <!-- Tab content -->
@@ -452,7 +452,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
     
     <!-- Student Dashboard -->
     <div id="svDashTab" style="width:100%;max-width:360px;">
-      <!-- Filters and the "vs" level: hidden until Filter (beside "per round") is tapped. -->
+      <!-- The filters and the "vs" level, always hidden: the dashboard heading's picker and Filter box set them. -->
       <div id="svDashFilters" style="display:none;gap:4px;justify-content:center;margin-bottom:8px;flex-wrap:nowrap;">
         <select id="svDashFilterType" onchange="applySvDashFilters()" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:4px 6px;font-size:11px;flex:1;min-width:0;">
           <option value="all">All Rounds</option>

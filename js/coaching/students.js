@@ -1,3 +1,4 @@
+import { errText } from '../store.js';
 import { S } from './core.js';
 import { expose } from './core.js';
 import { showAuthPage } from './core.js';
@@ -60,7 +61,7 @@ async function loadStudents() {
     .eq('coach_id', S.currentUser.id)
     .order('student_name', { ascending: true });
   
-  if (error) { msg.textContent = 'Error: ' + error.message; return; }
+  if (error) { msg.textContent = errText(error, 'Error: '); return; }
   if (!data || data.length === 0) { msg.textContent = 'No students yet. Add one using their invite code above.'; return; }
   
   // Store for filtering
@@ -130,7 +131,7 @@ async function editStudentName(studentId, currentName) {
     .eq('id', rows.id);
   
   if (error) {
-    alert('Error updating name: ' + error.message);
+    alert(errText(error, 'Error updating name: '));
     console.error('Update error:', error);
   } else {
     // Update local cache
@@ -185,7 +186,7 @@ async function addStudentByCode() {
     invite_code: code
   });
   
-  if (insertErr) { msg.style.color = '#d4706e'; msg.textContent = 'Error: ' + insertErr.message; return; }
+  if (insertErr) { msg.style.color = '#d4706e'; msg.textContent = errText(insertErr, 'Error: '); return; }
   
   // Also write coach_id back to the student's profile so the student can see their coach
   await _sb.from('profiles').update({ coach_id: S.currentUser.id }).eq('id', profile.id);
