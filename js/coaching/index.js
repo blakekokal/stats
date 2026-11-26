@@ -51,6 +51,7 @@ import '../practice/hub.js';
 import '../practice/log.js';
 import '../practice/plans.js';
 import '../practice/swing-journal.js';
+import './swipe.js';
 
 initCoachSide();
 initProximity();
