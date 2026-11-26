@@ -115,6 +115,7 @@ export const COURSES = [
   { id: 'dac-blue', name: 'Dallas Athletic Club – Blue', file: 'data/dac-blue.json' },
   { id: 'dallasnational', name: 'Dallas National Golf Club', file: 'data/dallasnational.json' },
   { id: 'colonial', name: 'Colonial Country Club', file: 'data/colonial.json' },
+  { id: 'northwood', name: 'The Northwood Club', file: 'data/northwood.json' },
   { id: 'isabella-nina', name: 'Isabella Golf Course – Nina', file: 'data/isabella-nina.json', nines: 'isabella' },
   { id: 'isabella-pinta', name: 'Isabella Golf Course – Pinta', file: 'data/isabella-pinta.json', nines: 'isabella' },
   { id: 'isabella-santamaria', name: 'Isabella Golf Course – Santa Maria', file: 'data/isabella-santamaria.json', nines: 'isabella' },

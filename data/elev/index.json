@@ -988,5 +988,20 @@
    673
   ],
   "source": "USGS 3DEP"
+ },
+ "northwood": {
+  "bounds": [
+   -96.798207,
+   32.927699,
+   -96.787166,
+   32.938687
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   502,
+   608
+  ],
+  "source": "USGS 3DEP"
  }
 }

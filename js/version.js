@@ -1,1 +1,1 @@
-export const VERSION = '1.41.3';
+export const VERSION = '1.42.0';

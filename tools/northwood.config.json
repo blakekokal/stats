@@ -1,0 +1,19 @@
+{
+  "id": "northwood",
+  "name": "The Northwood Club",
+  "location": "Dallas, TX",
+  "par": [4, 5, 4, 4, 3, 5, 4, 4, 3, 4, 4, 3, 4, 5, 4, 3, 4, 4],
+  "hcp": [9, 11, 5, 3, 15, 17, 7, 1, 13, 10, 2, 16, 14, 18, 6, 12, 4, 8],
+  "_comment_tees": "Scorecard from GolfPass (12693); its pars match OpenStreetMap's hole tags (par 71). Tee I (7039 yards) has no hole-by-hole row, so the longest is I/II; the other combination tees are left out. Men's ratings, each for its own length.",
+  "_comment_drop": "Polygons containing these points are not part of the course: nothing here; trim_far.py drops the practice greens, short-game area and range tee.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand; the greens agree).",
+  "shift": {"east": -1.0, "north": 0},
+  "tees": [
+    {"name": "I/II", "rating": 73.9, "slope": 136, "yards": [403, 566, 438, 435, 160, 470, 415, 450, 185, 370, 435, 183, 401, 530, 404, 209, 420, 408]},
+    {"name": "II", "rating": 73.0, "slope": 134, "yards": [390, 550, 438, 435, 153, 470, 415, 435, 185, 350, 435, 175, 360, 480, 384, 209, 395, 408]},
+    {"name": "III", "rating": 70.7, "slope": 128, "yards": [363, 530, 412, 395, 136, 455, 388, 415, 164, 335, 389, 162, 348, 472, 355, 175, 360, 379]},
+    {"name": "IV", "rating": 68.5, "slope": 125, "yards": [297, 475, 399, 360, 125, 413, 360, 381, 148, 328, 366, 149, 316, 457, 332, 141, 330, 349]},
+    {"name": "V", "rating": 65.5, "slope": 120, "yards": [267, 447, 341, 317, 105, 387, 336, 314, 123, 280, 337, 134, 285, 383, 280, 103, 305, 313]}
+  ]
+}
