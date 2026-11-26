@@ -96,7 +96,7 @@ export function renderWgTab() {
     var lbl = t === 'percent' ? '%' : t === 'fraction' ? '½' : 'Body';
     var active = s.swingType === t;
     return '<button onclick="wgChangeSwingType(\'' + t + '\')" style="' +
-      'padding:4px 10px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;border:1px solid ' +
+      'width:56px;min-width:56px;max-width:56px;height:32px;flex:none;padding:0;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid ' +
       (active ? '#2d7abc' : '#333333') + ';background:' + (active ? '#2d7abc' : '#282828') +
       ';color:' + (active ? '#ffffff' : '#606060') + ';">' + lbl + '</button>';
   }).join('');
@@ -104,7 +104,7 @@ export function renderWgTab() {
   list.innerHTML = '<div style="background:#222222;border-radius:12px;padding:12px;">' +
     '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">' +
       '<div style="display:flex;gap:4px;">' + typeBtns + '</div>' +
-      '<button onclick="wgClearSession()" style="background:#2a1a1a;border:1px solid #351a1a;border-radius:6px;color:#d4706e;font-size:11px;font-weight:600;cursor:pointer;padding:4px 10px;">Clear</button>' +
+      '<button onclick="wgClearSession()" style="background:#2a1a1a;border:1px solid #351a1a;border-radius:6px;color:#d4706e;font-size:12px;font-weight:700;cursor:pointer;width:56px;min-width:56px;max-width:56px;height:32px;flex:none;padding:0;">Clear</button>' +
     '</div>' +
     '<div style="display:grid;grid-template-columns:' + gridCols + ';gap:3px 6px;align-items:center;">' + cells + '</div>' +
   '</div>';
