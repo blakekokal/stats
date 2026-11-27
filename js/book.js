@@ -1226,7 +1226,7 @@ export function openSavedBooks(opts) {
             if (name == null || !name.trim()) return;
             store.set(`ybook:${b.id}`, { ...b, name: name.trim(), updated: Date.now() }); fill();
           } }, 'Rename'),
-          h('button', { class: 'setupdanger', onclick: () => { if (confirm(`Delete “${b.name}”?`)) { store.remove(`ybook:${b.id}`); fill(); } } }, 'Delete')));
+          h('button', { class: 'delbtn', 'aria-label': 'Delete', title: 'Delete', onclick: () => { if (confirm(`Delete “${b.name}”?`)) { store.remove(`ybook:${b.id}`); fill(); } } }, icEl('trash'))));
     }) : [h('div', { class: 'setuphint' }, 'No saved yardage books yet. Generate one, then Save it from Preview and edit.')]));
   };
   const back = h('button', { class: 'back-btn-top', 'aria-label': 'Back', onclick: close });

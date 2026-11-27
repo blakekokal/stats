@@ -461,10 +461,15 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+=top+'<div class="dashsghead">'
     +'<div style="font-size:12.5px;font-weight:800;color:#00b87a;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;">STROKES GAINED \u00b7 '+(opts.single?'this round':'per round')+'</div>'
     +(cv?'<select class="minisel dashhcpsel" aria-label="Compare to" onchange="dashSet(\'hcp\',this.value)">'+opt(HCP_OPTS,cv.hcp)+'</select>':'')
-    +(cv&&ctl.filters&&!opts.single?'<button class="dashfilterbtn" aria-label="Filter" onclick="toggleDashFilters(this)">Filter</button>'
-      +'<div class="dashfilterbox" style="display:none;">'
-      +'<div class="lab">Rounds</div><select class="minisel" onchange="dashSet(\'type\',this.value)">'+opt(TYPE_OPTS,cv.type)+'</select>'
-      +'<div class="lab">Time</div><select class="minisel" onchange="dashSet(\'time\',this.value)">'+opt(TIME_OPTS,cv.time)+'</select></div>':'')
+    +(cv&&ctl.filters&&!opts.single?(function(){
+      // The shared Filter (js/ui.js): blue with a count when a filter is set.
+      var n=(cv.type!=='all'?1:0)+(String(cv.time)!=='all'?1:0);
+      return '<div class="fmenu"><button type="button" class="fbtn'+(n?' on':'')+'">&#9776; <span>'+(n?'Filter \u00b7 '+n:'Filter')+'</span></button>'
+      +'<div class="fpanel" hidden>'
+      +'<label class="frow"><span>Rounds</span><select onchange="dashSet(\'type\',this.value)">'+opt(TYPE_OPTS,cv.type)+'</select></label>'
+      +'<label class="frow"><span>Time</span><select onchange="dashSet(\'time\',this.value)">'+opt(TIME_OPTS,cv.time)+'</select></label>'
+      +'<div class="factions"><button type="button" class="fclear">Clear</button><button type="button" class="fdone">Done</button></div></div></div>';
+    })():'')
     +'</div>';
   html+=sgBar('SG: Total', sgPer.tot, sgR, true, 1);
   // The four categories two by two, so more of Past rounds fits below.
@@ -647,17 +652,6 @@ function dashViewRound(i) {
 }
 window.dashViewRound = dashViewRound;
 function dashAllRounds() { if (_dash) renderDashboard(_dash.data, _dash.hcp, _dash.targetId); }
-// Filter (beside the title, or beside "per round" in a coach's view of a student): shows or hides the page's filters (round type, time, and the level to compare with).
-function toggleDashFilters(btn) {
-  var box = btn && btn.parentElement.querySelector('.dashfilterbox');
-  if (box) box.style.display = box.style.display === 'none' ? 'flex' : 'none';
-}
-// A Filter box closes on a tap anywhere outside it.
-document.addEventListener('click', function (e) {
-  document.querySelectorAll('.dashfilterbox').forEach(function (box) {
-    if (box.style.display !== 'none' && !box.contains(e.target) && !box.parentElement.contains(e.target.closest('.dashfilterbtn'))) box.style.display = 'none';
-  });
-});
 // The heading's controls for each dashboard (by its target id): get() gives
 // { hcp, type, time }; set(key, value) applies a change and redraws.
 var CTL = {};
@@ -672,7 +666,7 @@ function dashSet(key, v) {
   if (key === 'hcp' && one != null) dashOneRound(one); // stays on that round, with the new level
 }
 window.dashSet = dashSet;
-window.dashOneRound = dashOneRound; window.dashAllRounds = dashAllRounds; window.toggleDashFilters = toggleDashFilters;
+window.dashOneRound = dashOneRound; window.dashAllRounds = dashAllRounds;
 
 // Shows one part of the dashboard: 0 the SG bars, 1-5 a category's detailed stats.
 function showDashSub(idx) {

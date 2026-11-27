@@ -694,3 +694,5 @@ input.searchbox { padding-left: 36px !important; background-image: url("data:ima
 #actbar { flex: none; display: flex; align-items: center; justify-content: center; gap: 10px; padding: calc(env(safe-area-inset-top) + 5px) 12px 5px; background: #5c4a08; color: #fff; font: 13px/1.2 system-ui, -apple-system, sans-serif; z-index: 2100; position: relative; }
 #actbar b { color: #f0c830; }
 #actbar button { flex: none; height: 26px; padding: 0 12px; border: 0; border-radius: 13px; background: rgba(255,255,255,.18); color: #fff; font: 700 12px system-ui, -apple-system, sans-serif; cursor: pointer; }
+/* GPS screen: every ✕ (Strokes Gained, Scorecard, Club and the other sheets) is the same round button. */
+.sgclose, .schead button, .clubhead .x { width: 32px; height: 32px; min-height: 0; padding: 0; border: 0; border-radius: 50%; background: #ffffff1c; color: #fff; font-size: 15px; line-height: 1; flex: none; }

@@ -4,6 +4,7 @@ import { expose } from './core.js';
 import { _sb } from './core.js';
 import { combChipScenarios, combPutDistances } from './data-combines.js';
 import { drillsData } from './data-drills.js';
+import { ic } from '../icons.js';
 
 export function populateCoachDrillList() {
   var cat = (document.getElementById('coachDrillCategorySelect') || {}).value;
@@ -207,7 +208,7 @@ function coachCombRenderShots() {
       + '<div style="font-size:11px;color:#9a9a9a;width:22px;text-align:center;font-weight:700;">' + (i+1) + '</div>'
       + '<input type="number" value="' + s.dist + '" onchange="S.coachCombShots[' + i + '].dist=+this.value" style="width:55px;height:28px;font-size:12px;text-align:center;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:0;">'
       + '<span style="font-size:10px;color:#9a9a9a;">' + s.unit + '</span>' + lieHtml
-      + '<button onclick="coachCombRemoveShot(' + i + ')" style="margin-left:auto;background:transparent;border:none;color:#9a9a9a;font-size:13px;cursor:pointer;padding:2px 6px;height:auto;width:auto;max-width:none;">✕</button></div>';
+      + '<button class="delbtn" onclick="coachCombRemoveShot(' + i + ')" aria-label="Remove shot" style="margin-left:auto;">' + ic('trash') + '</button></div>';
   }).join('');
   html += '<button onclick="coachCombAddShot()" style="width:100%;height:30px;margin-top:6px;font-size:11px;font-weight:700;background:#282828;border:1px dashed #3d3d3d;border-radius:6px;color:#606060;cursor:pointer;max-width:none;">+ Add Shot</button>';
   list.innerHTML = html;

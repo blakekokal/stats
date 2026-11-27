@@ -123,7 +123,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     <div style="font-size:13px;color:#9a9a9a;margin-bottom:14px;">Combines, Drills, Practice &amp; Learn</div>
 
     <!-- 4-tab bar -->
-    <div style="display:flex;gap:4px;width:100%;max-width:360px;margin-bottom:0;">
+    <div class="tabs" style="display:flex;width:100%;max-width:360px;margin-bottom:0;">
       <button onclick="setPracticeHubTab('combines')" id="phTabCombines" style="flex:1;height:40px;font-size:13px;font-weight:700;background:#2d7abc;border:none;color:#ffffff;cursor:pointer;max-width:none;width:auto;padding:0;margin:0;">Combines</button>
       <button onclick="setPracticeHubTab('plan')" id="phTabPlan" style="flex:1;height:40px;font-size:13px;font-weight:700;background:#282828;border:none;color:#606060;cursor:pointer;max-width:none;width:auto;padding:0;margin:0;">Practice</button>
       <button onclick="setPracticeHubTab('drills')" id="phTabDrills" style="flex:1;height:40px;font-size:13px;font-weight:700;background:#282828;border:none;color:#606060;cursor:pointer;max-width:none;width:auto;padding:0;margin:0;">Drills</button>
@@ -165,9 +165,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
       </div>
       <!-- Combine History -->
       <div style="margin-top:16px;">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;margin-bottom:8px;">Combine History</div>
-        <div style="display:flex;gap:8px;margin-bottom:10px;">
-          <select id="phCombFilterType" onchange="loadPHCombineHistory()" class="glassselect" style="flex:1;min-width:0;height:44px;color:#ffffff;font-size:14px;padding:0 12px;box-sizing:border-box;">
+        <div class="fhead" style="margin-bottom:10px;"><div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#606060;">Combine History</div><div class="fmenu"><button type="button" class="fbtn">&#9776; <span>Filter</span></button><div class="fpanel" hidden><label class="frow"><span>Type</span><select id="phCombFilterType" onchange="loadPHCombineHistory()" class="glassselect">
             <option value="all">All Types</option>
             <option value="Putting">Putting</option>
             <option value="Chipping (Prox)">Chipping Prox</option>
@@ -175,13 +173,11 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
             <option value="Wedge">Wedge</option>
             <option value="Driver">Driver</option>
             <option value="Line Drill">Line Drill</option>
-          </select>
-          <select id="phCombFilterMode" onchange="loadPHCombineHistory()" class="glassselect" style="flex:1;min-width:0;height:44px;color:#ffffff;font-size:14px;padding:0 12px;box-sizing:border-box;">
+          </select></label><label class="frow"><span>Show</span><select id="phCombFilterMode" onchange="loadPHCombineHistory()" class="glassselect">
             <option value="all">Custom &amp; Combine</option>
             <option value="combine">Combine Only</option>
             <option value="custom">Custom Only</option>
-          </select>
-        </div>
+          </select></label><div class="factions"><button type="button" class="fclear">Clear</button><button type="button" class="fdone">Done</button></div></div></div></div>
         <div id="phCombineHistoryMsg" style="font-size:13px;color:#606060;min-height:20px;text-align:center;margin-bottom:4px;"></div>
         <div id="phCombineHistory" style="width:100%;"></div>
       </div>
@@ -190,12 +186,12 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     <!-- DRILLS TAB -->
     <div id="phDrillsContent" style="display:none;">
       <div style="font-size:22px;font-weight:800;margin-bottom:12px;text-align:center;">Drills Library</div>
-      <div style="display:flex;gap:8px;margin-bottom:10px;">
+      <div class="tabs" style="display:flex;margin-bottom:10px;">
         <button id="phDrillTabPutting"   onclick="setDrillCategory('putting')"   style="flex:1;height:44px;font-size:14px;font-weight:700;border:none;border-radius:10px;cursor:pointer;background:#2d7abc;color:#ffffff;min-width:0;max-width:none;width:auto;">Putting</button>
         <button id="phDrillTabShortgame" onclick="setDrillCategory('shortgame')" style="flex:1;height:44px;font-size:14px;font-weight:700;border:none;border-radius:10px;cursor:pointer;background:#282828;color:#606060;min-width:0;max-width:none;width:auto;">Short Game</button>
         <button id="phDrillTabFullswing" onclick="setDrillCategory('fullswing')" style="flex:1;height:44px;font-size:14px;font-weight:700;border:none;border-radius:10px;cursor:pointer;background:#282828;color:#606060;min-width:0;max-width:none;width:auto;">Full Swing</button>
       </div>
-      <select id="phDrillSubcategory" onchange="filterDrillsBySubcategory(this.value)" style="width:100%;height:44px;background:#333333;color:#ffffff;border-radius:10px;border:none;text-align:center;text-align-last:center;font-size:14px;appearance:none;-webkit-appearance:none;padding:0 10px;margin-bottom:10px;box-sizing:border-box;"></select>
+      <div class="fhead end" style="margin-bottom:10px;"><div class="fmenu"><button type="button" class="fbtn">&#9776; <span>Filter</span></button><div class="fpanel" hidden><label class="frow"><span>Type</span><select id="phDrillSubcategory" onchange="filterDrillsBySubcategory(this.value)"></select></label><div class="factions"><button type="button" class="fclear">Clear</button><button type="button" class="fdone">Done</button></div></div></div></div>
       <div id="phDrillContent" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
     </div>
 
@@ -247,7 +243,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
         <div style="font-size:18px;font-weight:800;text-align:center;margin-bottom:4px;">Tour Practice Routine</div>
         <p style="text-align:center;font-size:11px;color:rgba(255,255,255,0.4);margin:0 0 10px;">Typical PGA Tour practice structure</p>
         <!-- Season tabs -->
-        <div style="display:flex;gap:0;width:100%;border-radius:10px;overflow:hidden;margin-bottom:14px;">
+        <div class="tabs" style="display:flex;width:100%;margin-bottom:14px;">
           <button id="ppTourSeasonTab0" onclick="ppShowTourSeason(0)" style="flex:1;height:36px;font-size:11px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Off Season</button>
           <button id="ppTourSeasonTab1" onclick="ppShowTourSeason(1)" style="flex:1;height:36px;font-size:11px;font-weight:700;background:#2d7abc;border-radius:0;border:none;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">In Season</button>
           <button id="ppTourSeasonTab2" onclick="ppShowTourSeason(2)" style="flex:1;height:36px;font-size:11px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Pre Tournament</button>
@@ -668,7 +664,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     <p style="text-align:center;font-size:12px;color:rgba(255,255,255,0.4);margin:0 0 14px;">Average distances by tour, handicap, or club speed</p>
 
     <!-- Mode Tabs -->
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:5px;margin-bottom:16px;">
+    <div class="tabs many" style="display:flex;margin-bottom:16px;">
       <button id="dgTab_pga" class="dg-tab dg-tab-active" onclick="dgSetTab('pga')">PGA Tour</button>
       <button id="dgTab_lpga" class="dg-tab" onclick="dgSetTab('lpga')">LPGA</button>
       <button id="dgTab_handicap" class="dg-tab" onclick="dgSetTab('handicap')">Handicap</button>
@@ -817,7 +813,7 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
     </div>
 
     <!-- Page toggle tabs -->
-    <div style="display:flex;gap:6px;margin-bottom:16px;background:#1e1e1e;border-radius:12px;padding:4px;">
+    <div class="tabs" style="display:flex;margin-bottom:16px;">
       <button id="perfTabBtnRounds"   onclick="setPerfPage('rounds')"   style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:#2d7abc;color:#ffffff;">Past Rounds</button>
       <button id="perfTabBtnCombines" onclick="setPerfPage('combines')" style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:#9a9a9a;">Combines</button>
     </div>
@@ -886,14 +882,14 @@ export const DRILLS_PAGES = `<div id="drillsPage" class="page" style="justify-co
     <div style="font-size:22px;font-weight:800;margin-bottom:12px;text-align:center;">Drills Library</div>
 
     <!-- Category button tabs -->
-    <div style="display:flex;gap:8px;margin-bottom:10px;">
+    <div class="tabs" style="display:flex;margin-bottom:10px;">
       <button id="drillTabPutting"   onclick="setDrillCategory('putting')"   style="flex:1;height:44px;font-size:14px;font-weight:700;border:none;border-radius:10px;cursor:pointer;background:#2d7abc;color:#ffffff;min-width:0;max-width:none;width:auto;">Putting</button>
       <button id="drillTabShortgame" onclick="setDrillCategory('shortgame')" style="flex:1;height:44px;font-size:14px;font-weight:700;border:none;border-radius:10px;cursor:pointer;background:#282828;color:#606060;min-width:0;max-width:none;width:auto;">Short Game</button>
       <button id="drillTabFullswing" onclick="setDrillCategory('fullswing')" style="flex:1;height:44px;font-size:14px;font-weight:700;border:none;border-radius:10px;cursor:pointer;background:#282828;color:#606060;min-width:0;max-width:none;width:auto;">Full Swing</button>
     </div>
 
     <!-- Subcategory filter -->
-    <select id="drillSubcategory" onchange="filterDrillsBySubcategory(this.value)" style="width:100%;height:44px;background:#333333;color:#ffffff;border-radius:10px;border:none;text-align:center;text-align-last:center;font-size:14px;appearance:none;-webkit-appearance:none;padding:0 10px;margin-bottom:10px;box-sizing:border-box;"></select>
+    <div class="fhead end" style="margin-bottom:10px;"><div class="fmenu"><button type="button" class="fbtn">&#9776; <span>Filter</span></button><div class="fpanel" hidden><label class="frow"><span>Type</span><select id="drillSubcategory" onchange="filterDrillsBySubcategory(this.value)"></select></label><div class="factions"><button type="button" class="fclear">Clear</button><button type="button" class="fdone">Done</button></div></div></div></div>
 
     <!-- Drill cards: 2-column grid -->
     <div id="drillContent" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;"></div>
@@ -922,7 +918,7 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
 
   <!-- Tabs -->
   <div style="position:sticky;top:0;z-index:10;width:100%;display:flex;justify-content:center;background:#1e1e1e;padding:0 0 16px;">
-    <div style="display:grid;grid-template-columns:repeat(4,1fr);width:100%;max-width:360px;background:#222222;border-radius:12px;overflow:hidden;border:1px solid #333333;">
+    <div class="tabs" style="display:flex;width:100%;max-width:360px;">
       <button id="bagTabMyBag" onclick="setBagTab('myBag')" style="height:40px;font-size:13px;font-weight:700;border:none;cursor:pointer;background:#2d7abc;color:#ffffff;padding:0 2px;">Bag</button>
       <button id="bagTabFindYardages" onclick="setBagTab('findYardages')" style="height:40px;font-size:13px;font-weight:700;border:none;cursor:pointer;background:transparent;color:#606060;padding:0 2px;">Yardages</button>
       <button id="bagTabWedgeGap" onclick="setBagTab('wedgeGap')" style="height:40px;font-size:13px;font-weight:700;border:none;cursor:pointer;background:transparent;color:#606060;padding:0 2px;">Wedges</button>
@@ -1094,23 +1090,20 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <button onclick="spStartNewSession()" style="width:100%;height:44px;background:#007a52;border:none;border-radius:12px;color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:14px;">+ New Speed Session</button>
 
       <!-- Filters -->
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <select id="spClubFilterSel" onchange="spSetClubFilter(this.value)" class="glassselect" style="flex:1;min-width:0;height:44px;color:#ffffff;font-size:14px;padding:0 12px;box-sizing:border-box;">
+      <div class="fhead end" style="margin-bottom:12px;"><div class="fmenu"><button type="button" class="fbtn">&#9776; <span>Filter</span></button><div class="fpanel" hidden><label class="frow"><span>Clubs</span><select id="spClubFilterSel" onchange="spSetClubFilter(this.value)" class="glassselect">
           <option value="all">All Clubs</option>
           <option value="driver">Driver</option>
           <option value="woods">Woods</option>
           <option value="hybrids">Hybrids</option>
           <option value="irons">Irons</option>
           <option value="wedges">Wedges</option>
-        </select>
-        <select id="spDateFilterSel" onchange="spSetDateFilter(this.value)" class="glassselect" style="flex:1;min-width:0;height:44px;color:#ffffff;font-size:14px;padding:0 12px;box-sizing:border-box;">
+        </select></label><label class="frow"><span>Time</span><select id="spDateFilterSel" onchange="spSetDateFilter(this.value)" class="glassselect">
           <option value="all">All Time</option>
           <option value="1mo">Last Month</option>
           <option value="3mo">Last 3 Months</option>
           <option value="6mo">Last 6 Months</option>
           <option value="1yr">Last 12 Months</option>
-        </select>
-      </div>
+        </select></label><div class="factions"><button type="button" class="fclear">Clear</button><button type="button" class="fdone">Done</button></div></div></div></div>
 
       <!-- Summary averages -->
       <div id="spSummaryCard" class="glasstile" style="padding:14px;margin-bottom:12px;display:none;">
@@ -1199,8 +1192,8 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
     <div style="font-size:12px;color:#606060;margin-top:4px;">Full swing distances &amp; ¾ swing gaps</div>
   </div>
   <div style="width:100%;max-width:400px;padding:0 16px;box-sizing:border-box;">
-    <!-- Filter buttons -->
-    <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-bottom:14px;">
+    <!-- Club groups -->
+    <div class="tabs many" style="display:flex;margin-bottom:14px;">
       <button id="gvFilterAll" onclick="setGapVizFilter('all')" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #2d7abc;background:#2d7abc;color:#ffffff;">All</button>
       <button id="gvFilterWoods" onclick="setGapVizFilter('woods')" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #3d3d3d;background:transparent;color:#9a9a9a;">Woods</button>
       <button id="gvFilterIrons" onclick="setGapVizFilter('irons')" style="padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;border:1px solid #3d3d3d;background:transparent;color:#9a9a9a;">Irons</button>
