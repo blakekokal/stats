@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.50.6', ['Coaching (coach\u2019s Home): the title stays at the top and the page fades out under it as it scrolls', 'Stats Dashboard: no emoji on View round']],
   ['1.50.5', ['My Bag: the title stays at the top and each tab scrolls under the tabs']],
   ['1.50.4', ['Stats Dashboard: everything scrolls under the Strokes Gained heading', 'Back button a little closer to the right edge']],
   ['1.50.3', ['Performance Analysis: the title stays at the top and the page scrolls under the tabs', 'Lists fade out softly where they slide under the tabs or a heading (Stats Dashboard\u2019s Past rounds too), no hard line']],
