@@ -395,7 +395,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
   function sgFmt(v){return v>=0?'+'+v.toFixed(2):v.toFixed(2);}
   function sgC(v){return v>=0?'#00b87a':'#d4706e';}
   function row(l,v,s){return'<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #282828;"><span style="color:#9a9a9a;">'+l+'</span><span style="font-weight:700;">'+v+(s?' <span style="font-size:11px;color:#606060;">'+s+'</span>':'')+'</span></div>';}
-  function hdr(t){return'<div style="font-size:14px;font-weight:800;color:#00b87a;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:2px;">'+t+'</div>';}
+  function hdr(t){return'<div class="dashhdr" style="font-size:14px;font-weight:800;color:#00b87a;margin:14px 0 4px;border-bottom:2px solid #007a52;padding-bottom:2px;">'+t+'</div>';}
   function tbl(headers,rows){var h='<div style="overflow-x:auto;margin:4px 0;"><table style="width:100%;font-size:12px;border-collapse:collapse;"><tr>';headers.forEach(function(c){h+='<td style="padding:4px 6px;font-weight:700;color:#9a9a9a;border-bottom:1px solid #3d3d3d;">'+c+'</td>';});h+='</tr>';rows.forEach(function(r){h+='<tr>';r.forEach(function(c){h+='<td style="padding:3px 6px;border-bottom:1px solid #282828;">'+c+'</td>';});h+='</tr>';});return h+'</table></div>';}
   // A strokes-gained slider: 0 in the middle, red to the left for strokes lost,
   // green to the right for strokes gained. Title above the bar, number below.
@@ -628,6 +628,23 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+='</div></div>'; // .dashdetail, then the section
   
   content.innerHTML=html;
+  tileDetails(content);
+}
+
+// A category's detail page: each section (its heading and what's under it, and the
+// category's bar at the top) is a glass tile, as on the other pages.
+function tileDetails(root) {
+  root.querySelectorAll('.dsubContent:not(#dsub_0)').forEach(function(sub) {
+    [sub, sub.querySelector('.dashdetail')].forEach(function(box) {
+      if (!box) return;
+      var tile = null;
+      Array.from(box.children).forEach(function(el) {
+        if (el.classList.contains('dashdetail')) { tile = null; return; }
+        if (el.classList.contains('dashhdr')) { tile = document.createElement('div'); tile.className = 'dashtile'; box.insertBefore(tile, el); }
+        if (tile) tile.appendChild(el);
+      });
+    });
+  });
 }
 
 // SG by round: one round's dashboard, and back to all of them.

@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.50.9', ['Stats Dashboard: each category\u2019s detail (Total, Off the Tee, Approach, Around the Green, Putting) is in glass tiles, one per section']],
   ['1.50.8', ['Coaching, Students: the search stays at the top as the list scrolls, and Filter can show only students with activity']],
   ['1.50.7', ['Coaching (coach\u2019s Home): Students stays at the top; the rest of Home scrolls and fades out behind it']],
   ['1.50.6', ['Coaching (coach\u2019s Home): the title stays at the top and the page fades out under it as it scrolls', 'Stats Dashboard: no emoji on View round']],
