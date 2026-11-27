@@ -914,21 +914,22 @@ export const DRILLS_PAGES = `<div id="drillsPage" class="page" style="justify-co
   <div id="drillDetailContent" style="width:320px;max-width:100%;"></div>
 </div>`;
 
-export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-content:flex-start;padding-top:15px;overflow-y:auto;padding-bottom:80px;align-items:center;">
-  <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-  <div style="text-align:center;margin-bottom:12px;">
+export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-content:flex-start;padding-top:15px;padding-bottom:0;overflow:hidden;gap:0;align-items:center;">
+  <!-- Title: stays at the top; the tabs' contents scroll under the tabs -->
+  <div class="pagehead" style="text-align:center;margin-bottom:12px;flex-shrink:0;">
+    <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="font-size:22px;font-weight:800;">${ic('bag', 'tint-blue')} My Bag</div>
   </div>
 
   <!-- Coach Student Selector -->
-  <div id="bagCoachStudentBar" style="display:none;width:100%;max-width:360px;margin:0 auto 10px;">
+  <div id="bagCoachStudentBar" style="display:none;width:100%;max-width:360px;margin:0 auto 10px;flex-shrink:0;">
     <select id="bagStudentSelect" onchange="onBagStudentChange(this.value)" style="width:100%;height:38px;font-size:13px;font-weight:600;text-align:center;background:#222222;color:#ffffff;border:1px solid #007a52;border-radius:10px;-webkit-appearance:none;appearance:none;padding:0 10px;box-sizing:border-box;">
       <option value="">My Bag</option>
     </select>
   </div>
 
   <!-- Tabs -->
-  <div style="position:sticky;top:0;z-index:10;width:100%;display:flex;justify-content:center;background:#1e1e1e;padding:0 0 16px;">
+  <div class="overtop" style="flex-shrink:0;width:100%;display:flex;justify-content:center;">
     <div class="tabs" style="display:flex;width:100%;max-width:360px;">
       <button id="bagTabMyBag" onclick="setBagTab('myBag')" style="height:40px;font-size:13px;font-weight:700;border:none;cursor:pointer;background:#2d7abc;color:#ffffff;padding:0 2px;">Bag</button>
       <button id="bagTabFindYardages" onclick="setBagTab('findYardages')" style="height:40px;font-size:13px;font-weight:700;border:none;cursor:pointer;background:transparent;color:#606060;padding:0 2px;">Yardages</button>
@@ -936,6 +937,9 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <button id="bagTabSpeed" onclick="setBagTab('speed')" style="height:40px;font-size:13px;font-weight:700;border:none;cursor:pointer;background:transparent;color:#606060;padding:0 2px;">Speed</button>
     </div>
   </div>
+
+  <!-- Scrolling body: starts under the tabs, so it passes beneath them -->
+  <div id="bagScroll" class="undertop" style="--gap:16px;flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100%;display:flex;flex-direction:column;align-items:center;padding:16px 0 80px;box-sizing:border-box;">
 
   <!-- TAB 1: MY BAG -->
   <div id="bagTabContentMyBag" style="width:100%;display:flex;flex-direction:column;align-items:center;">
@@ -966,11 +970,6 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
       <div id="bagClubHeaders" style="display:none;"></div>
       <div id="bagClubList" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
     </div>
-  </div>
-
-  <!-- Club Detail Modal -->
-  <div id="clubDetailModal" onclick="if(event.target===this)closeClubDetail()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;justify-content:center;align-items:center;">
-    <div id="clubDetailContent" style="background:#222222;border-radius:16px;padding:20px;width:90%;max-width:340px;max-height:80vh;overflow-y:auto;position:relative;border:1px solid #333333;"></div>
   </div>
 
   <!-- TAB 2: FIND YARDAGES -->
@@ -1179,6 +1178,13 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
         </div>
       </div>
     </div>
+  </div>
+
+  </div><!-- #bagScroll -->
+
+  <!-- Club Detail Modal -->
+  <div id="clubDetailModal" onclick="if(event.target===this)closeClubDetail()" style="display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:1000;justify-content:center;align-items:center;">
+    <div id="clubDetailContent" style="background:#222222;border-radius:16px;padding:20px;width:90%;max-width:340px;max-height:80vh;overflow-y:auto;position:relative;border:1px solid #333333;"></div>
   </div>
 
   <!-- Existing data conflict modal -->

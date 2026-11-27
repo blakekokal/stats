@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.50.5', ['My Bag: the title stays at the top and each tab scrolls under the tabs']],
   ['1.50.4', ['Stats Dashboard: everything scrolls under the Strokes Gained heading', 'Back button a little closer to the right edge']],
   ['1.50.3', ['Performance Analysis: the title stays at the top and the page scrolls under the tabs', 'Lists fade out softly where they slide under the tabs or a heading (Stats Dashboard\u2019s Past rounds too), no hard line']],
   ['1.50.2', ['Coaching, a student\u2019s page, Round History and Practice and Learning: the title stays at the top and the list scrolls under the tabs (or History\u2019s search), as on My Bag']],
