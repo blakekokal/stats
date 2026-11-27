@@ -173,7 +173,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
     </div>
 
     <!-- Students: always on Home, with the rest of Home fading out behind it as it scrolls -->
-    <div id="coachStudentsBar" class="overtop" style="flex-shrink:0;padding:14px 16px 0;">
+    <div id="coachStudentsBar" class="overtop coachbar" style="flex-shrink:0;padding:14px 16px 0;">
       <button onclick="showCoachCoachingTab(4)" style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:none;height:auto;background:#222222;border-radius:12px;padding:14px 18px;margin:0;border:none;color:#ffffff;text-align:left;">
           <div><div id="coachStatStudents" style="font-size:24px;font-weight:800;color:#44b8f0;line-height:1.1;">–</div>
           <div style="font-size:12px;color:#9a9a9a;margin-top:2px;font-weight:600;">Students</div></div>
@@ -181,7 +181,15 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
         </button>
     </div>
 
-    <!-- Tab content: scrolls under the Students button (or, on the other tabs, the title), fading out -->
+    <!-- Students list: the search and Filter stay put; the list scrolls under them -->
+    <div id="coachStudentSearchBar" class="overtop coachbar" style="flex-shrink:0;padding:14px 16px 0;">
+      <div class="fbar">
+        <input id="coachStudentSearch" type="search" oninput="drawCoachStudentList()" placeholder="Search students" class="searchbox" autocomplete="off" style="height:38px;font-size:14px;text-align:left;">
+        <div class="fmenu"><button type="button" class="fbtn">&#9776; <span>Filter</span></button><div class="fpanel" hidden><label class="frow"><span>Show</span><select id="coachStudentShow" onchange="drawCoachStudentList()"><option value="all">All students</option><option value="active">With activity</option></select></label><div class="factions"><button type="button" class="fclear">Clear</button><button type="button" class="fdone">Done</button></div></div></div>
+      </div>
+    </div>
+
+    <!-- Tab content: scrolls under the Students button, the search (students list) or the title, fading out -->
     <div class="undertop" style="flex:1;overflow-y:auto;padding:14px 16px 80px;">
 
       <!-- TAB 0: Home -->
@@ -365,11 +373,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
 
       <!-- TAB 4: Students / Teams -->
       <div id="cctTabContent4" style="display:none;">
-        <!-- Students: one list, latest activity first, with a name search -->
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-          <button class="stepback" onclick="showCoachCoachingTab(0)" aria-label="Back" style="height:38px;font-size:18px;background:#282828;border-radius:8px;padding:0 12px;max-width:none;width:auto;color:#9a9a9a;border:1px solid #333333;">←</button>
-          <input id="coachStudentSearch" type="search" oninput="drawCoachStudentList()" placeholder="Search students" class="searchbox" autocomplete="off" style="flex:1;height:38px;font-size:14px;max-width:none;text-align:left;border-radius:8px;">
-        </div>
+        <!-- Students: one list, latest activity first (search and Filter stay above it: #coachStudentSearchBar) -->
         <div id="coachStudentList" style="margin-bottom:14px;"><div style="text-align:center;color:#606060;font-size:13px;padding:20px 0;">Loading students...</div></div>
         <!-- Add student -->
         <div style="background:#222222;border-radius:14px;padding:14px 16px;margin-bottom:12px;">

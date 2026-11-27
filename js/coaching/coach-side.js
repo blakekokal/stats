@@ -328,13 +328,14 @@ export function drawCoachStudentList(reload) {
   if (!el) return;
   if (reload || !_actLoading) _actLoading = loadStudentActivity().catch(function() {});
   var q = ((document.getElementById('coachStudentSearch') || {}).value || '').toLowerCase().trim();
-  var students = (S.coachRosterData || []).filter(function(s) { return !q || (s.student_name || '').toLowerCase().indexOf(q) !== -1; });
+  var activeOnly = ((document.getElementById('coachStudentShow') || {}).value) === 'active'; // Filter: only students with activity
+  var students = (S.coachRosterData || []).filter(function(s) { return (!q || (s.student_name || '').toLowerCase().indexOf(q) !== -1) && (!activeOnly || _studentAct[s.student_id]); });
   students.sort(function(a, b) {
     var x = (_studentAct[a.student_id] || {}).at || 0, y = (_studentAct[b.student_id] || {}).at || 0;
     return y - x || (a.student_name || '').localeCompare(b.student_name || '');
   });
   if (!students.length) {
-    el.innerHTML = '<div style="text-align:center;color:#606060;font-size:13px;padding:20px 0;">' + ((S.coachRosterData || []).length ? 'No students match' : 'No students yet. Add one with their invite code below.') + '</div>';
+    el.innerHTML = '<div style="text-align:center;color:#606060;font-size:13px;padding:20px 0;">' + ((S.coachRosterData || []).length ? (activeOnly && !q ? 'No students with activity yet' : 'No students match') : 'No students yet. Add one with their invite code below.') + '</div>';
     return;
   }
   el.innerHTML = students.map(function(s) {
