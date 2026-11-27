@@ -345,3 +345,20 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 .cx button.svuseapp { width: auto; max-width: none; height: 30px; margin: 8px auto 2px; padding: 0 14px; font-size: 13px; font-weight: 700; border-radius: 15px; color: #f0c830; display: block; }
 .cx .homebtn.stopacting { background: rgba(240,200,48,.14) !important; }
 .cx .homebtn.stopacting .ic { color: #f0c830; }
+
+/* Home: the profile button (under Settings) and its menu. */
+.cx .iconbtn.profbtn.acting { box-shadow: 0 0 0 2px #f0c830 !important; color: #f0c830; }
+.cx.home .profmenu { position: absolute; left: 6px; top: 76px; z-index: 40; width: min(280px, calc(100vw - 24px)); max-height: 60vh; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding: 12px; box-sizing: border-box; background: #2c2c2e; border-radius: 18px; box-shadow: 0 10px 30px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08); text-align: left; touch-action: pan-y; }
+.cx.home .profmenu[hidden] { display: none; }
+.cx .profwho { display: flex; flex-direction: column; gap: 1px; padding: 0 2px 4px; }
+.cx .profwho b { font-size: 15px; } .cx .profwho small { font-size: 12px; color: #9a9a9a; overflow-wrap: anywhere; }
+.cx .profnow { font-size: 12px; color: #c8c8cc; padding: 6px 2px 0; border-top: 1px solid rgba(255,255,255,.08); }
+.cx .profnow b { color: #f0c830; }
+.cx .proflist { display: flex; flex-direction: column; gap: 6px; }
+.cx .proflist:empty { display: none; }
+.cx .proflab { font-size: 11px; font-weight: 700; color: #9a9a9a; text-transform: uppercase; letter-spacing: .04em; padding: 6px 2px 0; border-top: 1px solid rgba(255,255,255,.08); }
+.cx .profmenu button { max-width: none; width: 100%; height: 38px; font-size: 14px; display: flex; align-items: center; justify-content: space-between; padding: 0 14px; }
+.cx .profmenu button.profback { justify-content: center; color: #f0c830; }
+.cx .profmenu button.profstudent small { font-size: 11px; color: #f0c830; }
+.cx .profmenu button.profstudent[disabled] { opacity: 1; }
+.cx.home .homehead { z-index: 5; } /* its profile menu opens over the buttons below */

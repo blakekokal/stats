@@ -3,7 +3,7 @@
 // Coaching are the coaching app's own pages (js/coaching).
 
 import { h, course, toast, COURSES, courseById, setActiveCourse, goBack, ninesWith, comboId, isAdmin, exitActing } from './app.js';
-import { store, sync, actingAs, levelFromPref, submitCourseRequest, fetchCourseRequests, setCourseRequestStatus, countNewCourseRequests, markCourseRequestsSeen, errText } from './store.js';
+import { store, sync, actingAs, startActing, stopActing, actState, fetchCoachStudents, supabaseClient, levelFromPref, submitCourseRequest, fetchCourseRequests, setCourseRequestStatus, countNewCourseRequests, markCourseRequestsSeen, errText } from './store.js';
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
 import { checkCoachingDot } from './coaching/index.js';
@@ -67,6 +67,55 @@ export function askResume() {
 
 // ---------- home ----------
 
+// Home's profile button: who's signed in, and for a coach, the students to use
+// the app as (or, while using it as one, the way back).
+function profileButton() {
+  const as = actingAs();
+  const btn = h('button', { class: 'iconbtn profbtn' + (as ? ' acting' : ''), 'aria-label': as ? `Using the app as ${as.name}` : 'Profile', 'aria-expanded': 'false' }, icEl('user'));
+  const menu = h('div', { class: 'profmenu', hidden: true });
+  const close = () => { menu.hidden = true; btn.setAttribute('aria-expanded', 'false'); document.removeEventListener('click', outside, true); };
+  const outside = e => { if (!menu.contains(e.target) && !btn.contains(e.target)) close(); };
+  // Leaves the student being used (if any), then uses the app as `st` ({ id, name }), or as yourself.
+  async function switchTo(st) {
+    const cur = actingAs();
+    if (cur && !(await stopActing())) {
+      if (!confirm(`Some of ${cur.name}\u2019s changes aren\u2019t saved yet (${actState.error || 'no signal'}). Switch anyway and lose them?`)) return;
+      await stopActing(true);
+    }
+    if (st) {
+      let hcp = 'pro';
+      try { const { data } = await supabaseClient().from('profiles').select('hcp_preference').eq('id', st.id).single(); if (data?.hcp_preference) hcp = data.hcp_preference; } catch { /* their level, else Tour Pro */ }
+      try { await startActing({ id: st.id, name: st.name, hcp }); } catch (e) { toast(errText(e, 'Couldn\u2019t open their app: ')); }
+    }
+    close(); location.hash = '#/'; renderHome(document.getElementById('view'));
+  }
+  function draw() {
+    const kids = [];
+    kids.push(h('div', { class: 'profwho' }, h('b', {}, sync.user ? sync.name : 'Not logged in'), sync.user ? h('small', {}, sync.email) : null));
+    if (!sync.user) kids.push(h('button', { onclick: () => { close(); location.hash = '#/account'; } }, 'Log In / Sign Up'));
+    if (as) kids.push(h('div', { class: 'profnow' }, 'Using the app as ', h('b', {}, as.name)), h('button', { class: 'profback', onclick: () => switchTo(null) }, 'Back to my account'));
+    const list = h('div', { class: 'proflist' });
+    if (sync.user) kids.push(list);
+    menu.replaceChildren(...kids);
+    if (!sync.user) return;
+    list.append(h('div', { class: 'small muted' }, 'Loading students\u2026'));
+    fetchCoachStudents().then(rows => {
+      if (!rows.length) { list.replaceChildren(); return; }
+      list.replaceChildren(h('div', { class: 'proflab' }, 'Use the app as'),
+        ...rows.map(r => {
+          const name = r.student_name || 'Student', on = as && as.id === r.student_id;
+          return h('button', { class: 'profstudent' + (on ? ' on' : ''), disabled: on, onclick: () => switchTo({ id: r.student_id, name }) }, name, on ? h('small', {}, 'now') : null);
+        }));
+    }).catch(e => list.replaceChildren(h('div', { class: 'small', style: 'color:#d4706e;' }, errText(e))));
+  }
+  btn.addEventListener('click', () => {
+    if (!menu.hidden) return close();
+    draw(); menu.hidden = false; btn.setAttribute('aria-expanded', 'true');
+    setTimeout(() => document.addEventListener('click', outside, true), 0);
+  });
+  return { btn, menu };
+}
+
 export function renderHome(view) {
   const go = (icon, title, bg, href) => h('button', { class: 'homebtn', style: `background:${bg}`, onclick: () => { location.hash = href; } },
     h('span', { class: 'ic' }, icEl(icon)), h('div', {}, h('div', { class: 't' }, title)));
@@ -81,9 +130,9 @@ export function renderHome(view) {
   // One line, between the ? and the search / settings buttons; version and the player's name under it.
   brand.innerHTML = `<div class="hometitle">Blake Kokal Golf</div><div class="homesub"><span class="wn" style="color:#606060;font-weight:700;cursor:pointer;">v${VERSION}</span><span class="wn" style="color:#44b8f0;font-weight:600;cursor:pointer;">&#x2190; What's new</span></div>`;
   brand.querySelectorAll('.wn').forEach(el => el.addEventListener('click', () => { location.hash = '#/whatsnew'; }));
-  brand.append(h('div', { class: 'homeuser' }, actingAs() ? [icEl('user'), ' ' + actingAs().name] : sync.user ? [icEl('user'), ' ' + sync.name] : ''));
   // Using the app as a student: their account's Settings and the coach's Coaching aren't part of it.
   if (actingAs()) gearBtn.style.visibility = 'hidden';
+  const profile = profileButton();
 
   // Coaching, with a dot when a note, message or assignment is waiting.
   const coaching = go('cap', 'Coaching', '#00402c', '#/coaching');
@@ -94,12 +143,14 @@ export function renderHome(view) {
 
   view.replaceChildren(page('center home',
     h('div', { class: 'homecol' },
-      // Help on the left, the title in the middle, settings (search under it) on the right.
+      // Settings with the profile button under it on the left, the title in the middle,
+      // Search with ? under it on the right: both sides one button wide, so the title stays centred.
       h('div', { class: 'homehead' },
-        h('button', { class: 'iconbtn', 'aria-label': 'Strokes Gained explained', onclick: () => { location.hash = '#/help'; } }, icEl('help')),
+        h('div', { style: 'display:flex;flex-direction:column;gap:6px;' }, gearBtn, profile.btn),
         brand,
-        // Settings with Search under it, so both sides are one button wide and the title stays centred.
-        h('div', { style: 'display:flex;flex-direction:column;gap:6px;' }, gearBtn, search)),
+        h('div', { style: 'display:flex;flex-direction:column;gap:6px;' }, search,
+          h('button', { class: 'iconbtn', 'aria-label': 'Strokes Gained explained', onclick: () => { location.hash = '#/help'; } }, icEl('help'))),
+        profile.menu),
       go('map', 'GPS Overview / Yardage Books', '#1a4a8a', '#/scout'),
       go('flag', 'New Round', '#007a52', '#/new'),
       go('scorecard', 'Round History', '#00402c', '#/history'),
@@ -115,7 +166,7 @@ export function renderHome(view) {
     sync.user ? null : h('button', { class: 'linkbtn', style: 'margin-top:10px;flex:none;', onclick: () => { location.hash = '#/account'; } }, 'Log In / Sign Up')));
   // Everything fits, so a drag on Home shouldn't move the page at all: on iPhone
   // the whole screen otherwise slides and springs back (rubber-band bounce).
-  view.firstChild.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+  view.firstChild.addEventListener('touchmove', e => { if (!e.target.closest('.profmenu')) e.preventDefault(); }, { passive: false }); // the student list still scrolls
 }
 
 // ---------- new round ----------
@@ -622,6 +673,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.48.1', ['Home: a profile button under Settings shows who\u2019s signed in and lets a coach pick a student to use the app as; Search is top right with ? under it']],
   ['1.48.0', ['Coaches: Use app as a student (on their profile) to see and log their rounds, combines and practice; what you add is marked Added by coach. Exit or Stop viewing to come back', 'A student\u2019s Performance Analysis shows their own combines']],
   ['1.47.0', ['New course: Shady Oaks Country Club (Fort Worth), built without a yardage book: greens, fairways, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture (renovated since mapping), trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
   ['1.46.0', ['New course: Oakmont Country Club (Corinth), built without a yardage book: greens, fairways, bunkers, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
