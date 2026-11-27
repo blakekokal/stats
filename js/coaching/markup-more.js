@@ -445,29 +445,29 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     <!-- LEARN TAB -->
     <div id="phLearnContent" style="display:none;">
       <div style="display:flex;flex-direction:column;gap:10px;align-items:center;">
-        <button onclick="openLearningLibrary()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
+        <button onclick="openLearningLibrary()" style="width:100%;display:flex;align-items:center;gap:13px;height:60px;padding:0 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
           <span class="tileic">${ic('books', 'tint-blue')}</span>
-          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Learning Library</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Articles, tips &amp; guides</div></div>
+          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Learning Library</div></div>
         </button>
-        <button onclick="toggleLearnPBV()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
+        <button onclick="toggleLearnPBV()" style="width:100%;display:flex;align-items:center;gap:13px;height:60px;padding:0 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
           <span class="tileic">${ic('breakGreen', 'tint-purple')}</span>
-          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Putting Break Calculator</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Visualize putt break &amp; aim point</div></div>
+          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Putting Break Calculator</div></div>
         </button>
-        <button onclick="toggleLearnDistanceOptimizer()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
+        <button onclick="toggleLearnDistanceOptimizer()" style="width:100%;display:flex;align-items:center;gap:13px;height:60px;padding:0 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
           <span class="tileic">${ic('ruler', 'tint-yellow')}</span>
-          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Distance Optimizer</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Optimize distances for your game</div></div>
+          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Distance Optimizer</div></div>
         </button>
-        <button onclick="toggleLearnProximityCalc()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
+        <button onclick="toggleLearnProximityCalc()" style="width:100%;display:flex;align-items:center;gap:13px;height:60px;padding:0 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
           <span class="tileic">${ic('prox', 'tint-red')}</span>
-          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Proximity Calculator</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">How close to gain strokes from any yardage</div></div>
+          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Proximity Calculator</div></div>
         </button>
-        <button onclick="toggleDistanceGuide()" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
+        <button onclick="toggleDistanceGuide()" style="width:100%;display:flex;align-items:center;gap:13px;height:60px;padding:0 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
           <span class="tileic">${ic('flight', 'tint-purple')}</span>
-          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">How Far Should I Hit It?</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">Tour averages &amp; distance by speed or handicap</div></div>
+          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">How Far Should I Hit It?</div></div>
         </button>
-        <button onclick="show('guideToGolfPage')" style="width:100%;display:flex;align-items:center;gap:13px;height:auto;padding:16px 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
+        <button onclick="show('guideToGolfPage')" style="width:100%;display:flex;align-items:center;gap:13px;height:60px;padding:0 15px;font-size:15px;font-weight:700;background:#1a4a8a;border-radius:12px;text-align:left;">
           <span class="tileic">${ic('book', 'tint-blue')}</span>
-          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;">Guide to Golf</div><div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:4px;">How to hit every shot with photos &amp; tips</div></div>
+          <div><div style="font-size:1.1rem;font-weight:700;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">Guide to Golf</div></div>
         </button>
       </div>
     </div>
