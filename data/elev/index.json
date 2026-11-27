@@ -1198,5 +1198,20 @@
    615
   ],
   "source": "USGS 3DEP"
+ },
+ "pecanvalley-river": {
+  "bounds": [
+   -97.455176,
+   32.651214,
+   -97.441687,
+   32.665309
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   606,
+   754
+  ],
+  "source": "USGS 3DEP"
  }
 }
