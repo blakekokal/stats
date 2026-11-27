@@ -80,6 +80,8 @@ try { acting = JSON.parse(sessionStorage.getItem(ACT_KEY) || 'null'); } catch { 
 const actingKey = key => !!acting && key.startsWith('round:');
 function docOf(key) { return actingKey(key) ? acting.docs[key] : docs[key]; }
 function actPersist() { try { sessionStorage.setItem(ACT_KEY, JSON.stringify(acting)); } catch { /* full: still in memory */ } }
+// When this coach last used the app as each student: { student id: ms } (orders Home's student list).
+export const usedAsTimes = () => { try { return JSON.parse(localStorage.getItem('gs:usedAs') || '{}'); } catch { return {}; } };
 // The student being used, or null: { id, name, email, hcp }.
 export const actingAs = () => (acting ? { id: acting.id, name: acting.name, email: acting.email, hcp: acting.hcp } : null);
 export const actState = { saving: false, error: '' }; // for the banner
@@ -136,6 +138,7 @@ export async function startActing(student) {
   const stash = {};
   for (const k of ['gs:currentRound', 'gs:viewOnly', 'gs:editingPast', 'gs:editSnap']) { stash[k] = localStorage.getItem(k); localStorage.removeItem(k); }
   acting = { id: student.id, name: student.name || 'Student', email: student.email || '', hcp: student.hcp || 'pro', docs: sdocs, pending: [], stash };
+  try { const used = JSON.parse(localStorage.getItem('gs:usedAs') || '{}'); used[student.id] = Date.now(); localStorage.setItem('gs:usedAs', JSON.stringify(used)); } catch { /* order only */ }
   actPersist(); actEmit(); emit();
 }
 // Back to the coach's own app. Unsent changes are sent first; `force` leaves without them.

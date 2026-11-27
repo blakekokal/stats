@@ -3,7 +3,7 @@
 // Coaching are the coaching app's own pages (js/coaching).
 
 import { h, course, toast, COURSES, courseById, setActiveCourse, goBack, ninesWith, comboId, isAdmin, exitActing } from './app.js';
-import { store, sync, actingAs, startActing, stopActing, actState, fetchCoachStudents, supabaseClient, levelFromPref, submitCourseRequest, fetchCourseRequests, setCourseRequestStatus, countNewCourseRequests, markCourseRequestsSeen, errText } from './store.js';
+import { store, sync, actingAs, startActing, stopActing, actState, fetchCoachStudents, fetchStudentActivity, usedAsTimes, supabaseClient, levelFromPref, submitCourseRequest, fetchCourseRequests, setCourseRequestStatus, countNewCourseRequests, markCourseRequestsSeen, errText } from './store.js';
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
 import { checkCoachingDot } from './coaching/index.js';
@@ -67,6 +67,11 @@ export function askResume() {
 
 // ---------- home ----------
 
+// Students' last activity, kept a couple of minutes so the menu opens quickly: { at, last: { id: ms } }.
+let studentActive = { at: 0, last: {} };
+// "5m ago", "3h ago", "2d ago", "4w ago".
+const ago = t => { const m = Math.max(1, Math.round((Date.now() - t) / 60000)); return m < 60 ? `${m}m ago` : m < 1440 ? `${Math.round(m / 60)}h ago` : m < 20160 ? `${Math.round(m / 1440)}d ago` : `${Math.round(m / 10080)}w ago`; };
+
 // Home's profile button: who's signed in, and for a coach, the students to use
 // the app as (or, while using it as one, the way back).
 function profileButton() {
@@ -101,11 +106,22 @@ function profileButton() {
     list.append(h('div', { class: 'small muted' }, 'Loading students\u2026'));
     fetchCoachStudents().then(rows => {
       if (!rows.length) { list.replaceChildren(); return; }
-      list.replaceChildren(h('div', { class: 'proflab' }, 'Use the app as'),
-        ...rows.map(r => {
-          const name = r.student_name || 'Student', on = as && as.id === r.student_id;
-          return h('button', { class: 'profstudent' + (on ? ' on' : ''), disabled: on, onclick: () => switchTo({ id: r.student_id, name }) }, name, on ? h('small', {}, 'now') : null);
-        }));
+      // Newest first: their last activity (a round, or anything they sent you) or when you
+      // last used the app as them, whichever is later. Drawn by last use at once, then again
+      // once their activity is in.
+      const drawRows = active => {
+        const used = usedAsTimes();
+        const when = r => { const a = active[r.student_id] || 0, u = used[r.student_id] || 0; return a >= u ? { t: a, what: 'active' } : { t: u, what: 'used' }; };
+        const sorted = [...rows].sort((x, y) => when(y).t - when(x).t || (x.student_name || '').localeCompare(y.student_name || ''));
+        list.replaceChildren(h('div', { class: 'proflab' }, 'Use the app as'),
+          ...sorted.map(r => {
+            const name = r.student_name || 'Student', on = as && as.id === r.student_id, w = when(r);
+            return h('button', { class: 'profstudent' + (on ? ' on' : ''), disabled: on, onclick: () => switchTo({ id: r.student_id, name }) },
+              name, h('small', {}, on ? 'now' : w.t ? `${w.what} ${ago(w.t)}` : ''));
+          }));
+      };
+      drawRows(studentActive.at > Date.now() - 120000 ? studentActive.last : {});
+      if (studentActive.at < Date.now() - 120000) fetchStudentActivity(rows).then(last => { studentActive = { at: Date.now(), last }; if (list.isConnected) drawRows(last); }).catch(() => {});
     }).catch(e => list.replaceChildren(h('div', { class: 'small', style: 'color:#d4706e;' }, errText(e))));
   }
   btn.addEventListener('click', () => {
@@ -673,6 +689,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.48.2', ['Profile button: students listed by last active or last used by you']],
   ['1.48.1', ['Home: a profile button under Settings shows who\u2019s signed in and lets a coach pick a student to use the app as; Search is top right with ? under it']],
   ['1.48.0', ['Coaches: Use app as a student (on their profile) to see and log their rounds, combines and practice; what you add is marked Added by coach. Exit or Stop viewing to come back', 'A student\u2019s Performance Analysis shows their own combines']],
   ['1.47.0', ['New course: Shady Oaks Country Club (Fort Worth), built without a yardage book: greens, fairways, water, tee boxes and hole lines from OpenStreetMap lined up on the satellite picture, bunkers checked against the picture (renovated since mapping), trees from the picture as circles, out-of-bounds line from the course boundary, and elevation (contours and plays-like yardages)']],
