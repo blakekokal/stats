@@ -29,7 +29,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
   <div id="coachingStudentView" style="display:none;width:100%;max-width:420px;flex:1;overflow:hidden;display:flex;flex-direction:column;">
 
     <!-- Tab bar -->
-    <div class="tabs many" style="display:flex;width:100%;flex-shrink:0;">
+    <div class="tabs many overtop" style="display:flex;width:100%;flex-shrink:0;">
       <button id="cstTab0" onclick="showStudentCoachingTab(0)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#2d7abc;border-radius:0;border:none;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">Feedback</button>
       <button id="cstTab1" onclick="showStudentCoachingTab(1)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Drills</button>
       <button id="cstTab2" onclick="showStudentCoachingTab(2)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Goals</button>
@@ -38,7 +38,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
     </div>
 
     <!-- Tab content -->
-    <div id="cstTabContentWrap" style="flex:1;overflow:hidden;padding:14px 16px 40px;">
+    <div id="cstTabContentWrap" class="undertop" style="flex:1;overflow:hidden;padding:14px 16px 40px;">
 
       <!-- TAB 0: Feedback -->
       <div id="cstTabContent0" style="display:flex;flex-direction:column;height:100%;margin:-14px -16px -40px;">
@@ -437,7 +437,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
     <div id="studentViewEmail" style="font-size:12px;color:#606060;"></div>
     <button id="svUseAppBtn" class="svuseapp" onclick="svUseAppAs()">Use app as student</button>
   </div>
-  <div class="tabs many" style="display:flex;width:100%;max-width:360px;margin-bottom:0;flex-shrink:0;">
+  <div class="tabs many overtop" style="display:flex;width:100%;max-width:360px;margin-bottom:0;flex-shrink:0;">
     <button onclick="showStudentTab('dashboard')" id="svTabDash" style="flex:1;height:38px;font-size:10px;background:#2d7abc;border-radius:0;border:none;color:#ffffff;font-weight:700;max-width:none;width:auto;padding:0;margin:0;">Dashboard</button>
     <button onclick="showStudentTab('performance')" id="svTabPerf" style="display:none;flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Analysis</button>
     <button onclick="showStudentTab('rounds')" id="svTabRounds" style="flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Rounds</button>
@@ -445,7 +445,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
     <button onclick="showStudentTab('notes')" id="svTabNotes" style="flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Notes</button>
     <button onclick="showStudentTab('misc')" id="svTabMisc" style="flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Clubs</button>
   </div>
-  <div id="studentViewScroll" style="flex:1;overflow-y:auto;width:100%;display:flex;flex-direction:column;align-items:center;padding:12px 0 80px;">
+  <div id="studentViewScroll" class="undertop" style="--gap:12px;flex:1;overflow-y:auto;width:100%;display:flex;flex-direction:column;align-items:center;padding:12px 0 80px;">
     
     <!-- Student Dashboard -->
     <div id="svDashTab" style="width:100%;max-width:360px;">

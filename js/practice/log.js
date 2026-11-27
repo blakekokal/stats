@@ -274,7 +274,7 @@ function editPracticeSession(id) {
   if (saveBtn) saveBtn.textContent = 'Update Practice Session';
 
   // Scroll to top so the form is visible
-  var scroll = document.getElementById('practiceHubPage');
+  var scroll = document.getElementById('practiceHubScroll');
   if (scroll) scroll.scrollTop = 0;
 }
 
