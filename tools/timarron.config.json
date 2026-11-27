@@ -1,0 +1,18 @@
+{
+  "id": "timarron",
+  "name": "Timarron Country Club",
+  "location": "Southlake, TX",
+  "par": [5, 4, 3, 4, 3, 5, 4, 4, 4, 4, 4, 4, 5, 3, 4, 4, 3, 5],
+  "hcp": [8, 14, 18, 10, 16, 2, 6, 12, 4, 7, 5, 1, 11, 15, 9, 13, 17, 3],
+  "_comment_tees": "Scorecard from GolfPass (3327); its pars match OpenStreetMap's hole tags except #1 (OSM: par 4; card: par 5, 538 yards), so the card's are used (par 72). Combination tees left out. Ratings where the tee table's length fits: Black (7012), Green (5309, men's); Copper and White have none.",
+  "_comment_drop": "Polygons containing these points are not part of the course: nothing here; trim_far.py drops the range and practice green.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand; the greens roughly agree).",
+  "shift": {"east": -0.5, "north": 1.8},
+  "tees": [
+    {"name": "Black", "rating": 74.2, "slope": 139, "yards": [538, 375, 185, 410, 162, 512, 444, 406, 394, 410, 448, 459, 548, 197, 348, 419, 218, 540]},
+    {"name": "Copper", "rating": null, "slope": null, "yards": [499, 335, 154, 381, 137, 495, 402, 387, 349, 383, 416, 412, 513, 159, 316, 392, 184, 515]},
+    {"name": "White", "rating": null, "slope": null, "yards": [465, 303, 132, 351, 120, 425, 380, 346, 285, 349, 375, 377, 487, 137, 294, 358, 164, 493]},
+    {"name": "Green", "rating": 65.7, "slope": 120, "yards": [445, 290, 111, 282, 108, 413, 296, 312, 275, 320, 344, 352, 431, 116, 276, 345, 145, 438]}
+  ]
+}
