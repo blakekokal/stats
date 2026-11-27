@@ -640,7 +640,7 @@ function tileDetails(root) {
       var tile = null;
       Array.from(box.children).forEach(function(el) {
         if (el.classList.contains('dashdetail')) { tile = null; return; }
-        if (el.classList.contains('dashhdr')) { tile = document.createElement('div'); tile.className = 'dashtile'; box.insertBefore(tile, el); }
+        if (el.classList.contains('dashhdr')) { tile = document.createElement('div'); tile.className = box === sub ? 'dashtile dashtop' : 'dashtile'; box.insertBefore(tile, el); }
         if (tile) tile.appendChild(el);
       });
     });
