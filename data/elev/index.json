@@ -1153,5 +1153,20 @@
    631
   ],
   "source": "USGS 3DEP"
+ },
+ "ridgeview": {
+  "bounds": [
+   -96.750869,
+   33.102886,
+   -96.732344,
+   33.121218
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   618,
+   761
+  ],
+  "source": "USGS 3DEP"
  }
 }
