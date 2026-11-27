@@ -1093,5 +1093,20 @@
    640
   ],
   "source": "USGS 3DEP"
+ },
+ "pecanhollow": {
+  "bounds": [
+   -96.644807,
+   33.008496,
+   -96.629997,
+   33.020117
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   496,
+   572
+  ],
+  "source": "USGS 3DEP"
  }
 }
