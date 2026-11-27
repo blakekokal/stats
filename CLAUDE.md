@@ -122,7 +122,8 @@ Fossil Creek, Whitestone (winter imagery and brown sand: shift fitted to the gre
 by eye), Hawks Creek (Shady Oaks is next door: kept to its own boundary), Oak Hollow, Tenison Park Highlands and Glen
 (one OSM boundary for both: holes told apart by way id; winter imagery with snow in the shade, so
 OSM's bunkers kept as they are). The Resort (Fort Worth; winter imagery and tan sand: shift
-fitted to the greens; OSM's 19th hole dropped). Pecan Valley Hills (River not yet: see below). Texas Rangers
+fitted to the greens; OSM's 19th hole dropped). Pecan Valley Hills and River (River's two missing greens and eight fairways from the
+imagery). Texas Rangers
 (GolfPass's card has the nines swapped: the club's #1 is the 589-yard par 5, as in OSM). Grover C. Keaton
 (GolfPass lists it as Keeton Park; its ratings are for old lengths, so none are given). Duck Creek (Garland). Watters Creek Traditions (Plano; the short
 course, practice holes and range in the same boundary trimmed out). Rusted Rail (Crandall; OSM's fairways are drawn wide,
@@ -150,7 +151,7 @@ tee boxes, fairway and green; 22 old bunkers on grass dropped). Stonebridge Ranc
 are in a second boundary way). Heritage Ranch (Fairview; all 18 holes, in three boundary ways).
 
 Skipped for now: Meadowbrook (Fort Worth; GolfPass's card is a different layout from OSM's holes),
-Lost Creek (Aledo; GolfPass says it closed), Pecan Valley River (see below). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
+Lost Creek (Aledo; GolfPass says it closed). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
 
 Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, every shape
 traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).
@@ -166,7 +167,5 @@ Mapped with gaps (better from a book, or fill the gaps from the imagery):
   renovated since?): greens and bunkers need redrawing; GolfPass 2918 has the card (par 71)
 - Dallas Athletic Club Gold: OSM's #16-#18 don't match GolfPass's card (see `tools/dac/README.md`);
   needs the club's current card (Blue is live)
-- Pecan Valley River (Fort Worth): no fairways on 8 holes, no greens on #9 and #14; winter imagery
-  hides the fairways (Hills is live; `tools/pecanvalley/` has the River's config)
 - hole lines but little else: Mansfield National, Thorntree
 - shapes but no hole lines: Waterview, Timberlinks
