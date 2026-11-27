@@ -7,10 +7,11 @@ import { renderAccount } from './account.js';
 import { renderStatsDashboard } from './dashboard.js';
 import { askResume, renderHome, renderNewRound, renderHistory, renderSettingsPage, renderLogin, renderWhatsNew, renderEditRound, renderHelp, renderSearch } from './coach.js';
 import { VERSION } from './version.js';
-import { currentRound, isWatching, endWatching, watchInfo, watchingId } from './rounds.js';
+import { currentRound, isWatching, endWatching, watchInfo, watchingId, historyRounds } from './rounds.js';
 import { loadWatch, watchHole } from './live.js';
 import { renderCoaching, closeCoaching } from './coaching/index.js';
 
+window.__appStarted = true; // every module loaded: index.html's start-up check waits instead of offering a reload
 const L = window.L;
 const view = document.getElementById('view');
 export const TILE_URL = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
@@ -178,8 +179,15 @@ try { dropPublishedCopies(); } catch { /* not yet */ }
 // The outlines in use: the published ones, or for an admin, this device's own
 // edits when they're newer (saved but not yet published, say).
 export function courseById(id) {
-  if (typeof id === 'string' && id.includes('+')) return joinedNines(id);
-  const b = base[id] || base[DEFAULT_COURSE];
+  if (typeof id === 'string' && id.includes('+')) {
+    const waiting = id.split('+').some(x => metaOf(x) && !base[x] && !failedFile.has(x));
+    return waiting ? placeholder(id) : joinedNines(id);
+  }
+  const known = COURSES.some(c => c.id === id) ? id : DEFAULT_COURSE;
+  // Not loaded yet (pages load what they show first, see ensureCourses): an empty
+  // stand-in for now, and the page is drawn again once the file is in.
+  if (!base[known]) return placeholder(known);
+  const b = base[known];
   const pub = published[b.id];
   const mine = isAdmin ? store.get('course:' + b.id) : null;
   let edited = mine && (!pub || (mine.savedAt || 0) > pub.updated) ? mine : pub;
@@ -225,16 +233,47 @@ export function setActiveCourse(id) {
   try { localStorage.setItem('gs:course', id); } catch { /* ignore */ }
   course = courseById(id);
 }
+// ---- course files: loaded when needed ----
+// Only the course in use and those of the rounds a page shows are downloaded
+// (and kept for the rest of the visit), not every course at start: there are
+// dozens, and waiting for all of them made the app slow to open.
+const metaOf = id => COURSES.find(c => c.id === id);
+// The files a course id needs: each nine of two played as 18, and a course sharing its map.
+function filesFor(id) {
+  const out = new Set();
+  String(id || '').split('+').forEach(x => { const m = metaOf(x); if (m) { out.add(x); if (m.shares) out.add(m.shares); } });
+  return [...out];
+}
+const loadingFile = {}, failedFile = new Set();
+// Loads the courses `ids` need that aren't loaded yet. Never throws: a file that
+// can't be fetched is left out (courseById then gives a stand-in).
+export function ensureCourses(ids) {
+  const need = [...new Set(ids.flatMap(filesFor))].filter(id => !base[id] && !failedFile.has(id));
+  return Promise.all(need.map(id => loadingFile[id] || (loadingFile[id] = fetch(metaOf(id).file)
+    .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+    .then(j => { base[id] = j; }, () => { failedFile.add(id); })
+    .finally(() => { delete loadingFile[id]; }))));
+}
+// A course that isn't loaded: its name, no holes or shapes. Loads it and draws the page again.
+let healing = null;
+function placeholder(id) {
+  if (!failedFile.has(id) && !healing) {
+    healing = ensureCourses([id]).then(() => { healing = null; if (base[id] && !document.body.classList.contains('playing')) route(); });
+  }
+  const name = String(id).split('+').map(x => metaOf(x)?.name || x).join(' / ');
+  return { id, name, tees: [], holes: [], features: [], placeholder: true };
+}
+const activeId = (onHole = false) => (onHole && currentRound()?.course) || pickedCourse() || DEFAULT_COURSE;
 export async function loadCourse(onHole = false) {
-  // The first time, wait (briefly) for the published outlines; after that use
-  // what's cached and check again in the background, redrawing if they changed.
+  // The first time, wait (briefly, and only for a map) for the published outlines; after that
+  // use what's cached and check again in the background, redrawing if they changed.
   if (!publishedLoad) {
     const first = refreshPublished();
     first.then(changed => { if (changed && course) { loadCourse(onHole).then(() => { if (!document.body.classList.contains('playing')) route(); }); } });
-    await Promise.race([first, new Promise(r => setTimeout(r, 2500))]);
+    if (onHole) await Promise.race([first, new Promise(r => setTimeout(r, 2500))]);
   }
-  await Promise.all(COURSES.filter(c => !base[c.id]).map(async c => { base[c.id] = await (await fetch(c.file)).json(); }));
-  course = courseById((onHole && currentRound()?.course) || pickedCourse() || DEFAULT_COURSE);
+  await ensureCourses([activeId(onHole)]);
+  course = courseById(activeId(onHole));
   return course;
 }
 export const originalFeatures = () => base[course.id].features;
@@ -371,6 +410,8 @@ async function route() {
   document.body.classList.toggle('coach', ['device', 'home', 'new', 'history', 'settings', 'account', 'whatsnew', 'dashboard', 'round', 'bag', 'scout', 'coaching', 'performance', 'practice', 'help', 'search'].includes(tab));
   document.body.classList.toggle('playing', tab === 'hole');
   await loadCourse(parts[0] === 'hole');
+  // Pages that list rounds need each round's course (pars, holes, tees).
+  if (['history', 'dashboard', 'round', 'performance', 'practice'].includes(tab)) await ensureCourses(historyRounds().map(r => r.course));
   if (tab !== 'hole') closeHole();
   // Coaching, My Bag, Performance Analysis and Practice are the coaching app's pages (js/coaching).
   const coachTab = ['coaching', 'bag', 'performance', 'practice'].includes(tab);

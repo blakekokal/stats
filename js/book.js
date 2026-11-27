@@ -7,7 +7,7 @@
 // picked with switches (kept on this device); Print makes a PDF / paper copy
 // of this hole or of the whole course.
 
-import { h, course, teePosition, teeBoxFor, boxCentre, partOf, TILE_URL, setActiveCourse, courseById } from './app.js';
+import { h, course, teePosition, teeBoxFor, boxCentre, partOf, TILE_URL, setActiveCourse, courseById, ensureCourses, COURSES } from './app.js';
 import { store } from './store.js';
 import { elevIndex, heightAt } from './elev.js';
 import { icEl } from './icons.js';
@@ -1216,8 +1216,9 @@ export function openSavedBooks(opts) {
       return h('div', { class: 'savedbook' },
         h('div', { class: 'savedopen' }, h('b', {}, b.name || b.courseName), h('small', {}, `${b.courseName} · ${b.teeName} tees${pts ? ` · ${pts} point${pts > 1 ? 's' : ''}` : ''}${when ? ` · ${when}` : ''}`)),
         h('div', { class: 'row' },
-          h('button', { class: 'savededit', onclick: () => {
-            if (!courseById(b.courseId)) { alert('That course isn’t in the app any more.'); return; }
+          h('button', { class: 'savededit', onclick: async () => {
+            if (!String(b.courseId || '').split('+').every(x => COURSES.some(c => c.id === x))) { alert('That course isn’t in the app any more.'); return; }
+            await ensureCourses([b.courseId]); // its file, if not loaded yet this visit
             close(); openBookSetup({ ...opts, book: openable(b) });
           } }, 'Edit'),
           h('button', { class: 'setupplain', onclick: () => {

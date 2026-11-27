@@ -6,7 +6,7 @@
 // Remove test rounds takes away only these. No coach is notified.
 
 import { store, sync } from './store.js';
-import { courseById } from './app.js';
+import { courseById, ensureCourses } from './app.js';
 import { yards, lieAt } from './geo.js';
 import { roundKeyOf, historyRounds } from './rounds.js';
 
@@ -106,7 +106,8 @@ function makeRound(i) {
 
 export const testRounds = () => historyRounds().filter(r => r.test);
 
-export function addTestRounds(n = 8) {
+export async function addTestRounds(n = 8) {
+  await ensureCourses(PLAN.map(p => p[0])); // their courses' files
   let added = 0;
   for (let i = 0; i < n; i++) {
     const r = makeRound(i);

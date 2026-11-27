@@ -2,7 +2,7 @@
 // coaching app. My Bag, Performance Analysis, Practice and Learning and
 // Coaching are the coaching app's own pages (js/coaching).
 
-import { h, course, toast, COURSES, courseById, setActiveCourse, goBack, ninesWith, comboId, isAdmin, exitActing } from './app.js';
+import { h, course, toast, COURSES, courseById, ensureCourses, setActiveCourse, goBack, ninesWith, comboId, isAdmin, exitActing } from './app.js';
 import { store, sync, actingAs, startActing, stopActing, actState, fetchCoachStudents, fetchStudentActivity, usedAsTimes, supabaseClient, levelFromPref, submitCourseRequest, fetchCourseRequests, setCourseRequestStatus, countNewCourseRequests, markCourseRequestsSeen, errText } from './store.js';
 import { newRound } from './model.js';
 import { LEVELS } from './sg.js';
@@ -277,7 +277,14 @@ export function renderNewRound(view, { scout = false } = {}) {
   // another nine as the back nine (each listed by its name).
   const ninesBox = h('div', { class: 'ninesbox', hidden: true });
   const shortName = id => { const n = COURSES.find(x => x.id === id)?.name || id; return n.split(' – ').slice(1).join(' – ') || n; };
-  const useCourse = id => {
+  // Picking a course downloads its file (if this visit hasn't yet), then fills in its tees.
+  let picking = 0;
+  const useCourse = async id => {
+    const mine = ++picking;
+    search.value = String(id).split('+').map(x => COURSES.find(c => c.id === x)?.name || x).join(' / ');
+    tee.disabled = true; tee.replaceChildren(h('option', { value: '' }, 'Loading course\u2026'));
+    await ensureCourses([id]);
+    if (mine !== picking) return; // another course was picked meanwhile
     setActiveCourse(id); chosen = courseById(id);
     search.value = chosen.name; err.textContent = '';
     fillTees();
@@ -507,8 +514,8 @@ function openCourseRequest(prefill = '') {
 function testRoundsSection() {
   const note = h('div', { class: 'small muted' });
   const show = () => { const n = testRounds().length; note.textContent = n ? `${n} test round${n > 1 ? 's' : ''} on your profile` : 'No test rounds'; rm.disabled = !n; };
-  const add = h('button', { style: 'flex:1;max-width:none;height:36px;font-size:13px;background:#2d7abc;border-radius:8px;', onclick: () => {
-    const n = addTestRounds(8); show(); toast(n ? `Added ${n} test rounds` : 'Test rounds already added');
+  const add = h('button', { style: 'flex:1;max-width:none;height:36px;font-size:13px;background:#2d7abc;border-radius:8px;', onclick: async () => {
+    const n = await addTestRounds(8); show(); toast(n ? `Added ${n} test rounds` : 'Test rounds already added');
   } }, 'Add 8 test rounds');
   const rm = h('button', { style: 'flex:1;max-width:none;height:36px;font-size:13px;background:#282828;border-radius:8px;', onclick: () => {
     if (!confirm('Remove all test rounds?')) return;
@@ -689,6 +696,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.49.0', ['Opens much faster: course maps download only when you pick or view a course, not all at start', 'Slow signal shows Loading\u2026 instead of the \u201cdid not load properly\u201d message']],
   ['1.48.3', ['Home: Settings and profile on the right, Search and ? on the left']],
   ['1.48.2', ['Profile button: students listed by last active or last used by you']],
   ['1.48.1', ['Home: a profile button under Settings shows who\u2019s signed in and lets a coach pick a student to use the app as; Search is top right with ? under it']],
