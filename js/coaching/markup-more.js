@@ -114,15 +114,17 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
   </div>
 </div>`;
 
-export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="justify-content:flex-start;padding:0;overflow:hidden;">
+export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="justify-content:flex-start;padding:0;overflow-y:auto;gap:0;">
 
-  <!-- Fixed header -->
-  <div class="fixedhead" style="flex-shrink:0;width:100%;padding:30px 16px 0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;position:relative;">
+  <!-- Header: scrolls away; the tabs below stay at the top, over the content (as on My Bag) -->
+  <div class="pagehead" style="flex-shrink:0;width:100%;padding:30px 16px 0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;position:relative;">
     <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="font-size:22px;font-weight:800;margin-bottom:6px;">${ic('club', 'tint-yellow')} Practice and Learning</div>
     <div style="font-size:13px;color:#9a9a9a;margin-bottom:14px;">Combines, Drills, Practice &amp; Learn</div>
+  </div>
 
-    <!-- 4-tab bar -->
+  <!-- 4-tab bar -->
+  <div style="position:sticky;top:0;z-index:10;flex-shrink:0;width:100%;display:flex;justify-content:center;padding:0 16px;box-sizing:border-box;">
     <div class="tabs" style="display:flex;width:100%;max-width:360px;margin-bottom:0;">
       <button onclick="setPracticeHubTab('combines')" id="phTabCombines" style="flex:1;height:40px;font-size:13px;font-weight:700;background:#2d7abc;border:none;color:#ffffff;cursor:pointer;max-width:none;width:auto;padding:0;margin:0;">Combines</button>
       <button onclick="setPracticeHubTab('plan')" id="phTabPlan" style="flex:1;height:40px;font-size:13px;font-weight:700;background:#282828;border:none;color:#606060;cursor:pointer;max-width:none;width:auto;padding:0;margin:0;">Practice</button>
@@ -131,8 +133,8 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     </div>
   </div>
 
-  <!-- Scrollable body -->
-  <div id="practiceHubScroll" style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100%;display:flex;flex-direction:column;align-items:center;padding:14px 16px 80px;">
+  <!-- Body (the page scrolls) -->
+  <div id="practiceHubScroll" style="flex-shrink:0;width:100%;display:flex;flex-direction:column;align-items:center;padding:14px 16px 80px;box-sizing:border-box;">
   <div style="width:100%;max-width:360px;">
 
     <!-- COMBINES TAB -->
@@ -813,7 +815,7 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
     </div>
 
     <!-- Page toggle tabs -->
-    <div class="tabs" style="display:flex;margin-bottom:16px;">
+    <div class="tabs" style="display:flex;margin-bottom:16px;position:sticky;top:0;z-index:10;">
       <button id="perfTabBtnRounds"   onclick="setPerfPage('rounds')"   style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:#2d7abc;color:#ffffff;">Past Rounds</button>
       <button id="perfTabBtnCombines" onclick="setPerfPage('combines')" style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:#9a9a9a;">Combines</button>
     </div>
@@ -1215,15 +1217,15 @@ export const BAG_PAGES = `<div id="myBagPage" class="page" style="justify-conten
   </div>
 </div>`;
 
-export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justify-content:flex-start;padding:0;overflow:hidden;">
+export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justify-content:flex-start;padding:0;overflow-y:auto;gap:0;">
   <!-- Header -->
-  <div class="fixedhead" style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
+  <div class="pagehead" style="width:100%;text-align:center;padding:30px 0 6px;position:relative;flex-shrink:0;">
     <button class="back-btn-top" aria-label="Back" onclick="lineDrillBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <div style="font-size:1.2rem;font-weight:800;color:#ffffff;">Line Drill</div>
+    <div style="font-size:22px;font-weight:800;color:#ffffff;">Line Drill</div>
   </div>
 
   <!-- Scrollable body -->
-  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100%;">
+  <div style="flex-shrink:0;width:100%;">
     <div style="max-width:520px;margin:0 auto;padding:14px 14px 100px;">
 
       <!-- SETUP VIEW -->
@@ -1353,15 +1355,15 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
   </div>
 </div>
 
-<div id="driverDrillPage" class="page" style="justify-content:flex-start;padding:0;overflow:hidden;">
+<div id="driverDrillPage" class="page" style="justify-content:flex-start;padding:0;overflow-y:auto;gap:0;">
   <!-- Header -->
-  <div class="fixedhead" style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
+  <div class="pagehead" style="width:100%;text-align:center;padding:30px 0 6px;position:relative;flex-shrink:0;">
     <button class="back-btn-top" aria-label="Back" onclick="driverDrillBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <div style="font-size:1.2rem;font-weight:800;color:#ffffff;">Driver Combine</div>
+    <div style="font-size:22px;font-weight:800;color:#ffffff;">Driver Combine</div>
   </div>
 
   <!-- Scrollable body -->
-  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100%;">
+  <div style="flex-shrink:0;width:100%;">
     <div style="max-width:520px;margin:0 auto;padding:14px 14px 100px;">
 
       <!-- SETUP VIEW -->
@@ -1471,12 +1473,12 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
 </div>
 
 <!-- EVAL COMBINE -->
-<div id="evalCombinePage" class="page" style="justify-content:flex-start;padding:0;overflow:hidden;">
-  <div class="fixedhead" style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
+<div id="evalCombinePage" class="page" style="justify-content:flex-start;padding:0;overflow-y:auto;gap:0;">
+  <div class="pagehead" style="width:100%;text-align:center;padding:30px 0 6px;position:relative;flex-shrink:0;">
     <button class="back-btn-top" aria-label="Back" onclick="evalCombineBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <div style="font-size:1.2rem;font-weight:800;color:#ffffff;">Evaluation Test</div>
+    <div style="font-size:22px;font-weight:800;color:#ffffff;">Evaluation Test</div>
   </div>
-  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100%;">
+  <div style="flex-shrink:0;width:100%;">
     <div style="max-width:520px;margin:0 auto;padding:14px 14px 100px;">
 
       <!-- MODE SELECT -->
@@ -1525,17 +1527,17 @@ export const COMBINES_PAGES = `<div id="lineDrillPage" class="page" style="justi
   </div>
 </div>
 
-<div id="combinesPage" class="page" style="justify-content:flex-start;padding:0;overflow:hidden;">
+<div id="combinesPage" class="page" style="justify-content:flex-start;padding:0;overflow-y:auto;gap:0;">
 
   <!-- Fixed header -->
-  <div class="fixedhead" style="background:#1e1e1e;border-bottom:2px solid #00b87a;width:100%;text-align:center;padding:11px 0;position:relative;flex-shrink:0;">
+  <div class="pagehead" style="width:100%;text-align:center;padding:30px 0 6px;position:relative;flex-shrink:0;">
     <button id="comb-header-back-btn" class="back-btn-top" aria-label="Back" onclick="combHeaderBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-    <div id="comb-page-title" style="font-size:1.2rem;font-weight:800;color:#ffffff;">Combines</div>
+    <div id="comb-page-title" style="font-size:22px;font-weight:800;color:#ffffff;">Combines</div>
     <div id="combStudentBanner" style="display:none;background:#007a52;color:#ffffff;font-size:12px;font-weight:700;padding:4px 10px;border-radius:6px;margin-top:4px;"></div>
   </div>
 
   <!-- Scrollable body -->
-  <div style="flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100%;">
+  <div style="flex-shrink:0;width:100%;">
     <div style="max-width:520px;margin:0 auto;padding:14px 12px 80px;">
 
       <!-- HOME VIEW (menu grid + history) -->

@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.50.1', ['Practice and Learning, Performance Analysis and the combines scroll like My Bag: no header bar, the tabs stay at the top with the page passing under them']],
   ['1.50.0', ['Same buttons everywhere: every tab bar looks alike, every list filters with one Filter button, every close is a round \u2715 and every delete a red bin']],
   ['1.49.2', ['Practice and Learning: Learn tiles without descriptions, all the same size']],
   ['1.49.1', ['Practice and Learning: Combines and Practice tiles without descriptions, all the same size']],

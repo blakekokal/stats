@@ -22,7 +22,7 @@ body.coach { background: #1e1e1e; }
 .cx .back-btn-top svg { width: 20px; height: 20px; stroke: #fff; stroke-width: 2; fill: none; }
 /* The Back button sits in the bottom-right corner (one-handed): every page with one
    keeps room at its foot, so nothing ends up under it once you've scrolled down. */
-.cx:has(> .back-btn-top), .cx :has(> .back-btn-top):not(.fixedhead) { padding-bottom: calc(66px + env(safe-area-inset-bottom)) !important; }
+.cx:has(> .back-btn-top), .cx :has(> .back-btn-top):not(.fixedhead):not(.pagehead) { padding-bottom: calc(66px + env(safe-area-inset-bottom)) !important; }
 /* More see-through than the other glass buttons. */
 .cx button.back-btn-top:not(.linkbtn):not(.link):not(.glass-skip) { background: rgba(255,255,255,.02) !important; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .cx .back-btn-top svg { opacity: .85; }
