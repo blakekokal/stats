@@ -1108,5 +1108,20 @@
    572
   ],
   "source": "USGS 3DEP"
+ },
+ "lunavista": {
+  "bounds": [
+   -96.928541,
+   32.880217,
+   -96.917548,
+   32.896549
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   414,
+   452
+  ],
+  "source": "USGS 3DEP"
  }
 }
