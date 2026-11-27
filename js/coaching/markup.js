@@ -172,8 +172,17 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
       <button id="cctTab4" onclick="showCoachCoachingTab(4)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Students</button>
     </div>
 
-    <!-- Tab content: scrolls under the title, fading out (no hard line) -->
-    <div class="undertop" style="--over:0px;--gap:20px;--fade:20px;flex:1;overflow-y:auto;padding:14px 16px 80px;">
+    <!-- Students: always on Home, with the rest of Home fading out behind it as it scrolls -->
+    <div id="coachStudentsBar" class="overtop" style="flex-shrink:0;padding:14px 16px 0;">
+      <button onclick="showCoachCoachingTab(4)" style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:none;height:auto;background:#222222;border-radius:12px;padding:14px 18px;margin:0;border:none;color:#ffffff;text-align:left;">
+          <div><div id="coachStatStudents" style="font-size:24px;font-weight:800;color:#44b8f0;line-height:1.1;">–</div>
+          <div style="font-size:12px;color:#9a9a9a;margin-top:2px;font-weight:600;">Students</div></div>
+          <div style="font-size:26px;color:#606060;line-height:1;">›</div>
+        </button>
+    </div>
+
+    <!-- Tab content: scrolls under the Students button (or, on the other tabs, the title), fading out -->
+    <div class="undertop" style="flex:1;overflow-y:auto;padding:14px 16px 80px;">
 
       <!-- TAB 0: Home -->
       <div id="cctTabContent0">
@@ -182,12 +191,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#d4706e;margin-bottom:8px;">\u25cf Live now</div>
           <div id="coachLiveList"></div>
         </div>
-        <!-- Students: tap for the list of students -->
-        <button onclick="showCoachCoachingTab(4)" style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:none;height:auto;background:#222222;border-radius:12px;padding:14px 18px;margin:0 0 14px;border:none;color:#ffffff;text-align:left;">
-          <div><div id="coachStatStudents" style="font-size:24px;font-weight:800;color:#44b8f0;line-height:1.1;">–</div>
-          <div style="font-size:12px;color:#9a9a9a;margin-top:2px;font-weight:600;">Students</div></div>
-          <div style="font-size:26px;color:#606060;line-height:1;">›</div>
-        </button>
+
         <!-- Admin: Pending Coach Requests (only visible to admin) -->
         <div id="coachRequestsSection" style="display:none;background:#222222;border-radius:14px;padding:16px 18px;margin-bottom:14px;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#f0c830;margin-bottom:10px;">${ic('hourglass')} Pending Coach Requests</div>
