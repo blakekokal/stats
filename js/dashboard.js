@@ -639,12 +639,19 @@ function tileDetails(root) {
       if (!box) return;
       var tile = null;
       Array.from(box.children).forEach(function(el) {
-        if (el.classList.contains('dashdetail')) { tile = null; return; }
-        if (el.classList.contains('dashhdr')) { tile = document.createElement('div'); tile.className = box === sub ? 'dashtile dashtop' : 'dashtile'; box.insertBefore(tile, el); }
+        if (el.classList.contains('dashdetail')) { tile = null; el.classList.add('undertop'); return; }
+        if (el.classList.contains('dashhdr')) { tile = document.createElement('div'); tile.className = box === sub ? 'dashtile dashtop overtop' : 'dashtile'; box.insertBefore(tile, el); }
         if (tile) tile.appendChild(el);
       });
     });
+    sizeDetail(sub);
   });
+}
+// The detail scrolls under its glass bar at the top (as History's list does under its
+// search), so it starts that bar's height higher up (--over), once the page is shown.
+function sizeDetail(sub) {
+  var t = sub && sub.querySelector(':scope > .dashtop'), d = sub && sub.querySelector(':scope > .dashdetail');
+  if (t && d && t.offsetHeight) d.style.setProperty('--over', t.offsetHeight + 'px');
 }
 
 // SG by round: one round's dashboard, and back to all of them.
@@ -694,6 +701,7 @@ function showDashSub(idx) {
     if(el)el.style.display=i===idx?'':'none';
   }
   var top=document.getElementById('dsub_'+idx);
+  sizeDetail(top);
   if(top&&top.scrollIntoView)top.scrollIntoView({block:'nearest'});
 }
 
