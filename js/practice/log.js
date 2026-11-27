@@ -7,6 +7,7 @@ import { _sb } from '../coaching/core.js';
 import { escHtml, formatDateForDisplay, getTodayCentral } from '../coaching/core.js';
 import { setPracticeHubTab } from './hub.js';
 import { ppShowHistory, ppShowLogSession } from './plans.js';
+import { ic } from '../icons.js';
 
 export async function loadPHCombineHistory() {
   var msg  = document.getElementById('phCombineHistoryMsg');
@@ -106,7 +107,7 @@ export function renderPracticeNotes() {
     html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#282828;border-radius:8px;margin-bottom:4px;">';
     html += '<div style="flex:1;font-size:13px;color:#ffffff;">' + escHtml(n.text) + '</div>';
     html += '<div style="font-size:12px;font-weight:700;color:#00b87a;white-space:nowrap;">' + n.minutes + ' min</div>';
-    html += '<button onclick="removePracticeNote(' + i + ')" style="background:transparent;border:none;color:#d4706e;font-size:16px;cursor:pointer;padding:0 4px;height:auto;max-width:none;width:auto;">×</button>';
+    html += '<button class="delbtn" onclick="removePracticeNote(' + i + ')" aria-label="Remove note">' + ic('trash') + '</button>';
     html += '</div>';
   });
   list.innerHTML = html;
@@ -241,7 +242,7 @@ export async function loadPracticeHistory() {
 
     html += '<div style="display:flex;justify-content:flex-end;gap:12px;margin-top:6px;">';
     html += '<button onclick="editPracticeSession(\'' + s.id + '\')" style="background:transparent;border:none;color:#44b8f0;font-size:11px;font-weight:700;cursor:pointer;padding:0;height:auto;max-width:none;width:auto;">Edit</button>';
-    html += '<button onclick="deletePracticeSession(\'' + s.id + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:11px;cursor:pointer;padding:0;height:auto;max-width:none;width:auto;">Delete</button>';
+    html += '<button class="delbtn" onclick="deletePracticeSession(\'' + s.id + '\')" aria-label="Delete session">' + ic('trash') + '</button>';
     html += '</div>';
     html += '</div>';
   });

@@ -5,6 +5,7 @@ import { _viewingAsStudent, activeUserId } from '../coaching/core.js';
 import { _sb } from '../coaching/core.js';
 import { escHtml } from '../coaching/core.js';
 import { ppHideAllViews } from './plans.js';
+import { ic } from '../icons.js';
 
 var _SWING_JOURNAL_KEY = 'swingJournal_v1'; // legacy localStorage fallback
 
@@ -109,7 +110,7 @@ async function renderSwingJournal() {
       html += '<li style="display:flex;align-items:flex-start;gap:8px;">';
       html += '<span style="flex:1;">' + escHtml(e.text) + (e.added_by ? ' <span class="coachtag">Added by coach</span>' : '') + '</span>';
       if (canDelete) {
-        html += '<button onclick="deleteSwingJournalEntry(\'' + e.id + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:11px;cursor:pointer;padding:0 4px;height:auto;max-width:none;width:auto;flex-shrink:0;">×</button>';
+        html += '<button class="delbtn" onclick="deleteSwingJournalEntry(\'' + e.id + '\')" aria-label="Delete">' + ic('trash') + '</button>';
       }
       html += '</li>';
     });

@@ -380,7 +380,7 @@ function combSetup(){
       r += '<td class="comb-ro" id="ce1-'+i+'">–</td><td class="comb-ro" id="csg-'+i+'">–</td>';
     }
 
-    r += '<td><button class="comb-xbtn" onclick="combDelRow('+i+')">✕</button></td></tr>';
+    r += '<td><button class="delbtn" onclick="combDelRow('+i+')" aria-label="Delete row">' + ic('trash') + '</button></td></tr>';
     rows += r;
   }
   body.innerHTML = rows;

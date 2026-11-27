@@ -1,6 +1,7 @@
 import { expose } from '../coaching/core.js';
 import { escHtml } from '../coaching/core.js';
 import { ppHideAllViews } from './plans.js';
+import { ic } from '../icons.js';
 
 // ── Custom Practice Plan ──
 var _ppCustomCategories = []; // [{title:'', items:['','']}]
@@ -40,7 +41,7 @@ function ppCustomRenderSaved() {
     html += '</div>';
     html += '<div style="display:flex;gap:10px;align-items:center;">';
     html += '<button onclick="ppCustomEditPlan(' + i + ')" style="background:none;border:none;color:#44b8f0;font-size:11px;font-weight:700;cursor:pointer;padding:0;height:auto;max-width:none;width:auto;">Edit</button>';
-    html += '<button onclick="ppCustomDeletePlan(' + i + ')" style="background:none;border:none;color:#606060;font-size:11px;cursor:pointer;padding:0;height:auto;max-width:none;width:auto;">Delete</button>';
+    html += '<button class="delbtn" onclick="ppCustomDeletePlan(' + i + ')" aria-label="Delete plan">' + ic('trash') + '</button>';
     html += '</div></div>';
   });
   container.innerHTML = html;
@@ -66,7 +67,7 @@ function ppCustomRenderCategories() {
     html += '<option value="Putting"' + (selVal === 'Putting' ? ' selected' : '') + '>Putting</option>';
     html += '<option value="Custom"' + (selVal === 'Custom' ? ' selected' : '') + '>Custom</option>';
     html += '</select>';
-    html += '<button onclick="ppCustomRemoveCat(' + ci + ')" style="background:none;border:none;color:#606060;font-size:18px;cursor:pointer;padding:0 0 0 4px;height:auto;max-width:none;width:auto;">×</button>';
+    html += '<button class="delbtn" onclick="ppCustomRemoveCat(' + ci + ')" aria-label="Remove">' + ic('trash') + '</button>';
     html += '</div>';
     if (selVal === 'Custom') {
       html += '<input type="text" value="' + escHtml(cat.title) + '" placeholder="Enter custom category name" onchange="ppCustomUpdateCatTitle(' + ci + ',this.value)" style="width:100%;height:34px;background:#1e1e1e;color:#fff;border:1px solid #3d3d3d;border-radius:8px;padding:0 10px;font-size:13px;box-sizing:border-box;margin-bottom:10px;">';
@@ -74,7 +75,7 @@ function ppCustomRenderCategories() {
     cat.items.forEach(function(item, ii) {
       html += '<div style="display:flex;gap:6px;margin-bottom:6px;">';
       html += '<input type="text" value="' + escHtml(item) + '" placeholder="Drill or activity" onchange="ppCustomUpdateItem(' + ci + ',' + ii + ',this.value)" style="flex:1;height:34px;background:#1e1e1e;color:#fff;border:1px solid #3d3d3d;border-radius:8px;padding:0 10px;font-size:12px;box-sizing:border-box;">';
-      html += '<button onclick="ppCustomRemoveItem(' + ci + ',' + ii + ')" style="width:34px;height:34px;background:#333;border:none;border-radius:8px;color:#606060;font-size:16px;cursor:pointer;padding:0;">×</button>';
+      html += '<button class="delbtn" onclick="ppCustomRemoveItem(' + ci + ',' + ii + ')" aria-label="Remove">' + ic('trash') + '</button>';
       html += '</div>';
     });
     html += '<button onclick="ppCustomAddItem(' + ci + ')" style="width:100%;height:32px;background:transparent;border:1px dashed #3d3d3d;border-radius:8px;color:#606060;font-size:12px;cursor:pointer;max-width:none;">+ Add drill</button>';

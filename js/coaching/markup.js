@@ -29,7 +29,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
   <div id="coachingStudentView" style="display:none;width:100%;max-width:420px;flex:1;overflow:hidden;display:flex;flex-direction:column;">
 
     <!-- Tab bar -->
-    <div style="display:flex;gap:0;width:100%;flex-shrink:0;border-radius:10px;overflow:hidden;">
+    <div class="tabs many" style="display:flex;width:100%;flex-shrink:0;">
       <button id="cstTab0" onclick="showStudentCoachingTab(0)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#2d7abc;border-radius:0;border:none;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">Feedback</button>
       <button id="cstTab1" onclick="showStudentCoachingTab(1)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Drills</button>
       <button id="cstTab2" onclick="showStudentCoachingTab(2)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Goals</button>
@@ -45,21 +45,17 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
 
         <!-- Sticky search + filters -->
         <div style="flex-shrink:0;padding:12px 16px 8px;background:#1e1e1e;border-bottom:1px solid #282828;">
-          <input id="feedbackSearch" oninput="filterStudentFeedback()" placeholder="Search notes..." style="width:100%;height:38px;font-size:13px;box-sizing:border-box;display:block;text-align:center;margin-bottom:6px;">
-          <div style="display:flex;gap:6px;">
-            <select id="feedbackFilterType" onchange="filterStudentFeedback()" style="flex:1;height:36px;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;font-size:12px;padding:0 8px;">
+          <div class="fbar"><input id="feedbackSearch" oninput="filterStudentFeedback()" placeholder="Search notes..." style="height:38px;font-size:13px;box-sizing:border-box;display:block;text-align:center;"><div class="fmenu"><button type="button" class="fbtn">&#9776; <span>Filter</span></button><div class="fpanel" hidden><label class="frow"><span>Type</span><select id="feedbackFilterType" onchange="filterStudentFeedback()">
               <option value="all">All Types</option>
               <option value="lesson">Lesson Notes</option>
               <option value="general">General Feedback</option>
-            </select>
-            <select id="feedbackFilterDate" onchange="filterStudentFeedback()" style="flex:1;height:36px;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;font-size:12px;padding:0 8px;">
+            </select></label><label class="frow"><span>Time</span><select id="feedbackFilterDate" onchange="filterStudentFeedback()">
               <option value="all">All Time</option>
               <option value="1">Last Month</option>
               <option value="3">Last 3 Months</option>
               <option value="6">Last 6 Months</option>
               <option value="12">Last Year</option>
-            </select>
-          </div>
+            </select></label><div class="factions"><button type="button" class="fclear">Clear</button><button type="button" class="fdone">Done</button></div></div></div></div>
           <div id="feedbackFilterCount" style="font-size:11px;color:#9a9a9a;text-align:right;min-height:14px;margin-top:4px;"></div>
         </div>
 
@@ -168,7 +164,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
   <div id="coachingCoachView" style="display:none;width:100%;max-width:420px;flex:1;overflow:hidden;display:flex;flex-direction:column;">
 
     <!-- Tab bar: hidden. The coach side is one page (Home); Students opens from its tile. -->
-    <div style="display:none;gap:0;width:100%;flex-shrink:0;border-radius:10px;overflow:hidden;">
+    <div class="tabs many" style="display:none;width:100%;flex-shrink:0;">
       <button id="cctTab0" onclick="showCoachCoachingTab(0)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#2d7abc;border-radius:0;border:none;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">Home</button>
       <button id="cctTab1" onclick="showCoachCoachingTab(1)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Notes</button>
       <button id="cctTab2" onclick="showCoachCoachingTab(2)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Assign</button>
@@ -226,7 +222,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
         <input type="hidden" id="coachNoteType" value="lesson">
         <div id="coachNoteSelectedStudent" style="display:none;background:#2d7abc;border-radius:8px;padding:8px 12px;margin-bottom:8px;font-size:13px;font-weight:700;color:#44b8f0;align-items:center;justify-content:space-between;">
           <span id="coachNoteSelectedName"></span>
-          <button onclick="clearCoachNoteStudent()" style="background:transparent;border:none;color:#606060;font-size:18px;cursor:pointer;height:auto;width:auto;max-width:none;padding:0;line-height:1;">×</button>
+          <button class="xbtn" onclick="clearCoachNoteStudent()" aria-label="Clear">✕</button>
         </div>
 
         <!-- Lesson date (only shown for lesson type) -->
@@ -405,7 +401,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
               <div id="coachTeamDetailCount" style="font-size:11px;color:#606060;"></div>
             </div>
             <button id="coachTeamRenameBtn" onclick="renameCoachTeam()" style="height:34px;font-size:11px;font-weight:700;background:#282828;border:1px solid #333333;border-radius:8px;padding:0 10px;max-width:none;width:auto;color:#9a9a9a;">Rename</button>
-            <button id="coachTeamDeleteBtn" onclick="deleteCoachTeam()" style="height:34px;font-size:11px;font-weight:700;background:#282828;border:1px solid #333333;border-radius:8px;padding:0 10px;max-width:none;width:auto;color:#d4706e;">Delete</button>
+            <button id="coachTeamDeleteBtn" class="delbtn" onclick="deleteCoachTeam()" aria-label="Delete team" title="Delete team">${ic('trash')}</button>
           </div>
           <!-- Search within team -->
           <div style="display:flex;align-items:center;background:#222222;border:1px solid #333333;border-radius:8px;padding:6px 10px;margin-bottom:8px;gap:6px;">
@@ -441,7 +437,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
     <div id="studentViewEmail" style="font-size:12px;color:#606060;"></div>
     <button id="svUseAppBtn" class="svuseapp" onclick="svUseAppAs()">Use app as student</button>
   </div>
-  <div style="display:flex;gap:6px;width:100%;max-width:360px;margin-bottom:0;background:transparent;overflow:visible;flex-shrink:0;">
+  <div class="tabs many" style="display:flex;width:100%;max-width:360px;margin-bottom:0;flex-shrink:0;">
     <button onclick="showStudentTab('dashboard')" id="svTabDash" style="flex:1;height:38px;font-size:10px;background:#2d7abc;border-radius:0;border:none;color:#ffffff;font-weight:700;max-width:none;width:auto;padding:0;margin:0;">Dashboard</button>
     <button onclick="showStudentTab('performance')" id="svTabPerf" style="display:none;flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Analysis</button>
     <button onclick="showStudentTab('rounds')" id="svTabRounds" style="flex:1;height:38px;font-size:10px;background:#282828;border-radius:0;border:none;color:#606060;font-weight:600;max-width:none;width:auto;padding:0;margin:0;">Rounds</button>
@@ -484,7 +480,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
     
     <!-- Student Performance Analysis -->
     <div id="svPerfTab" style="width:100%;max-width:360px;display:none;">
-      <div style="display:flex;gap:0;border-radius:9px;overflow:hidden;margin-bottom:10px;">
+      <div class="tabs" style="display:flex;margin-bottom:10px;">
         <button id="svPerfBtnRounds" onclick="setSvPerfPage('rounds')" style="flex:1;height:36px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:#2d7abc;color:#ffffff;max-width:none;width:auto;padding:0;margin:0;">Past Rounds</button>
         <button id="svPerfBtnCombines" onclick="setSvPerfPage('combines')" style="flex:1;height:36px;border:none;font-size:12px;font-weight:700;cursor:pointer;background:transparent;color:#9a9a9a;max-width:none;width:auto;padding:0;margin:0;">Combines</button>
       </div>
@@ -530,25 +526,20 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
 
     <!-- Student Rounds -->
     <div id="svRoundsTab" style="width:100%;max-width:360px;display:none;">
-      <input id="svRoundSearch" type="text" placeholder="Search course name..." class="searchbox" oninput="filterSvRounds()" style="width:100%;max-width:360px;box-sizing:border-box;margin-bottom:6px;">
-      <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:8px;">
-        <select id="svRoundFilterType" onchange="filterSvRounds()" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:4px 6px;font-size:11px;">
+      <div class="fbar" style="margin-bottom:8px;"><input id="svRoundSearch" type="text" placeholder="Search course name..." class="searchbox" oninput="filterSvRounds()" style="box-sizing:border-box;"><div class="fmenu"><button type="button" class="fbtn">&#9776; <span>Filter</span></button><div class="fpanel" hidden><label class="frow"><span>Type</span><select id="svRoundFilterType" onchange="filterSvRounds()">
           <option value="all">All Types</option>
           <option value="Casual">Casual</option>
           <option value="Tournament">Tournament</option>
-        </select>
-        <select id="svRoundFilterHoles" onchange="filterSvRounds()" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:4px 6px;font-size:11px;">
+        </select></label><label class="frow"><span>Holes</span><select id="svRoundFilterHoles" onchange="filterSvRounds()">
           <option value="all">All Holes</option>
           <option value="9">9 Holes</option>
           <option value="18">18 Holes</option>
-        </select>
-        <select id="svRoundSortBy" onchange="filterSvRounds()" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:4px 6px;font-size:11px;">
+        </select></label><label class="frow"><span>Sort</span><select id="svRoundSortBy" onchange="filterSvRounds()">
           <option value="date-desc">Date: Newest</option>
           <option value="date-asc">Date: Oldest</option>
           <option value="score-asc">Score: Low→High</option>
           <option value="score-desc">Score: High→Low</option>
-        </select>
-      </div>
+        </select></label><div class="factions"><button type="button" class="fclear">Clear</button><button type="button" class="fdone">Done</button></div></div></div></div>
       <div id="svRoundsMsg" style="font-size:13px;color:#606060;min-height:20px;text-align:center;"></div>
       <div id="svRoundsList" style="width:100%;"></div>
     </div>
@@ -558,7 +549,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
     <!-- Student Practice Tab (Combines + Practice Sessions) -->
     <div id="svPracticePlanTab" style="width:100%;max-width:360px;display:none;">
       <!-- Toggle: Combines / Practice Sessions -->
-      <div style="display:flex;gap:0;margin-bottom:12px;background:#1e1e1e;border-radius:10px;overflow:hidden;border:1px solid #333333;">
+      <div class="tabs" style="display:flex;margin-bottom:12px;">
         <button id="svPracticeToggleCombines" onclick="showSvPracticeSubTab('combines')" style="flex:1;height:38px;font-size:13px;font-weight:700;background:#2d7abc;border:none;color:#ffffff;cursor:pointer;">Combines</button>
         <button id="svPracticeTogglePractice" onclick="showSvPracticeSubTab('practice')" style="flex:1;height:38px;font-size:13px;font-weight:700;background:#1e1e1e;border:none;color:#606060;cursor:pointer;">Practice Sessions</button>
       </div>
@@ -566,22 +557,18 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
       <!-- Combines sub-tab (moved from standalone Combines tab) -->
       <div id="svPracticeCombinesContent">
         <button onclick="coachRunCombineForStudent()" style="width:100%;height:46px;background:#007a52;border:none;border-radius:10px;color:#ffffff;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px;max-width:none;">Run Combine for Student</button>
-        <div style="font-size:16px;font-weight:800;text-align:center;margin-bottom:8px;">${ic('club')} Combine History</div>
-        <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:10px;">
-          <select id="svCombFilterType" onchange="loadStudentCombines()" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:4px 8px;font-size:12px;">
+        <div class="fhead" style="margin-bottom:10px;"><div style="font-size:16px;font-weight:800;">${ic('club')} Combine History</div><div class="fmenu"><button type="button" class="fbtn">&#9776; <span>Filter</span></button><div class="fpanel" hidden><label class="frow"><span>Type</span><select id="svCombFilterType" onchange="loadStudentCombines()">
             <option value="all">All Types</option>
             <option value="Putting">Putting</option>
             <option value="Chipping (Prox)">Chipping Prox</option>
             <option value="Chip Hole Out">Chip Hole Out</option>
             <option value="Wedge">Wedge</option>
-          </select>
-          <select id="svCombFilterTime" onchange="loadStudentCombines()" style="background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:6px;padding:4px 8px;font-size:12px;">
+          </select></label><label class="frow"><span>Time</span><select id="svCombFilterTime" onchange="loadStudentCombines()">
             <option value="all">All Time</option>
             <option value="1">Last Month</option>
             <option value="3">Last 3 Months</option>
             <option value="6">Last 6 Months</option>
-          </select>
-        </div>
+          </select></label><div class="factions"><button type="button" class="fclear">Clear</button><button type="button" class="fdone">Done</button></div></div></div></div>
         <div id="svCombMsg" style="font-size:13px;color:#606060;min-height:20px;text-align:center;"></div>
         <div id="svCombList" style="width:100%;"></div>
       </div>
@@ -596,7 +583,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
     <!-- Student Clubs tab (internally "misc"; Goals and Schedule hidden for now: show the toggle again to bring them back) -->
     <div id="svMiscTab" style="width:100%;max-width:360px;display:none;">
       <!-- Toggle: Bag / Goals / Schedule -->
-      <div style="display:none;gap:0;margin-bottom:12px;background:#1e1e1e;border-radius:10px;overflow:hidden;border:1px solid #333333;">
+      <div class="tabs" style="display:none;margin-bottom:12px;">
         <button id="svMiscToggleBag" onclick="showSvMiscSubTab('bag')" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#2d7abc;border:none;color:#ffffff;cursor:pointer;">Bag</button>
         <button id="svMiscToggleGoals" onclick="showSvMiscSubTab('goals')" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#1e1e1e;border:none;color:#606060;cursor:pointer;">Goals</button>
         <button id="svMiscToggleSchedule" onclick="showSvMiscSubTab('schedule')" style="flex:1;height:38px;font-size:11px;font-weight:700;background:#1e1e1e;border:none;color:#606060;cursor:pointer;">Schedule</button>
@@ -690,21 +677,17 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
 
       <!-- Sticky filters -->
       <div style="position:sticky;top:0;background:#1e1e1e;z-index:5;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid #282828;">
-        <input id="svNotesSearch" oninput="filterSvNotes()" placeholder="Search notes..." style="width:100%;height:38px;font-size:13px;box-sizing:border-box;text-align:center;margin-bottom:6px;">
-        <div style="display:flex;gap:6px;">
-          <select id="svNotesFilterType" onchange="filterSvNotes()" style="flex:1;height:34px;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;font-size:12px;padding:0 8px;">
+        <div class="fbar"><input id="svNotesSearch" oninput="filterSvNotes()" placeholder="Search notes..." style="height:38px;font-size:13px;box-sizing:border-box;text-align:center;"><div class="fmenu"><button type="button" class="fbtn">&#9776; <span>Filter</span></button><div class="fpanel" hidden><label class="frow"><span>Type</span><select id="svNotesFilterType" onchange="filterSvNotes()">
             <option value="all">All Types</option>
             <option value="lesson">Lesson Notes</option>
             <option value="general">General Feedback</option>
-          </select>
-          <select id="svNotesFilterDate" onchange="filterSvNotes()" style="flex:1;height:34px;background:#282828;color:#ffffff;border:1px solid #3d3d3d;border-radius:8px;font-size:12px;padding:0 8px;">
+          </select></label><label class="frow"><span>Time</span><select id="svNotesFilterDate" onchange="filterSvNotes()">
             <option value="all">All Time</option>
             <option value="1">Last Month</option>
             <option value="3">Last 3 Months</option>
             <option value="6">Last 6 Months</option>
             <option value="12">Last Year</option>
-          </select>
-        </div>
+          </select></label><div class="factions"><button type="button" class="fclear">Clear</button><button type="button" class="fdone">Done</button></div></div></div></div>
         <div id="svNotesCount" style="font-size:11px;color:#9a9a9a;text-align:right;min-height:14px;margin-top:4px;"></div>
       </div>
 

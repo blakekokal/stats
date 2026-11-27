@@ -100,7 +100,7 @@ function renderStudentsList(data) {
       + '</div>'
       + '<div style="display:flex;gap:6px;margin-top:8px;">'
       + '<button onclick="viewStudent(\'' + s.student_id + '\',\'' + (s.student_name||'Student').replace(/'/g,"\\'") + '\',\'' + (s.student_email||'').replace(/'/g,"\\'") + '\')" style="flex:1;height:36px;font-size:13px;background:#2d7abc;border-radius:6px;">View Profile</button>'
-      + '<button onclick="removeStudent(\'' + s.student_id + '\',this)" style="width:70px;height:36px;font-size:12px;background:#d4706e;border-radius:6px;">Remove</button>'
+      + '<button class="delbtn" onclick="removeStudent(\'' + s.student_id + '\',this)" aria-label="Remove student" title="Remove student">' + ic('trash') + '</button>'
       + '</div>';
     list.appendChild(card);
   });

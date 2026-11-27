@@ -2,6 +2,7 @@ import { S } from '../coaching/core.js';
 import { expose } from '../coaching/core.js';
 import { show } from '../coaching/core.js';
 import { drillsData } from '../coaching/data-drills.js';
+import { refreshFilters } from '../ui.js';
 
 var _currentDrillCategory = 'putting';
 var _currentSubcategoryFilter = null;
@@ -50,6 +51,7 @@ function showDrillCategory(cat) {
     subHtml += '<option value="' + sub + '">' + sub + '</option>';
   });
   subSelect.innerHTML = subHtml;
+  refreshFilters();
 
   renderDrillsList(cat, null);
 }

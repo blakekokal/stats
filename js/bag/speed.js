@@ -128,7 +128,7 @@ export function renderSpeedTab() {
         '<div style="font-size:14px;font-weight:800;color:#9a9a9a;">' + s.club + '</div>' +
         '<div style="display:flex;align-items:center;gap:8px;">' +
           '<div style="font-size:11px;color:#9a9a9a;">' + dateStr + ' · ' + s.shots.length + ' swings</div>' +
-          '<button class="comb-hist-del" onclick="spDeleteSession(\'' + s.id + '\')" title="Delete" aria-label="Delete">' + ic('trash') + '</button>' +
+          '<button class="delbtn" onclick="spDeleteSession(\'' + s.id + '\')" title="Delete" aria-label="Delete">' + ic('trash') + '</button>' +
         '</div>' +
       '</div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px;">' +

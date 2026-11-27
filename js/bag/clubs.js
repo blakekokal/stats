@@ -372,7 +372,7 @@ function openClubDetail(name) {
   var escapedLabel = clubLabel.replace(/"/g,'&quot;').replace(/</g,'&lt;');
   var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
   html += '<div style="font-size:20px;font-weight:800;color:#9a9a9a;">' + dName + (clubLabel ? ' <span style="font-size:14px;color:#606060;font-weight:600;">(' + clubLabel.replace(/</g,'&lt;') + ')</span>' : '') + '</div>';
-  html += '<button onclick="closeClubDetail()" style="width:32px;height:32px;background:transparent;border:1px solid #3d3d3d;border-radius:8px;color:#9a9a9a;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;">×</button>';
+  html += '<button class="xbtn" onclick="closeClubDetail()" aria-label="Close">✕</button>';
   html += '</div>';
   html += '<div style="margin-bottom:12px;"><input type="text" value="' + escapedLabel + '" placeholder="Add label (e.g. 48°, Titleist)" maxlength="20" onchange="updateBagClub(\'' + safe + '\',\'label\',this.value.trim());openClubDetail(\'' + safe + '\')" style="width:100%;height:32px;font-size:12px;text-align:center;background:#282828;border:1px solid #3d3d3d;border-radius:8px;color:#ffffff;box-sizing:border-box;padding:0 10px;"></div>';
 

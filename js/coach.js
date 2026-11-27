@@ -10,6 +10,7 @@ import { checkCoachingDot } from './coaching/index.js';
 import { fetchMyRole, saveRole, sendCoachRequest } from './coaching/roles.js';
 import { VERSION } from './version.js';
 import { icEl } from './icons.js';
+import { filterMenu } from './ui.js';
 import { addTestRounds, removeTestRounds, testRounds } from './testrounds.js';
 import { setCurrentRound, summarize, historyRounds, roundKeyOf, startScouting, firstHoleOf, activeRound, pauseRound, resumeRound, holeCountOf } from './rounds.js';
 import { downloadRoundCsv } from './dashboard.js';
@@ -355,13 +356,13 @@ export function renderNewRound(view, { scout = false } = {}) {
 export function renderHistory(view) {
   if (needLogin(view)) return;
   const level = profileLevel();
-  const sel = (opts, def) => h('select', { class: 'minisel', style: 'flex:1;max-width:190px;height:36px;font-size:13px;background:#333333;border-color:#3d3d3d;border-radius:8px;', onchange: () => draw() }, opts.map(([v, l]) => h('option', { value: v, selected: v === def }, l)));
+  const sel = (opts, def) => h('select', { onchange: () => draw() }, opts.map(([v, l]) => h('option', { value: v, selected: v === def }, l)));
   const fType = sel([['all', 'All Types'], ['Casual', 'Casual'], ['Tournament', 'Tournament']]);
   const fHoles = sel([['all', 'All Holes'], ['9', '9 Holes'], ['18', '18 Holes']]);
   const fTime = sel([['all', 'All Time'], ['1', 'Last Month'], ['3', 'Last 3 Months'], ['6', 'Last 6 Months']]);
   const fStatus = sel([['all', 'All Status'], ['complete', 'Completed'], ['incomplete', 'In Progress']]);
   const sort = sel([['date-desc', 'Date: Newest'], ['date-asc', 'Date: Oldest'], ['score-asc', 'Score: Low→High'], ['score-desc', 'Score: High→Low']]);
-  const search = h('input', { type: 'text', placeholder: 'Search course name...', class: 'searchbox', style: 'max-width:360px;margin-bottom:6px;', oninput: () => draw() });
+  const search = h('input', { type: 'text', placeholder: 'Search course name...', class: 'searchbox', oninput: () => draw() });
   const msg = h('div', { style: 'font-size:13px;color:#606060;min-height:20px;text-align:center;' });
   const list = h('div', { class: 'scrollpane', style: 'width:100%;' });
   const filtMsg = h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:6px;' });
@@ -383,9 +384,6 @@ export function renderHistory(view) {
     }).sort((x, y) => ({ 'date-desc': y.r.date.localeCompare(x.r.date) || y.r.updated - x.r.updated, 'date-asc': x.r.date.localeCompare(y.r.date),
       'score-asc': x.s.score - y.s.score, 'score-desc': y.s.score - x.s.score })[sort.value]);
     msg.textContent = `${shown.length} of ${all.length} round${all.length === 1 ? '' : 's'}`;
-    const n = [fType, fHoles, fTime, fStatus].filter(f => f.value !== 'all').length + (sort.value !== 'date-desc' ? 1 : 0);
-    filterBtn.lastChild.textContent = n ? `Filter · ${n}` : 'Filter';
-    filterBtn.style.background = n ? '#2d7abc' : '#282828';
     filtMsg.textContent = shown.length < all.length ? 'Filters active' : '';
     if (!shown.length) { list.replaceChildren(h('div', { style: 'text-align:center;color:#606060;padding:16px;font-size:13px;' }, 'No rounds match your filters')); return; }
     list.replaceChildren(...shown.map(({ r, s }) => card(r, s)));
@@ -393,10 +391,10 @@ export function renderHistory(view) {
 
   function card(r, s) {
     const tp = s.toPar > 0 ? '+' + s.toPar : s.toPar === 0 ? 'E' : String(s.toPar);
-    const del = (w, ht) => h('button', { style: `width:${w}px;max-width:none;height:${ht}px;font-size:12px;background:#d4706e;border-radius:6px;`, onclick: e => {
+    const del = () => h('button', { class: 'delbtn', 'aria-label': 'Delete round', title: 'Delete round', onclick: e => {
       e.stopPropagation();
       if (confirm(`Delete the round from ${fmtDate(r.date)}? This removes it from every device.`)) { store.remove(roundKeyOf(r.id)); draw(); }
-    } }, 'Del');
+    } }, icEl('trash'));
     const resume = () => openRound(r);
     const holesInfo = s.done < s.count ? `${s.done}/${s.count} holes` : `${s.count} holes`;
     return h('div', { class: 'card', style: s.incomplete ? 'border-left:3px solid #d4706e;cursor:pointer;' : '', onclick: s.incomplete ? resume : null },
@@ -410,7 +408,7 @@ export function renderHistory(view) {
           : [h('div', { style: 'font-size:20px;font-weight:800;' }, String(s.score)),
             h('div', { style: `font-size:13px;color:${s.toPar > 0 ? '#d4706e' : s.toPar < 0 ? '#00b87a' : '#9a9a9a'}` }, tp)])),
       h('div', { style: 'display:flex;gap:6px;margin-top:8px;' }, s.incomplete
-        ? [h('button', { style: 'flex:2;max-width:none;height:34px;font-size:13px;font-weight:700;background:#d4706e;border-radius:6px;', onclick: e => { e.stopPropagation(); resume(); } }, '▶ Resume Round'), del(60, 34)]
+        ? [h('button', { style: 'flex:2;max-width:none;height:34px;font-size:13px;font-weight:700;background:#d4706e;border-radius:6px;', onclick: e => { e.stopPropagation(); resume(); } }, '▶ Resume Round'), del()]
         : [h('button', { style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#007a52;border-radius:6px;font-weight:700;', onclick: e => {
             e.stopPropagation();
             setCurrentRound(r.id); localStorage.setItem('gs:viewOnly', '1'); localStorage.removeItem('gs:editingPast'); sessionStorage.removeItem('gs:level');
@@ -419,31 +417,18 @@ export function renderHistory(view) {
           } }, 'View/Edit'),
           h('button', { style: 'flex:1;max-width:none;height:30px;font-size:12px;background:#2d7abc;border-radius:6px;', onclick: e => { e.stopPropagation(); location.hash = `#/dashboard/${r.id}`; } }, 'Stats'),
           h('button', { title: 'Download scorecard (CSV)', style: 'width:50px;max-width:none;height:30px;font-size:12px;background:#00402c;border-radius:6px;', onclick: e => { e.stopPropagation(); downloadRoundCsv(r); } }, icEl('download')),
-          del(50, 30)]));
+          del()]));
   }
 
-  // One Filter button; tapping it drops down the filters and the sort order.
-  const filterRow = (label, el) => h('div', { style: 'display:flex;align-items:center;justify-content:space-between;gap:10px;' },
-    h('span', { style: 'font-size:13px;font-weight:600;color:#9a9a9a;' }, label), el);
-  const panel = h('div', { hidden: true, style: 'position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:20;background:#282828;border:1px solid #3d3d3d;border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:0 8px 24px rgba(0,0,0,0.5);text-align:left;' },
-    filterRow('Type', fType), filterRow('Holes', fHoles), filterRow('Time', fTime), filterRow('Status', fStatus), filterRow('Sort', sort),
-    h('div', { style: 'display:flex;gap:8px;margin-top:4px;' },
-      h('button', { style: 'flex:1;max-width:none;height:36px;font-size:13px;background:#333333;color:#9a9a9a;border-radius:8px;', onclick: () => {
-        [fType, fHoles, fTime, fStatus].forEach(f => { f.value = 'all'; }); sort.value = 'date-desc'; draw();
-      } }, 'Clear'),
-      h('button', { style: 'flex:1;max-width:none;height:36px;font-size:13px;background:#2d7abc;border-radius:8px;', onclick: () => { panel.hidden = true; } }, 'Done')));
-  const filterBtn = h('button', { 'aria-expanded': 'false', style: 'max-width:none;height:40px;font-size:14px;background:#282828;border-radius:10px;display:flex;align-items:center;justify-content:center;gap:8px;',
-    onclick: e => { e.stopPropagation(); panel.hidden = !panel.hidden; filterBtn.setAttribute('aria-expanded', String(!panel.hidden)); } },
-    h('span', { style: 'font-size:15px;line-height:1;' }, '\u2630'), h('span', {}, 'Filter'));
-  const filterWrap = h('div', { style: 'position:relative;margin-bottom:8px;' }, filterBtn, panel);
-  // Tapping anywhere else closes it.
+  // The shared Filter (js/ui.js): the filters and the sort order drop down from one button.
+  const filterWrap = h('div', { class: 'fbar', style: 'margin-bottom:8px;' }, search,
+    filterMenu([['Type', fType], ['Holes', fHoles], ['Time', fTime], ['Status', fStatus], ['Sort', sort]]));
   // Only the list of rounds scrolls; the title, search and Filter stay put.
   const root = page('top fixedpage', backBtn(),
     h('div', { class: 'fixedcol', style: 'width:100%;max-width:360px;' },
       h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;' }, icEl('scorecard', 'tint-green'), ' Round History'),
-      search, filterWrap,
+      filterWrap,
       msg, list, filtMsg));
-  root.addEventListener('click', e => { if (!panel.hidden && !filterWrap.contains(e.target)) { panel.hidden = true; filterBtn.setAttribute('aria-expanded', 'false'); } });
   view.replaceChildren(root);
   draw();
 }
@@ -696,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.50.0', ['Same buttons everywhere: every tab bar looks alike, every list filters with one Filter button, every close is a round \u2715 and every delete a red bin']],
   ['1.49.2', ['Practice and Learning: Learn tiles without descriptions, all the same size']],
   ['1.49.1', ['Practice and Learning: Combines and Practice tiles without descriptions, all the same size']],
   ['1.49.0', ['Opens much faster: course maps download only when you pick or view a course, not all at start', 'Slow signal shows Loading\u2026 instead of the \u201cdid not load properly\u201d message']],

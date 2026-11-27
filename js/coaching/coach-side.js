@@ -390,7 +390,7 @@ async function coachActRound(studentId, roundId, at, msg, mode) {
   }
   box.innerHTML = '<div style="max-width:420px;margin:0 auto;"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">'
     + '<div style="font-size:17px;font-weight:800;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + escapeHtml(name) + '</div>'
-    + '<button onclick="document.getElementById(\'coachSgOverlay\').style.display=\'none\'" aria-label="Close" style="flex-shrink:0;width:36px;height:36px;max-width:none;padding:0;border-radius:50%;background:#282828;border:1px solid #333333;color:#ffffff;font-size:16px;">✕</button></div>'
+    + '<button class="xbtn" onclick="document.getElementById(\'coachSgOverlay\').style.display=\'none\'" aria-label="Close">✕</button></div>'
     + '<div id="coachSgContent"></div></div>';
   box.style.display = 'block';
   var data = rounds.map(function(r) { return Object.assign({}, r, { _name: name }); });

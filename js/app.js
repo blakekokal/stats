@@ -10,6 +10,7 @@ import { VERSION } from './version.js';
 import { currentRound, isWatching, endWatching, watchInfo, watchingId, historyRounds } from './rounds.js';
 import { loadWatch, watchHole } from './live.js';
 import { renderCoaching, closeCoaching } from './coaching/index.js';
+import './ui.js'; // shared controls (Filter)
 
 window.__appStarted = true; // every module loaded: index.html's start-up check waits instead of offering a reload
 const L = window.L;

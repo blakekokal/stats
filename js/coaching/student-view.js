@@ -10,6 +10,7 @@ import { escapeHtml } from './core.js';
 import { studentRounds, viewRound, replayRound, watchLive, liveStudents, forgetStudentRounds } from './gps.js';
 import { startActing } from '../store.js';
 import { _sb } from './core.js';
+import { refreshFilters } from '../ui.js';
 import { ordinalSuffix } from './core.js';
 import { renderDashboard, setDashControls } from '../dashboard.js';
 
@@ -390,6 +391,7 @@ export async function loadStudentRounds() {
   document.getElementById('svRoundFilterType').value = 'all';
   document.getElementById('svRoundFilterHoles').value = 'all';
   document.getElementById('svRoundSortBy').value = 'date-desc';
+  refreshFilters();
   filterSvRounds();
 }
 

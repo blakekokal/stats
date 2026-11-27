@@ -280,3 +280,55 @@ body.swiping .cx, body.swiping .cx *, body.swiping .cx *::before { -webkit-backd
   background: linear-gradient(180deg, #2c2c2e 0%, #232325 45%, #1a1a1c 100%) 0 0 / 100% 100vh no-repeat !important;
 }
 .coachroot .page > .fixedhead ~ div :is(button, div, a, input, select, textarea) { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+
+/* ---- Shared controls: one look for each kind of button, on every page ----
+   .tabs    a tab bar: glass pills sharing the width, the picked one blue
+   .fmenu   Filter: one "☰ Filter" button dropping down the list's pickers (js/ui.js)
+   .xbtn    close / clear: a round glass button with ✕
+   .delbtn  delete an item: a round glass button with a red bin */
+.cx .tabs {
+  gap: 6px !important; width: 100%; padding: 0 !important; border: 0 !important; border-radius: 0 !important;
+  background: transparent !important; box-shadow: none !important; overflow: visible !important;
+  -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+}
+.cx .tabs > button:not(.linkbtn):not(.glass-skip) {
+  flex: 1 1 auto !important; min-width: 0; width: auto !important; max-width: none !important;
+  height: 38px !important; min-height: 0 !important; margin: 0 !important; padding: 0 8px !important;
+  border-radius: 22px !important; font-size: 13px !important; font-weight: 700 !important; font-family: inherit !important;
+  color: rgba(255,255,255,.78) !important; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cx .tabs.many > button:not(.linkbtn):not(.glass-skip) { font-size: 12px !important; padding: 0 4px !important; }
+
+.cx .fbar { display: flex; align-items: center; gap: 8px; width: 100%; }
+.cx .fbar > input { flex: 1; min-width: 0; width: auto !important; max-width: none !important; margin: 0 !important; }
+.cx .fhead { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; }
+.cx .fhead.end { justify-content: flex-end; }
+.cx .fmenu { position: relative; flex: none; }
+.cx button.fbtn:not(.linkbtn) {
+  flex: none !important; width: auto !important; max-width: none !important; height: 36px !important; min-height: 0 !important;
+  margin: 0 !important; padding: 0 12px !important; display: inline-flex !important; align-items: center; justify-content: center; gap: 5px;
+  font-size: 13px !important; font-weight: 700 !important; color: #fff !important;
+}
+.cx .fpanel {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 40; width: 260px; max-width: calc(100vw - 32px); box-sizing: border-box;
+  display: flex; flex-direction: column; gap: 8px; padding: 12px; text-align: left;
+  background: #2c2c2e !important; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.55), inset 0 1px 0 rgba(255,255,255,.08);
+}
+.cx .fpanel[hidden] { display: none; }
+.cx .frow { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin: 0; }
+.cx .frow > span { font-size: 13px; font-weight: 600; color: #9a9a9a; }
+.cx .frow > select {
+  flex: none; display: block !important; width: 160px !important; max-width: 160px !important; height: 34px !important; min-height: 0 !important;
+  margin: 0 !important; padding: 0 10px !important; font-size: 13px !important; font-weight: 600; color: #fff !important; box-sizing: border-box;
+}
+.cx .factions { display: flex; gap: 8px; margin-top: 4px; }
+.cx .factions > button:not(.linkbtn) { flex: 1; width: auto !important; max-width: none !important; height: 36px !important; min-height: 0 !important; margin: 0 !important; font-size: 13px !important; font-weight: 700 !important; color: #fff !important; }
+.cx .factions > button.fdone:not(.linkbtn) { background: var(--glass-on) !important; }
+
+.cx :is(.xbtn, .delbtn):not(.linkbtn) {
+  flex: none !important; width: 32px !important; height: 32px !important; min-width: 32px !important; max-width: 32px !important; min-height: 0 !important;
+  margin: 0; padding: 0 !important; border-radius: 50% !important; display: inline-flex !important; align-items: center; justify-content: center;
+  font-size: 15px !important; font-weight: 600 !important; line-height: 1 !important; color: #e5e5ea !important; cursor: pointer;
+}
+.cx .delbtn:not(.linkbtn) { color: var(--mac-red) !important; }
+.cx :is(.xbtn, .delbtn) svg, .cx :is(.xbtn, .delbtn) .ic { width: 16px; height: 16px; }

@@ -83,9 +83,9 @@ export function renderGoals(targetEl, goals, readOnly) {
     }
     var completedStyle = g.completed ? 'opacity:0.5;text-decoration:line-through;' : '';
     var checkIcon = ic(g.completed ? 'check' : 'box');
-    var actions = readOnly ? '' : '<div style="display:flex;gap:4px;margin-top:4px;">'
+    var actions = readOnly ? '' : '<div style="display:flex;gap:8px;align-items:center;justify-content:flex-end;margin-top:4px;">'
       + '<button onclick="toggleGoalComplete(\'' + g.id + '\')" style="background:transparent;border:none;color:#44b8f0;font-size:11px;cursor:pointer;padding:0;height:auto;text-decoration:underline;">' + (g.completed ? 'Undo' : 'Complete') + '</button>'
-      + '<button onclick="deleteGoal(\'' + g.id + '\')" style="background:transparent;border:none;color:#d4706e;font-size:11px;cursor:pointer;padding:0;height:auto;text-decoration:underline;">Delete</button>'
+      + '<button class="delbtn" onclick="deleteGoal(\'' + g.id + '\')" aria-label="Delete goal">' + ic('trash') + '</button>'
       + '</div>';
 
     return '<div style="background:#222222;border-radius:10px;padding:10px 12px;margin-bottom:6px;' + completedStyle + '">'

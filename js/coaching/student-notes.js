@@ -109,7 +109,7 @@ function renderSvNotes(data) {
       + '<div style="display:flex;align-items:center;gap:8px;">'
       + '<div style="font-size:10px;color:#9a9a9a;">' + sentDate + '</div>'
       + editBtn
-      + (n.id ? '<button onclick="deleteSvNote(\'' + n.id + '\')" style="background:transparent;border:none;color:#9a9a9a;font-size:14px;cursor:pointer;padding:2px 4px;height:auto;width:auto;max-width:none;" title="Delete note">' + ic('trash') + '</button>' : '')
+      + (n.id ? '<button class="delbtn" onclick="deleteSvNote(\'' + n.id + '\')" title="Delete note" aria-label="Delete note">' + ic('trash') + '</button>' : '')
       + '</div></div>'
       + lessonLine
       + '<div style="font-size:13px;color:#9a9a9a;line-height:1.6;">' + noteText + '</div></div>';
