@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.59.0', ['New course: Pecan Valley Golf Course – River (Fort Worth)']],
   ['1.58.0', ['New course: Heritage Ranch Golf & Country Club (Fairview)']],
   ['1.57.0', ['New course: Stonebridge Ranch Country Club – Dye (McKinney)']],
   ['1.56.0', ['New course: Ridgeview Ranch Golf Club (Plano)']],
