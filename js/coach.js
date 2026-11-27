@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.57.0', ['New course: Stonebridge Ranch Country Club – Dye (McKinney)']],
   ['1.56.0', ['New course: Ridgeview Ranch Golf Club (Plano)']],
   ['1.55.0', ['New course: Timarron Country Club (Southlake)']],
   ['1.54.0', ['New course: Mesquite Golf Club (Mesquite)']],

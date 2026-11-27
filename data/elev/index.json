@@ -1168,5 +1168,20 @@
    761
   ],
   "source": "USGS 3DEP"
+ },
+ "stonebridge": {
+  "bounds": [
+   -96.724572,
+   33.186998,
+   -96.707226,
+   33.204575
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   627,
+   774
+  ],
+  "source": "USGS 3DEP"
  }
 }
