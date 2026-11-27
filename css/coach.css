@@ -359,3 +359,8 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 .cx.home .homehead { z-index: 5; } /* its profile menu opens over the buttons below */
 
 .cx .dashsghead .fmenu { position: static; }
+/* Coaching, coach's Home: the Students button stays put and Home scrolls under it
+   (--over: the button's height); the other tabs have no button and fade under the title. */
+#coachingCoachView > .undertop { --over: 74px; --gap: 14px; }
+#coachingCoachView.nobar > #coachStudentsBar { display: none; }
+#coachingCoachView.nobar > .undertop { --over: 0px; --gap: 20px; }
