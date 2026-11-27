@@ -143,7 +143,8 @@ tagged as a bunker: `retype` in the config, a `build_course.py` option). Oakmont
 predates the 2020 renovation: 58 bunkers on grass dropped, 14 added from the imagery). Lake Arlington (its
 "gap" was bunkers, but it has none: no sand in the imagery). Pecan Hollow (no fairways or tee boxes in OSM:
 `tools/fill_from_imagery.py` traces fairways from the imagery, each hole's own fairway vs rough colour, and adds
-tee boxes; approximate, worth tidying in the editor). Luna Vista (fairways the same way).
+tee boxes; approximate, worth tidying in the editor). Luna Vista (fairways the same way). Mesquite Municipal (fairways, tee boxes and
+three bunkers from the imagery).
 
 Skipped for now: Meadowbrook (Fort Worth; GolfPass's card is a different layout from OSM's holes),
 Lost Creek (Aledo; GolfPass says it closed), Pecan Valley River (see below). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
@@ -164,7 +165,6 @@ Mapped with gaps (better from a book, or fill the gaps from the imagery):
   needs the club's current card (Blue is live)
 - Pecan Valley River (Fort Worth): no fairways on 8 holes, no greens on #9 and #14; winter imagery
   hides the fairways (Hills is live; `tools/pecanvalley/` has the River's config)
-- tee boxes or fairways missing: Mesquite Municipal (`tools/fill_from_imagery.py`, as Pecan Hollow)
 - hole lines but little else: Mansfield National, Thorntree
 - some holes missing: Timarron (17), Ridgeview Ranch (17), Stonebridge Ranch (17), Heritage Ranch (11)
 - shapes but no hole lines: Waterview, Timberlinks
