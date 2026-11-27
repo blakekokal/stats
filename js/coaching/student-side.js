@@ -38,8 +38,8 @@ export function showCoachCoachingTab(idx) {
     if (btn)  { btn.style.background = i === idx ? '#2d7abc' : '#282828'; btn.style.color = i === idx ? '#ffffff' : '#606060'; btn.style.fontWeight = i === idx ? '700' : '600'; }
     if (pane) pane.style.display = i === idx ? 'block' : 'none';
   }
-  // The Students button stays at the top of Home only.
-  document.getElementById('coachingCoachView')?.classList.toggle('nobar', idx !== 0);
+  // Home keeps the Students button at the top, the students list its search (css: #coachingCoachView[data-tab]).
+  var cv = document.getElementById('coachingCoachView'); if (cv) cv.dataset.tab = String(idx);
   if (idx === 3) loadCoachMessages();
   if (idx === 4) drawCoachStudentList(true); // one list of students, latest activity first
   S.coachReturnTab = idx;

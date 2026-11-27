@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.50.8', ['Coaching, Students: the search stays at the top as the list scrolls, and Filter can show only students with activity']],
   ['1.50.7', ['Coaching (coach\u2019s Home): Students stays at the top; the rest of Home scrolls and fades out behind it']],
   ['1.50.6', ['Coaching (coach\u2019s Home): the title stays at the top and the page fades out under it as it scrolls', 'Stats Dashboard: no emoji on View round']],
   ['1.50.5', ['My Bag: the title stays at the top and each tab scrolls under the tabs']],
