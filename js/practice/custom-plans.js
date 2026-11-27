@@ -149,7 +149,7 @@ function ppCustomEditPlan(idx) {
   ppCustomRenderCategories();
   document.getElementById('ppCustomMsg').textContent = '';
   // Scroll to builder
-  var scroll = document.getElementById('practiceHubScroll');
+  var scroll = document.getElementById('practiceHubPage');
   if (scroll) scroll.scrollTop = scroll.scrollHeight;
 }
 

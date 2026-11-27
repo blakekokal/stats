@@ -44,7 +44,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
       <div id="cstTabContent0" style="display:flex;flex-direction:column;height:100%;margin:-14px -16px -40px;">
 
         <!-- Sticky search + filters -->
-        <div style="flex-shrink:0;padding:12px 16px 8px;background:#1e1e1e;border-bottom:1px solid #282828;">
+        <div style="flex-shrink:0;padding:12px 16px 8px;background:#1e1e1e;">
           <div class="fbar"><input id="feedbackSearch" oninput="filterStudentFeedback()" placeholder="Search notes..." style="height:38px;font-size:13px;box-sizing:border-box;display:block;text-align:center;"><div class="fmenu"><button type="button" class="fbtn">&#9776; <span>Filter</span></button><div class="fpanel" hidden><label class="frow"><span>Type</span><select id="feedbackFilterType" onchange="filterStudentFeedback()">
               <option value="all">All Types</option>
               <option value="lesson">Lesson Notes</option>
@@ -676,7 +676,7 @@ export const STUDENT_VIEW_PAGE = `<div id="studentViewPage" class="page" style="
       </div>
 
       <!-- Sticky filters -->
-      <div style="position:sticky;top:0;background:#1e1e1e;z-index:5;padding-bottom:8px;margin-bottom:4px;border-bottom:1px solid #282828;">
+      <div style="position:sticky;top:0;background:#1e1e1e;z-index:5;padding-bottom:8px;margin-bottom:4px;">
         <div class="fbar"><input id="svNotesSearch" oninput="filterSvNotes()" placeholder="Search notes..." style="height:38px;font-size:13px;box-sizing:border-box;text-align:center;"><div class="fmenu"><button type="button" class="fbtn">&#9776; <span>Filter</span></button><div class="fpanel" hidden><label class="frow"><span>Type</span><select id="svNotesFilterType" onchange="filterSvNotes()">
             <option value="all">All Types</option>
             <option value="lesson">Lesson Notes</option>
