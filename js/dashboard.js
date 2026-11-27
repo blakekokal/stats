@@ -482,7 +482,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
   html+=sgBar('Putting', sgPer.putt, sgR, false, 5, true);
   html+='</div>';
   // One round: View round opens it on the hole screen (the shots on the map).
-  if(opts.single&&opts.index!=null)html+='<button onclick="dashViewRound('+opts.index+')" style="width:100%;max-width:none;height:46px;margin:16px 0 4px;font-size:15px;font-weight:800;background:#007a52;color:#ffffff;border:none;border-radius:12px;">\u26f3 View round</button>';
+  if(opts.single&&opts.index!=null)html+='<button onclick="dashViewRound('+opts.index+')" style="width:100%;max-width:none;height:46px;margin:16px 0 4px;font-size:15px;font-weight:800;background:#007a52;color:#ffffff;border:none;border-radius:12px;">View round</button>';
   // Past rounds: every round, newest first (scroll for these): the date, course and
   // score on top, the SG total and each category under them. Tap one to see
   // the strokes gained for just that round.

@@ -172,8 +172,8 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
       <button id="cctTab4" onclick="showCoachCoachingTab(4)" style="flex:1;height:38px;font-size:12.5px;font-weight:700;background:#282828;border-radius:0;border:none;color:#606060;max-width:none;width:auto;padding:0;margin:0;">Students</button>
     </div>
 
-    <!-- Tab content -->
-    <div style="flex:1;overflow-y:auto;padding:14px 16px 80px;">
+    <!-- Tab content: scrolls under the title, fading out (no hard line) -->
+    <div class="undertop" style="--over:0px;--gap:20px;--fade:20px;flex:1;overflow-y:auto;padding:14px 16px 80px;">
 
       <!-- TAB 0: Home -->
       <div id="cctTabContent0">
