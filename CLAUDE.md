@@ -140,7 +140,8 @@ in Florida). Northwood (GolfPass 12693). Prestonwood Creek (OSM's greens drawn ~
 bunkers: `greenShift` in the config moves only the greens). Hackberry Creek (#5's missing green grown from the imagery). Eldorado (McKinney; boundary is two ways; #9's green
 tagged as a bunker: `retype` in the config, a `build_course.py` option). Oakmont (Corinth;
 `greenShift` as at Prestonwood). Shady Oaks (holes named "SOCC n"; its par-3 course trimmed; OSM
-predates the 2020 renovation: 58 bunkers on grass dropped, 14 added from the imagery).
+predates the 2020 renovation: 58 bunkers on grass dropped, 14 added from the imagery). Lake Arlington (its
+"gap" was bunkers, but it has none: no sand in the imagery).
 
 Skipped for now: Meadowbrook (Fort Worth; GolfPass's card is a different layout from OSM's holes),
 Lost Creek (Aledo; GolfPass says it closed), Pecan Valley River (see below). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
@@ -161,7 +162,7 @@ Mapped with gaps (better from a book, or fill the gaps from the imagery):
   needs the club's current card (Blue is live)
 - Pecan Valley River (Fort Worth): no fairways on 8 holes, no greens on #9 and #14; winter imagery
   hides the fairways (Hills is live; `tools/pecanvalley/` has the River's config)
-- tee boxes or fairways missing: Pecan Hollow, Mesquite Municipal, Luna Vista, Lake Arlington
+- tee boxes or fairways missing: Pecan Hollow, Mesquite Municipal, Luna Vista
 - hole lines but little else: Mansfield National, Thorntree
 - some holes missing: Timarron (17), Ridgeview Ranch (17), Stonebridge Ranch (17), Heritage Ranch (11)
 - shapes but no hole lines: Waterview, Timberlinks
