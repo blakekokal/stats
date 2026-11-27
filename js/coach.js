@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.54.0', ['New course: Mesquite Golf Club (Mesquite)']],
   ['1.53.0', ['New course: Luna Vista Golf Course (Dallas)']],
   ['1.52.0', ['New course: Pecan Hollow Golf Course (Plano)']],
   ['1.51.0', ['New course: Lake Arlington Golf Course (Arlington)']],
