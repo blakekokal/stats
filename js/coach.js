@@ -696,6 +696,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.49.1', ['Practice and Learning: Combines and Practice tiles without descriptions, all the same size']],
   ['1.49.0', ['Opens much faster: course maps download only when you pick or view a course, not all at start', 'Slow signal shows Loading\u2026 instead of the \u201cdid not load properly\u201d message']],
   ['1.48.3', ['Home: Settings and profile on the right, Search and ? on the left']],
   ['1.48.2', ['Profile button: students listed by last active or last used by you']],
