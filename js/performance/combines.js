@@ -61,7 +61,7 @@ function toggleCombineDetail(key, from) {
     if (c) c.textContent = on ? 'Close \u25b2' : 'View detail \u2192';
   });
   if (opening) {
-    var sc = root.closest('#studentViewScroll') || document.getElementById('performanceAnalysisPage');
+    var sc = root.closest('#studentViewScroll') || document.getElementById('perfScroll');
     if (sc) setTimeout(function(){ sc.scrollTop += 140; }, 60);
   }
 }

@@ -801,10 +801,10 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
   </div>
 </div>`;
 
-export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" style="justify-content:flex-start;padding-top:30px;overflow-y:auto;scrollbar-gutter:stable;padding-bottom:80px;align-items:center;">
-  <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
-
-  <div style="width:100%;max-width:420px;padding:0 14px;box-sizing:border-box;">
+export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" style="justify-content:flex-start;padding-top:30px;padding-bottom:0;overflow:hidden;gap:0;align-items:center;">
+  <!-- Title: stays at the top; the body scrolls under the tabs (as on My Bag) -->
+  <div class="pagehead" style="width:100%;max-width:420px;padding:0 14px;box-sizing:border-box;flex-shrink:0;">
+    <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="font-size:22px;font-weight:800;margin-bottom:2px;text-align:center;">${ic('perf', 'tint-blue')} Performance Analysis</div>
     <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
       <div id="perfAnalysisSubtitle" style="font-size:12px;color:#9a9a9a;">Loading...</div>
@@ -814,11 +814,19 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
       </div>
     </div>
 
-    <!-- Page toggle tabs -->
-    <div class="tabs" style="display:flex;margin-bottom:16px;position:sticky;top:0;z-index:10;">
+  </div>
+
+  <!-- Page toggle tabs -->
+  <div class="overtop" style="width:100%;max-width:420px;padding:0 14px;box-sizing:border-box;flex-shrink:0;">
+    <div class="tabs" style="display:flex;">
       <button id="perfTabBtnRounds"   onclick="setPerfPage('rounds')"   style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:#2d7abc;color:#ffffff;">Past Rounds</button>
       <button id="perfTabBtnCombines" onclick="setPerfPage('combines')" style="flex:1;height:38px;border:none;border-radius:9px;font-size:13px;font-weight:700;cursor:pointer;background:transparent;color:#9a9a9a;">Combines</button>
     </div>
+  </div>
+
+  <!-- Scrolling body: starts under the tabs, so it passes beneath them -->
+  <div id="perfScroll" class="undertop" style="--gap:16px;flex:1;min-height:0;overflow-y:auto;scrollbar-gutter:stable;width:100%;display:flex;flex-direction:column;align-items:center;padding:16px 0 80px;box-sizing:border-box;">
+  <div style="width:100%;max-width:420px;padding:0 14px;box-sizing:border-box;">
 
     <!-- ── PAST ROUNDS PAGE ── -->
     <div id="perfPageRounds">
@@ -872,6 +880,7 @@ export const PERFORMANCE_PAGE = `<div id="performanceAnalysisPage" class="page" 
       <div id="perfCombineFooter" style="display:none;text-align:center;font-size:10px;color:#9a9a9a;margin-top:14px;">All stats vs scratch · combines only</div>
     </div>
 
+  </div>
   </div>
 </div>`;
 

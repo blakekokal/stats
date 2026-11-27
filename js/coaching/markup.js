@@ -38,7 +38,7 @@ export const COACHING_PAGE = `<div id="coachingCornerPage" class="page" style="j
     </div>
 
     <!-- Tab content -->
-    <div id="cstTabContentWrap" class="undertop" style="flex:1;overflow:hidden;padding:14px 16px 40px;">
+    <div id="cstTabContentWrap" class="undertop" style="--fade:38px;flex:1;overflow:hidden;padding:14px 16px 40px;">
 
       <!-- TAB 0: Feedback -->
       <div id="cstTabContent0" style="display:flex;flex-direction:column;height:100%;margin:-14px -16px -40px;">
