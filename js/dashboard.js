@@ -458,7 +458,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
   // over the page): the same on the Stats Dashboard and in a coach's view of a student.
   var ctl=CTL[targetId||'dashContent'], cv=ctl?ctl.get():null;
   var opt=function(pairs,v){return pairs.map(function(p){return '<option value="'+p[0]+'"'+(String(p[0])===String(v)?' selected':'')+'>'+p[1]+'</option>';}).join('');};
-  html+=top+'<div class="dashsghead">'
+  html+=top+'<div class="dashsghead overtop">'
     +'<div style="font-size:12.5px;font-weight:800;color:#00b87a;white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis;">STROKES GAINED \u00b7 '+(opts.single?'this round':'per round')+'</div>'
     +(cv?'<select class="minisel dashhcpsel" aria-label="Compare to" onchange="dashSet(\'hcp\',this.value)">'+opt(HCP_OPTS,cv.hcp)+'</select>':'')
     +(cv&&ctl.filters&&!opts.single?(function(){
@@ -471,6 +471,8 @@ export function renderDashboard(data, hcp, targetId, opts) {
       +'<div class="factions"><button type="button" class="fclear">Clear</button><button type="button" class="fdone">Done</button></div></div></div>';
     })():'')
     +'</div>';
+  // Everything under the heading scrolls, passing under it (css: .dash0scroll).
+  html+='<div class="dash0scroll undertop" style="--over:46px;--gap:10px;">';
   html+=sgBar('SG: Total', sgPer.tot, sgR, true, 1);
   // The four categories two by two, so more of Past rounds fits below.
   html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">';
@@ -498,7 +500,7 @@ export function renderDashboard(data, hcp, targetId, opts) {
     });
     html+='</div>';
   }
-  html+='</div>';
+  html+='</div></div>'; // .dash0scroll, then #dsub_0
   
   // ===== TAB 1: SCORING =====
   html+='<div id="dsub_1" class="dsubContent" style="display:none;">'+back;
