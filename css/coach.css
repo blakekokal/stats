@@ -18,7 +18,7 @@ body.coach { background: #1e1e1e; }
 .cx .holes9 { background: #007a52; }
 .cx .holes9.genbook { background: #1c3a5e; margin-top: 8px; }
 .cx .holes18 { background: #2d7abc; }
-.cx .back-btn-top { position: fixed; top: auto; left: auto; right: max(16px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); width: 40px; height: 40px; min-width: 40px; max-width: 40px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; z-index: 20; }
+.cx .back-btn-top { position: fixed; top: auto; left: auto; right: max(8px, env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom)); width: 40px; height: 40px; min-width: 40px; max-width: 40px; background: #333; border-radius: 8px; display: flex; align-items: center; justify-content: center; z-index: 20; }
 .cx .back-btn-top svg { width: 20px; height: 20px; stroke: #fff; stroke-width: 2; fill: none; }
 /* The Back button sits in the bottom-right corner (one-handed): every page with one
    keeps room at its foot, so nothing ends up under it once you've scrolled down. */
@@ -281,16 +281,17 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
 :is(.cx.fixedpage #dashContent, .svdashfixed #svDashContent) { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 :is(.cx.fixedpage #dashContent, .svdashfixed #svDashContent) > div { flex-shrink: 0; }
 :is(.cx.fixedpage #dashContent, .svdashfixed #svDashContent) > .dsubContent { flex: 1; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
-:is(.cx.fixedpage, .svdashfixed) #dsub_0:has(.dashpast) { display: flex; flex-direction: column; overflow: hidden; }
+:is(.cx.fixedpage, .svdashfixed) #dsub_0 { display: flex; flex-direction: column; overflow: hidden; }
 :is(.cx.fixedpage, .svdashfixed) #dsub_0 > * { flex-shrink: 0; }
-:is(.cx.fixedpage, .svdashfixed) #dsub_0 > .dashpast { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+/* The bars and Past rounds scroll together under the heading ("Strokes gained · per round", the vs picker and Filter). */
+:is(.cx.fixedpage, .svdashfixed) #dsub_0 > .dash0scroll { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
 
 /* New Round: fits the screen and doesn't scroll. */
 .cx.noscroll { height: 100%; min-height: 0; overflow: hidden; overscroll-behavior: none; }
 .cx.noscroll > * { flex-shrink: 0; }
 /* No scroll bars on these lists. */
-.cx.fixedpage .scrollpane, :is(.cx.fixedpage, .svdashfixed) .dsubContent, :is(.cx.fixedpage, .svdashfixed) .dashpast { scrollbar-width: none; }
-.cx.fixedpage .scrollpane::-webkit-scrollbar, :is(.cx.fixedpage, .svdashfixed) .dsubContent::-webkit-scrollbar, :is(.cx.fixedpage, .svdashfixed) .dashpast::-webkit-scrollbar { display: none; }
+.cx.fixedpage .scrollpane, :is(.cx.fixedpage, .svdashfixed) .dsubContent, :is(.cx.fixedpage, .svdashfixed) .dash0scroll { scrollbar-width: none; }
+.cx.fixedpage .scrollpane::-webkit-scrollbar, :is(.cx.fixedpage, .svdashfixed) .dsubContent::-webkit-scrollbar, :is(.cx.fixedpage, .svdashfixed) .dash0scroll::-webkit-scrollbar { display: none; }
 /* A category's detail page: its SG bar stays at the top; the stats under it scroll. */
 :is(.cx.fixedpage #dashContent, .svdashfixed #svDashContent) > .dsubContent:has(> .dashdetail) { display: flex; flex-direction: column; overflow: hidden; }
 :is(.cx.fixedpage, .svdashfixed) .dsubContent > * { flex-shrink: 0; }
@@ -305,7 +306,7 @@ html:has(.cx.home), html:has(.cx.home) body, #view:has(> .cx.home) { overscroll-
    foot of the screen and keeps its own room at the end, so its last row still scrolls clear of
    the Back button instead of the page leaving an empty band. */
 .cx.fixedpage, .coachroot .page.svdashfixed { padding-bottom: 0 !important; }
-:is(.cx.fixedpage, .svdashfixed) :is(.scrollpane, .dashpast, .dashdetail) { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
+:is(.cx.fixedpage, .svdashfixed) :is(.scrollpane, .dash0scroll, .dashdetail) { padding-bottom: calc(64px + env(safe-area-inset-bottom)); }
 /* Coaching (coach side): Recent Activity runs to the foot of the screen; its own end room
    keeps the last item clear of the Back button. */
 #coachingCoachView { margin-bottom: calc(-66px - env(safe-area-inset-bottom)); }
