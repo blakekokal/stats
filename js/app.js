@@ -129,6 +129,7 @@ export const COURSES = [
   { id: 'mesquite', name: 'Mesquite Golf Club', file: 'data/mesquite.json' },
   { id: 'timarron', name: 'Timarron Country Club', file: 'data/timarron.json' },
   { id: 'ridgeview', name: 'Ridgeview Ranch Golf Club', file: 'data/ridgeview.json' },
+  { id: 'stonebridge', name: 'Stonebridge Ranch Country Club – Dye', file: 'data/stonebridge.json' },
   { id: 'isabella-nina', name: 'Isabella Golf Course – Nina', file: 'data/isabella-nina.json', nines: 'isabella' },
   { id: 'isabella-pinta', name: 'Isabella Golf Course – Pinta', file: 'data/isabella-pinta.json', nines: 'isabella' },
   { id: 'isabella-santamaria', name: 'Isabella Golf Course – Santa Maria', file: 'data/isabella-santamaria.json', nines: 'isabella' },

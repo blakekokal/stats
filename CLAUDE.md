@@ -146,7 +146,8 @@ predates the 2020 renovation: 58 bunkers on grass dropped, 14 added from the ima
 tee boxes; approximate, worth tidying in the editor). Luna Vista (fairways the same way). Mesquite Municipal (fairways, tee boxes and
 three bunkers from the imagery). Timarron (not missing a hole: OSM tags #10 ref=4, name=10;
 the card's par 5 #1 used). Ridgeview Ranch (#18's hole line added in `osm_to_geom.py` from its mapped
-tee boxes, fairway and green; 22 old bunkers on grass dropped).
+tee boxes, fairway and green; 22 old bunkers on grass dropped). Stonebridge Ranch Dye (not missing a hole: #3 and #4
+are in a second boundary way).
 
 Skipped for now: Meadowbrook (Fort Worth; GolfPass's card is a different layout from OSM's holes),
 Lost Creek (Aledo; GolfPass says it closed), Pecan Valley River (see below). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
@@ -168,5 +169,5 @@ Mapped with gaps (better from a book, or fill the gaps from the imagery):
 - Pecan Valley River (Fort Worth): no fairways on 8 holes, no greens on #9 and #14; winter imagery
   hides the fairways (Hills is live; `tools/pecanvalley/` has the River's config)
 - hole lines but little else: Mansfield National, Thorntree
-- some holes missing (check the tags first: Timarron's "missing" hole was mislabelled): Stonebridge Ranch (17), Heritage Ranch (11)
+- some holes missing (check the tags and boundary pieces first: Timarron's and Stonebridge's weren't): Heritage Ranch (11)
 - shapes but no hole lines: Waterview, Timberlinks
