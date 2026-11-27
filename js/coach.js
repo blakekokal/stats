@@ -364,7 +364,7 @@ export function renderHistory(view) {
   const sort = sel([['date-desc', 'Date: Newest'], ['date-asc', 'Date: Oldest'], ['score-asc', 'Score: Low→High'], ['score-desc', 'Score: High→Low']]);
   const search = h('input', { type: 'text', placeholder: 'Search course name...', class: 'searchbox', oninput: () => draw() });
   const msg = h('div', { style: 'font-size:13px;color:#606060;min-height:20px;text-align:center;' });
-  const list = h('div', { class: 'scrollpane', style: 'width:100%;' });
+  const list = h('div', { style: 'width:100%;' });
   const filtMsg = h('div', { style: 'font-size:12px;color:#606060;text-align:center;margin-top:6px;' });
 
   function draw() {
@@ -421,14 +421,14 @@ export function renderHistory(view) {
   }
 
   // The shared Filter (js/ui.js): the filters and the sort order drop down from one button.
-  const filterWrap = h('div', { class: 'fbar', style: 'margin-bottom:8px;' }, search,
+  const filterWrap = h('div', { class: 'fbar overtop' }, search,
     filterMenu([['Type', fType], ['Holes', fHoles], ['Time', fTime], ['Status', fStatus], ['Sort', sort]]));
   // Only the list of rounds scrolls; the title, search and Filter stay put.
   const root = page('top fixedpage', backBtn(),
     h('div', { class: 'fixedcol', style: 'width:100%;max-width:360px;' },
       h('div', { style: 'font-size:20px;font-weight:800;text-align:center;margin-bottom:8px;' }, icEl('scorecard', 'tint-green'), ' Round History'),
       filterWrap,
-      msg, list, filtMsg));
+      h('div', { class: 'scrollpane undertop', style: 'width:100%;--over:44px;--gap:8px;' }, msg, list, filtMsg)));
   view.replaceChildren(root);
   draw();
 }
@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.50.2', ['Coaching, a student\u2019s page, Round History and Practice and Learning: the title stays at the top and the list scrolls under the tabs (or History\u2019s search), as on My Bag']],
   ['1.50.1', ['Practice and Learning, Performance Analysis and the combines scroll like My Bag: no header bar, the tabs stay at the top with the page passing under them']],
   ['1.50.0', ['Same buttons everywhere: every tab bar looks alike, every list filters with one Filter button, every close is a round \u2715 and every delete a red bin']],
   ['1.49.2', ['Practice and Learning: Learn tiles without descriptions, all the same size']],

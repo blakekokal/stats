@@ -114,9 +114,9 @@ export const GUIDE_PAGE = `<!-- GUIDE TO GOLF PAGE -->
   </div>
 </div>`;
 
-export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="justify-content:flex-start;padding:0;overflow-y:auto;gap:0;">
+export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="justify-content:flex-start;padding:0;overflow:hidden;gap:0;">
 
-  <!-- Header: scrolls away; the tabs below stay at the top, over the content (as on My Bag) -->
+  <!-- Header: stays at the top; the body scrolls under the tabs (as on My Bag) -->
   <div class="pagehead" style="flex-shrink:0;width:100%;padding:30px 16px 0;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;position:relative;">
     <button class="back-btn-top" aria-label="Back" onclick="appBack()"><svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg></button>
     <div style="font-size:22px;font-weight:800;margin-bottom:6px;">${ic('club', 'tint-yellow')} Practice and Learning</div>
@@ -124,7 +124,7 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
   </div>
 
   <!-- 4-tab bar -->
-  <div style="position:sticky;top:0;z-index:10;flex-shrink:0;width:100%;display:flex;justify-content:center;padding:0 16px;box-sizing:border-box;">
+  <div class="overtop" style="flex-shrink:0;width:100%;display:flex;justify-content:center;padding:0 16px;box-sizing:border-box;">
     <div class="tabs" style="display:flex;width:100%;max-width:360px;margin-bottom:0;">
       <button onclick="setPracticeHubTab('combines')" id="phTabCombines" style="flex:1;height:40px;font-size:13px;font-weight:700;background:#2d7abc;border:none;color:#ffffff;cursor:pointer;max-width:none;width:auto;padding:0;margin:0;">Combines</button>
       <button onclick="setPracticeHubTab('plan')" id="phTabPlan" style="flex:1;height:40px;font-size:13px;font-weight:700;background:#282828;border:none;color:#606060;cursor:pointer;max-width:none;width:auto;padding:0;margin:0;">Practice</button>
@@ -133,8 +133,8 @@ export const PRACTICE_PAGES = `<div id="practiceHubPage" class="page" style="jus
     </div>
   </div>
 
-  <!-- Body (the page scrolls) -->
-  <div id="practiceHubScroll" style="flex-shrink:0;width:100%;display:flex;flex-direction:column;align-items:center;padding:14px 16px 80px;box-sizing:border-box;">
+  <!-- Scrolling body: starts under the tabs, so it passes beneath them -->
+  <div id="practiceHubScroll" class="undertop" style="flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;width:100%;display:flex;flex-direction:column;align-items:center;padding:14px 16px 80px;box-sizing:border-box;">
   <div style="width:100%;max-width:360px;">
 
     <!-- COMBINES TAB -->

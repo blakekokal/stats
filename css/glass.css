@@ -324,3 +324,12 @@ body.swiping .cx, body.swiping .cx *, body.swiping .cx *::before { -webkit-backd
 }
 .cx .delbtn:not(.linkbtn) { color: var(--mac-red) !important; }
 .cx :is(.xbtn, .delbtn) svg, .cx :is(.xbtn, .delbtn) .ic { width: 16px; height: 16px; }
+
+/* Tabs (or History's search row) over a scrolling list: .overtop sits on top and the
+   .undertop list starts under it (--over: its height, --gap: the space below it), so
+   the list passes beneath the tabs as it scrolls, as on My Bag, while the title above
+   stays put with nothing behind it. Nothing in the list is blurred: on iPhone blurred
+   glass inside a scrolling box isn't clipped at the box's edge and drew over the title. */
+.cx .overtop { position: relative; z-index: 10; margin-bottom: 0 !important; }
+.cx .undertop { margin-top: calc(-1 * var(--over, 38px)) !important; padding-top: calc(var(--over, 38px) + var(--gap, 14px)) !important; }
+.cx .undertop :is(button, div, a, input, select, textarea, span, label) { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
