@@ -159,13 +159,13 @@ export function renderHome(view) {
 
   view.replaceChildren(page('center home',
     h('div', { class: 'homecol' },
-      // Settings with the profile button under it on the left, the title in the middle,
-      // Search with ? under it on the right: both sides one button wide, so the title stays centred.
+      // Search with ? under it on the left, the title in the middle, Settings with the
+      // profile button under it on the right: both sides one button wide, so the title stays centred.
       h('div', { class: 'homehead' },
-        h('div', { style: 'display:flex;flex-direction:column;gap:6px;' }, gearBtn, profile.btn),
-        brand,
         h('div', { style: 'display:flex;flex-direction:column;gap:6px;' }, search,
           h('button', { class: 'iconbtn', 'aria-label': 'Strokes Gained explained', onclick: () => { location.hash = '#/help'; } }, icEl('help'))),
+        brand,
+        h('div', { style: 'display:flex;flex-direction:column;gap:6px;' }, gearBtn, profile.btn),
         profile.menu),
       go('map', 'GPS Overview / Yardage Books', '#1a4a8a', '#/scout'),
       go('flag', 'New Round', '#007a52', '#/new'),
@@ -689,6 +689,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.48.3', ['Home: Settings and profile on the right, Search and ? on the left']],
   ['1.48.2', ['Profile button: students listed by last active or last used by you']],
   ['1.48.1', ['Home: a profile button under Settings shows who\u2019s signed in and lets a coach pick a student to use the app as; Search is top right with ? under it']],
   ['1.48.0', ['Coaches: Use app as a student (on their profile) to see and log their rounds, combines and practice; what you add is marked Added by coach. Exit or Stop viewing to come back', 'A student\u2019s Performance Analysis shows their own combines']],
