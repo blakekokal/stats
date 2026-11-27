@@ -123,6 +123,7 @@ export const COURSES = [
   { id: 'eldorado', name: 'Eldorado Country Club', file: 'data/eldorado.json' },
   { id: 'oakmont', name: 'Oakmont Country Club', file: 'data/oakmont.json' },
   { id: 'shadyoaks', name: 'Shady Oaks Country Club', file: 'data/shadyoaks.json' },
+  { id: 'lakearlington', name: 'Lake Arlington Golf Course', file: 'data/lakearlington.json' },
   { id: 'isabella-nina', name: 'Isabella Golf Course – Nina', file: 'data/isabella-nina.json', nines: 'isabella' },
   { id: 'isabella-pinta', name: 'Isabella Golf Course – Pinta', file: 'data/isabella-pinta.json', nines: 'isabella' },
   { id: 'isabella-santamaria', name: 'Isabella Golf Course – Santa Maria', file: 'data/isabella-santamaria.json', nines: 'isabella' },

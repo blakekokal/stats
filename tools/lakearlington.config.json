@@ -1,0 +1,19 @@
+{
+  "id": "lakearlington",
+  "name": "Lake Arlington Golf Course",
+  "location": "Arlington, TX",
+  "par": [4, 3, 4, 4, 4, 4, 3, 4, 5, 4, 4, 4, 4, 3, 5, 5, 3, 4],
+  "hcp": [2, 12, 16, 14, 10, 4, 6, 8, 18, 17, 15, 9, 1, 7, 5, 3, 11, 13],
+  "_comment_tees": "Scorecard from GolfPass (14572); its pars match OpenStreetMap's hole tags (par 71). Men's ratings for Blue and White; the Red (W) rating is for 5485 yards (the card's Red is 5350), so Red, Yellow and Orange have none.",
+  "_comment_drop": "Polygons containing these points are not part of the course: nothing here; trim_far.py drops the practice greens.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the greens: OSM has no bunkers).",
+  "shift": {"east": 1.0, "north": 1.0},
+  "tees": [
+    {"name": "Blue", "rating": 70.7, "slope": 117, "yards": [420, 194, 371, 339, 415, 393, 187, 404, 456, 361, 358, 394, 371, 245, 570, 561, 210, 386]},
+    {"name": "White", "rating": 68.5, "slope": 111, "yards": [397, 151, 362, 320, 382, 375, 148, 348, 435, 334, 350, 372, 362, 233, 552, 542, 195, 345]},
+    {"name": "Yellow", "rating": null, "slope": null, "yards": [359, 115, 343, 296, 351, 353, 129, 315, 407, 308, 302, 322, 317, 175, 478, 475, 136, 344]},
+    {"name": "Red", "rating": null, "slope": null, "yards": [355, 110, 339, 294, 348, 349, 125, 311, 402, 305, 296, 319, 314, 169, 407, 472, 131, 304]},
+    {"name": "Orange", "rating": null, "slope": null, "yards": [305, 110, 279, 229, 273, 299, 125, 246, 322, 270, 236, 254, 235, 169, 337, 407, 131, 269]}
+  ]
+}
