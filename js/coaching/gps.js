@@ -4,7 +4,7 @@
 
 import { fetchStudentRounds, fetchStudentsLive } from '../store.js';
 import { toCoachRound } from '../dashboard.js';
-import { courseById } from '../app.js';
+import { courseById, ensureCourses } from '../app.js';
 import { summarize, startWatching, firstHoleOf } from '../rounds.js';
 
 const cache = new Map(); // student id -> { at, rounds }
@@ -19,6 +19,7 @@ export async function studentRounds(studentId, fresh = false) {
   const raw = (await fetchStudentRounds(studentId)).filter(r => r && r.courseName);
   // Each round remembers whose it is (not saved with it), so a coach can edit it.
   raw.forEach(r => Object.defineProperty(r, '_student', { value: studentId, enumerable: false, configurable: true }));
+  await ensureCourses(raw.map(r => r.course)); // their rounds' courses, before reading pars and holes
   const rounds = raw.map(r => ({ ...toCoachRound(r), _gps: r })).filter(r => r.holes > 0)
     .sort((a, b) => (a.round_date < b.round_date ? 1 : a.round_date > b.round_date ? -1 : (b._gps.updated || 0) - (a._gps.updated || 0)));
   cache.set(studentId, { at: Date.now(), rounds });
@@ -27,8 +28,9 @@ export async function studentRounds(studentId, fresh = false) {
 
 // Students playing right now: [{ id, student_id, name, course, hole, thru, toPar, updated }].
 export async function liveStudents() {
-  const rows = await fetchStudentsLive();
-  return rows.filter(x => x.doc && x.doc.round).map(x => {
+  const rows = (await fetchStudentsLive()).filter(x => x.doc && x.doc.round);
+  await ensureCourses(rows.map(x => x.doc.round.course));
+  return rows.map(x => {
     const r = x.doc.round, c = courseById(r.course), s = summarize(r, c, r.level);
     return { id: x.id, student_id: x.student_id, roundId: r.id, name: x.doc.name || r.player || 'Student', course: r.courseName || c.name,
       hole: x.doc.at || s.firstOpen || null, thru: s.done, toPar: s.toPar, updated: x.updated };
