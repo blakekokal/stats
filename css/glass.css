@@ -333,3 +333,15 @@ body.swiping .cx, body.swiping .cx *, body.swiping .cx *::before { -webkit-backd
 .cx .overtop { position: relative; z-index: 10; margin-bottom: 0 !important; }
 .cx .undertop { margin-top: calc(-1 * var(--over, 38px)) !important; padding-top: calc(var(--over, 38px) + var(--gap, 14px)) !important; }
 .cx .undertop :is(button, div, a, input, select, textarea, span, label) { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
+/* A soft fade, not a hard line, where a list slides under the tabs (--fade: where it is
+   fully shown, by default just below the tabs) and where the Stats Dashboard's Past
+   rounds and a category's detail scroll away under their heading. */
+.cx .undertop {
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade, calc(var(--over, 38px) + var(--gap, 14px))));
+  mask-image: linear-gradient(to bottom, transparent 0, #000 var(--fade, calc(var(--over, 38px) + var(--gap, 14px))));
+}
+.cx :is(.dashpast, .dashdetail) {
+  padding-top: 14px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 14px);
+  mask-image: linear-gradient(to bottom, transparent 0, #000 14px);
+}
