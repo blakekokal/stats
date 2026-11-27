@@ -1183,5 +1183,20 @@
    774
   ],
   "source": "USGS 3DEP"
+ },
+ "heritageranch": {
+  "bounds": [
+   -96.599839,
+   33.129534,
+   -96.581889,
+   33.151093
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   503,
+   615
+  ],
+  "source": "USGS 3DEP"
  }
 }

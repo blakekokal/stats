@@ -1,0 +1,221 @@
+{
+ "id": "heritageranch",
+ "name": "Heritage Ranch Golf & Country Club",
+ "location": "Fairview, TX",
+ "par": [
+  4,
+  4,
+  5,
+  3,
+  4,
+  3,
+  4,
+  5,
+  4,
+  4,
+  5,
+  3,
+  4,
+  4,
+  4,
+  3,
+  5,
+  4
+ ],
+ "hcp": [
+  11,
+  5,
+  13,
+  7,
+  1,
+  17,
+  3,
+  15,
+  9,
+  12,
+  14,
+  16,
+  2,
+  10,
+  18,
+  8,
+  6,
+  4
+ ],
+ "_comment_tees": "Scorecard from GolfPass (22891); its pars match OpenStreetMap's hole tags (par 72). Combination tees left out. Its tee table names the tees differently; ratings matched by total yards (men's): Black = its Blue (6988), Blue = its White (6472), White = Bronze (6051), Gold, Red, Green.",
+ "_comment_drop": "Polygons containing these points are not part of the course: an OSM bunker on grass by #4's green, the chipping area by the clubhouse and a fairway sliver (trim_far.py drops the practice greens and range tee).",
+ "drop": [
+  [
+   33.146362,
+   -96.587018,
+   "bunker"
+  ],
+  [
+   33.138916,
+   -96.594146,
+   "fairway"
+  ],
+  [
+   33.134376,
+   -96.592459,
+   "fairway"
+  ]
+ ],
+ "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand; the greens agree).",
+ "shift": {
+  "east": -2.0,
+  "north": 0.5
+ },
+ "tees": [
+  {
+   "name": "Black",
+   "rating": 73.6,
+   "slope": 133,
+   "yards": [
+    388,
+    406,
+    524,
+    210,
+    443,
+    173,
+    388,
+    571,
+    403,
+    385,
+    535,
+    182,
+    448,
+    388,
+    356,
+    208,
+    547,
+    433
+   ]
+  },
+  {
+   "name": "Blue",
+   "rating": 71.0,
+   "slope": 130,
+   "yards": [
+    353,
+    383,
+    501,
+    192,
+    396,
+    156,
+    337,
+    534,
+    386,
+    358,
+    506,
+    160,
+    422,
+    362,
+    327,
+    182,
+    519,
+    398
+   ]
+  },
+  {
+   "name": "White",
+   "rating": 69.0,
+   "slope": 124,
+   "yards": [
+    343,
+    359,
+    485,
+    160,
+    385,
+    140,
+    322,
+    505,
+    322,
+    329,
+    476,
+    135,
+    400,
+    340,
+    320,
+    165,
+    499,
+    366
+   ]
+  },
+  {
+   "name": "Gold",
+   "rating": 67.4,
+   "slope": 120,
+   "yards": [
+    320,
+    325,
+    468,
+    158,
+    364,
+    131,
+    305,
+    475,
+    319,
+    305,
+    446,
+    121,
+    364,
+    312,
+    304,
+    165,
+    458,
+    346
+   ]
+  },
+  {
+   "name": "Red",
+   "rating": 64.2,
+   "slope": 110,
+   "yards": [
+    264,
+    303,
+    421,
+    139,
+    298,
+    111,
+    256,
+    429,
+    306,
+    270,
+    401,
+    104,
+    322,
+    279,
+    273,
+    102,
+    385,
+    283
+   ]
+  },
+  {
+   "name": "Green",
+   "rating": 61.1,
+   "slope": 104,
+   "yards": [
+    260,
+    225,
+    291,
+    139,
+    220,
+    111,
+    202,
+    350,
+    208,
+    268,
+    315,
+    104,
+    252,
+    212,
+    231,
+    102,
+    275,
+    235
+   ]
+  }
+ ]
+}
