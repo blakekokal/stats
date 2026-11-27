@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.52.0', ['New course: Pecan Hollow Golf Course (Plano)']],
   ['1.51.0', ['New course: Lake Arlington Golf Course (Arlington)']],
   ['1.50.11', ['Stats Dashboard: a category\u2019s detail scrolls under its glass bar at the top, showing through it like Round History\u2019s search']],
   ['1.50.10', ['Stats Dashboard: a category\u2019s bar at the top of its detail is frosted liquid glass, like the dashboard\u2019s bars']],
