@@ -1,0 +1,19 @@
+{
+  "id": "rockwood",
+  "name": "Rockwood Park Golf Course",
+  "location": "Fort Worth, TX",
+  "par": [4, 5, 4, 5, 3, 4, 4, 3, 4, 4, 4, 3, 5, 4, 3, 4, 4, 5],
+  "hcp": [7, 3, 11, 1, 15, 9, 13, 17, 5, 10, 8, 18, 2, 6, 16, 14, 12, 4],
+  "_comment_tees": "Scorecard from GolfPass (2913); its pars match OpenStreetMap's hole tags (par 72). Men's ratings; White/Red's is the women's.",
+  "_comment_drop": "Polygons containing these points are not part of the course.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 0},
+  "tees": [
+    {"name": "Black", "rating": 73.7, "slope": 120, "yards": [414, 533, 373, 611, 164, 409, 311, 142, 434, 403, 408, 233, 540, 457, 212, 422, 430, 557]},
+    {"name": "Blue", "rating": 71.1, "slope": 115, "yards": [387, 504, 349, 565, 144, 375, 293, 127, 389, 384, 343, 207, 492, 433, 185, 371, 409, 522]},
+    {"name": "White", "rating": 69.1, "slope": 113, "yards": [352, 471, 327, 527, 125, 354, 268, 108, 363, 338, 322, 174, 467, 393, 157, 299, 387, 468]},
+    {"name": "White/Red", "rating": 72.2, "slope": 116, "yards": [315, 471, 327, 395, 125, 317, 268, 108, 324, 338, 322, 130, 406, 365, 157, 299, 351, 468]},
+    {"name": "Red", "rating": 66.2, "slope": 109, "yards": [315, 410, 287, 395, 100, 317, 240, 86, 324, 305, 290, 130, 406, 365, 136, 260, 351, 440]}
+  ]
+}

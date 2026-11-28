@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.68.0', ['New course: Rockwood Park Golf Course (Fort Worth)']],
   ['1.67.0', ['New course: Old Brickyard Golf Course (Ferris)']],
   ['1.66.0', ['New course: Split Rail Golf Club (Aledo)']],
   ['1.65.0', ['New course: Maridoe Golf Club (Carrollton)']],

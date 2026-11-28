@@ -157,7 +157,8 @@ at Denton (9 holes; routed the same way; doglegs drawn straight). Mira Vista (Fo
 renovation: all its bunkers swapped for 60 from the imagery, `fill_from_imagery.py --bunkers`, picked by eye). Maridoe (Carrollton; OSM numbers its holes in another order:
 renumbered to GolfPass's card in `osm_to_geom.py`, where pars, lengths and green-to-tee walks all fit).
 Split Rail (Aledo; from the handoff's Texas survey; #6's green tagged as a tee: `retype`). Old Brickyard (Ferris;
-only six OSM bunkers: shift fitted to the greens).
+only six OSM bunkers: shift fitted to the greens). Rockwood Park (Fort Worth; #15-#16 run past OSM's boundary:
+widened in `osm_to_geom.py`).
 
 Skipped for now: Meadowbrook (Fort Worth; rebuilt and rerouted in 2023-25: OSM has the old holes, without #6-#7),
 Lost Creek (Aledo; GolfPass says it closed). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
