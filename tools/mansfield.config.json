@@ -1,0 +1,18 @@
+{
+  "id": "mansfield",
+  "name": "Mansfield National Golf Club",
+  "location": "Mansfield, TX",
+  "par": [4, 4, 5, 4, 3, 5, 4, 3, 4, 3, 4, 4, 5, 3, 4, 5, 4, 4],
+  "hcp": [7, 15, 17, 9, 1, 5, 3, 13, 11, 14, 6, 10, 12, 18, 8, 4, 16, 2],
+  "_comment_tees": "Scorecard from GolfPass (16373); OpenStreetMap's hole lines have no par tags, but their lengths match the card's Black tees (par 72). The Silver/Red combination is left out. Ratings by total yards: Black = its Blue (6850), Gold = its White (6232), men's; Red = Red (W) (5263, the women's); Silver has none.",
+  "_comment_drop": "Polygons containing these points are not part of the course.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 0},
+  "tees": [
+    {"name": "Black", "rating": 72.7, "slope": 128, "yards": [403, 386, 488, 402, 233, 545, 454, 160, 396, 199, 418, 354, 503, 166, 397, 554, 396, 423]},
+    {"name": "Gold", "rating": 69.4, "slope": 119, "yards": [363, 355, 456, 367, 200, 502, 415, 136, 323, 171, 372, 327, 478, 128, 367, 523, 352, 397]},
+    {"name": "Silver", "rating": null, "slope": null, "yards": [337, 335, 403, 338, 171, 485, 389, 109, 302, 157, 349, 287, 446, 116, 348, 486, 323, 372]},
+    {"name": "Red", "rating": 70.2, "slope": 116, "yards": [296, 309, 387, 316, 127, 411, 353, 103, 280, 100, 332, 264, 415, 82, 320, 464, 287, 361]}
+  ]
+}

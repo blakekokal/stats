@@ -112,8 +112,8 @@ def main(src, cfg_path, dst):
     for n in range(1, len(cfg["par"]) + 1):
         line = lines[n]
         end = line[-1]
-        g = min(greens, key=lambda r: (centroid(r)[0] - end[0]) ** 2 + (centroid(r)[1] - end[1]) ** 2)
-        pin = end if n in cfg.get("pinAtLineEnd", []) else centroid(g)  # double greens: the hole's own end
+        g = min(greens, key=lambda r: (centroid(r)[0] - end[0]) ** 2 + (centroid(r)[1] - end[1]) ** 2) if greens else None
+        pin = end if n in cfg.get("pinAtLineEnd", []) or g is None else centroid(g)  # double greens: the hole's own end; no greens mapped: the line's end
         out_holes.append({"n": n, "par": cfg["par"][n - 1], "hcp": cfg["hcp"][n - 1],
                           "line": line, "tee": line[0], "pin": pin})
     course = {k: cfg[k] for k in ("id", "name", "location", "tees")}

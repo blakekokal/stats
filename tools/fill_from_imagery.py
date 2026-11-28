@@ -8,8 +8,12 @@
         the fairway colour (green-red weighted most), joined to the strip, less greens, bunkers, water and cart paths (an OSM export given with --paths).
         A hole whose fairway can't be told from its rough gets none (and is reported).
   --tees  a 12 x 8 m tee box at the start of every hole line with no tee box within 15 m.
+  --bunkers  bunkers where OSM has none: white sand (bright, unsaturated, brighter than its surroundings)
+        inside the course (not in the OB area: run add_ob.py first, so roofs are left out), within 60 m
+        of a hole line, 8 to 1500 m2, compact, off cart paths and greens. For courses whose bunkers are
+        white in the imagery; check the result by eye.
 
-Usage: fill_from_imagery.py course.json m19.png out.json [--fairways missing|1,2,5] [--tees] [--paths export.json]
+Usage: fill_from_imagery.py course.json m19.png out.json [--fairways missing|1,2,5] [--tees] [--bunkers] [--paths export.json]
 """
 import json, math, sys, cv2, numpy as np
 from shapely.geometry import LineString, Polygon
@@ -98,5 +102,39 @@ if '--tees' in args:
         a, b = t, along(t, h['line'][1], 12); x, y = vec(a, b); Lr = math.hypot(x, y); nx, ny = -y / Lr * 4, x / Lr * 4
         r = [off(a, nx, ny), off(b, nx, ny), off(b, -nx, -ny), off(a, -nx, -ny)]
         d['features'].append({'t': 'tee', 'p': [r + [r[0]]]}); added.append(f"#{h['n']}: tee box")
+if '--bunkers' in args:
+    hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV); Sat, V = hsv[..., 1].astype(np.float32), hsv[..., 2].astype(np.float32)
+    lift = V - cv2.blur(V, (61, 61))
+    sand = ((V > 190) & (Sat < 50) & (lift > 10)).astype(np.uint8)
+    disk2 = lambda r: cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
+    sand = cv2.morphologyEx(sand, cv2.MORPH_OPEN, disk2(max(1, int(0.8 / M))))
+    # OB features are a big box with the course cut out: fill the course holes back in
+    obm = np.zeros((H, W), np.uint8)
+    for f in d['features']:
+        if f['t'] == 'ob':
+            cv2.fillPoly(obm, [np.array([px(q) for q in f['p'][0]], np.int32)], 1)
+            for r in f['p'][1:]: cv2.fillPoly(obm, [np.array([px(q) for q in r], np.int32)], 0)
+    allow = np.zeros((H, W), np.uint8)
+    for h in d['holes']: cv2.polylines(allow, [np.array([px(q) for q in h['line']], np.int32)], False, 1, int(120 / M))
+    allow &= (1 - obm)
+    bad = np.zeros((H, W), np.uint8)
+    for f in d['features']:
+        if f['t'] in ('green', 'tee', 'bunker'): cv2.fillPoly(bad, [np.array([px(q) for q in f['p'][0]], np.int32)], 1)
+    if '--paths' in args:
+        for e in json.load(open(args[args.index('--paths') + 1]))['elements']:
+            if e.get('geometry'): cv2.polylines(bad, [np.array([px((q['lat'], q['lon'])) for q in e['geometry']], np.int32)], False, 1, max(1, int(3 / M)))
+    sand &= allow
+    cs, _ = cv2.findContours(sand, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE); nb = 0
+    for c in cs:
+        a = cv2.contourArea(c) * M * M
+        if a < 8 or a > 1500: continue
+        (_, _), (rw, rh), _ = cv2.minAreaRect(c)
+        if max(rw, rh) / max(1, min(rw, rh)) > 5 or cv2.contourArea(c) / max(1, rw * rh) < 0.35: continue  # paths
+        blob = np.zeros((H, W), np.uint8); cv2.drawContours(blob, [c], -1, 1, -1)
+        if (blob & bad).sum() > 0.3 * blob.sum(): continue
+        c = cv2.approxPolyDP(c, 0.3 / M, True); r = [ll(*q[0]) for q in c]
+        if len(r) < 4: continue
+        d['features'].append({'t': 'bunker', 'p': [r + [r[0]]]}); nb += 1
+    added.append(f"{nb} bunkers")
 json.dump(d, open(out, 'w'), separators=(',', ':'))
 print('; '.join(added) or 'nothing added')
