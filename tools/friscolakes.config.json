@@ -1,0 +1,20 @@
+{
+  "id": "friscolakes",
+  "name": "Frisco Lakes Golf Club",
+  "location": "Frisco, TX",
+  "par": [4, 4, 5, 4, 3, 4, 4, 3, 5, 4, 4, 3, 4, 3, 5, 4, 4, 5],
+  "hcp": [17, 11, 3, 1, 9, 13, 5, 15, 7, 16, 4, 18, 14, 2, 8, 6, 10, 12],
+  "_comment_tees": "Scorecard from GolfPass (22711); its pars match OpenStreetMap's hole tags (par 72). Ratings matched by total yards: the tee table's lengths are within 25 yards of the card's tees (it calls Ghost Black and Black Gold); Green's is the women's.",
+  "_comment_drop": "Polygons containing these points are not part of the course: one OSM bunker on grass.",
+  "drop": [[33.135483, -96.910264, "bunker"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (bunker and green fits agree); every point is moved by it.",
+  "shift": {"east": -0.9, "north": 1.3},
+  "tees": [
+    {"name": "Ghost", "rating": 74.3, "slope": 131, "yards": [397, 427, 583, 485, 195, 430, 332, 168, 545, 373, 426, 171, 354, 247, 574, 430, 413, 535]},
+    {"name": "Black", "rating": 72.3, "slope": 127, "yards": [375, 407, 558, 465, 176, 398, 317, 135, 516, 349, 409, 155, 322, 222, 547, 403, 392, 513]},
+    {"name": "Blue", "rating": 70.4, "slope": 123, "yards": [351, 386, 535, 430, 169, 358, 287, 122, 488, 326, 387, 138, 289, 204, 523, 369, 366, 485]},
+    {"name": "White", "rating": 67.8, "slope": 114, "yards": [319, 356, 499, 395, 124, 331, 264, 106, 447, 293, 352, 125, 260, 168, 493, 327, 330, 454]},
+    {"name": "Green", "rating": 70.6, "slope": 120, "yards": [296, 325, 474, 352, 108, 301, 244, 92, 431, 258, 319, 110, 220, 149, 464, 297, 295, 422]},
+    {"name": "Green Short", "rating": null, "slope": null, "yards": [296, 325, 452, 352, 108, 301, 200, 75, 431, 258, 319, 110, 220, 149, 464, 270, 295, 422]}
+  ]
+}
