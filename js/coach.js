@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.63.0', ['New course: The Timber Links at Denton (9 holes, Denton)']],
   ['1.62.0', ['New course: Waterview Golf Club (Rowlett)']],
   ['1.61.0', ['New course: Thorntree Golf Club (DeSoto)']],
   ['1.60.0', ['New course: Mansfield National Golf Club (Mansfield)']],
