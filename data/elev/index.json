@@ -1363,5 +1363,20 @@
    691
   ],
   "source": "USGS 3DEP"
+ },
+ "stewartpeninsula": {
+  "bounds": [
+   -96.925513,
+   33.083637,
+   -96.911891,
+   33.094277
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   521,
+   567
+  ],
+  "source": "USGS 3DEP"
  }
 }
