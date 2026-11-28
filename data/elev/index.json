@@ -1258,5 +1258,20 @@
    579
   ],
   "source": "USGS 3DEP"
+ },
+ "timberlinks": {
+  "bounds": [
+   -97.082271,
+   33.177276,
+   -97.073058,
+   33.184623
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   550,
+   649
+  ],
+  "source": "USGS 3DEP"
  }
 }

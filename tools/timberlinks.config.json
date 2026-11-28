@@ -1,0 +1,112 @@
+{
+ "id": "timberlinks",
+ "name": "The Timber Links at Denton",
+ "location": "Denton, TX",
+ "par": [
+  5,
+  4,
+  4,
+  4,
+  3,
+  3,
+  4,
+  3,
+  5
+ ],
+ "hcp": [
+  5,
+  13,
+  9,
+  3,
+  17,
+  15,
+  11,
+  7,
+  1
+ ],
+ "_comment_tees": "Scorecard from GolfPass (22688), 9 holes, par 35. 9-hole ratings; Red's is the women's.",
+ "_comment_drop": "Polygons containing these points are not part of the course: two OSM bunkers on grass (trim_far.py drops the practice green).",
+ "drop": [
+  [
+   33.178515,
+   -97.07464,
+   "bunker"
+  ],
+  [
+   33.179986,
+   -97.077564,
+   "bunker"
+  ]
+ ],
+ "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it (fitted to the bunkers on sand).",
+ "shift": {
+  "east": -1.0,
+  "north": 1.5
+ },
+ "tees": [
+  {
+   "name": "Blue",
+   "rating": 35.9,
+   "slope": 133,
+   "yards": [
+    480,
+    330,
+    380,
+    385,
+    193,
+    154,
+    391,
+    210,
+    520
+   ]
+  },
+  {
+   "name": "White",
+   "rating": 34.4,
+   "slope": 129,
+   "yards": [
+    460,
+    300,
+    360,
+    365,
+    142,
+    141,
+    372,
+    175,
+    487
+   ]
+  },
+  {
+   "name": "Gold",
+   "rating": 33.1,
+   "slope": 127,
+   "yards": [
+    420,
+    278,
+    345,
+    351,
+    113,
+    132,
+    354,
+    153,
+    458
+   ]
+  },
+  {
+   "name": "Red",
+   "rating": 35.6,
+   "slope": 125,
+   "yards": [
+    390,
+    264,
+    315,
+    327,
+    96,
+    113,
+    341,
+    118,
+    447
+   ]
+  }
+ ]
+}
