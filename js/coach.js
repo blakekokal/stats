@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.72.0', ['New course: Ridglea Country Club – South (Fort Worth)']],
   ['1.71.0', ['New course: Gentle Creek Country Club (Prosper)']],
   ['1.70.0', ['New course: Stewart Peninsula Golf Course (The Colony)']],
   ['1.69.0', ['New course: Canyon Creek Country Club (Richardson)']],
