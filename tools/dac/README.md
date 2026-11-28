@@ -9,7 +9,9 @@ agree) and are shifted onto it.
 
 Only the **Blue** is live. The Gold's hole lines agree with GolfPass's card (2854) except #16-#18: OSM has a
 423-yard par 4, a 198-yard par 3 and a 608-yard par 5 (ending at the clubhouse), the card a 571-yard par 5,
-a 141-yard par 3 and a 454-yard par 4 (perhaps the 2016 renovation). Needs the club's current card.
+a 141-yard par 3 and a 454-yard par 4. The TXGA's Dec 2024 Winter Classic yardages (571, 141, 425) confirm the
+card, so it's OSM's last three holes that are off; the imagery doesn't settle their routing (a green near #15/#16
+belongs to no OSM hole). Needs the club's course map.
 
 Bunkers: the imagery's sand check, judged by eye: 20 OSM bunkers on grass with no sand are dropped (`drop`;
 many by greens reshaped since), the rest are tan sand or shaded; two white greenside bunkers it found are
