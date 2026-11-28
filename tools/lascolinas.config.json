@@ -1,0 +1,20 @@
+{
+  "id": "lascolinas",
+  "name": "Las Colinas Country Club",
+  "location": "Irving, TX",
+  "par": [4, 4, 5, 3, 4, 3, 5, 4, 4, 5, 3, 4, 3, 4, 4, 4, 3, 5],
+  "hcp": [7, 11, 13, 9, 3, 17, 15, 1, 5, 14, 12, 10, 18, 8, 2, 4, 16, 6],
+  "_comment_tees": "Scorecard from GolfPass (3053), par 71; OpenStreetMap's hole lines have no par tags. Only White's length matches the tee table's (men's rating), so the other tees have none.",
+  "_comment_drop": "Polygons containing these points are not part of the course: eleven OSM bunkers on grass.",
+  "drop": [[32.85895, -96.942489, "bunker"], [32.857381, -96.949584, "bunker"], [32.857112, -96.936447, "bunker"], [32.852987, -96.945673, "bunker"], [32.860083, -96.944516, "bunker"], [32.85984, -96.939907, "bunker"], [32.859424, -96.948718, "bunker"], [32.852952, -96.945744, "bunker"], [32.853839, -96.943684, "bunker"], [32.860725, -96.944197, "bunker"], [32.856738, -96.947835, "bunker"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (between the bunker and green fits); every point is moved by it.",
+  "shift": {"east": -1.0, "north": 1.3},
+  "tees": [
+    {"name": "Blue", "rating": null, "slope": null, "yards": [464, 347, 521, 200, 428, 220, 556, 403, 445, 554, 215, 410, 155, 439, 425, 475, 173, 595]},
+    {"name": "Blue/White", "rating": null, "slope": null, "yards": [426, 347, 521, 180, 408, 159, 532, 403, 426, 554, 170, 381, 155, 416, 425, 407, 173, 595]},
+    {"name": "White", "rating": 71.6, "slope": 130, "yards": [426, 327, 505, 180, 408, 159, 532, 370, 426, 510, 170, 381, 135, 416, 374, 407, 144, 510]},
+    {"name": "White/Gold", "rating": null, "slope": null, "yards": [336, 327, 505, 180, 345, 159, 458, 370, 333, 510, 155, 328, 135, 416, 374, 337, 144, 510]},
+    {"name": "Gold", "rating": null, "slope": null, "yards": [336, 285, 460, 140, 345, 159, 458, 335, 333, 460, 155, 328, 110, 416, 337, 337, 130, 488]},
+    {"name": "Red", "rating": null, "slope": null, "yards": [316, 278, 408, 129, 335, 133, 422, 302, 302, 434, 135, 292, 100, 326, 294, 300, 117, 381]}
+  ]
+}
