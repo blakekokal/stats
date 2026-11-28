@@ -154,7 +154,8 @@ dormant winter imagery: greens good, fairways approximate, many beige bunkers mi
 `green_from_seed.py --auto/--hull/--open` for dull greens). Waterview (Rowlett; no hole lines in OSM:
 routed in `osm_to_geom.py` from its numbered greens and tee boxes; fairways and bunkers fixed from the imagery). The Timber Links
 at Denton (9 holes; routed the same way; doglegs drawn straight). Mira Vista (Fort Worth; OSM predates a
-renovation: all its bunkers swapped for 60 from the imagery, `fill_from_imagery.py --bunkers`, picked by eye).
+renovation: all its bunkers swapped for 60 from the imagery, `fill_from_imagery.py --bunkers`, picked by eye). Maridoe (Carrollton; OSM numbers its holes in another order:
+renumbered to GolfPass's card in `osm_to_geom.py`, where pars, lengths and green-to-tee walks all fit).
 
 Skipped for now: Meadowbrook (Fort Worth; GolfPass's card is a different layout from OSM's holes),
 Lost Creek (Aledo; GolfPass says it closed). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
@@ -163,10 +164,6 @@ Also live, though OpenStreetMap had almost nothing: Prairie Lakes (three nines, 
 traced from the imagery, routed from the club's course map; see `tools/prairielakes/`).
 Outside DFW: Isabella (Hot Springs Village, AR; three nines, Nina, Pinta and Santa Maria, all
 from OSM; OSM numbers Pinta 10-18, so `tools/isabella/course.py` names each nine's holes by way id).
-
-Public, complete:
-- Maridoe (Carrollton): GolfPass has the pre-renovation card (pars and yards fit
-  no OSM hole); needs the current card from the club
 
 Mapped with gaps (better from a book, or fill the gaps from the imagery):
 - Dallas Athletic Club Gold: OSM's #16-#18 don't match GolfPass's card (see `tools/dac/README.md`);
