@@ -11,9 +11,10 @@
   --bunkers  bunkers where OSM has none: white sand (bright, unsaturated, brighter than its surroundings)
         inside the course (not in the OB area: run add_ob.py first, so roofs are left out), within 60 m
         of a hole line, 8 to 1500 m2, compact, off cart paths and greens. For courses whose bunkers are
-        white in the imagery; check the result by eye.
+        white in the imagery; check the result by eye. --sand V,S,LIFT sets the thresholds (default
+        190,50,10; beige sand needs lower brightness and a higher saturation, e.g. 175,75,12).
 
-Usage: fill_from_imagery.py course.json m19.png out.json [--fairways missing|1,2,5] [--tees] [--bunkers] [--paths export.json]
+Usage: fill_from_imagery.py course.json m19.png out.json [--fairways missing|1,2,5] [--tees] [--bunkers [--sand V,S,LIFT]] [--paths export.json]
 """
 import json, math, sys, cv2, numpy as np
 from shapely.geometry import LineString, Polygon
@@ -105,7 +106,8 @@ if '--tees' in args:
 if '--bunkers' in args:
     hsv = cv2.cvtColor(im, cv2.COLOR_BGR2HSV); Sat, V = hsv[..., 1].astype(np.float32), hsv[..., 2].astype(np.float32)
     lift = V - cv2.blur(V, (61, 61))
-    sand = ((V > 190) & (Sat < 50) & (lift > 10)).astype(np.uint8)
+    bv, bs, bl = (float(x) for x in args[args.index('--sand') + 1].split(',')) if '--sand' in args else (190, 50, 10)
+    sand = ((V > bv) & (Sat < bs) & (lift > bl)).astype(np.uint8)
     disk2 = lambda r: cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * r + 1, 2 * r + 1))
     sand = cv2.morphologyEx(sand, cv2.MORPH_OPEN, disk2(max(1, int(0.8 / M))))
     # OB features are a big box with the course cut out: fill the course holes back in
