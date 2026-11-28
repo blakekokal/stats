@@ -1,0 +1,18 @@
+{
+  "id": "oldbrickyard",
+  "name": "Old Brickyard Golf Course",
+  "location": "Ferris, TX",
+  "par": [4, 5, 4, 3, 5, 3, 5, 3, 4, 5, 4, 4, 3, 4, 3, 4, 4, 4],
+  "hcp": [9, 11, 17, 13, 1, 15, 5, 3, 7, 2, 8, 6, 16, 14, 18, 4, 12, 10],
+  "_comment_tees": "Scorecard from GolfPass (22899); its pars match OpenStreetMap's hole tags (par 71). Its tee table rates other lengths than the card's tees, so no ratings are given.",
+  "_comment_drop": "Polygons containing these points are not part of the course: four OSM bunkers on grass (two of them redrawn from the imagery a few metres away).",
+  "drop": [[32.543097, -96.660735, "bunker"], [32.543659, -96.66153, "bunker"], [32.540256, -96.664232, "bunker"], [32.548649, -96.663843, "bunker"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (fitted to the greens: only six bunkers); every point is moved by it.",
+  "shift": {"east": -3.0, "north": -1.3},
+  "tees": [
+    {"name": "Gold", "rating": null, "slope": null, "yards": [368, 501, 359, 172, 562, 184, 468, 207, 332, 553, 348, 419, 177, 364, 136, 429, 348, 399]},
+    {"name": "Blue", "rating": null, "slope": null, "yards": [339, 455, 335, 150, 542, 166, 468, 167, 310, 530, 324, 399, 148, 330, 124, 396, 330, 381]},
+    {"name": "White", "rating": null, "slope": null, "yards": [339, 431, 335, 150, 500, 142, 450, 138, 310, 375, 324, 305, 148, 330, 124, 396, 330, 325]},
+    {"name": "Red", "rating": null, "slope": null, "yards": [249, 321, 220, 128, 454, 142, 383, 138, 243, 375, 236, 305, 136, 227, 83, 290, 241, 307]}
+  ]
+}
