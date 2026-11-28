@@ -139,6 +139,7 @@ export const COURSES = [
   { id: 'miravista', name: 'Mira Vista Country Club', file: 'data/miravista.json' },
   { id: 'maridoe', name: 'Maridoe Golf Club', file: 'data/maridoe.json' },
   { id: 'splitrail', name: 'Split Rail Golf Club', file: 'data/splitrail.json' },
+  { id: 'oldbrickyard', name: 'Old Brickyard Golf Course', file: 'data/oldbrickyard.json' },
   { id: 'isabella-nina', name: 'Isabella Golf Course – Nina', file: 'data/isabella-nina.json', nines: 'isabella' },
   { id: 'isabella-pinta', name: 'Isabella Golf Course – Pinta', file: 'data/isabella-pinta.json', nines: 'isabella' },
   { id: 'isabella-santamaria', name: 'Isabella Golf Course – Santa Maria', file: 'data/isabella-santamaria.json', nines: 'isabella' },

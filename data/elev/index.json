@@ -1318,5 +1318,20 @@
    917
   ],
   "source": "USGS 3DEP"
+ },
+ "oldbrickyard": {
+  "bounds": [
+   -96.666736,
+   32.537416,
+   -96.658154,
+   32.551327
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   398,
+   513
+  ],
+  "source": "USGS 3DEP"
  }
 }
