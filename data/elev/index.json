@@ -1273,5 +1273,20 @@
    649
   ],
   "source": "USGS 3DEP"
+ },
+ "miravista": {
+  "bounds": [
+   -97.44486,
+   32.648055,
+   -97.43082,
+   32.668109
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   604,
+   780
+  ],
+  "source": "USGS 3DEP"
  }
 }

@@ -63,7 +63,9 @@ for a in args:
     else:
         m = grow(seed0, tol)
     m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15)))
-    cs, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE); c = max(cs, key=cv2.contourArea)
+    cs, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+    if not cs: print(f'green at {lat},{lng}: nothing found'); continue
+    c = max(cs, key=cv2.contourArea)
     if hull: c = cv2.convexHull(c)
     c = cv2.approxPolyDP(c, 0.4 / mpp, True).reshape(-1, 2)
     ring = [ll(x - R + p[0], y - R + p[1]) for p in c]; ring.append(ring[0])
