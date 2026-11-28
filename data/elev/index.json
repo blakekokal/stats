@@ -1303,5 +1303,20 @@
    566
   ],
   "source": "USGS 3DEP"
+ },
+ "splitrail": {
+  "bounds": [
+   -97.653949,
+   32.691231,
+   -97.631963,
+   32.705577
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   783,
+   917
+  ],
+  "source": "USGS 3DEP"
  }
 }

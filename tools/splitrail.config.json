@@ -1,0 +1,21 @@
+{
+  "id": "splitrail",
+  "name": "Split Rail Golf Club",
+  "location": "Aledo, TX",
+  "par": [5, 4, 4, 3, 4, 5, 4, 3, 4, 4, 3, 4, 4, 5, 4, 3, 4, 5],
+  "hcp": [11, 7, 13, 15, 1, 9, 5, 17, 3, 14, 18, 6, 10, 4, 2, 16, 8, 12],
+  "_comment_tees": "Scorecard from GolfPass (22607; formerly Split Rail Links & Golf Club); its pars match OpenStreetMap's hole tags (par 72). Its tee table swaps the Black and Gold names: ratings matched by total yards. Red's is the women's.",
+  "_comment_drop": "Polygons containing these points are not part of the course: one OSM bunker on grass.",
+  "drop": [[32.699334, -97.644677, "bunker"]],
+  "_comment_retype": "OSM tags #6's green as a tee.",
+  "retype": [[32.69889, -97.63932, "tee", "green"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (bunker and green fits agree); every point is moved by it.",
+  "shift": {"east": -1.3, "north": 0.2},
+  "tees": [
+    {"name": "Black", "rating": 76.2, "slope": 138, "yards": [566, 444, 437, 185, 455, 560, 457, 170, 473, 422, 174, 460, 366, 611, 465, 190, 376, 542]},
+    {"name": "Gold", "rating": 73.8, "slope": 136, "yards": [552, 420, 424, 165, 440, 544, 436, 148, 426, 403, 164, 432, 351, 588, 415, 170, 360, 528]},
+    {"name": "Blue", "rating": 71.6, "slope": 131, "yards": [540, 405, 403, 144, 424, 520, 415, 134, 392, 374, 152, 397, 332, 570, 404, 157, 342, 508]},
+    {"name": "White", "rating": 69.4, "slope": 130, "yards": [512, 385, 365, 120, 402, 500, 398, 112, 356, 344, 128, 367, 305, 545, 385, 147, 326, 485]},
+    {"name": "Red", "rating": 72.4, "slope": 129, "yards": [451, 331, 340, 110, 375, 458, 374, 90, 273, 275, 92, 340, 237, 512, 325, 128, 256, 425]}
+  ]
+}
