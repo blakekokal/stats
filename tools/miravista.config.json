@@ -1,0 +1,21 @@
+{
+  "id": "miravista",
+  "name": "Mira Vista Country Club",
+  "location": "Fort Worth, TX",
+  "par": [4, 4, 3, 4, 4, 5, 3, 4, 4, 4, 5, 3, 4, 4, 3, 4, 5, 4],
+  "hcp": [7, 3, 13, 11, 17, 1, 15, 9, 5, 4, 8, 14, 2, 10, 12, 18, 16, 6],
+  "_comment_tees": "Scorecard from GolfPass (2918); OpenStreetMap's hole lines have no par tags, but their lengths match the card's Thistle tees (par 71). Named tees kept plus I/II, the one combination its tee table rates (Gold, 6556 yards); the others have no rating at their lengths.",
+  "_comment_drop": "Polygons containing these points are not part of the course: nothing here; trim_far.py drops the practice green.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 0},
+  "tees": [
+    {"name": "Thistle", "rating": null, "slope": null, "yards": [441, 461, 217, 436, 449, 643, 167, 395, 420, 478, 555, 183, 469, 408, 234, 325, 548, 364]},
+    {"name": "I", "rating": null, "slope": null, "yards": [424, 445, 185, 420, 409, 617, 139, 377, 404, 437, 544, 162, 443, 378, 223, 298, 521, 347]},
+    {"name": "I/II", "rating": 72.5, "slope": 137, "yards": [403, 424, 167, 395, 409, 578, 139, 377, 404, 437, 511, 162, 427, 378, 202, 298, 496, 347]},
+    {"name": "II", "rating": null, "slope": null, "yards": [403, 424, 167, 395, 391, 578, 133, 359, 380, 419, 511, 155, 427, 360, 202, 280, 496, 332]},
+    {"name": "III", "rating": null, "slope": null, "yards": [360, 375, 150, 352, 347, 521, 115, 318, 340, 371, 458, 145, 378, 320, 169, 259, 457, 300]},
+    {"name": "IV", "rating": null, "slope": null, "yards": [317, 330, 135, 306, 318, 454, 98, 266, 305, 326, 403, 120, 337, 281, 155, 225, 422, 275]},
+    {"name": "V", "rating": null, "slope": null, "yards": [281, 288, 113, 256, 266, 396, 84, 233, 265, 280, 355, 104, 290, 235, 125, 174, 339, 236]}
+  ]
+}
