@@ -152,7 +152,8 @@ are in a second boundary way). Heritage Ranch (Fairview; all 18 holes, in three 
 tee boxes and bunkers from the imagery; `fill_from_imagery.py --bunkers` finds white sand inside the course). Thorntree (the same, from
 dormant winter imagery: greens good, fairways approximate, many beige bunkers missing; a yardage book would help;
 `green_from_seed.py --auto/--hull/--open` for dull greens). Waterview (Rowlett; no hole lines in OSM:
-routed in `osm_to_geom.py` from its numbered greens and tee boxes; fairways and bunkers fixed from the imagery).
+routed in `osm_to_geom.py` from its numbered greens and tee boxes; fairways and bunkers fixed from the imagery). The Timber Links
+at Denton (9 holes; routed the same way; doglegs drawn straight).
 
 Skipped for now: Meadowbrook (Fort Worth; GolfPass's card is a different layout from OSM's holes),
 Lost Creek (Aledo; GolfPass says it closed). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
@@ -171,4 +172,3 @@ Mapped with gaps (better from a book, or fill the gaps from the imagery):
   renovated since?): greens and bunkers need redrawing; GolfPass 2918 has the card (par 71)
 - Dallas Athletic Club Gold: OSM's #16-#18 don't match GolfPass's card (see `tools/dac/README.md`);
   needs the club's current card (Blue is live)
-- shapes but no hole lines: Timberlinks (route as Waterview if its greens are numbered)
