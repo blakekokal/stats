@@ -1243,5 +1243,20 @@
    647
   ],
   "source": "USGS 3DEP"
+ },
+ "waterview": {
+  "bounds": [
+   -96.544406,
+   32.941046,
+   -96.522342,
+   32.961181
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   443,
+   579
+  ],
+  "source": "USGS 3DEP"
  }
 }
