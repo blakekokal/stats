@@ -1213,5 +1213,20 @@
    754
   ],
   "source": "USGS 3DEP"
+ },
+ "mansfield": {
+  "bounds": [
+   -97.083862,
+   32.549974,
+   -97.068655,
+   32.571914
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   527,
+   603
+  ],
+  "source": "USGS 3DEP"
  }
 }
