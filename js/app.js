@@ -144,6 +144,7 @@ export const COURSES = [
   { id: 'canyoncreek', name: 'Canyon Creek Country Club', file: 'data/canyoncreek.json' },
   { id: 'stewartpeninsula', name: 'Stewart Peninsula Golf Course', file: 'data/stewartpeninsula.json' },
   { id: 'gentlecreek', name: 'Gentle Creek Country Club', file: 'data/gentlecreek.json' },
+  { id: 'ridglea', name: 'Ridglea Country Club – South', file: 'data/ridglea.json' },
   { id: 'isabella-nina', name: 'Isabella Golf Course – Nina', file: 'data/isabella-nina.json', nines: 'isabella' },
   { id: 'isabella-pinta', name: 'Isabella Golf Course – Pinta', file: 'data/isabella-pinta.json', nines: 'isabella' },
   { id: 'isabella-santamaria', name: 'Isabella Golf Course – Santa Maria', file: 'data/isabella-santamaria.json', nines: 'isabella' },

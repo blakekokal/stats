@@ -1,0 +1,20 @@
+{
+  "id": "ridglea",
+  "name": "Ridglea Country Club – South",
+  "location": "Fort Worth, TX",
+  "par": [4, 4, 3, 5, 4, 4, 3, 5, 4, 4, 4, 4, 3, 4, 4, 4, 4, 5],
+  "hcp": [13, 1, 15, 7, 3, 5, 11, 17, 9, 2, 12, 4, 10, 16, 6, 8, 14, 18],
+  "_comment_tees": "Scorecard from GolfPass (2926, Ridglea Country Club - South Course; OpenStreetMap calls it the Championship course); its pars match OpenStreetMap's hole tags (par 72). Ratings matched by total yards (the tee table calls Black Gold); Blue's length differs from the table's, so none; White's is the women's.",
+  "_comment_drop": "Polygons containing these points are not part of the course.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 0},
+  "tees": [
+    {"name": "Black", "rating": 74.6, "slope": 139, "yards": [405, 450, 175, 562, 430, 401, 205, 545, 415, 440, 415, 414, 172, 338, 387, 425, 411, 535]},
+    {"name": "Blue", "rating": null, "slope": null, "yards": [389, 421, 162, 555, 406, 391, 185, 525, 396, 429, 395, 404, 162, 318, 376, 408, 390, 501]},
+    {"name": "Blue/White", "rating": null, "slope": null, "yards": [389, 390, 162, 535, 385, 391, 164, 525, 370, 415, 395, 380, 142, 318, 364, 408, 390, 501]},
+    {"name": "White", "rating": 71.5, "slope": 132, "yards": [370, 390, 150, 535, 385, 380, 164, 505, 370, 415, 380, 380, 142, 298, 364, 388, 368, 480]},
+    {"name": "White/Green", "rating": null, "slope": null, "yards": [370, 335, 150, 468, 364, 331, 159, 505, 370, 355, 380, 380, 142, 298, 335, 355, 316, 480]},
+    {"name": "Green", "rating": null, "slope": null, "yards": [328, 335, 135, 468, 364, 331, 159, 456, 316, 355, 321, 199, 142, 267, 335, 355, 316, 422]}
+  ]
+}
