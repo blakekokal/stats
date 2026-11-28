@@ -1,0 +1,21 @@
+{
+  "id": "maridoe",
+  "name": "Maridoe Golf Club",
+  "location": "Carrollton, TX",
+  "par": [4, 5, 3, 4, 4, 4, 5, 3, 4, 4, 3, 4, 5, 3, 4, 4, 5, 4],
+  "hcp": [8, 4, 12, 2, 14, 18, 10, 16, 6, 5, 15, 1, 11, 17, 9, 7, 13, 3],
+  "_comment_tees": "Scorecard from GolfPass (2813), par 72; OpenStreetMap's holes renumbered to it in osm_to_geom.py. Its tee table (Plate, One-Four) rates lengths that match none of the card's seven yardage rows, so no ratings are given.",
+  "_comment_drop": "Polygons containing these points are not part of the course: one OSM bunker on grass and two drawn in a pond.",
+  "drop": [[32.965856, -96.877057, "bunker"], [32.96283, -96.86828, "bunker"], [32.963039, -96.868564, "bunker"]],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (fitted to the greens: the winter sand is too dull for the bunker fit); every point is moved by it.",
+  "shift": {"east": -1.8, "north": 0.3},
+  "tees": [
+    {"name": "Red", "rating": null, "slope": null, "yards": [443, 655, 211, 434, 380, 337, 577, 157, 450, 447, 190, 455, 577, 158, 425, 425, 583, 484]},
+    {"name": "Hybrid I", "rating": null, "slope": null, "yards": [421, 619, 195, 434, 333, 337, 577, 115, 450, 447, 190, 429, 577, 142, 425, 388, 555, 484]},
+    {"name": "Yellow", "rating": null, "slope": null, "yards": [421, 619, 195, 405, 333, 282, 550, 115, 401, 412, 165, 429, 561, 142, 400, 388, 555, 457]},
+    {"name": "Hybrid II", "rating": null, "slope": null, "yards": [375, 529, 195, 405, 333, 282, 499, 115, 401, 404, 165, 376, 519, 142, 372, 365, 555, 417]},
+    {"name": "White", "rating": null, "slope": null, "yards": [375, 529, 152, 334, 273, 250, 499, 105, 336, 404, 141, 376, 519, 134, 372, 365, 518, 417]},
+    {"name": "Hybrid III", "rating": null, "slope": null, "yards": [333, 462, 152, 334, 273, 250, 424, 105, 298, 304, 141, 296, 477, 134, 372, 365, 447, 404]},
+    {"name": "Black", "rating": null, "slope": null, "yards": [333, 462, 147, 285, 209, 197, 424, 95, 298, 304, 112, 296, 477, 106, 287, 298, 447, 404]}
+  ]
+}

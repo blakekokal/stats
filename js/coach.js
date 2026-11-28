@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.65.0', ['New course: Maridoe Golf Club (Carrollton)']],
   ['1.64.0', ['New course: Mira Vista Country Club (Fort Worth)']],
   ['1.63.0', ['New course: The Timber Links at Denton (9 holes, Denton)']],
   ['1.62.0', ['New course: Waterview Golf Club (Rowlett)']],
