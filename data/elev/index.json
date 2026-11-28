@@ -1408,5 +1408,20 @@
    658
   ],
   "source": "USGS 3DEP"
+ },
+ "friscolakes": {
+  "bounds": [
+   -96.919848,
+   33.129996,
+   -96.889626,
+   33.145715
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   521,
+   604
+  ],
+  "source": "USGS 3DEP"
  }
 }

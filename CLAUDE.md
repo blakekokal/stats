@@ -161,7 +161,7 @@ only six OSM bunkers: shift fitted to the greens). Rockwood Park (Fort Worth; #1
 widened in `osm_to_geom.py`). Canyon Creek (Richardson; OSM predates the 2023 renovation:
 bunkers swapped for the imagery's; card is the new par 72). Woodhaven (Fort Worth) is closed (2022): not built.
 Stewart Peninsula (The Colony;
-9 holes; greens drawn generously). Gentle Creek (Prosper). Ridglea South (Fort Worth; imagery mid-rebuild, OSM matches the new
+9 holes; greens drawn generously). Gentle Creek (Prosper). Frisco Lakes (Frisco). Ridglea South (Fort Worth; imagery mid-rebuild, OSM matches the new
 shapes). Bent Tree (Dallas): imagery mid-renovation (bare fairways, drained lakes): not built until it's updated. Shady Valley (Arlington): OSM's back nine is par 35 in an order that doesn't fit GolfPass's par-71 card; needs the club's card.
 
 Skipped for now: Meadowbrook (Fort Worth; rebuilt and rerouted in 2023-25: OSM has the old holes, without #6-#7),
