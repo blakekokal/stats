@@ -1,0 +1,17 @@
+{
+  "id": "stewartpeninsula",
+  "name": "Stewart Peninsula Golf Course",
+  "location": "The Colony, TX",
+  "par": [4, 3, 4, 4, 3, 3, 4, 3, 5],
+  "hcp": [11, 15, 9, 1, 7, 17, 3, 13, 5],
+  "_comment_tees": "Scorecard from GolfPass (22176), par 33; OpenStreetMap's hole lines have no par tags. 9-hole ratings: Back's (65.9) is for 18 holes, so none is given; Front's is the women's.",
+  "_comment_drop": "Polygons containing these points are not part of the course.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 0},
+  "tees": [
+    {"name": "Back", "rating": null, "slope": null, "yards": [315, 156, 371, 432, 212, 188, 368, 155, 479]},
+    {"name": "Middle", "rating": 31.5, "slope": 111, "yards": [294, 127, 323, 359, 181, 142, 339, 132, 463]},
+    {"name": "Front", "rating": 30.3, "slope": 100, "yards": [231, 96, 290, 314, 132, 89, 294, 115, 421]}
+  ]
+}
