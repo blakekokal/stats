@@ -1,0 +1,286 @@
+{
+ "id": "waterview",
+ "name": "Waterview Golf Club",
+ "location": "Rowlett, TX",
+ "par": [
+  4,
+  3,
+  5,
+  4,
+  4,
+  5,
+  4,
+  3,
+  4,
+  4,
+  5,
+  3,
+  4,
+  4,
+  5,
+  4,
+  3,
+  4
+ ],
+ "hcp": [
+  3,
+  11,
+  15,
+  1,
+  17,
+  13,
+  9,
+  7,
+  5,
+  12,
+  6,
+  16,
+  2,
+  18,
+  10,
+  4,
+  14,
+  8
+ ],
+ "_comment_tees": "Scorecard from GolfPass (22920). Hole lines routed in osm_to_geom.py from OSM's numbered greens and its tee boxes (each within 3% of the card's Black yards). Men's ratings, each for its own length.",
+ "_comment_drop": "Polygons containing these points are not part of the course: 21 OSM bunkers on grass, with no sand in the imagery (trim_far.py drops the practice greens and range tees).",
+ "drop": [
+  [
+   32.951257,
+   -96.538398,
+   "bunker"
+  ],
+  [
+   32.95176,
+   -96.537811,
+   "bunker"
+  ],
+  [
+   32.956194,
+   -96.537306,
+   "bunker"
+  ],
+  [
+   32.956418,
+   -96.53782,
+   "bunker"
+  ],
+  [
+   32.958558,
+   -96.536689,
+   "bunker"
+  ],
+  [
+   32.958803,
+   -96.534035,
+   "bunker"
+  ],
+  [
+   32.956634,
+   -96.531598,
+   "bunker"
+  ],
+  [
+   32.95138,
+   -96.535887,
+   "bunker"
+  ],
+  [
+   32.951334,
+   -96.536121,
+   "bunker"
+  ],
+  [
+   32.950276,
+   -96.533738,
+   "bunker"
+  ],
+  [
+   32.950352,
+   -96.533805,
+   "bunker"
+  ],
+  [
+   32.950587,
+   -96.533863,
+   "bunker"
+  ],
+  [
+   32.950842,
+   -96.533541,
+   "bunker"
+  ],
+  [
+   32.951947,
+   -96.523926,
+   "bunker"
+  ],
+  [
+   32.952419,
+   -96.526015,
+   "bunker"
+  ],
+  [
+   32.952167,
+   -96.528753,
+   "bunker"
+  ],
+  [
+   32.951899,
+   -96.529098,
+   "bunker"
+  ],
+  [
+   32.951667,
+   -96.530117,
+   "bunker"
+  ],
+  [
+   32.948379,
+   -96.531745,
+   "bunker"
+  ],
+  [
+   32.948662,
+   -96.532044,
+   "bunker"
+  ],
+  [
+   32.943649,
+   -96.532408,
+   "bunker"
+  ]
+ ],
+ "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+ "shift": {
+  "east": 0,
+  "north": 0
+ },
+ "tees": [
+  {
+   "name": "Black",
+   "rating": 74.5,
+   "slope": 133,
+   "yards": [
+    466,
+    162,
+    532,
+    442,
+    313,
+    564,
+    383,
+    235,
+    446,
+    375,
+    602,
+    179,
+    436,
+    353,
+    556,
+    480,
+    206,
+    461
+   ]
+  },
+  {
+   "name": "Blue",
+   "rating": 72.3,
+   "slope": 130,
+   "yards": [
+    447,
+    152,
+    508,
+    417,
+    287,
+    536,
+    364,
+    213,
+    423,
+    338,
+    576,
+    162,
+    408,
+    331,
+    534,
+    453,
+    182,
+    431
+   ]
+  },
+  {
+   "name": "White",
+   "rating": 71.3,
+   "slope": 126,
+   "yards": [
+    417,
+    147,
+    486,
+    393,
+    248,
+    510,
+    345,
+    189,
+    404,
+    314,
+    555,
+    147,
+    380,
+    307,
+    509,
+    433,
+    163,
+    408
+   ]
+  },
+  {
+   "name": "Gold",
+   "rating": 68.5,
+   "slope": 115,
+   "yards": [
+    387,
+    122,
+    463,
+    366,
+    220,
+    483,
+    326,
+    161,
+    381,
+    277,
+    525,
+    142,
+    344,
+    285,
+    486,
+    410,
+    141,
+    387
+   ]
+  },
+  {
+   "name": "Green",
+   "rating": 66.6,
+   "slope": 109,
+   "yards": [
+    350,
+    112,
+    435,
+    338,
+    199,
+    462,
+    306,
+    142,
+    359,
+    260,
+    493,
+    136,
+    317,
+    259,
+    456,
+    374,
+    121,
+    353
+   ]
+  }
+ ]
+}
