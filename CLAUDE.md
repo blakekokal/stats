@@ -149,7 +149,9 @@ three bunkers from the imagery). Timarron (not missing a hole: OSM tags #10 ref=
 the card's par 5 #1 used). Ridgeview Ranch (#18's hole line added in `osm_to_geom.py` from its mapped
 tee boxes, fairway and green; 22 old bunkers on grass dropped). Stonebridge Ranch Dye (not missing a hole: #3 and #4
 are in a second boundary way). Heritage Ranch (Fairview; all 18 holes, in three boundary ways). Mansfield National (OSM had only hole lines: greens, fairways,
-tee boxes and bunkers from the imagery; `fill_from_imagery.py --bunkers` finds white sand inside the course).
+tee boxes and bunkers from the imagery; `fill_from_imagery.py --bunkers` finds white sand inside the course). Thorntree (the same, from
+dormant winter imagery: greens good, fairways approximate, many beige bunkers missing; a yardage book would help;
+`green_from_seed.py --auto/--hull/--open` for dull greens).
 
 Skipped for now: Meadowbrook (Fort Worth; GolfPass's card is a different layout from OSM's holes),
 Lost Creek (Aledo; GolfPass says it closed). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
@@ -168,5 +170,4 @@ Mapped with gaps (better from a book, or fill the gaps from the imagery):
   renovated since?): greens and bunkers need redrawing; GolfPass 2918 has the card (par 71)
 - Dallas Athletic Club Gold: OSM's #16-#18 don't match GolfPass's card (see `tools/dac/README.md`);
   needs the club's current card (Blue is live)
-- hole lines but little else: Thorntree (as Mansfield National)
 - shapes but no hole lines: Waterview, Timberlinks

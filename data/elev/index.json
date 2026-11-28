@@ -1228,5 +1228,20 @@
    603
   ],
   "source": "USGS 3DEP"
+ },
+ "thorntree": {
+  "bounds": [
+   -96.890098,
+   32.61769,
+   -96.873105,
+   32.626654
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   556,
+   647
+  ],
+  "source": "USGS 3DEP"
  }
 }

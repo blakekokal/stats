@@ -133,6 +133,7 @@ export const COURSES = [
   { id: 'stonebridge', name: 'Stonebridge Ranch Country Club – Dye', file: 'data/stonebridge.json' },
   { id: 'heritageranch', name: 'Heritage Ranch Golf & Country Club', file: 'data/heritageranch.json' },
   { id: 'mansfield', name: 'Mansfield National Golf Club', file: 'data/mansfield.json' },
+  { id: 'thorntree', name: 'Thorntree Golf Club', file: 'data/thorntree.json' },
   { id: 'isabella-nina', name: 'Isabella Golf Course – Nina', file: 'data/isabella-nina.json', nines: 'isabella' },
   { id: 'isabella-pinta', name: 'Isabella Golf Course – Pinta', file: 'data/isabella-pinta.json', nines: 'isabella' },
   { id: 'isabella-santamaria', name: 'Isabella Golf Course – Santa Maria', file: 'data/isabella-santamaria.json', nines: 'isabella' },

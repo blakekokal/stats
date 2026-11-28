@@ -5,12 +5,18 @@ connected to it, smoothed; kept 2 m inside the fairway (collar) round the point,
 
 A hole whose line ends within 15 m of the new green's middle gets its pin there.
 
-Usage: green_from_seed.py course.json m19.png out.json lat,lng [lat,lng ...] [--tol 9]
+--open M cuts leaks narrower than about 2M metres before the seed's piece is taken; --hull replaces the
+outline with its convex hull (greens are mostly convex: for dormant winter greens that trace raggedly).
+--auto re-seeds from the first pass's colour and keeps the largest outline, over tolerances 6-20, that is still
+compact (its area at least 80% of its hull's) and under 1100 m2: for greens only a little darker than their collar.
+
+Usage: green_from_seed.py course.json m19.png out.json lat,lng [lat,lng ...] [--tol 9] [--open 2] [--hull] [--auto]
 """
 import cv2, json, math, sys, numpy as np
-args = [a for a in sys.argv[4:] if not a.startswith('--')]
-tol = float(sys.argv[sys.argv.index('--tol') + 1]) if '--tol' in sys.argv else 9
-if '--tol' in sys.argv: args = [a for a in args if a != sys.argv[sys.argv.index('--tol') + 1]]
+opt = lambda k, dflt: float(sys.argv[sys.argv.index(k) + 1]) if k in sys.argv else dflt
+tol, open_m, hull, auto = opt('--tol', 9), opt('--open', 0), '--hull' in sys.argv, '--auto' in sys.argv
+vals = {sys.argv[sys.argv.index(k) + 1] for k in ('--tol', '--open') if k in sys.argv}
+args = [a for a in sys.argv[4:] if not a.startswith('--') and a not in vals]
 d = json.load(open(sys.argv[1])); mos = sys.argv[2]
 im = cv2.imread(mos); z, X0, Y0 = map(int, open(mos + '.meta').read().split()); N = 256 * 2 ** z
 mpp = 156543.03 * math.cos(math.radians(d['holes'][0]['pin'][0])) / 2 ** z
@@ -25,18 +31,40 @@ for a in args:
     lat, lng = map(float, a.split(',')); x, y = map(int, px(lat, lng)); R = int(30 / mpp); r = max(2, int(2 / mpp))
     win = lab[y - R:y + R, x - R:x + R]
     yy, xx = np.ogrid[-R:R, -R:R]; disc = xx * xx + yy * yy <= r * r
-    seed = np.median(win[disc], axis=0)
-    m = (np.linalg.norm(win - seed, axis=2) < tol).astype(np.uint8) * (xx * xx + yy * yy <= R * R)
+    seed0 = np.median(win[disc], axis=0)
+    fwm = None
     for f in d['features']:  # stay inside the fairway (collar) the point is in
         if f['t'] != 'fairway': continue
         P = np.array([px(*q) for q in f['p'][0]]) - [x - R, y - R]
         if cv2.pointPolygonTest(P.astype(np.float32), (float(R), float(R)), False) > 0:
-            fw = np.zeros_like(m); cv2.fillPoly(fw, [np.round(P).astype(np.int32)], 1)
-            m = m * cv2.erode(fw, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * int(2 / mpp) + 1,) * 2))
-    m = cv2.morphologyEx(m.astype(np.uint8), cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
-    n, lbl = cv2.connectedComponents(m); m = (lbl == lbl[R, R]).astype(np.uint8)
+            fwm = np.zeros((2 * R, 2 * R), np.uint8); cv2.fillPoly(fwm, [np.round(P).astype(np.int32)], 1)
+            fwm = cv2.erode(fwm, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * int(2 / mpp) + 1,) * 2))
+    def grow(seed, tol):
+        m = (np.linalg.norm(win - seed, axis=2) < tol).astype(np.uint8) * (xx * xx + yy * yy <= R * R)
+        if fwm is not None: m = m * fwm
+        m = cv2.morphologyEx(m.astype(np.uint8), cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5)))
+        if open_m: m = cv2.morphologyEx(m, cv2.MORPH_OPEN, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2 * int(open_m / mpp) + 1,) * 2))
+        n, lbl = cv2.connectedComponents(m)
+        if lbl[R, R] == 0:  # the seed pixel itself fell out: take the piece nearest it
+            ys, xs = np.nonzero(lbl)
+            if not len(ys): return m
+            k = np.argmin((ys - R) ** 2 + (xs - R) ** 2); return (lbl == lbl[ys[k], xs[k]]).astype(np.uint8)
+        return (lbl == lbl[R, R]).astype(np.uint8)
+    if auto:  # the largest compact outline over a range of tolerances, re-seeded from the first pass's colour
+        m1 = grow(seed0, 8); seed = np.median(win[m1 > 0], axis=0) if m1.sum() > 50 else seed0
+        m = m1
+        for t in range(6, 21):
+            g = grow(seed, t); a_ = g.sum() * mpp * mpp
+            cs_, _ = cv2.findContours(g, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+            if not cs_ or a_ > 1100: break
+            sol = g.sum() / max(1, cv2.contourArea(cv2.convexHull(max(cs_, key=cv2.contourArea))))
+            if sol < 0.8: break
+            m = g
+    else:
+        m = grow(seed0, tol)
     m = cv2.morphologyEx(m, cv2.MORPH_CLOSE, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15)))
     cs, _ = cv2.findContours(m, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE); c = max(cs, key=cv2.contourArea)
+    if hull: c = cv2.convexHull(c)
     c = cv2.approxPolyDP(c, 0.4 / mpp, True).reshape(-1, 2)
     ring = [ll(x - R + p[0], y - R + p[1]) for p in c]; ring.append(ring[0])
     d['features'].append({'t': 'green', 'p': [ring]})

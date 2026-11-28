@@ -1,0 +1,19 @@
+{
+  "id": "thorntree",
+  "name": "Thorntree Golf Club",
+  "location": "DeSoto, TX",
+  "par": [4, 3, 4, 5, 4, 4, 3, 4, 5, 5, 4, 4, 4, 3, 5, 3, 4, 4],
+  "hcp": [16, 18, 1, 7, 2, 11, 14, 4, 8, 15, 5, 13, 10, 17, 9, 12, 6, 3],
+  "_comment_tees": "Scorecard from GolfPass (14585, Thorntree Country Club); OpenStreetMap's hole lines have no par tags; their lengths fit the card's pars (par 72; some lines start at a middle tee). Ratings by total yards: Championship, Tournament = Members (6454), White = Regular (5764), men's; Ladies = Forward (W) (5241, the women's); Mens has none.",
+  "_comment_drop": "Polygons containing these points are not part of the course.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 0},
+  "tees": [
+    {"name": "Championship", "rating": 74.9, "slope": 144, "yards": [375, 115, 476, 510, 435, 375, 170, 460, 566, 667, 419, 370, 338, 225, 525, 180, 459, 377]},
+    {"name": "Tournament", "rating": 71.3, "slope": 137, "yards": [355, 108, 443, 486, 414, 350, 160, 384, 548, 603, 382, 338, 319, 152, 496, 160, 400, 356]},
+    {"name": "Mens", "rating": null, "slope": null, "yards": [355, 108, 376, 486, 337, 350, 160, 384, 462, 522, 364, 338, 319, 152, 496, 134, 365, 356]},
+    {"name": "White", "rating": 68.1, "slope": 128, "yards": [324, 81, 376, 472, 337, 326, 139, 336, 462, 522, 364, 312, 297, 125, 472, 134, 365, 320]},
+    {"name": "Ladies", "rating": 71.1, "slope": 127, "yards": [324, 81, 285, 472, 337, 320, 115, 336, 385, 430, 287, 312, 297, 125, 394, 105, 290, 320]}
+  ]
+}

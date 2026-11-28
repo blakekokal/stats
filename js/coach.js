@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.61.0', ['New course: Thorntree Golf Club (DeSoto)']],
   ['1.60.0', ['New course: Mansfield National Golf Club (Mansfield)']],
   ['1.59.0', ['New course: Pecan Valley Golf Course – River (Fort Worth)']],
   ['1.58.0', ['New course: Heritage Ranch Golf & Country Club (Fairview)']],
