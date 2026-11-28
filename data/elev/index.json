@@ -1423,5 +1423,20 @@
    604
   ],
   "source": "USGS 3DEP"
+ },
+ "lascolinas": {
+  "bounds": [
+   -96.951525,
+   32.850791,
+   -96.929289,
+   32.86362
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   415,
+   551
+  ],
+  "source": "USGS 3DEP"
  }
 }

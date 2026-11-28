@@ -681,6 +681,7 @@ export function renderLogin(view) {
 // ---------- what's new ----------
 
 const CHANGES = [
+  ['1.74.0', ['New course: Las Colinas Country Club (Irving)']],
   ['1.73.0', ['New course: Frisco Lakes Golf Club (Frisco)']],
   ['1.72.0', ['New course: Ridglea Country Club – South (Fort Worth)']],
   ['1.71.0', ['New course: Gentle Creek Country Club (Prosper)']],
