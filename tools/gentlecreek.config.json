@@ -1,0 +1,21 @@
+{
+  "id": "gentlecreek",
+  "name": "Gentle Creek Country Club",
+  "location": "Prosper, TX",
+  "par": [4, 5, 4, 4, 3, 5, 4, 4, 3, 4, 3, 4, 5, 4, 3, 4, 4, 5],
+  "hcp": [3, 11, 9, 1, 15, 17, 7, 5, 13, 6, 16, 10, 8, 2, 18, 14, 4, 12],
+  "_comment_tees": "Scorecard from GolfPass (25491, Gentle Creek Golf Club); its pars match OpenStreetMap's hole tags (par 72). Ratings matched by total yards: White's length differs from the tee table's, so none; Red's is the women's.",
+  "_comment_drop": "Polygons containing these points are not part of the course.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery (bunker fit); every point is moved by it.",
+  "shift": {"east": -0.2, "north": 1.5},
+  "tees": [
+    {"name": "Black", "rating": 74.9, "slope": 139, "yards": [407, 545, 409, 497, 172, 541, 425, 443, 186, 463, 215, 388, 570, 472, 168, 381, 474, 561]},
+    {"name": "Black/Blue", "rating": null, "slope": null, "yards": [383, 524, 409, 456, 172, 499, 425, 411, 186, 431, 215, 388, 538, 457, 168, 381, 446, 561]},
+    {"name": "Blue", "rating": 72.2, "slope": 134, "yards": [383, 524, 382, 456, 154, 499, 401, 411, 167, 431, 184, 361, 538, 457, 139, 349, 446, 531]},
+    {"name": "Blue/White", "rating": null, "slope": null, "yards": [352, 486, 382, 431, 154, 448, 401, 376, 167, 386, 184, 361, 512, 439, 139, 349, 425, 531]},
+    {"name": "White", "rating": null, "slope": null, "yards": [352, 486, 349, 431, 132, 448, 361, 376, 148, 386, 156, 329, 512, 439, 120, 310, 425, 460]},
+    {"name": "White/Red", "rating": null, "slope": null, "yards": [295, 375, 349, 318, 132, 372, 361, 283, 148, 347, 156, 329, 403, 336, 120, 310, 323, 460]},
+    {"name": "Red", "rating": 70.6, "slope": 123, "yards": [295, 375, 272, 318, 115, 372, 292, 283, 105, 347, 114, 272, 403, 336, 90, 255, 323, 436]}
+  ]
+}
