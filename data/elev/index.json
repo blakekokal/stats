@@ -1348,5 +1348,20 @@
    669
   ],
   "source": "USGS 3DEP"
+ },
+ "canyoncreek": {
+  "bounds": [
+   -96.741621,
+   32.981835,
+   -96.727652,
+   32.997924
+  ],
+  "minzoom": 16,
+  "maxzoom": 16,
+  "ft": [
+   598,
+   691
+  ],
+  "source": "USGS 3DEP"
  }
 }

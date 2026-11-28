@@ -1,0 +1,23 @@
+{
+  "id": "canyoncreek",
+  "name": "Canyon Creek Country Club",
+  "location": "Richardson, TX",
+  "par": [4, 3, 4, 4, 5, 3, 4, 5, 4, 4, 4, 4, 4, 3, 5, 4, 3, 5],
+  "hcp": [11, 3, 9, 15, 13, 5, 1, 17, 7, 8, 4, 16, 12, 14, 6, 2, 10, 18],
+  "_comment_tees": "Scorecard from GolfPass (3257): the card since the 2023 renovation (par 72, new back tees; OpenStreetMap's hole tags, mapped in 2022, have #8 and #18 as par 4s). The club lists I at 75.0/133; GolfPass's tee table is the old par-70 course, so the other tees have no rating.",
+  "_comment_drop": "Polygons containing these points are not part of the course.",
+  "drop": [],
+  "_comment_shift": "OSM outlines sit this many metres off the Esri imagery; every point is moved by it.",
+  "shift": {"east": 0, "north": 0},
+  "tees": [
+    {"name": "I", "rating": 75.0, "slope": 133, "yards": [410, 201, 406, 355, 602, 198, 432, 524, 403, 431, 431, 345, 354, 172, 557, 495, 228, 493]},
+    {"name": "I-II", "rating": null, "slope": null, "yards": [410, 188, 406, 355, 526, 175, 432, 524, 403, 431, 402, 345, 354, 172, 557, 417, 198, 493]},
+    {"name": "II", "rating": null, "slope": null, "yards": [391, 188, 390, 332, 526, 175, 396, 487, 383, 395, 402, 328, 323, 156, 540, 417, 198, 487]},
+    {"name": "II-III", "rating": null, "slope": null, "yards": [391, 175, 390, 332, 526, 164, 376, 487, 364, 395, 391, 328, 323, 156, 522, 382, 175, 487]},
+    {"name": "III", "rating": null, "slope": null, "yards": [371, 175, 378, 320, 509, 164, 376, 442, 364, 387, 391, 317, 311, 142, 522, 382, 175, 463]},
+    {"name": "III-IV", "rating": null, "slope": null, "yards": [371, 163, 334, 320, 509, 148, 326, 442, 323, 361, 378, 317, 277, 142, 487, 350, 142, 463]},
+    {"name": "IV", "rating": null, "slope": null, "yards": [321, 163, 334, 266, 433, 148, 326, 422, 323, 361, 378, 307, 277, 119, 487, 350, 142, 415]},
+    {"name": "IV-V", "rating": null, "slope": null, "yards": [274, 163, 279, 266, 433, 118, 326, 422, 295, 345, 305, 307, 277, 112, 450, 282, 123, 415]},
+    {"name": "V", "rating": null, "slope": null, "yards": [274, 101, 279, 262, 393, 118, 289, 343, 295, 345, 305, 228, 269, 112, 450, 282, 123, 355]}
+  ]
+}

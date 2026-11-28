@@ -158,7 +158,9 @@ renovation: all its bunkers swapped for 60 from the imagery, `fill_from_imagery.
 renumbered to GolfPass's card in `osm_to_geom.py`, where pars, lengths and green-to-tee walks all fit).
 Split Rail (Aledo; from the handoff's Texas survey; #6's green tagged as a tee: `retype`). Old Brickyard (Ferris;
 only six OSM bunkers: shift fitted to the greens). Rockwood Park (Fort Worth; #15-#16 run past OSM's boundary:
-widened in `osm_to_geom.py`).
+widened in `osm_to_geom.py`). Canyon Creek (Richardson; OSM predates the 2023 renovation:
+bunkers swapped for the imagery's; card is the new par 72). Woodhaven (Fort Worth) is closed (2022): not built.
+Shady Valley (Arlington): OSM's back nine is par 35 in an order that doesn't fit GolfPass's par-71 card; needs the club's card.
 
 Skipped for now: Meadowbrook (Fort Worth; rebuilt and rerouted in 2023-25: OSM has the old holes, without #6-#7),
 Lost Creek (Aledo; GolfPass says it closed). `tools/fit_shift.py` measures the shift (bunkers on sand, or greens).
